@@ -4,3 +4,18 @@
 01_开发文档与前端能力 (1).md
 02_服务端接口明细 (1).md
 后台功能明细.zip
+
+# 密钥与签名文件：真实值放密钥管理服务，不进仓库
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*.jks
+*.mobileprovision
+*.p7b
+*.cer
+*.csr

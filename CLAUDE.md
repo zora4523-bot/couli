@@ -30,6 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **条目状态**只有四种：已确认 / 默认假设 / 待决策 / 待验证（08 README §0.3）。09 未判为「支持」的能力不得写成对用户的承诺。
 - 08 条目结构：主题概述 → 规则一览表（编号、规则、状态、影响面）→ 细则（默认值、决策人、依赖平台能力、取代、来源、公式/例子/边界）→ 未决问题（08 README §0.4）。编号发布后不复用，作废保留编号并注明替代。
 - 名词以 08 术语表为准；从参考文档搬内容时先按 `规划/08_业务规则/13_命名与编码对照.md` 换算（PRD v2.1 的 D3–D14 与规划 D 编号不同义）。
+- **不写真实密钥**：本仓库公开。联盟 AppKey/AppSecret、支付宝私钥、签名证书、短信与推送密钥、账号密码等，文档里只写名称和存放位置（如「淘宝联盟 AppSecret → 密钥管理服务 `union.taobao.secret`」），不写值；需要示例时用明显的占位符（`<APP_SECRET>`）。提交前钩子 `.githooks/pre-commit` 用 gitleaks 扫描暂存区，克隆后运行 `git config core.hooksPath .githooks` 启用；不要用 `--no-verify` 绕过。
 - 界面文案禁用「到手价」，用「预估返后价」（BR-PRICE-05、BR-PRICE-09）；金额一律整数分字段（`_fen`）。
 
 ## 读文件的注意事项
