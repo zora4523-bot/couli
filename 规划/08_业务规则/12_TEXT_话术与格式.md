@@ -733,7 +733,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | --- | --- | --- | --- |
 | REBATE_CREDIT | 自购返利入账 | + | 子订单 |
 | SHARE_CREDIT | 分享收益入账 | + | share 子订单 |
-| REFERRAL_CREDIT | 邀请分佣入账（显示「邀请好友订单」）；sub_type=INDIRECT 显示「邀请奖励」（默认，文案待定，key ledger_type.REFERRAL_CREDIT.name_indirect） | + | 不跳转 |
+| REFERRAL_CREDIT | 邀请分佣入账（显示「邀请好友订单」）；sub_type=INDIRECT 显示「好友推广奖励」（2026-10-01 负责人确认，key ledger_type.REFERRAL_CREDIT.name_indirect） | + | 不跳转 |
 | CLAWBACK | 订单扣回（sub_type=PART_REFUND 时显示「部分退款扣回」） | - | 子订单；referrer 角色不跳转 |
 | SETTLE_ADJUST | 结算补差（只表示联盟结算额差异，sub_type SETTLE_DIFF / PRICE_COMPARE / PRICE_PROTECT；入账后部分退款不用此类型） | ± | 子订单；referrer 角色不跳转 |
 | WITHDRAW_FREEZE | 提现冻结 | - | 提现单 |
@@ -748,7 +748,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 例 2：提现 1000 分、代扣 80 分成功 → 「提现冻结 -¥10」「提现到账 ¥9.2 已转入支付宝」（明细：申请 ¥10，代扣个税 ¥0.8，手续费 ¥0）。
 例 3：驳回 → 「提现冻结 -¥10」「提现退回 +¥10」。
 例 4：下级订单入账给上级 150 分 → 「邀请分佣入账｜邀请好友订单｜+¥1.5｜10-17」，不可点击。
-例 4b（间推开关开启）：间推份额 61 分 → 「邀请奖励｜邀请好友订单｜+¥0.61｜10-17」，不可点击，不显示层级或「二级」「间推」字样。「邀请奖励」与 P1 REWARD sub_type=invite（BR-INV-22）同名，定稿文案时须区分，改名只改字典。
+例 4b（间推开关开启）：间推份额 61 分 → 「好友推广奖励｜邀请好友订单｜+¥0.61｜10-17」，不可点击，不显示层级或「二级」「间推」字样。名称与 P1 邀请奖励（REWARD sub_type=invite，BR-INV-22）区分。
 例 5：自购订单入账 800 分后退 1 件（共 2 件）→ 流水「部分退款扣回｜-¥4」，点击跳转该子订单（BR-FUND-08）。
 
 入账后部分退款写 CLAWBACK（sub_type=PART_REFUND），不写负向 SETTLE_ADJUST；按 C-16 默认处理，待财务确认。名称「部分退款扣回」的字典 key 为 ledger_type.CLAWBACK.name_part_refund。
