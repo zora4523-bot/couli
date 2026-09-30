@@ -4,41 +4,44 @@
 
 ## 7. 提现与打款（BR-WDR）
 
-本节规定：提现入口与鉴权、校验顺序、限额、冻结、状态机与分录、审核打款、审核风险标签、支付宝结果判定、对账与文案。共 29 条（已确认 2、默认假设 21、待决策 4、待验证 2）。
+本节规定：提现入口与鉴权、收款账号（支付宝 / 银行卡）、劳务协议、校验顺序、限额、冻结、状态机与分录、自动到账与人工审核打款、审核风险标签、打款通道与结果判定、对账与文案。共 32 条（已确认 5、默认假设 20、待决策 5、待验证 2）。
 
 ### 7.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
 | --- | --- | --- | --- |
 | BR-WDR-01 | **提现入口与鉴权**<br>提现申请 `POST /v1/withdrawals` 与收款账号变更 `PUT /v1/me/payout-account` 只能由原生 App（iOS/Android/鸿蒙）发起，并且必须同时满足以下条件：access_token 有效；请求签名通过（`X-Timestamp` 与服务器时间差 ≤300 秒，`X-Nonce` 10 分钟内未用过，`X-Sign` 校验通过）；带 `Idempotency-Key`；带有效的 `step_up_token`。step_up_token 由短信二次验证签发，5 分钟有效，绑定 user_id + device_id + action。action ∈ {withdraw, payout_account_change}，必须与所调接口一致。token 只能用一次：请求成功（提现单已创建或收款账号已变更）时，在同一事务内把它的 jti 记为已用。`h5_token`（aud=h5）、JSBridge、Agent 工具一律不得调用这两个接口，也不得调用任何写钱包的接口。 | 默认假设 | POST /v1/withdrawals；PUT /v1/me/payout-account；step_up_token 签发与 jti 消费记录；h5_token 作用域；bridge.schema.json；Agent 工具注册表 CI 检查；Withdraw 页；AC-WDR-01 |
-| BR-WDR-02 | **收款账号绑定与变更**<br>收款通道只支持支付宝。MVP 只提供绑定和换绑，不提供解绑。绑定或换绑时有以下要求。⓪ 新账号的 alipay_hmac 命中黑名单（BR-ID-31）→ 44001。① `payee_name` 与实名姓名都先规范化，再逐字比较，必须相等，否则返回 30307。规范化步骤：NFKC；去掉首尾空白（含 U+3000、U+00A0）；把 ‘•’‘.’‘．’‘・’ 统一为 ‘·’（U+00B7）。数据库存规范化后的值。② 支付宝登录号加密存储，并计算 HMAC。当前有效绑定上 `(app_id, alipay_hmac)` 唯一（部分唯一索引，WHERE is_current=true）；该账号已被其他会员当前绑定时返回 30308。③ 每次换绑必须带有效 step_up_token（action=payout_account_change）。④ 换绑成功且新 alipay_hmac ≠ 当前绑定时，才计 1 次变更。每个自然月（+08:00）的变更次数 ≤ `withdraw.payout_account_change_per_month`（默认 2）。首次绑定、失败的请求、提交同一个账号都不计次。超出上限返回 30303，且 `data.reason=payout_account_change_limit`。⑤ 提现单创建时快照收款人（规范化姓名、登录号密文、HMAC）；之后换绑不影响已创建的提现单。 | 默认假设 | payout_accounts（alipay_logon_id_cipher、alipay_hmac、payee_name、is_current；部分唯一索引）；payout_account_changes（新表）；withdrawals 收款人快照字段；realname.name 规范化存储；PUT /v1/me/payout-account；配置 withdraw.payout_account_change_per_month；risk_flags：payee_prev_other_user；blocklist 命中校验（44001，BR-ID-31）；绑定收款账号页；AC-WDR-02 |
-| BR-WDR-03 | **申请校验顺序与错误码**<br>`POST /v1/withdrawals` 的判断顺序固定，命中第一条即返回：<br>前置（全局中间件）：access_token 与作用域；签名与防重放（10401）；参数格式（amount_fen 为正整数、account_type ∈ {SELF, PROMO}，否则返回 20001，并在 data.fields 列出出错字段）；缺少 Idempotency-Key（20001）。<br>⓪ 幂等查找（BR-WDR-07）：同 key、同请求体、已完成 → 原样返回首次响应；同 key、不同请求体 → 20901；同 key 仍在处理中 → 40901。<br>① `withdraw.enabled=off` 或 `withdraw.account_enabled.<account_type>=off` → 30306（30306 只表示提现开关关闭）。<br>② step-up（BR-WDR-01）→ 10003。<br>③ risk_state=banned，或 appealing 且 prev_risk_state=banned → 10006。<br>③a 命中黑名单（BR-ID-31：手机号 HMAC、身份证 HMAC、收款支付宝 HMAC、设备哈希任一命中）→ 44001。<br>④ 未实名 → 30304。<br>⑤ 未绑收款账号 → 30305。<br>⑥ 收款人姓名 ≠ 实名姓名（规范化后比较）→ 30307。<br>⑦ 会员处于提现冻结（risk_state=frozen 或 appealing 且 prev_risk_state=frozen，或有生效的 withdraw_holds，含账务差异冻结 reason=ledger_mismatch，见 BR-WDR-05）→ 30303 reason=account_frozen。<br>⑧ 任一账户 available_fen &lt;0 → 30302。<br>⑨ 金额不合规 → 30303，本步内按 below_min → not_multiple → above_max → net_too_small 取第一个命中的原因。<br>⑩ 申请账户 available_fen &lt; amount_fen → 30301。<br>⑪ 次数超限 → 30303，本步内按 daily_count → monthly_count → payee_daily_users 取第一个命中的原因。<br>⑫ 未成年（BR-WDR-06）→ 30309，先判 PROMO 禁提，再判月额度。<br>⑬ 近 90 天自购门槛（开启时）→ 30303 reason=self_purchase_required。<br>⑭ 风控命中 → 不拒绝，按 BR-WDR-29 打 risk_flags，进入人工审核。<br>`GET /v1/withdrawals/rules` 复用同一个校验器，只要求 access_token 有效，跳过以下各项：前置中的签名与幂等，⓪、②，以及 ⑨⑩⑫ 中与本次金额有关的比较。其余步骤按原顺序判断，逐账户返回：can_withdraw、首个阻断的 block_code 与 block_reason、max_withdrawable_fen、剩余次数、各项限制值。 | 默认假设 | POST /v1/withdrawals；GET /v1/withdrawals/rules 响应结构；全局鉴权与参数校验中间件；错误码表 规划/04 §7；/v1/dict 的 withdraw_reason 枚举；Withdraw 页错误提示；客服话术：提现失败原因；AC-WDR-03 |
-| BR-WDR-04 | **金额与次数限制默认值**<br>提现金额与次数限制全部可配，默认值如下：单笔 amount_fen ≥ `withdraw.min_amount_fen`（默认 100 分，即 ¥1）；amount_fen % `withdraw.amount_step_fen` = 0（默认 100 分，即整元）；amount_fen ≤ `withdraw.max_amount_fen`（默认 500000 分，即 ¥5,000）；每个会员每自然日 ≤ `withdraw.daily_count_per_user`（默认 1）、每自然月 ≤ `withdraw.monthly_count_per_user`（默认 10），均按 SELF+PROMO 两账户合计；同一收款支付宝（按快照 alipay_hmac）每自然日被不同会员使用 ≤ `withdraw.payee_daily_distinct_users`（默认 1）。“0 表示不限”只适用于 daily_count_per_user、monthly_count_per_user、payee_daily_distinct_users。配置保存时校验：min_amount_fen ≥1；amount_step_fen ≥1；min_amount_fen ≤ max_amount_fen ≤ payout.single_cap_fen。计数口径：created_at 落在该自然日或自然月（00:00 +08:00 日切），且状态不属于 {REJECTED, FAILED} 的提现单；比较方式为“已有数 + 本次 ≤ 上限”。并发下计数一致由 BR-WDR-07 的锁保证。 | 默认假设 | 配置 withdraw.min_amount_fen / amount_step_fen / max_amount_fen / daily_count_per_user / monthly_count_per_user / payee_daily_distinct_users / self_purchase_90d.enabled / self_purchase_90d.min_fen 及保存时校验；withdrawals 索引 (user_id, created_at)、(payee_alipay_hmac, created_at)；GET /v1/withdrawals/rules；Withdraw 页金额输入与提示；后台 提现设置；AC-WDR-03 |
+| BR-WDR-02 | **收款账号绑定与变更**<br>收款方式有两种：支付宝、本人银行卡（D12，负责人 2026-09-30）。每个会员同一时刻只有 1 个当前收款账号，`payout_method ∈ {alipay, bank_card}`。MVP 只提供绑定和换绑（含在两种方式之间切换），不提供解绑。绑定或换绑时有以下要求，①–⑤ 两种方式共用，下文“收款账号 HMAC”指支付宝的 alipay_hmac 或银行卡的 bank_card_hmac。⓪ 新账号的收款账号 HMAC 命中黑名单（BR-ID-31）→ 44001。① 收款人姓名（支付宝 `payee_name`、银行卡户名，同存 payee_name）与实名姓名都先规范化，再逐字比较，必须相等，否则返回 30307。规范化步骤：NFKC；去掉首尾空白（含 U+3000、U+00A0）；把 ‘•’‘.’‘．’‘・’ 统一为 ‘·’（U+00B7）。数据库存规范化后的值。② 支付宝登录号、银行卡号加密存储，并计算 HMAC。当前有效绑定上 `(app_id, alipay_hmac)`、`(app_id, bank_card_hmac)` 各自唯一（部分唯一索引，WHERE is_current=true）；该账号已被其他会员当前绑定时返回 30308。③ 每次换绑必须带有效 step_up_token（action=payout_account_change）。④ 换绑成功且新账号（payout_method + 收款账号 HMAC）≠ 当前绑定时，才计 1 次变更；两种方式共用同一个计数。每个自然月（+08:00）的变更次数 ≤ `withdraw.payout_account_change_per_month`（默认 2）。首次绑定、失败的请求、提交同一个账号都不计次。超出上限返回 30303，且 `data.reason=payout_account_change_limit`。⑤ 提现单创建时快照收款人（payout_method、规范化姓名、账号密文、HMAC；银行卡另含开户行）；之后换绑不影响已创建的提现单。<br>⑥ 银行卡另有以下要求（默认处理，待负责人确认，见细则）：卡号只含数字、长度 12–19 位且通过 Luhn 校验，否则 20001（data.fields=[card_no]）；只支持本人名下借记卡，卡 BIN 识别为贷记卡或无法识别 → 20001（data.fields=[card_no]）；绑定时做银行卡三要素核验（实名姓名 + 身份证号 + 卡号），不一致 → 30307。 | 默认假设 | payout_accounts（payout_method、alipay_logon_id_cipher、alipay_hmac、bank_card_no_cipher、bank_card_hmac、bank_name、card_bin、payee_name、is_current；两个部分唯一索引）；payout_account_changes（新表）；withdrawals 收款人快照字段；realname.name 规范化存储；PUT /v1/me/payout-account；配置 withdraw.payout_account_change_per_month；risk_flags：payee_prev_other_user；blocklist 命中校验（44001，BR-ID-31，含收款银行卡 HMAC）；卡 BIN 表与银行卡三要素核验；绑定收款账号页（支付宝 / 银行卡两种方式）；AC-WDR-02 |
+| BR-WDR-03 | **申请校验顺序与错误码**<br>`POST /v1/withdrawals` 的判断顺序固定，命中第一条即返回：<br>前置（全局中间件）：access_token 与作用域；签名与防重放（10401）；参数格式（amount_fen 为正整数、account_type ∈ {SELF, PROMO}，否则返回 20001，并在 data.fields 列出出错字段）；缺少 Idempotency-Key（20001）。<br>⓪ 幂等查找（BR-WDR-07）：同 key、同请求体、已完成 → 原样返回首次响应；同 key、不同请求体 → 20901；同 key 仍在处理中 → 40901。<br>① `withdraw.enabled=off` 或 `withdraw.account_enabled.<account_type>=off` → 30306（30306 只表示提现开关关闭）。<br>② step-up（BR-WDR-01）→ 10003。<br>③ risk_state=banned，或 appealing 且 prev_risk_state=banned → 10006。<br>③a 命中黑名单（BR-ID-31：手机号 HMAC、身份证 HMAC、收款账号 HMAC（支付宝或银行卡）、设备哈希任一命中）→ 44001。<br>④ 未实名 → 30304。<br>⑤ 未绑收款账号 → 30305。<br>⑥ 收款人姓名 ≠ 实名姓名（规范化后比较）→ 30307。<br>⑥a 未签署当前有效版本的劳务协议（BR-WDR-31）→ 10004，`data.consent_type=labor_agreement`。<br>⑦ 会员处于提现冻结（risk_state=frozen 或 appealing 且 prev_risk_state=frozen，或有生效的 withdraw_holds，含账务差异冻结 reason=ledger_mismatch，见 BR-WDR-05）→ 30303 reason=account_frozen。<br>⑧ 任一账户 available_fen &lt;0 → 30302。<br>⑨ 金额不合规 → 30303，本步内按 below_min → not_multiple → above_max → net_too_small 取第一个命中的原因。<br>⑩ 申请账户 available_fen &lt; amount_fen → 30301。<br>⑪ 次数超限 → 30303，本步内按 daily_count → monthly_count → payee_daily_users 取第一个命中的原因。<br>⑫ 未成年（BR-WDR-06）→ 30309，先判 PROMO 禁提，再判月额度。<br>⑬ 近 90 天自购门槛（开启时）→ 30303 reason=self_purchase_required。<br>⑭ 风控命中 → 不拒绝，按 BR-WDR-29 打 risk_flags；命中任一标签的单不得自动打款，转人工审核（BR-WDR-30）。<br>`GET /v1/withdrawals/rules` 复用同一个校验器，只要求 access_token 有效，跳过以下各项：前置中的签名与幂等，⓪、②，以及 ⑨⑩⑫ 中与本次金额有关的比较。其余步骤按原顺序判断，逐账户返回：can_withdraw、首个阻断的 block_code 与 block_reason、max_withdrawable_fen、剩余次数、各项限制值。 | 默认假设 | POST /v1/withdrawals；GET /v1/withdrawals/rules 响应结构；全局鉴权与参数校验中间件；错误码表 规划/04 §7；/v1/dict 的 withdraw_reason 枚举；Withdraw 页错误提示；客服话术：提现失败原因；AC-WDR-03 |
+| BR-WDR-04 | **金额与次数限制默认值**<br>提现金额与次数限制全部可配，默认值如下：单笔 amount_fen ≥ `withdraw.min_amount_fen`（默认 100 分，即 ¥1）；amount_fen % `withdraw.amount_step_fen` = 0（默认 100 分，即整元）；amount_fen ≤ `withdraw.max_amount_fen`（默认 500000 分，即 ¥5,000）；每个会员每自然日 ≤ `withdraw.daily_count_per_user`（默认 1）、每自然月 ≤ `withdraw.monthly_count_per_user`（默认 10），均按 SELF+PROMO 两账户合计；同一收款账号（按快照中的收款账号 HMAC：支付宝 alipay_hmac、银行卡 bank_card_hmac）每自然日被不同会员使用 ≤ `withdraw.payee_daily_distinct_users`（默认 1）。“0 表示不限”只适用于 daily_count_per_user、monthly_count_per_user、payee_daily_distinct_users。配置保存时校验：min_amount_fen ≥1；amount_step_fen ≥1；min_amount_fen ≤ max_amount_fen ≤ payout.single_cap_fen。计数口径：created_at 落在该自然日或自然月（00:00 +08:00 日切），且状态不属于 {REJECTED, FAILED} 的提现单；比较方式为“已有数 + 本次 ≤ 上限”。并发下计数一致由 BR-WDR-07 的锁保证。 | 默认假设 | 配置 withdraw.min_amount_fen / amount_step_fen / max_amount_fen / daily_count_per_user / monthly_count_per_user / payee_daily_distinct_users / self_purchase_90d.enabled / self_purchase_90d.min_fen 及保存时校验；withdrawals 索引 (user_id, created_at)、(payee_hmac, created_at)；GET /v1/withdrawals/rules；Withdraw 页金额输入与提示；后台 提现设置；AC-WDR-03 |
 | BR-WDR-05 | **提现阻断：负余额与冻结**<br>“提现阻断”指以下任一情况：risk_state ∈ {frozen, banned, appealing}（appealing 按 appeals.prev_risk_state 取 frozen 或 banned 的效果，BR-ID-36）；存在生效的提现冻结记录（withdraw_holds）；SELF 或 PROMO 任一账户 available_fen &lt; 0。<br>申请时（BR-WDR-03）：banned 或 appealing(prev=banned) → 10006；frozen、appealing(prev=frozen) 或有生效冻结 → 30303 reason=account_frozen；任一账户为负 → 30302，data.account 指明为负的账户，作用范围按 BR-FUND-11（默认两个账户都不得申请）。<br>已存在的非终态单按阻断来源分两类处理：<br>(a) 负余额（本款是负余额处理非终态提现单的唯一维护处，BR-FUND-21 只保留编号指向本款）：W2、W4、W8 的守卫在锁定账户行的同一事务内检查“该单所属账户 available_fen ≥ 0”；扣回或负向调整使账户 available 由 ≥0 变为 &lt;0 的事务内写 outbox 事件 account.went_negative，提现模块消费后立即处理（事件只加快处理，守卫是硬约束）。为负账户下 PENDING_REVIEW、APPROVED 且没有任何 kind=transfer 尝试记录的单，由系统执行 W3（reject_reason_code=NEGATIVE_BALANCE，BR-WDR-10），写 WITHDRAW_RETURN，冻结额退回 available 抵扣负数。另一账户（未变负）的 PENDING_REVIEW、APPROVED 单不驳回，置 withdrawals.blocked_reason=NEGATIVE_BALANCE_OTHER：W2 拒绝、EXECUTE 跳过、W8 拒绝；两个账户 available_fen 都 ≥ 0 时自动清空。为负账户下已有转账尝试记录的 APPROVED 单（经 W9 退回）不自动驳回，置 blocked_reason=NEGATIVE_BALANCE 并告警，由财务按 BR-WDR-10 处理；该账户恢复 ≥0 后同样自动清空。PAYING 且尚未发出转账的单在 payout 复核（BR-WDR-13 ③）走 W9（hold_reason=member_blocked），回到 APPROVED 后立即按本款处理；已发出转账的 PAYING 单照常查询与完成。<br>(b) 风控冻结（risk_state ∈ {frozen, banned, appealing}）与 withdraw_holds：不自动改变单据状态。W2 审核通过与 W3 驳回不受影响。EXECUTE（BR-WDR-12）与 W8 手动成功（BR-WDR-16）遇到阻断时拒绝。payout 复核遇到阻断时走 W9，hold_reason=member_blocked。<br>提现冻结只记在 withdraw_holds 表（唯一冻结记录；不使用 users.withdraw_blocked_reason），字段：user_id、reason ∈ {manual, recon_diff, ledger_mismatch, manual_failed_watch}、source_ref、created_by、created_at、hold_until（可空）、released_at、released_by。一条记录在 released_at 为空、且 hold_until 为空或 > now 时生效。多个原因可以叠加，逐条解除。新增和解除都记审计，且与 BR-WDR-07 一样先锁 users 行。不设账户级冻结。R2 与日终校验只追加 withdraw_holds，不改 risk_state。 | 待决策 | account_balances；users.risk_state；withdraw_holds（新表，reason 含 ledger_mismatch）；withdrawals.blocked_reason；事件 account.went_negative 消费者；W2 / W4 / W8 守卫；reject_reason_code NEGATIVE_BALANCE；POST /v1/withdrawals；后台审核列表 blocked 标识；后台批次执行结果；payout 进程复核；后台 冻结/解冻操作；推送「提现未通过」；客服话术：余额为负为何不能提现；AC-WDR-03 |
 | BR-WDR-06 | **未成年人提现限制**<br>本条是未成年人提现限额、计数口径与错误码的唯一维护处；年龄计算、满 18 周岁时刻 adult_at（由 realname.birth_date 推导，BR-ID-25）与识别时点只在 BR-ID-26 维护，本条调用同一推导函数。申请时刻 now &lt; adult_at 即为未成年；未满 14 周岁不能实名（BR-ID-26），因此在 ④ 即被拦截（30304）。已实名且未满 18 周岁时：<br>① 不得提 PROMO → 30309，`data.remaining_fen=0`。<br>② SELF：本自然月已申请额 + 本次 amount_fen 必须 ≤ `withdraw.minor_monthly_cap_fen`（默认 20000 分，即 ¥200），否则 30309，`data.remaining_fen` = max(0, 上限 − 本自然月已申请额)。本自然月已申请额 = 该用户 account_type=SELF、created_at 落在当前 +08:00 自然月内、status ∉ {REJECTED, FAILED}（即 PENDING_REVIEW、APPROVED、PAYING、PAID_API、PAID_MANUAL）的提现单 amount_fen 合计。<br>③ 该配置为 0 时，等同于未满 18 周岁一律禁提。<br>④ BR-WDR-03 ⑫ 先判 ①、再判 ②；② 的复核按 BR-WDR-07 在同一事务、同一组锁（users 行 → SELF → PROMO 余额行）内与建单、写 WITHDRAW_FREEZE 一起完成，不另加锁。<br>满 18 周岁时刻起本条限制自动失效，无需人工操作。 | 待决策 | 配置 withdraw.minor_monthly_cap_fen；realname.birth_date（加密，替代 birth_year；adult_at 由其推导）；POST /v1/withdrawals（30309）；GET /v1/withdrawals/rules；Withdraw 页未成年提示；用户协议未成年条款；AC-WDR-03 |
-| BR-WDR-07 | **提现单创建、并发锁与幂等**<br>校验通过后，在同一个数据库事务内按固定顺序加锁并复核：① `SELECT … FROM users WHERE id=? FOR UPDATE`；② 按 SELF → PROMO 的顺序，对该会员的两个 account_balances 行 `FOR UPDATE`；③ `pg_advisory_xact_lock(hashtext(app_id\|\|':'\|\|alipay_hmac))`（快照中的收款账号）；④ 在锁内重新执行 BR-WDR-03 的 ⑦⑧⑩⑪⑫；⑤ 计算 fee_fen（BR-WDR-19）、tax_fen（BR-WDR-20），`net_fen = amount_fen − fee_fen − tax_fen`；⑥ 插入提现单（PENDING_REVIEW）；⑦ 写 `WITHDRAW_FREEZE` 凭证（BR-WDR-09）；⑧ 写幂等结果。凡是会修改一个会员余额行或其提现冻结的写操作（包括 BR-FUND 扣回、BR-WDR-05 冻结），都必须先锁 users 行，再按 SELF→PROMO 顺序加锁，避免死锁。<br>幂等沿用 规划/04 的 `idempotency_keys`，唯一键 (app_id, user_id, method, path, key)：<br>- 在签名校验之后、BR-WDR-03 ① 之前查找（⓪）。<br>- 请求体哈希 = sha256(键名排序、无空白的规范化 JSON)。<br>- 同 key、同哈希、已完成 → 原样返回首次响应（包括业务错误）；同 key、不同哈希 → 20901；同 key 的首个请求还没完成 → 40901。<br>- 成功和 3xxxx 业务错误写入幂等结果；1xxxx、2xxxx 不写。缺少 Idempotency-Key → 20001。<br>- `POST /v1/withdrawals` 与 `PUT /v1/me/payout-account` 的幂等记录不按 30 天清理，保留期 ≥ 提现单保留期。<br>`out_biz_no` 在插入提现单时生成，`(app_id, out_biz_no)` 唯一，之后任何代码和 SQL 都不得修改（数据库触发器拒绝对该列的 UPDATE）。 | 默认假设 | withdrawals（out_biz_no 唯一及禁止 UPDATE 的触发器、net_fen、fee_rule_id、tax_rule_version、income_type）；idempotency_keys 保留策略；users 行锁、account_balances 行锁顺序；BR-FUND 扣回的锁顺序；ledger_vouchers / ledger_entries；POST /v1/withdrawals；AC-WDR-04；SM-WDR-W1 |
-| BR-WDR-08 | **提现状态机**<br>提现状态只有 7 个：PENDING_REVIEW、APPROVED、REJECTED、PAYING、PAID_API、PAID_MANUAL、FAILED。终态为 REJECTED、PAID_API、PAID_MANUAL、FAILED；进入终态后，状态与金额都不得再改。状态迁移只允许下表 W1–W10。每次迁移用 `UPDATE … WHERE id=? AND status=?` 做比较并交换（CAS）；影响 0 行即视为并发冲突，不写任何分录，后台接口返回 20902（状态已变化，请刷新后重试；`data.resource=withdrawal`）。needs_manual=true 的单只能经 W10 结束。 | 默认假设 | withdrawals.status 枚举、execute_seq、hold_reason、hold_at、blocked_reason；specs/state-machines/withdrawal.yaml；后台 withdrawals / payout-batches 接口；错误码 20902（data.resource=withdrawal）；SM-WDR-W1…W10；AC-WDR-05 |
+| BR-WDR-07 | **提现单创建、并发锁与幂等**<br>校验通过后，在同一个数据库事务内按固定顺序加锁并复核：① `SELECT … FROM users WHERE id=? FOR UPDATE`；② 按 SELF → PROMO 的顺序，对该会员的两个 account_balances 行 `FOR UPDATE`；③ `pg_advisory_xact_lock(hashtext(app_id\|\|':'\|\|payee_hmac))`（快照中的收款账号 HMAC，支付宝为 alipay_hmac、银行卡为 bank_card_hmac）；④ 在锁内重新执行 BR-WDR-03 的 ⑦⑧⑩⑪⑫；⑤ 计算 fee_fen（BR-WDR-19）、tax_fen（BR-WDR-20），`net_fen = amount_fen − fee_fen − tax_fen`；⑥ 插入提现单（PENDING_REVIEW）；⑦ 写 `WITHDRAW_FREEZE` 凭证（BR-WDR-09）；⑧ 写幂等结果。凡是会修改一个会员余额行或其提现冻结的写操作（包括 BR-FUND 扣回、BR-WDR-05 冻结），都必须先锁 users 行，再按 SELF→PROMO 顺序加锁，避免死锁。<br>幂等沿用 规划/04 的 `idempotency_keys`，唯一键 (app_id, user_id, method, path, key)：<br>- 在签名校验之后、BR-WDR-03 ① 之前查找（⓪）。<br>- 请求体哈希 = sha256(键名排序、无空白的规范化 JSON)。<br>- 同 key、同哈希、已完成 → 原样返回首次响应（包括业务错误）；同 key、不同哈希 → 20901；同 key 的首个请求还没完成 → 40901。<br>- 成功和 3xxxx 业务错误写入幂等结果；1xxxx、2xxxx 不写。缺少 Idempotency-Key → 20001。<br>- `POST /v1/withdrawals` 与 `PUT /v1/me/payout-account` 的幂等记录不按 30 天清理，保留期 ≥ 提现单保留期。<br>`out_biz_no` 在插入提现单时生成，`(app_id, out_biz_no)` 唯一，之后任何代码和 SQL 都不得修改（数据库触发器拒绝对该列的 UPDATE）。 | 默认假设 | withdrawals（out_biz_no 唯一及禁止 UPDATE 的触发器、net_fen、fee_rule_id、tax_rule_version、income_type）；idempotency_keys 保留策略；users 行锁、account_balances 行锁顺序；BR-FUND 扣回的锁顺序；ledger_vouchers / ledger_entries；POST /v1/withdrawals；AC-WDR-04；SM-WDR-W1 |
+| BR-WDR-08 | **提现状态机**<br>提现状态只有 7 个：PENDING_REVIEW、APPROVED、REJECTED、PAYING、PAID_API、PAID_MANUAL、FAILED。终态为 REJECTED、PAID_API、PAID_MANUAL、FAILED；进入终态后，状态与金额都不得再改。状态迁移只允许下表 W1–W10。每次迁移用 `UPDATE … WHERE id=? AND status=?` 做比较并交换（CAS）；影响 0 行即视为并发冲突，不写任何分录，后台接口返回 20902（状态已变化，请刷新后重试；`data.resource=withdrawal`）。needs_manual=true 的单只能经 W10 结束。W2（APPROVE）与 W4（EXECUTE）可由系统按自动到账规则组执行（actor=system:auto_payout，BR-WDR-30），守卫与人工执行相同，不新增状态。 | 默认假设 | withdrawals.status 枚举、execute_seq、hold_reason、hold_at、blocked_reason、review_mode；specs/state-machines/withdrawal.yaml；后台 withdrawals / payout-batches 接口；错误码 20902（data.resource=withdrawal）；SM-WDR-W1…W10；AC-WDR-05 |
 | BR-WDR-09 | **各状态的资金分录**<br>本条是提现分录模板（记账时点、ledger_type、借贷科目）的唯一维护处；frozen 子户性质、不设在途科目、风控冻结不移动资金、不变量 frozen = Σ 非终态提现单见 BR-FUND-14。<br>用户申请提现后，冻结金额一直留在 `USER_*.frozen`，直到单据进入终态；EXECUTE（W4）时不写任何分录。分录只在以下时点写，并与状态迁移在同一事务内完成：<br>- W1（APPLY，进入 PENDING_REVIEW）：写 WITHDRAW_FREEZE（available −amount，frozen +amount）。<br>- W3（驳回，含系统驳回 NEGATIVE_BALANCE）、W6（通道明确失败）、W10 判 FAILED：写 WITHDRAW_RETURN（frozen −amount，available +amount）。<br>- W5（通道成功 → PAID_API）、W8（手动成功录入并经确认人确认 → PAID_MANUAL，BR-WDR-16）、W10 判 PAID_API：写一张凭证，含 WITHDRAW_PAID（借 USER_\*.frozen net_fen，贷 CASH_ALIPAY）、WITHDRAW_FEE（借 USER_\*.frozen fee_fen，贷 FEE_INCOME）、TAX_WITHHOLD（借 USER_\*.frozen tax_fen，贷 TAX_PAYABLE）。金额为 0 的分录不写，三者合计必须等于 amount_fen。<br>- W2、W4、W7、W9：不写分录。 | 默认假设 | ledger_entries / ledger_vouchers；account_balances.frozen_fen；ledger_invariants.sql；specs/ledger-rules.md；钱包页“冻结中”金额；SM-WDR-W1…W10；AC-WDR-05 |
-| BR-WDR-10 | **审核与驳回**<br>MVP 的提现单全部人工审核。APPROVE（W2）与 REJECT（W3）只能由 super 或 finance 角色执行，执行前需持有 5 分钟内有效的后台 step-up token。APPROVE 写 reviewer_id、reviewed_at；会员处于风控冻结或有生效 withdraw_holds 时也可以审核通过，所属账户为负或 blocked_reason 非空时不得审核通过（BR-WDR-05）。REJECT 必须选择原因码 `reject_reason_code`（人工可选：RISK_SUSPECT、ORDER_ABNORMAL、PAYEE_INFO_INVALID、USER_REQUEST、OTHER；系统专用：NEGATIVE_BALANCE），可以填写内部备注；NEGATIVE_BALANCE 只由系统按 BR-WDR-05 (a) 写入（操作人记 system，不需 step-up，记审计），人工不可选；用户只看到原因码对应的文案，看不到内部备注。从 APPROVED 驳回时有两条额外限制：该单存在 result ∈ {pending, success, unknown} 的转账尝试时，拒绝驳回，只能走 BR-WDR-15；存在 result=fail 的转账尝试时，驳回需第二人确认后生效，第二人为 super 或 finance、≠ 驳回人、需 step-up。驳回在同一事务内写 WITHDRAW_RETURN，提交后经 outbox 发通知。MVP 用户不能自行撤销提现；需要撤销时联系客服，由财务以 USER_REQUEST 驳回。 | 默认假设 | withdrawals.reviewer_id、reviewed_at、reject_reason_code、reject_note、reject_confirmed_by、risk_flags；后台 withdrawals 审核接口与页面；通知模板：提现未通过；客服话术：如何撤销提现；AC-ADM-07；SM-WDR-W2、W3 |
-| BR-WDR-11 | **职责分离与第二人审批**<br>同一张提现单：执行打款人 executor_id ≠ 审核人 reviewer_id。W8 手动成功：录入人 ≠ reviewer_id，确认人 ≠ 录入人（确认人可以是 reviewer）。W10 由一名 super 和一名 finance 两名不同管理员确认，凭证上传人必须是其中之一。一张 APPROVED 单同一时刻只能属于一个未完成的批次（批次内还有 APPROVED 单即为未完成）。批次中任一单 `amount_fen ≥ payout.second_approval_single_fen`（默认 50000 分，即 ¥500），或批次 `Σ amount_fen ≥ payout.second_approval_batch_fen`（默认 2000000 分，即 ¥20,000）时，执行前必须有第二人批准：批准人为 super 或 finance，≠ 执行人（可以是批次内某单的审核人），需 step-up。批准时锁定成员（withdrawal_id 集合），并保存批准时的 Σ amount_fen；成员有任何增删，批准即失效，需重新批准。批准在批次未完成期间一直有效，经 W9 退回的单可以用原批准重新执行。所有校验都在服务端执行，界面按 ability 隐藏按钮只是辅助；所有操作都写审计日志。 | 默认假设 | withdrawals.reviewer_id、executor_id、manual_entry_by、manual_confirm_by；payout_batches.approver_id、approved_at、approved_member_ids、approved_total_fen；配置 payout.second_approval_single_fen / second_approval_batch_fen；后台 payout-batches 审批与执行；audit_logs；上线检查清单；AC-ADM-07 |
-| BR-WDR-12 | **批次执行**<br>批次只是一组 APPROVED 提现单的集合（一张单同一时刻只属于一个未完成批次，见 BR-WDR-11），不影响单据状态。EXECUTE 分三步：<br>① 批次级前置检查，任一不满足则整批拒绝：`payout.enabled=on`；`payout.queue_paused=false`；第二人审批有效（BR-WDR-11）。<br>② 逐单判断：状态仍为 APPROVED；executor ≠ reviewer；会员没有提现阻断（BR-WDR-05）；该单没有任何 kind=transfer 的 payout_attempts 记录。通过的单组成本次可执行集合。<br>③ 对可执行集合做水位检查（BR-WDR-18），不满足则整批拒绝，不迁移任何单。<br>检查通过后，每单以 CAS 迁到 PAYING，写 executor_id、batch_id、executed_at，execute_seq +1。事务提交后经 outbox 为每单投递一个 payout 任务，jobId = `{withdrawal_id}:{execute_seq}`。未通过的单保持 APPROVED，并在结果中列出原因。重复点击执行靠状态 CAS 去重：已经是 PAYING 或终态的单不再投递。 | 默认假设 | payout_batches；withdrawals.executor_id、batch_id、executed_at、execute_seq；payout 队列 jobId；outbox；后台 payout-batches 执行接口与页面；AC-WDR-06；SM-WDR-W4 |
-| BR-WDR-13 | **payout 进程与打款前复核**<br>只有 payout 进程能读取支付宝应用私钥（KMS，仅 prod）。该进程没有公网入站；出站只允许访问支付宝网关、PG、Redis；固定 1 个实例，转账队列 concurrency=1。非 prod 环境只能走支付宝沙箱或 dry-run。`PAYOUT_MODE` 默认 dry_run，改为 live 只能由人经生产发布完成。<br>处理每个转账任务的步骤：<br>① 单据状态 ≠ PAYING，或任务的 execute_seq ≠ 单据当前的 execute_seq → 直接结束。<br>② 该单已存在任何 kind=transfer 的尝试记录 → 不转账，转入查询（BR-WDR-14）。<br>③ 在 `pg_advisory_xact_lock('payout_daily')` 内按顺序复核，任一不满足即走 W9 回到 APPROVED，并写 hold_reason：payout_disabled（payout.enabled=off）→ queue_paused → member_blocked（BR-WDR-05）→ single_cap（net_fen > payout.single_cap_fen）→ daily_cap（当日已发出合计 + 本单 net > payout.daily_cap_fen）。这里不复核水位，水位只在 EXECUTE 时检查（BR-WDR-18）。<br>④ 在同一把锁内写 payout_attempts（kind=transfer，result=pending）并提交，之后才发起转账（先记后发）。<br>⑤ 转账请求超时时间为 10 秒。<br>转账任务 attempts=1，队列不得自动重试转账。W9 时清空 executor_id、executed_at，保留 batch_id，写 hold_reason 和 hold_at。hold_reason 完整枚举：payout_disabled、queue_paused、member_blocked、single_cap、daily_cap、payer_side_after_transfer（BR-WDR-17）。 | 默认假设 | payout 进程与部署（ECS、安全组、RAM、KMS、队列 concurrency）；payout_attempts（result 枚举增加 pending）；配置 payout.single_cap_fen / daily_cap_fen、PAYOUT_MODE；withdrawals.hold_reason、hold_at、execute_seq；B2-06 验收用例；SM-WDR-W9 |
+| BR-WDR-10 | **审核与驳回**<br>提现单先经自动到账规则组判定（BR-WDR-30）：判为自动的，由系统执行 W2 并自动执行打款；未命中自动规则、命中风控标签或自动执行前置未通过的，留在人工审核，按本条执行。系统不会自动驳回。人工 APPROVE（W2）与 REJECT（W3）只能由 super 或 finance 角色执行，执行前需持有 5 分钟内有效的后台 step-up token。APPROVE 写 reviewer_id、reviewed_at；会员处于风控冻结或有生效 withdraw_holds 时也可以审核通过，所属账户为负或 blocked_reason 非空时不得审核通过（BR-WDR-05）。REJECT 必须选择原因码 `reject_reason_code`（人工可选：RISK_SUSPECT、ORDER_ABNORMAL、PAYEE_INFO_INVALID、USER_REQUEST、OTHER；系统专用：NEGATIVE_BALANCE），可以填写内部备注；NEGATIVE_BALANCE 只由系统按 BR-WDR-05 (a) 写入（操作人记 system，不需 step-up，记审计），人工不可选；用户只看到原因码对应的文案，看不到内部备注。从 APPROVED 驳回时有两条额外限制：该单存在 result ∈ {pending, success, unknown} 的转账尝试时，拒绝驳回，只能走 BR-WDR-15；存在 result=fail 的转账尝试时，驳回需第二人确认后生效，第二人为 super 或 finance、≠ 驳回人、需 step-up。驳回在同一事务内写 WITHDRAW_RETURN，提交后经 outbox 发通知。MVP 用户不能自行撤销提现；需要撤销时联系客服，由财务以 USER_REQUEST 驳回。 | 默认假设 | withdrawals.reviewer_id、reviewed_at、reject_reason_code、reject_note、reject_confirmed_by、risk_flags、review_mode、auto_decision；后台 withdrawals 审核接口与页面（展示自动判定结果与转人工原因）；通知模板：提现未通过；客服话术：如何撤销提现；AC-ADM-07；SM-WDR-W2、W3 |
+| BR-WDR-11 | **职责分离与第二人审批**<br>同一张提现单：执行打款人 executor_id ≠ 审核人 reviewer_id。W8 手动成功：录入人 ≠ reviewer_id，确认人 ≠ 录入人（确认人可以是 reviewer）。W10 由一名 super 和一名 finance 两名不同管理员确认，凭证上传人必须是其中之一。一张 APPROVED 单同一时刻只能属于一个未完成的批次（批次内还有 APPROVED 单即为未完成）。批次中任一单 `amount_fen ≥ payout.second_approval_single_fen`（默认 50000 分，即 ¥500），或批次 `Σ amount_fen ≥ payout.second_approval_batch_fen`（默认 2000000 分，即 ¥20,000）时，执行前必须有第二人批准：批准人为 super 或 finance，≠ 执行人（可以是批次内某单的审核人），需 step-up。批准时锁定成员（withdrawal_id 集合），并保存批准时的 Σ amount_fen；成员有任何增删，批准即失效，需重新批准。批准在批次未完成期间一直有效，经 W9 退回的单可以用原批准重新执行。所有校验都在服务端执行，界面按 ability 隐藏按钮只是辅助；所有操作都写审计日志。自动到账路径（审核与执行均为系统）的职责分离替代规则见 BR-WDR-30，本条对人工操作不变。 | 默认假设 | withdrawals.reviewer_id、executor_id、manual_entry_by、manual_confirm_by；payout_batches.approver_id、approved_at、approved_member_ids、approved_total_fen；配置 payout.second_approval_single_fen / second_approval_batch_fen；后台 payout-batches 审批与执行；audit_logs；上线检查清单；AC-ADM-07 |
+| BR-WDR-12 | **批次执行**<br>批次只是一组 APPROVED 提现单的集合（一张单同一时刻只属于一个未完成批次，见 BR-WDR-11），不影响单据状态。EXECUTE 分三步：<br>① 批次级前置检查，任一不满足则整批拒绝：`payout.enabled=on`；`payout.queue_paused=false`；第二人审批有效（BR-WDR-11）。<br>② 逐单判断：状态仍为 APPROVED；executor ≠ reviewer（自动到账路径见 BR-WDR-30）；会员没有提现阻断（BR-WDR-05）；该单没有任何 kind=transfer 的 payout_attempts 记录；该单快照收款方式对应的通道已开通（`payout.channel_enabled.<channel>`=on，BR-WDR-32）。通过的单组成本次可执行集合。<br>③ 对可执行集合做水位检查（BR-WDR-18），不满足则整批拒绝，不迁移任何单。<br>检查通过后，每单以 CAS 迁到 PAYING，写 executor_id、batch_id、executed_at，execute_seq +1。事务提交后经 outbox 为每单投递一个 payout 任务，jobId = `{withdrawal_id}:{execute_seq}`。未通过的单保持 APPROVED，并在结果中列出原因。重复点击执行靠状态 CAS 去重：已经是 PAYING 或终态的单不再投递。自动到账的单由系统为每单建 1 个 kind=auto 批次并按同样的 ①–③ 执行（BR-WDR-30）；任一步不满足时该单留在 APPROVED，转人工批次执行。 | 默认假设 | payout_batches（kind ∈ {manual, auto}）；withdrawals.executor_id、batch_id、executed_at、execute_seq；payout 队列 jobId；outbox；后台 payout-batches 执行接口与页面；AC-WDR-06；SM-WDR-W4 |
+| BR-WDR-13 | **payout 进程与打款前复核**<br>只有 payout 进程能读取打款通道密钥（支付宝应用私钥；银行卡通道密钥，BR-WDR-32；KMS，仅 prod）。该进程没有公网入站；出站只允许访问已启用通道的网关、PG、Redis；固定 1 个实例，转账队列 concurrency=1。非 prod 环境只能走通道沙箱或 dry-run。`PAYOUT_MODE` 默认 dry_run，改为 live 只能由人经生产发布完成。<br>处理每个转账任务的步骤：<br>① 单据状态 ≠ PAYING，或任务的 execute_seq ≠ 单据当前的 execute_seq → 直接结束。<br>② 该单已存在任何 kind=transfer 的尝试记录 → 不转账，转入查询（BR-WDR-14）。<br>③ 在 `pg_advisory_xact_lock('payout_daily')` 内按顺序复核，任一不满足即走 W9 回到 APPROVED，并写 hold_reason：payout_disabled（payout.enabled=off）→ queue_paused → member_blocked（BR-WDR-05）→ single_cap（net_fen > payout.single_cap_fen）→ daily_cap（当日已发出合计 + 本单 net > payout.daily_cap_fen）。这里不复核水位，水位只在 EXECUTE 时检查（BR-WDR-18）。<br>④ 在同一把锁内写 payout_attempts（kind=transfer，result=pending）并提交，之后才发起转账（先记后发）。<br>⑤ 转账请求超时时间为 10 秒。<br>转账任务 attempts=1，队列不得自动重试转账。W9 时清空 executor_id、executed_at，保留 batch_id，写 hold_reason 和 hold_at。hold_reason 完整枚举：payout_disabled、queue_paused、member_blocked、single_cap、daily_cap、payer_side_after_transfer（BR-WDR-17）。 | 默认假设 | payout 进程与部署（ECS、安全组、RAM、KMS、队列 concurrency）；payout_attempts（result 枚举增加 pending）；配置 payout.single_cap_fen / daily_cap_fen、PAYOUT_MODE；withdrawals.hold_reason、hold_at、execute_seq；B2-06 验收用例；SM-WDR-W9 |
 | BR-WDR-14 | **打款结果判定与只查不重提**<br>转账或查询的结果按 BR-WDR-28 的清单判定：成功 → W5（PAID_API，记 channel_order_id 与 paid_at）；明确失败 → W6（FAILED）；付款方侧失败 → W9 + 暂停队列（BR-WDR-17）。不在清单内的情况一律视为结果未知，包括：超时、网络错误、HTTP 5xx、SYSTEM_ERROR、未列入清单的码或状态、查询返回“订单不存在”或处理中。结果未知时单据保持 PAYING，以首次转账尝试时间 T 为基准，在 T+1 分、+5 分、+30 分、+2 小时各查询一次，之后每 2 小时查询一次。到 T+24 小时仍未知，则置 needs_manual=true、告警，并停止自动查询；此后只能经 BR-WDR-15（W10）结束。任何情况下，系统都不得自动再次调用转账接口，也不得换新的 out_biz_no 重打。 | 已确认 | payout 进程查询调度；配置 payout.query_schedule；withdrawals.fail_code、channel_order_id、paid_at、needs_manual；W10 处置页【立即查询】；通知模板：提现成功/失败；SM-WDR-W5…W7；AC-WDR-07 |
 | BR-WDR-15 | **24 小时未知人工处置**<br>needs_manual=true 的 PAYING 单只能通过 W10 结束。处置人必须上传支付宝侧凭证，可以是查询接口返回的 JSON（处置页【立即查询】的结果），或含该 out_biz_no 的支付宝账务明细或账单行。然后由一名 super 和一名 finance 确认：两人不同，均需 step-up，上传人必须是二者之一。<br>- 凭证显示已成功 → PAID_API，按 BR-WDR-09 记成功分录。<br>- 只有同时满足以下三点才可判 FAILED：距 T 已 ≥24 小时；T 当日及次日的支付宝账单都已下载，且都没有该 out_biz_no；最近一次查询为“订单不存在”。判 FAILED 时写 WITHDRAW_RETURN，并在同一事务内为该会员新增 withdraw_holds（reason=manual_failed_watch，hold_until = 判定时刻 + `withdraw.manual_failed_hold_days` 天，默认 7 天）。<br>needs_manual 单不得转 PAID_MANUAL，也不得重发转账。 | 默认假设 | withdrawals.needs_manual、manual_resolution、resolver_ids、proof_file；withdraw_holds（manual_failed_watch）；配置 withdraw.manual_failed_hold_days；后台 needs_manual 处置页；文件存储（凭证）；audit_logs；SM-WDR-W10 |
-| BR-WDR-16 | **手动成功（线下打款）**<br>PAID_MANUAL 只能从 APPROVED 进入（W8），守卫如下：该单不存在 result ∈ {pending, success, unknown} 的转账尝试记录；会员没有提现阻断（BR-WDR-05）；录入人为 super 或 finance，且 ≠ reviewer_id；确认人为 super 或 finance，且 ≠ 录入人（可以是 reviewer）；两人都需 step-up。录入时必填：支付宝流水号（`(app_id, channel_order_id)` 唯一，同一个流水号不得用于两张单）、实付时间、实付金额，实付金额必须 = net_fen。成功后按 BR-WDR-09 写成功分录、更新 tax_ytd、通知用户。手动成功与接口打款的互斥由状态 CAS 保证：EXECUTE 与 MANUAL_PAID 都要求 status=APPROVED，先提交的一方生效。 | 默认假设 | withdrawals.channel_order_id 唯一约束、manual_entry_by、manual_confirm_by；后台 手动成功录入/确认页；R2 对账匹配规则；SM-WDR-W8 |
-| BR-WDR-17 | **开关、权限与付款方异常**<br>`withdraw.enabled=off` 或 `withdraw.account_enabled.<account_type>=off` 时，新申请返回 30306，已有单不受影响。<br>`payout.enabled=off` 时：EXECUTE 整批拒绝，APPROVED 单保持原状；已投递但还没发出转账的任务，在复核时走 W9（payout_disabled）；已发出转账的 PAYING 单继续查询，查询不会因开关而暂停。<br>转账返回 payer_side_codes 清单内的码时（BR-WDR-28，验证前清单为空）：该单走 W9 回到 APPROVED，hold_reason=payer_side_after_transfer，不退回用户余额；系统置 `payout.queue_paused=true` 并告警。这类单已有转账记录，在 BR-WDR-22 ④ 验证为“同一 out_biz_no 重提幂等”并经负责人批准之前，不得再次执行（BR-WDR-12），只能走 W8 手动成功，或 W3 驳回（需第二人确认，BR-WDR-10）。<br>权限：<br>- finance 可以直接切换（需 step-up，并告警）的只有三项：withdraw.enabled、payout.enabled、payout.queue_paused。<br>- withdraw.account_enabled.\* 只能由 super step-up 修改（涉及 BR-WDR-20 的税务前提）。<br>- 其余 withdraw.\*、payout.\*、tax.\* 的阈值与清单（包括 second_approval_\*、single_cap_fen、daily_cap_fen、watermark_\*、BR-WDR-28 的三份清单）由 finance 提议、super step-up 后生效；BR-WDR-28 的清单还需负责人确认。 | 默认假设 | 配置 withdraw.enabled、withdraw.account_enabled.SELF / PROMO、payout.enabled、payout.queue_paused；kill-switches 后台与配置变更审批流；payout 进程；告警规则；SM-WDR-W9 |
+| BR-WDR-16 | **手动成功（线下打款）**<br>PAID_MANUAL 只能从 APPROVED 进入（W8），守卫如下：该单不存在 result ∈ {pending, success, unknown} 的转账尝试记录；会员没有提现阻断（BR-WDR-05）；录入人为 super 或 finance，且 ≠ reviewer_id；确认人为 super 或 finance，且 ≠ 录入人（可以是 reviewer）；两人都需 step-up。录入时必填：通道流水号（支付宝流水号或银行转账流水号，按单据快照的收款方式；`(app_id, channel_order_id)` 唯一，同一个流水号不得用于两张单）、实付时间、实付金额，实付金额必须 = net_fen。成功后按 BR-WDR-09 写成功分录、更新 tax_ytd、通知用户。手动成功与接口打款的互斥由状态 CAS 保证：EXECUTE 与 MANUAL_PAID 都要求 status=APPROVED，先提交的一方生效。 | 默认假设 | withdrawals.channel_order_id 唯一约束、manual_entry_by、manual_confirm_by；后台 手动成功录入/确认页；R2 对账匹配规则；SM-WDR-W8 |
+| BR-WDR-17 | **开关、权限与付款方异常**<br>`withdraw.enabled=off` 或 `withdraw.account_enabled.<account_type>=off` 时，新申请返回 30306，已有单不受影响。<br>`payout.enabled=off` 时：EXECUTE 整批拒绝，APPROVED 单保持原状；已投递但还没发出转账的任务，在复核时走 W9（payout_disabled）；已发出转账的 PAYING 单继续查询，查询不会因开关而暂停。<br>转账返回 payer_side_codes 清单内的码时（BR-WDR-28，验证前清单为空）：该单走 W9 回到 APPROVED，hold_reason=payer_side_after_transfer，不退回用户余额；系统置 `payout.queue_paused=true` 并告警。这类单已有转账记录，在 BR-WDR-22 ④ 验证为“同一 out_biz_no 重提幂等”并经负责人批准之前，不得再次执行（BR-WDR-12），只能走 W8 手动成功，或 W3 驳回（需第二人确认，BR-WDR-10）。<br>权限：<br>- finance 可以直接切换（需 step-up，并告警）的只有三项：withdraw.enabled、payout.enabled、payout.queue_paused；另外 finance 可以直接关闭（不能开启）withdraw.auto_payout.enabled，开启规则见 BR-WDR-30。<br>- withdraw.account_enabled.\* 只能由 super step-up 修改（涉及 BR-WDR-20 的税务前提）。<br>- 其余 withdraw.\*、payout.\*、tax.\* 的阈值与清单（包括 second_approval_\*、single_cap_fen、daily_cap_fen、watermark_\*、BR-WDR-28 的三份清单）由 finance 提议、super step-up 后生效；BR-WDR-28 的清单还需负责人确认。 | 默认假设 | 配置 withdraw.enabled、withdraw.account_enabled.SELF / PROMO、payout.enabled、payout.queue_paused；kill-switches 后台与配置变更审批流；payout 进程；告警规则；SM-WDR-W9 |
 | BR-WDR-18 | **垫资水位与打款限额**<br>每小时整点计算两个量：企业支付宝可用余额 W（取数时刻记为 t_W；BR-WDR-22 ⑦ 验证前由财务手工录入并记录时间），以及未来 3 日预计提现 P = 近 7 个完整自然日（不含当日，+08:00）提现申请 amount_fen 的日均值 × 3（不含 REJECTED）。W &lt; 1.5P 时告警财务。<br>水位只在 EXECUTE 时检查。以下任一情况都整批拒绝、不迁移任何单，并提示“可用水位不足或数据过期，请拆分批次或刷新”，不做部分执行：<br>① W &lt; P；<br>② t_W 距今超过 2 小时；<br>③ Σ(本次将迁到 PAYING 的单的 net_fen) + Σ(status=PAYING 的单的 net_fen) + Σ(t_W 之后到达 PAID_API / PAID_MANUAL 的单的 net_fen) > W × `payout.watermark_usable_bp` / 10000（默认 9000）。<br>已进入 PAYING 的单不再按水位复核（BR-WDR-13 ③）。<br>payout 进程内的限额：单笔 net_fen ≤ `payout.single_cap_fen`（默认 500000 分）；当日已发出合计 ≤ `payout.daily_cap_fen` = 通道日限额 × 80%。 | 默认假设 | 配置 payout.single_cap_fen / daily_cap_fen / watermark_usable_bp / watermark_\*；watermark 定时任务（每小时）；后台 水位看板与手工录入；EXECUTE 接口；告警规则；AC-WDR-06 |
-| BR-WDR-19 | **提现手续费**<br>MVP 所有提现的 `fee_fen = 0`。`fee_rules` 表按“通道 × 账户类型 × 金额区间 × 会员等级 × 活跃度”建全字段，但 MVP 计算器只支持“账户类型 × (比例 ratio_bp 或固定金额 fixed_fen)”，其余维度必须为空，否则保存配置时拒绝。同一账户类型同一时刻只能有 1 条生效规则（effective_from ≤ now &lt; effective_to，区间不得重叠，保存时校验）；ratio_bp 与 fixed_fen 必须恰好一个非空。计算方式：fee_fen = fixed_fen，或 round_half_up(amount_fen × ratio_bp / 10000)，且 0 ≤ fee_fen &lt; amount_fen。手续费在申请时计算，并与 fee_rule_id 一起固化到提现单。 | 默认假设 | fee_rules 表（effective_from、effective_to 与保存校验）；withdrawals.fee_fen、fee_rule_id；后台 费率配置；提现确认页手续费展示 |
-| BR-WDR-20 | **税额计算与年度台账**<br>所得类型按账户固定：SELF→SELF_REBATE，PROMO→SERVICE_FEE；INCIDENTAL（活动奖励）放 P1。每类所得的计税方法 `tax.<income_type>.method ∈ {none, flat_rate, cumulative}` 与税率全部配置化，代码中不得硬编码税率。tax_fen 在申请时计算，并与 tax_rule_version 一起固化；四舍五入到分，tax_fen ≥ 0。计税年度取提现单 created_at 的 +08:00 自然年。累计方法下：本次税额 = max(0, 应扣(本年已到账累计收入 + 同年度在途同类申请额 + 本次 amount) − 本年已扣累计 − 同年度在途同类税额)。`tax_ytd(user_id, year, income_type, cum_income_fen, cum_withheld_fen, continuous_months)` 只在 PAID_API / PAID_MANUAL 时累加，year 取该单 created_at 的年份，cum_income 加 amount_fen；驳回与失败不累加。 | 待决策 | 配置 tax.\*、withdraw.account_enabled.PROMO；tax_ytd 表；withdrawals.tax_fen、income_type、tax_rule_version；ledger TAX_WITHHOLD / TAX_PAYABLE；提现确认页“预计到账 = 金额 − 手续费 − 代扣税”；B2-08；开发任务拆解 BF-12 算例验收 |
+| BR-WDR-19 | **提现手续费**<br>MVP 所有提现的 `fee_fen = 0`。`fee_rules` 表按“通道 × 账户类型 × 金额区间 × 会员等级 × 活跃度”建全字段，但 MVP 计算器只支持“账户类型 × (比例 ratio_bp 或固定金额 fixed_fen)”，其余维度必须为空，否则保存配置时拒绝。同一账户类型同一时刻只能有 1 条生效规则（effective_from ≤ now &lt; effective_to，区间不得重叠，保存时校验）；ratio_bp 与 fixed_fen 必须恰好一个非空。计算方式：fee_fen = fixed_fen，或 round_half_up(amount_fen × ratio_bp / 10000)，且 0 ≤ fee_fen &lt; amount_fen。手续费在申请时计算，并与 fee_rule_id 一起固化到提现单。 | 已确认 | fee_rules 表（effective_from、effective_to 与保存校验）；withdrawals.fee_fen、fee_rule_id；后台 费率配置；提现确认页手续费展示 |
+| BR-WDR-20 | **税额计算与年度台账**<br>所得类型按账户固定：SELF→SELF_REBATE，PROMO→SERVICE_FEE；INCIDENTAL（活动奖励）放 P1。每类所得的计税方法 `tax.<income_type>.method ∈ {none, flat_rate, cumulative}` 与税率全部配置化，代码中不得硬编码税率。tax_fen 在申请时计算，并与 tax_rule_version 一起固化；四舍五入到分，tax_fen ≥ 0。计税年度取提现单 created_at 的 +08:00 自然年。累计方法下：本次税额 = max(0, 应扣(本年已到账累计收入 + 同年度在途同类申请额 + 本次 amount) − 本年已扣累计 − 同年度在途同类税额)。`tax_ytd(user_id, year, income_type, cum_income_fen, cum_withheld_fen, continuous_months)` 只在 PAID_API / PAID_MANUAL 时累加，year 取该单 created_at 的年份，cum_income 加 amount_fen；驳回与失败不累加。 | 已确认 | 配置 tax.\*、withdraw.account_enabled.PROMO；tax_ytd 表；withdrawals.tax_fen、income_type、tax_rule_version；ledger TAX_WITHHOLD / TAX_PAYABLE；提现确认页“预计到账 = 金额 − 手续费 − 代扣税”；B2-08；开发任务拆解 BF-12 算例验收 |
 | BR-WDR-21 | **涉税导出与报送**<br>后台必须提供按自然季度（+08:00，按 paid_at）导出已到账提现的涉税明细，字段：姓名、证件号、所得类型、收入额（amount_fen）、已扣税额（tax_fen）、到账时间、收款账户（脱敏）、out_biz_no。含完整证件号的版本只有 finance 能导出，要求如下：导出前 step-up，并填写用途；文件存放在 OSS exports 私有桶，签名 URL 24 小时过期；文件首行写明导出人与导出时间；每次导出记审计（导出人、行数、用途）。super 只能导出脱敏版，证件号只保留前 6 位和后 4 位。报送时限（开展业务 30 日内报送平台基本信息、每季度终了次月报送）属于外部法规要求，在税务师书面意见确认前只作为上线检查项，不写成已确认的义务。 | 默认假设 | 后台 exports（涉税季度导出，全量 / 脱敏两种）；OSS exports 私有桶与签名 URL；audit_logs；上线检查清单；数据保留策略 |
 | BR-WDR-22 | **支付宝通道能力待验证**<br>以下支付宝能力在沙箱实测并留下接口样例之前，不得写成事实，相关配置按保守默认运行：① 企业支付宝能否开通“单笔转账到支付宝账户”，以及 SELF / PROMO 适用的业务场景（默认按“佣金报酬”申请）；② 单笔、单日转账限额；③ 转账是否强制校验收款人姓名，姓名不符时返回什么码；④ 超时后用同一 out_biz_no 再次提交的官方语义（是否幂等返回原单）；⑤ 明确失败码清单、付款方侧失败码清单、查询接口各状态的含义（包括“订单不存在”“处理中”，以及成功后又被退回的状态，如果存在）；⑥ out_biz_no 的长度与字符集；⑦ 企业账户余额查询接口；⑧ 按日下载的账单能否包含 out_biz_no。 | 待验证 | 规划/09 CAP-X-06（支付宝行）；配置 payout.biz_scene.&lt;account_type>、definite_fail_codes、query_status_map、payer_side_codes、single_cap_fen、daily_cap_fen；AlipayChannel 适配器；specs/alipay-error-map.csv；B2-06 |
 | BR-WDR-23 | **通道对账对提现的影响**<br>每日 T+1 对前一自然日（+08:00）的支付宝账务明细与提现单做核对：接口打款单按 out_biz_no 匹配，手动成功单按 channel_order_id 匹配；金额用账单金额对比 net_fen。差异处理：<br>① 支付宝成功、内部为 PAYING 且 needs_manual=false → 立即查询；查询返回成功才走 W5。查询结果不是成功 → 置 needs_manual=true，生成差错单并告警，之后按 BR-WDR-15 处理。<br>② 支付宝成功、内部为 PAYING 且 needs_manual=true → 只生成待处置提示并附上账单行，由 BR-WDR-15 的 W10 结束。<br>③ 以下情况生成差错单、告警，并为该会员新增 withdraw_holds（reason=recon_diff，不自动到期）：支付宝成功，而内部为 APPROVED / FAILED / REJECTED 或没有对应单；内部为 PAID_\*，而支付宝没有记录；金额不一致。<br>终态提现单不得修改状态或金额，更正只能经差错单 + 调账（发起人 ≠ 复核人，见 BR-FUND）。 | 默认假设 | recon_channel；差错单；withdraw_holds（recon_diff）；告警规则；B2-07 验收用例 |
 | BR-WDR-24 | **提现打款告警**<br>以下情形必须告警（通知财务和负责人）：<br>- 自然日内（按状态迁移时间，+08:00）W6 次数 ÷ (W5 + W6 次数) > 2%，且分母 ≥20；不含 W8、W10。<br>- 按 W5 / W6 迁移时间排序，连续 3 次 W6。<br>- 任一单被置 needs_manual。<br>- 转账同步返回未识别的业务码（BR-WDR-28）。<br>- payout.queue_paused 被置位。<br>- W &lt; 1.5P（告警），或 W &lt; P（暂停）。<br>- EXECUTE 因水位被拒。<br>- 任一单走 W9。<br>- W10 判定 FAILED。<br>- 审核超时（BR-WDR-26）。<br>- R2 出现差异。<br>- 修改 withdraw.\* / payout.\* 的开关或配置。 | 默认假设 | 告警规则配置；可观测看板；规划/02 §13 |
-| BR-WDR-25 | **用户侧状态文案**<br>withdrawal_status 到用户状态标题的映射与措辞只在 BR-TEXT-06 维护，资金术语含义只在 BR-TEXT-01 维护，本条不另写。本条只规定：①副文案的分支条件（见细则表：按 withdrawal_status、review_deadline、首次转账尝试后时长、needs_manual、失败类型 W6/W10、失败码是否账号类选择副文案 key）；REJECTED、FAILED 的副文案必须含原因与退回金额，【修改收款账号】入口只对账号类失败码显示（BR-TEXT-08）；②展示字段：提现记录必须展示申请金额 amount、手续费、代扣税、实际到账 net，以及各个时间点。PAYING 分支中的 T 取首次转账尝试时间；还没有尝试记录时取 executed_at。 | 待决策 | /v1/dict withdrawal_status 副文案 key；WithdrawRecords 页；提现详情页；通知模板；客服话术：提现到哪一步了；AC-WDR-08 |
+| BR-WDR-25 | **用户侧状态文案**<br>withdrawal_status 到用户状态标题的映射与措辞只在 BR-TEXT-06 维护，资金术语含义只在 BR-TEXT-01 维护，本条不另写。本条只规定：①副文案的分支条件（见细则表：按 withdrawal_status、review_deadline、首次转账尝试后时长、needs_manual、失败类型 W6/W10、失败码是否账号类选择副文案 key）；REJECTED、FAILED 的副文案必须含原因与退回金额，【修改收款账号】入口只对账号类失败码显示（BR-TEXT-08）；②展示字段：提现记录必须展示申请金额 amount、手续费、代扣税、实际到账 net，以及各个时间点。PAYING 分支中的 T 取首次转账尝试时间；还没有尝试记录时取 executed_at。 | 已确认 | /v1/dict withdrawal_status 副文案 key；WithdrawRecords 页；提现详情页；通知模板；客服话术：提现到哪一步了；AC-WDR-08 |
 | BR-WDR-26 | **审核时效与结果通知**<br>审核时效承诺为“工作日 24 小时”：只在工作日内计时（配置 workday_calendar，含法定节假日与调休，+08:00，工作日按全天 24 小时计；非工作日提交从下一个工作日 00:00 起算），`review_deadline = created_at + 24 个工作日小时`。“审核结束”指单据进入 PAYING、PAID_MANUAL 或 REJECTED。<br>超时判定：超时检查任务每 5 分钟运行一次，review_deadline 到达后 ≤5 分钟内判定；判定时状态仍 ∈ {PENDING_REVIEW, APPROVED} 即为审核超时，此时 ① 告警财务（BR-WDR-24，不受夜间限制）；② 向用户发 1 次推送 + 站内信（模板 WD_OVERDUE，文案按 BR-TEXT-07；不发短信）。判定时刻落在免打扰时段内的用户通知顺延到该时段结束时刻发送（时段取配置 notify.quiet_hours，定义与维护处见 BR-WATCH-15，本条不另写时段数值；若该配置改为按通知分类配置，本通知取交易/资金类的值）；发送前复查状态仍 ∈ {PENDING_REVIEW, APPROVED}，否则不发。每单只判定一次，用户通知幂等键 `withdrawal_id:OVERDUE`。<br>结果通知在状态迁移事务提交后经 outbox 发出：REJECTED、PAID_API、PAID_MANUAL 发推送 + 站内信；FAILED 发推送 + 站内信 + 短信。同一张单的同一个状态只通知一次，按 withdrawal_id + status 去重。 | 默认假设 | withdrawals.review_deadline；配置 workday_calendar、notify.quiet_hours（BR-WATCH-15）；scheduler 超时检查任务（5 分钟）；notify 模板与 outbox（含 WD_OVERDUE，幂等键 withdrawal_id:OVERDUE）；短信模板：提现失败；验收 AC-S2-20、AC-S2-29；后台 超时待审核列表；GET /v1/withdrawals/{id} |
-| BR-WDR-27 | **MVP 不做的提现能力**<br>以下能力 MVP 不实现，相关开关默认关闭，客户端不出现入口：自动到账规则组（金额阈值 ≤X 元、时段、首提不自动、当日入账不自动、次数）；三项提现预警指标（60 天高佣订单占比、60 天失效含维权占比、30 天提现额 / 60 天确认收货返利）用于自动决策（自动转人工、自动拦截或自动到账判定）——MVP 只计算并作为审核标签展示，见 BR-WDR-29；灵工通道 FlexLaborChannel；手续费全矩阵与条件模式；奖励类收益的提现门槛。通道层必须抽象为 PayoutChannel 接口，MVP 只实现 AlipayChannel。 | 已确认 | PayoutChannel 接口；配置 withdraw.auto_payout.\*；规划/05 P1 清单 |
+| BR-WDR-27 | **MVP 不做的提现能力**<br>以下能力 MVP 不实现，相关开关默认关闭，客户端不出现入口：风险标签与三项提现预警指标（60 天高佣订单占比、60 天失效含维权占比、30 天提现额 / 60 天确认收货返利）用于自动驳回或自动拦截——MVP 只计算、作为审核标签展示，并在命中时阻止自动打款、转人工（BR-WDR-29、BR-WDR-30）；灵工通道 FlexLaborChannel；手续费全矩阵与条件模式；奖励类收益的提现门槛。自动到账规则组不再属于本条，MVP 实现（BR-WDR-30）。通道层必须抽象为 PayoutChannel 接口，MVP 实现 AlipayChannel 与银行卡通道 BankCardChannel（BR-WDR-32）。 | 已确认 | PayoutChannel 接口（AlipayChannel、BankCardChannel）；规划/05 P1 清单 |
 | BR-WDR-28 | **打款结果判定清单**<br>打款结果只能按三份配置清单判定：`payout.definite_fail_codes`（转账同步返回码 → W6）；`payout.query_status_map`（查询返回的状态 → success / fail / unknown，映射为 fail 时走 W6）；`payout.payer_side_codes`（转账同步返回码 → W9 + 暂停队列，见 BR-WDR-17）。<br>BR-WDR-22 ⑤ 验证完成之前：definite_fail_codes 与 payer_side_codes 为空；query_status_map 只把官方文档中的成功状态（暂记为 SUCCESS，待实测）映射为 success，其余状态一律为 unknown；转账同步返回任何非成功的业务码时，该单按结果未知处理（BR-WDR-14），同时系统置 payout.queue_paused=true 并告警。<br>清单每加入一个码或状态，都必须附沙箱或生产的请求/响应样例（存 规划/09 CAP-X-06 证据路径），由 finance 提议、super step-up 后生效，并经负责人确认。<br>成功时 paid_at 取支付宝返回的成交时间；没有返回时，取收到成功响应时的服务器时间（+08:00）。fail_code 在“失败码 → 用户文案”映射表中查不到时，显示“支付宝处理失败”。 | 待验证 | 配置 payout.definite_fail_codes / query_status_map / payer_side_codes；AlipayChannel 适配器；specs/alipay-error-map.csv；失败码 → 用户文案映射表；payout.queue_paused；告警规则；SM-WDR-W5、W6、W9 |
-| BR-WDR-29 | **审核风险标签与提现预警指标**<br>风险标签只供审核人参考，不自动驳回、不自动放行、不改变校验结果。计算时点：BR-WDR-03 ⑭（加锁前）按申请时刻 t 计算下列 ①–⑧、⑩，结果（code、实际值、阈值）与计算时刻写入 withdrawals.risk_flags、risk_flags_at，随 W1 同事务插入，之后不自动重算；⑨ 在审核页加载时与 W2 提交前实时检查。窗口一律为 [t − N×24 小时, t]，时刻按 +08:00，金额单位分，比例单位 bp。<br>① first_withdrawal：该会员没有 status ∈ {PAID_API, PAID_MANUAL} 的提现单。<br>② credited_today：t 所在自然日 00:00 至 t，该会员任一账户有 REBATE_CREDIT、SHARE_CREDIT 或 REFERRAL_CREDIT 分录。<br>③ same_device_multi_account：判定口径（login_logs.device_hash、720 小时滑动窗口、按首次登录排序第 3 个及以后的账号才打标）与阈值 `risk.device_login_accounts_limit` 只在 BR-ID-37 维护；本条在 BR-WDR-03 ⑭ 时点调用同一判定函数，命中即写本标签，本条不另设计数口径与配置项。<br>④ invalid_ratio_60d（失效含维权占比）：分母 = 该会员 buy_type=self、已归属、paid_at 在 60 天窗口内的子订单数；分子 = 其中 rebate_status ∈ {VOID, CLAWED_BACK} 或存在 status=SUCCEEDED 的 order_rights 的子订单数；分子 × 10000 / 分母 > `risk.withdraw.invalid_ratio_bp`（默认 3000）且分子 ≥ `risk.withdraw.invalid_min_count`（默认 3）时命中。<br>⑤ high_commission_ratio_60d（高佣订单占比）：分母同 ④；单个子订单佣金率 = 联盟预估佣金 × 10000 / 计佣金额（均取订单同步回传值，向下取整）；分子 = 佣金率 ≥ `risk.withdraw.high_commission_rate_bp`（默认 5000）的子订单数；分母 ≥ `risk.withdraw.min_orders`（默认 5）且分子 × 10000 / 分母 > `risk.withdraw.high_commission_ratio_bp`（默认 5000）时命中。<br>⑥ withdraw_vs_received（30 天提现额 / 60 天确认收货返利）：分子 = 该会员 created_at 在 30 天窗口内、status ∉ {REJECTED, FAILED} 的提现单 amount_fen 合计（含本单）；分母 = 该会员作为受益人（自购、分享、直推）在 received_at 落在 60 天窗口内、rebate_status ∈ {WAITING, CREDITED} 的子订单上的返利份额合计（WAITING 取当前预估份额，CREDITED 取已入账净额）；分母 = 0，或分子 × 10000 / 分母 > `risk.withdraw.withdraw_received_ratio_bp`（默认 10000）时命中。<br>⑦ had_negative：该会员任一账户存在 balance_after_fen &lt; 0 的分录。<br>⑧ recon_diff：该会员存在 reason=recon_diff 的 withdraw_holds 记录（含已解除；未解除的已在 BR-WDR-03 ⑦ 被拒绝申请）。<br>⑨ blacklist_hit：申请之后才登记、且命中该会员手机号、身份证、收款支付宝 HMAC 或设备哈希的黑名单（BR-ID-31）。<br>⑩ payee_prev_other_user：见 BR-WDR-02。<br>任一项计算失败（查询超时或报错）时写 risk_calc_failed 标签，不阻断申请。 | 默认假设 | withdrawals.risk_flags、risk_flags_at；配置 risk.withdraw.invalid_ratio_bp / invalid_min_count / high_commission_rate_bp / high_commission_ratio_bp / min_orders / withdraw_received_ratio_bp（③ 的阈值用 BR-ID-37 的 risk.device_login_accounts_limit）；BR-ID-37 同设备多账号判定函数（login_logs.device_hash，720 小时）；ledger_entries；orders、order_rights、commission_splits 查询索引；blocklist；后台审核列表与详情标签；BR-WDR-03 ⑭；AC-ADM-07 |
+| BR-WDR-29 | **审核风险标签与提现预警指标**<br>风险标签供审核人参考，不自动驳回、不改变校验结果；命中任一标签（含 risk_calc_failed）的单不得自动打款，转人工审核（BR-WDR-30）。计算时点：BR-WDR-03 ⑭（加锁前）按申请时刻 t 计算下列 ①–⑧、⑩，结果（code、实际值、阈值）与计算时刻写入 withdrawals.risk_flags、risk_flags_at，随 W1 同事务插入，之后不自动重算；⑨ 在自动到账判定时（BR-WDR-30）、审核页加载时与 W2 提交前实时检查。窗口一律为 [t − N×24 小时, t]，时刻按 +08:00，金额单位分，比例单位 bp。<br>① first_withdrawal：该会员没有 status ∈ {PAID_API, PAID_MANUAL} 的提现单。<br>② credited_today：t 所在自然日 00:00 至 t，该会员任一账户有 REBATE_CREDIT、SHARE_CREDIT 或 REFERRAL_CREDIT 分录。<br>③ same_device_multi_account：判定口径（login_logs.device_hash、720 小时滑动窗口、按首次登录排序第 3 个及以后的账号才打标）与阈值 `risk.device_login_accounts_limit` 只在 BR-ID-37 维护；本条在 BR-WDR-03 ⑭ 时点调用同一判定函数，命中即写本标签，本条不另设计数口径与配置项。<br>④ invalid_ratio_60d（失效含维权占比）：分母 = 该会员 buy_type=self、已归属、paid_at 在 60 天窗口内的子订单数；分子 = 其中 rebate_status ∈ {VOID, CLAWED_BACK} 或存在 status=SUCCEEDED 的 order_rights 的子订单数；分子 × 10000 / 分母 > `risk.withdraw.invalid_ratio_bp`（默认 3000）且分子 ≥ `risk.withdraw.invalid_min_count`（默认 3）时命中。<br>⑤ high_commission_ratio_60d（高佣订单占比）：分母同 ④；单个子订单佣金率 = 联盟预估佣金 × 10000 / 计佣金额（均取订单同步回传值，向下取整）；分子 = 佣金率 ≥ `risk.withdraw.high_commission_rate_bp`（默认 5000）的子订单数；分母 ≥ `risk.withdraw.min_orders`（默认 5）且分子 × 10000 / 分母 > `risk.withdraw.high_commission_ratio_bp`（默认 5000）时命中。<br>⑥ withdraw_vs_received（30 天提现额 / 60 天确认收货返利）：分子 = 该会员 created_at 在 30 天窗口内、status ∉ {REJECTED, FAILED} 的提现单 amount_fen 合计（含本单）；分母 = 该会员作为受益人（自购、分享、直推）在 received_at 落在 60 天窗口内、rebate_status ∈ {WAITING, CREDITED} 的子订单上的返利份额合计（WAITING 取当前预估份额，CREDITED 取已入账净额）；分母 = 0，或分子 × 10000 / 分母 > `risk.withdraw.withdraw_received_ratio_bp`（默认 10000）时命中。<br>⑦ had_negative：该会员任一账户存在 balance_after_fen &lt; 0 的分录。<br>⑧ recon_diff：该会员存在 reason=recon_diff 的 withdraw_holds 记录（含已解除；未解除的已在 BR-WDR-03 ⑦ 被拒绝申请）。<br>⑨ blacklist_hit：申请之后才登记、且命中该会员手机号、身份证、收款账号 HMAC（支付宝或银行卡）或设备哈希的黑名单（BR-ID-31）。<br>⑩ payee_prev_other_user：见 BR-WDR-02。<br>任一项计算失败（查询超时或报错）时写 risk_calc_failed 标签，不阻断申请。 | 默认假设 | withdrawals.risk_flags、risk_flags_at；配置 risk.withdraw.invalid_ratio_bp / invalid_min_count / high_commission_rate_bp / high_commission_ratio_bp / min_orders / withdraw_received_ratio_bp（③ 的阈值用 BR-ID-37 的 risk.device_login_accounts_limit）；BR-ID-37 同设备多账号判定函数（login_logs.device_hash，720 小时）；ledger_entries；orders、order_rights、commission_splits 查询索引；blocklist；后台审核列表与详情标签；BR-WDR-03 ⑭；BR-WDR-30 自动到账判定；AC-ADM-07 |
+| BR-WDR-30 | **自动到账规则组与风控转人工**<br>MVP 实现自动到账（D10，负责人 2026-09-30：全部人工不现实，开发自动到账规则与风控规则）。提现单 W1 提交后，系统按自动到账规则组判定一次：同时满足下列全部条件的判为 auto，由系统执行 W2（APPROVE）并自动执行打款（W4，按 BR-WDR-12 ①–③、BR-WDR-13、BR-WDR-14）；任一条件不满足的判为 manual，单据留在 PENDING_REVIEW，按 BR-WDR-10、BR-WDR-11 人工审核与执行（第二人审批、只查不重提等机制不变）。系统不自动驳回。<br>条件（全部由后台配置，键前缀 `withdraw.auto_payout.`；默认值见细则，默认处理，待负责人确认，变更记录 §6）：① 总开关 `enabled`=on；② account_type ∈ `account_types`；③ 快照收款方式 ∈ `channels`；④ amount_fen ≤ `single_max_fen`；⑤ 该会员当日自动到账合计（含本单）≤ `user_daily_max_fen`；⑥ 全平台当日自动到账合计（含本单）≤ `platform_daily_max_fen`；⑦ 注册时长 ≥ `min_account_age_days`；⑧ 历史已到账提现（PAID_API / PAID_MANUAL）笔数 ≥ `min_paid_count`；⑨ 距最近一次绑定或换绑收款账号 ≥ `payee_change_cooldown_hours`；⑩ 申请时刻 created_at 落在 `hours` 时段内（+08:00）；⑪ 会员已满 18 周岁（adult_at 按 BR-ID-26）；⑫ 风控未命中：risk_flags 为空（BR-WDR-29 全部标签，含 risk_calc_failed），且判定时实时检查 blacklist_hit 未命中；⑬ W2 守卫通过（BR-WDR-05、BR-WDR-10：会员无提现阻断、所属账户 available_fen ≥ 0、blocked_reason 为空）。<br>判定结果（auto / manual、未满足条件的 code 列表、规则版本、判定时刻）写入 withdrawals.auto_decision，review_mode 记 auto 或 manual，审核人可见。判为 auto 后，EXECUTE 前置（payout.enabled、queue_paused、通道开通、水位、第二人审批）任一不满足时，单据留在 APPROVED，auto_decision 追加 execute_blocked 与原因，转人工批次执行。 | 待决策 | 配置 withdraw.auto_payout.enabled / account_types / channels / single_max_fen / user_daily_max_fen / platform_daily_max_fen / min_account_age_days / min_paid_count / payee_change_cooldown_hours / hours 及保存时校验、规则版本 rule_version；withdrawals.review_mode、auto_decision；payout_batches.kind；自动判定 worker（outbox 事件 withdrawal.created 消费者）；advisory lock auto_payout_daily；BR-WDR-29 风险标签；后台 提现设置（自动到账规则）与审核列表「转人工原因」；告警规则；上线检查清单；AC 待补（10 AC-S2） |
+| BR-WDR-31 | **劳务协议签署**<br>个人用户首次提现前须在原生 App 内在线签署劳务协议（D12，负责人 2026-09-30）；未签署当前有效版本时不能提交提现：`POST /v1/withdrawals` 按 BR-WDR-03 ⑥a 返回 10004、`data.consent_type=labor_agreement`，`GET /v1/withdrawals/rules` 返回 can_withdraw=false、block_code=10004。签署前提：已登录、已实名（签署主体为实名本人，BR-ID-25）。签署方式：提现流程内展示协议全文，用户主动勾选（默认不勾选）后点【同意并签署】；H5、JSBridge、Agent 不得代签。每次签署写一条只插入的签署记录，留存：协议版本号、协议文本摘要（sha256）、签署时间（服务器时间，+08:00）、签约主体（平台运营主体名称与统一社会信用代码；用户 user_id、实名记录 ID 与脱敏姓名快照）、渠道、device_id。协议文本与签署流程由法务提供（变更记录 §6）；后台维护协议版本，新版本标记为需重签时，旧版本签署对之后的提现不再有效。所得按劳务报酬处理，所得类型与税额计算按 BR-WDR-20，本条不复述。 | 待决策 | consent_records（type 增加 labor_agreement；另存 text_sha256、签约主体快照）；签署接口（POST /v1/consents 或专用接口，仅原生 App）；后台 协议版本管理（labor_agreement，含需重签标记）；BR-WDR-03 ⑥a；GET /v1/withdrawals/rules；错误码 10004 字典与签署组件；Withdraw 流程「签署劳务协议」步骤（三端原生）；数据保留策略（与涉税记录同期）；AC 待补（10 AC-S2-21） |
+| BR-WDR-32 | **银行卡打款通道**<br>打款通道为企业支付宝（AlipayChannel）与银行卡（BankCardChannel），均实现 PayoutChannel 接口（D12，负责人 2026-09-30）；提现单按快照的 payout_method 选择通道，写入 withdrawals.payout_channel。银行卡通道的供应商与接入方式未定（变更记录 §6），以下为默认处理，待负责人确认：<br>① 通道开关 `payout.channel_enabled.bank_card` 默认 off，直到供应商选定且通道能力（单笔 / 单日限额、户名校验、同一业务单号重提语义、明确失败码与查询状态、余额查询、按日对账单）在 规划/09 登记并验证。off 期间：银行卡收款的提现单可以申请、人工审核，EXECUTE 逐单跳过（原因「银行卡通道未开通」，BR-WDR-12 ②），只能由财务从企业对公账户线下转账后按 BR-WDR-16 走 W8 手动成功（录入银行转账流水号），并按流水号进入对账；不参与自动到账（BR-WDR-30 ③）。<br>② 通道开通后：BR-WDR-13 先记后发与复核、BR-WDR-14 只查不重提、BR-WDR-18 水位与上限、BR-WDR-23 对账、BR-WDR-28 判定清单按通道分别配置（`payout.<channel>.*`）；未验证前沿用 BR-WDR-28 的保守默认（清单为空，未识别码按结果未知处理并暂停该通道队列）。<br>③ 用户侧展示的通道名按快照通道显示（支付宝账号或银行名 + 卡号尾号），措辞在 BR-TEXT-06、BR-TEXT-08 维护。 | 待决策 | PayoutChannel 接口与 BankCardChannel 适配器；withdrawals.payout_channel ∈ {alipay, bank_card}；配置 payout.channel_enabled.&lt;channel>、payout.&lt;channel>.\*；payout 进程出站白名单与密钥（KMS）；企业对公账户线下转账与 W8 录入；银行流水对账；规划/09 银行卡通道能力（待登记）；BR-TEXT-06、08 通道名 |
 
 ### 7.2 细则
 
@@ -63,13 +66,14 @@
 #### BR-WDR-02 细则 · 收款账号绑定与变更
 
 - 状态：默认假设
-- 默认值：每月变更上限 2 次（规划/06 Q-B3）。不提供解绑、计次口径、姓名规范化为本条新定。
-- 决策人：财务
-- 依赖平台能力：支付宝转账是否校验收款人姓名（BR-WDR-22 ③）
+- 默认值：每月变更上限 2 次（规划/06 Q-B3）。不提供解绑、计次口径、姓名规范化为本条新定。收款方式增加银行卡为负责人决定（D12，2026-09-30）；⑥ 银行卡卡号校验、仅借记卡、绑定时三要素核验、每人同一时刻只有 1 个当前收款账号、两种方式共用变更计数为本条新定，默认处理，待负责人确认。
+- 决策人：财务（收款方式范围：负责人，已定）
+- 依赖平台能力：支付宝转账是否校验收款人姓名（BR-WDR-22 ③）；银行卡三要素核验（实名核验供应商，随 规划/09 CAP-X-08 一并验证）；银行卡通道是否校验户名（BR-WDR-32 ①）
 - 取代：
   - PRD v2.1 §11.6：「每月改收款账号 1 次」
   - PRD v2.1 §11.6：「支付宝账号实名须与平台实名一致（用支付宝接口校验姓名）」
-- 来源：规划/01 F-WDR-02；规划/04 §3.2 payout_accounts、§7；规划/06 Q-B3；后端功能规划 §2.1 收款账号；PRD v2.1 §11.6
+  - 本条旧版：「收款通道只支持支付宝」；「当前有效绑定上 (app_id, alipay_hmac) 唯一」「换绑成功且新 alipay_hmac ≠ 当前绑定时才计 1 次变更」（改为按收款方式 + 收款账号 HMAC）
+- 来源：规划/01 F-WDR-02；规划/04 §3.2 payout_accounts、§7；规划/06 Q-B3；后端功能规划 §2.1 收款账号；PRD v2.1 §11.6；docs/changes/20260930-拍板第一批.md §3 D12
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
 - 绑定时平台只做本地比对：姓名 = 实名姓名。转账时必传收款人姓名；支付宝是否据此校验、校验失败返回什么码，待 BR-WDR-22 ③ 验证。验证前，姓名不符类的返回按结果未知处理（BR-WDR-14、28），不自动置 FAILED。如果验证结果是支付宝不校验姓名，由负责人决定：在绑定环节加支付宝侧实名核验，或调低首次提现的上限（见 7.3 第 7 条）。
@@ -80,6 +84,13 @@
 - 例：用户 10 月 3 日首次绑定（不计次），10 月 8 日第 1 次变更，10 月 20 日第 2 次变更，10 月 25 日再变更 → 30303（payout_account_change_limit）；11 月 1 日 00:00 起可以再变更。10 月 25 日提交的账号与当前相同 → 不算变更，也不报超限。
 - 例：实名为“阿依古丽•买买提”，用户填“阿依古丽·买买提 ”（带全角空格）→ 规范化后相等，通过。
 - 1 个身份证最多对应 1 个可提现会员，属于实名规则，见 BR-ID-25（(app_id, id_no_hmac) 在 verified 中唯一）。
+- 银行卡与支付宝要求的对齐（默认处理，待负责人确认）：户名比对、HMAC 与加密存储、跨会员唯一（30308）、换绑 step-up、每月变更上限、提现单快照、黑名单（44001）、近 90 天曾被其他会员绑定时打 payee_prev_other_user，全部与支付宝一致。银行卡另加：
+  - 卡号规范化：去空格与连字符后只留数字，再做格式校验与 HMAC；长度 12–19 位、Luhn 校验通过，否则 20001（data.fields=[card_no]）。
+  - 只支持本人名下借记卡：按卡 BIN 表识别卡类型与开户行（BIN 表来源代理可自定，写入迁移说明）；识别为贷记卡或无法识别 → 20001（data.fields=[card_no]）。开户行由 BIN 自动带出，用户不手填支行。
+  - 绑定时经实名核验服务做银行卡三要素核验（实名姓名 + 身份证号 + 卡号）：不一致 → 30307；核验服务不可用 → 不保存，按服务端错误返回，用户稍后重试。供应商是否支持三要素、单次成本，随 规划/09 CAP-X-08 验证；验证前只做本地户名比对与卡号校验，并由 BR-WDR-30 ⑧⑨ 与人工审核兜底。
+  - 每个会员同一时刻只有 1 个当前收款账号：从支付宝切到银行卡（或反之）算 1 次变更，旧行置 is_current=false。
+  - 30305 的用户文案不再写“收款支付宝账号”（BR-TEXT-14 字典，见末行同步落点）。
+- 同步落点（2026-09-30 拍板第一批）：规划/04 §3.2 payout_accounts / payout_account_changes 增加 payout_method、bank_card_no_cipher、bank_card_hmac、bank_name、card_bin 与 (app_id, bank_card_hmac) WHERE is_current 部分唯一索引，withdrawals 收款人快照增加 payout_method、payee_hmac；规划/04 §6.1 `PUT /v1/me/payout-account` 请求体增加 payout_method 与银行卡字段；规划/01 F-WDR-02、§4.2 页面 `PayoutAccount`（「收款账号（支付宝）」改为支付宝 / 银行卡）、J6 第 2 步；08 10_ID BR-ID-31 黑名单 HMAC 增加收款银行卡；08 12_TEXT 错误码表 30305「请先绑定收款支付宝账号」改为不限收款方式；规划/10 AC-S2-21 ③ 补银行卡绑定（卡号校验、贷记卡拒绝、户名不一致 30307、跨会员 30308、跨方式换绑计次）；规划/09 5_X CAP-X-08 未知项补银行卡三要素核验。
 
 #### BR-WDR-03 细则 · 申请校验顺序与错误码
 
@@ -90,7 +101,9 @@
 - 取代：
   - 后端功能规划 §2.9 申请校验：「失败码 30201–30209 与 GET /v1/withdrawals/precheck」
   - PRD v2.1 §11.5：「申请条件只列实名、余额、最低额、无负余额（未列收款账号与 step-up）」
-- 来源：规划/04 §4.2 W1、§5 幂等、§7、§6.4；规划/01 F-WDR-03；后端功能规划 §2.9 申请校验；PRD v2.1 §11.5、§14.4
+  - 本条旧版 ⑭：「风控命中 → 不拒绝，按 BR-WDR-29 打 risk_flags，进入人工审核」（旧口径所有单都人工审核，D10 旧版）
+  - 本条旧版 ③a：「收款支付宝 HMAC」（扩为收款账号 HMAC，含银行卡）
+- 来源：规划/04 §4.2 W1、§5 幂等、§7、§6.4；规划/01 F-WDR-03；后端功能规划 §2.9 申请校验；PRD v2.1 §11.5、§14.4；docs/changes/20260930-拍板第一批.md §3 D10、D12
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
 - max_withdrawable_fen = can_withdraw ? floor_to_step(min(available_fen, withdraw.max_amount_fen, 未成年本月剩余额度)) : 0。floor_to_step 按 amount_step_fen 向下取整。结果 &lt; min_amount_fen 时，返回 can_withdraw=false、block_code=30303、block_reason=below_min、max_withdrawable_fen=0。次数用尽、被冻结或存在负余额时，can_withdraw=false，max 为 0。
@@ -104,7 +117,10 @@
 - 例：amount_fen=-100 → 20001，不进入 ⑨。
 - 例：withdraw.enabled 已关，客户端重放此前成功的同 key 请求 → 返回首次的成功结果（⓪ 在 ① 之前）。
 - 后端功能规划中的 30201–30209 编号作废，以 规划/04 §7 的 3030x 为准。映射：30201→30301、30202→30302、30203→30303、30204→30304、30205→30305、30206→30307、30207→30303（daily_count 等）、30208→30306（提现总开关）或 30303 reason=account_frozen（会员禁止提现 withdraw_disabled，本主题记为 withdraw_holds reason=manual）、30209→30309。
-- 按 C-03、C-09 默认处理，待负责人（码号分配）、财务（冻结记录方式）确认。⑦ 纳入 appealing(prev=frozen)、③ 的 banned 含 appealing(prev=banned)（BR-WDR-05）：按 C-28 默认处理，待负责人确认。
+- ⑥a 劳务协议（BR-WDR-31，D12 负责人 2026-09-30）：放在收款账号与姓名校验之后、冻结与金额校验之前，与 J6 流程顺序（实名 → 绑定收款账号 → 签署劳务协议 → 输入金额）一致。复用 10004 + `data.consent_type`（与 BR-ID-11、BR-ID-12 同一机制），不新分配 3xxxx 码：默认处理，待负责人（码号分配，C-03）确认。rules 接口不跳过 ⑥a。
+- ⑭ 与自动到账的衔接（D10 负责人 2026-09-30）：风控命中仍不拒绝申请；命中任一 risk_flags 的单在 BR-WDR-30 判定为转人工。
+- 按 C-03、C-09 默认处理，待负责人（码号分配）、财务（冻结记录方式）确认。⑦ 纳入 appealing(prev=frozen)、③ 的 banned 含 appealing(prev=banned)（BR-WDR-05）：按 C-28 默认处理，已由负责人确认 2026-09-30。
+- 同步落点（2026-09-30 拍板第一批）：规划/04 §7 错误码 10004 行来源条目增加 BR-WDR-03、BR-WDR-31；规划/04 §6.4 `GET /v1/withdrawals/rules` 说明补 block_code=10004（labor_agreement）；08 12_TEXT 错误码表 10004 的客户端动作补 consent_type=labor_agreement → 弹劳务协议签署组件；规划/10 AC-S2-21 补「未签劳务协议 → 10004」步骤；规划/01 J6 第 2 步补签署劳务协议。
 
 #### BR-WDR-04 细则 · 金额与次数限制默认值
 
@@ -115,7 +131,8 @@
 - 取代：
   - 后端功能规划 §2.9：「同一支付宝账号每天 2 次」
   - PRD v2.1 §11.6：「提现限制初值：每月改收款账号 1 次（其余与规划/06 相同）」
-- 来源：规划/06 Q-B3；规划/01 F-WDR-03、J6；规划/02 §8.1 日切；后端功能规划 §2.9；参考_花卷云查漏底稿 §7
+  - 本条旧版：「同一收款支付宝（按快照 alipay_hmac）每自然日被不同会员使用」（扩为收款账号 HMAC）
+- 来源：规划/06 Q-B3；规划/01 F-WDR-03、J6；规划/02 §8.1 日切；后端功能规划 §2.9；参考_花卷云查漏底稿 §7；docs/changes/20260930-拍板第一批.md §3 D12
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
 - 驳回和打款失败不占次数，保证“打款失败 → 改账号 → 当日重提”走得通（BR-WDR-25 对账号类失败码提示可以改账号重试）。
@@ -127,7 +144,9 @@
 - max_amount_fen 不允许为 0 或超过 payout.single_cap_fen。超过单笔打款上限的单在 payout 复核时只会反复 W9，永远打不出去。
 - 按会员等级设置不同限制放到 P1。
 - 配置变更由 finance 提议、super step-up 后生效（BR-WDR-17）。
-- 按 C-01 默认处理，待负责人确认。
+- 按 C-01 默认处理，已由负责人确认 2026-09-30。
+- 2026-09-30：同一收款账号跨会员的计数由 alipay_hmac 扩为收款账号 HMAC（含银行卡，BR-WDR-02），取值不变。
+- 同步落点（2026-09-30 拍板第一批）：规划/04 §3.2 withdrawals 索引 (payee_alipay_hmac, created_at) 改为 (payee_hmac, created_at)。
 
 #### BR-WDR-05 细则 · 提现阻断：负余额与冻结
 
@@ -158,7 +177,7 @@
 - 解除 manual、recon_diff、ledger_mismatch：由财务在差错单关闭后操作，需 step-up 并记审计（ledger_mismatch 的解除时点与 BR-FUND-19「差错单关闭时 step-up 解除」一致）。manual_failed_watch 到期后自动失效（BR-WDR-15）。
 - 后端功能规划 §2.9 的「会员禁止提现 withdraw_disabled（风控或客服设置）」在本主题记为 withdraw_holds reason=manual。
 - appealing（申诉中）按申诉前状态取效果（BR-ID-36）：prev_risk_state=banned → 申请返回 10006；prev_risk_state=frozen → 申请返回 30303 reason=account_frozen，已有非终态单按 (b) 处理。与 BR-CALC-13 对 appealing 延后入账一致。
-- 按 C-08、C-09 默认处理，待财务确认。appealing 纳入提现阻断按 C-28 默认处理，待负责人确认。
+- 按 C-08、C-09 默认处理，待财务确认。appealing 纳入提现阻断按 C-28 默认处理，已由负责人确认 2026-09-30。
 
 #### BR-WDR-06 细则 · 未成年人提现限制
 
@@ -196,7 +215,8 @@
   - PRD v2.1 原稿（规划/00 §6 所列）：「幂等结果缓存 24 小时」
   - 规划/04 §3.2 idempotency_keys：「保留 30 天（对提现与收款账号接口不再适用）」
   - 后端功能规划 §2.9 创建：「tax_base_fen、tax_withheld_fen 字段名（统一为 tax_fen，计税基数由 amount_fen 与 tax_rule_version 推出）」
-- 来源：规划/00 §6；规划/01 F-WDR-04；规划/02 §5.3、§8.1、§8.4；规划/04 §3.2 withdrawals、idempotency_keys、§4.2 W1、§5 幂等；后端功能规划 §2.9 创建；开发任务拆解 BF-06
+  - 本条旧版 ③：「pg_advisory_xact_lock(hashtext(app_id||':'||alipay_hmac))」（扩为收款账号 HMAC）
+- 来源：规划/00 §6；规划/01 F-WDR-04；规划/02 §5.3、§8.1、§8.4；规划/04 §3.2 withdrawals、idempotency_keys、§4.2 W1、§5 幂等；后端功能规划 §2.9 创建；开发任务拆解 BF-06；docs/changes/20260930-拍板第一批.md §3 D12
 - 需同步修改的规划文档：3 处（计数仅作记录，落点见 README §0.6）
 
 - 客户端规则：用户每点一次【提交】生成一个新 key；只有网络重试复用同一个 key。
@@ -208,6 +228,8 @@
 - 例：同一幂等键因网络重试并发 2 次 → 首个请求未完成时，后到的请求得到 40901；客户端用同一个 key 重放后，拿到与首次相同的 withdrawal_id；只生成 1 张单。
 - 例：用户用某个 key 申请得到 30301，之后余额入账，再用同一个 key 重放 → 仍返回 30301（首次结果）。
 - 验收：真实 PG（不用 mock）上并发 50 次同键请求 → 只有 1 单；并发 20 个不同键 → 冻结总额 ≤ 原可用余额；并发 SELF 与 PROMO 各 1 单 → 恰好 1 单成功。
+- 2026-09-30：③ 的 advisory lock 键由 alipay_hmac 扩为快照收款账号 HMAC（含银行卡，BR-WDR-02）；快照字段增加 payout_method。
+- 同步落点（2026-09-30 拍板第一批）：规划/04 §3.2 withdrawals 收款人快照增加 payout_method、payee_hmac（与 BR-WDR-02 同一处）。
 
 #### BR-WDR-08 细则 · 提现状态机
 
@@ -220,7 +242,8 @@
   - 后端功能规划 §3.3：「通过后直接 PAYING；状态名 AUTO_SUCCESS / MANUAL_SUCCESS」
   - 规划/02 §5.3 时序图：「→ AUTO_SUCCESS」
   - 规划/04 §4.2 W8：「APPROVED / PAYING（人工确认未打出）→ PAID_MANUAL」
-- 来源：规划/04 §2.4、§4.2；规划/01 F-WDR-05；规划/02 §5.3；后端功能规划 §3.3；PRD v2.1 §11.5
+  - 规划/00 D10 旧版：「全部人工审核」（W2、W4 只由人执行；改为也可由系统按 BR-WDR-30 执行）
+- 来源：规划/04 §2.4、§4.2；规划/01 F-WDR-05；规划/02 §5.3；后端功能规划 §3.3；PRD v2.1 §11.5；docs/changes/20260930-拍板第一批.md §3 D10
 - 需同步修改的规划文档：3 处（计数仅作记录，落点见 README §0.6）
 
 | # | 从 | 事件 | 守卫 | 到 |
@@ -242,6 +265,8 @@
 - W2、W3、W4、W8 守卫中与负余额有关的部分（所属账户 available_fen ≥ 0、blocked_reason、系统驳回）来自 BR-WDR-05 (a)。
 - 状态机定义写入 `specs/state-machines/withdrawal.yaml`。属性测试需覆盖：任意事件序列下，frozen 合计 = 非终态单金额合计。
 - 按 C-03（并发冲突码，待负责人确认）、C-08（负余额守卫，待财务确认）默认处理。
+- 系统执行的迁移（2026-09-30，D10）：W2、W4 可由自动判定 worker 以 actor=system:auto_payout 执行（BR-WDR-30），守卫、CAS、分录与人工执行完全相同；withdrawals.review_mode ∈ {manual, auto} 记录审核方式，auto 时 reviewer_id 为空。状态集合与 W1–W10 不变。
+- 同步落点（2026-09-30 拍板第一批）：规划/04 §4 状态机 4.2 行补「W2、W4 可由系统按 BR-WDR-30 执行」；`specs/state-machines/withdrawal.yaml` 的 W2、W4 增加 actor=system:auto_payout；规划/04 §3.2 withdrawals 增加 review_mode、auto_decision。
 
 #### BR-WDR-09 细则 · 各状态的资金分录
 
@@ -266,11 +291,12 @@
 #### BR-WDR-10 细则 · 审核与驳回
 
 - 状态：默认假设
-- 默认值：本条新定：原因码枚举、用户不能自撤、有转账尝试时的驳回限制。已在 规划/04 §11 确认：审核角色与 step-up。
+- 默认值：本条新定：原因码枚举、用户不能自撤、有转账尝试时的驳回限制。已在 规划/04 §11 确认：审核角色与 step-up。先经自动到账规则组判定、再人工审核为负责人决定（D10，2026-09-30），规则与阈值见 BR-WDR-30（待决策）。
 - 决策人：财务
 - 依赖平台能力：无
-- 取代：无
-- 来源：规划/04 §4.2 W2、W3、§11；规划/01 F-ADM-07、F-RISK-03；规划/02 §12.5；后端功能规划 §2.9 审核
+- 取代：
+  - 本条旧版：「MVP 的提现单全部人工审核」（D10 旧版）
+- 来源：规划/04 §4.2 W2、W3、§11；规划/01 F-ADM-07、F-RISK-03；规划/02 §12.5；后端功能规划 §2.9 审核；docs/changes/20260930-拍板第一批.md §3 D10
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
 - 审核列表必须展示风控标签 `risk_flags`（定义、窗口与阈值见 BR-WDR-29）：首次提现、当日有入账、同设备多账号（口径见 BR-ID-37）、命中黑名单、近 60 天失效（含维权）占比高、近 60 天高佣订单占比高、30 天提现额与 60 天确认收货返利之比高、有过负余额、R2 差异、payee_prev_other_user。这些标签都不会自动驳回；blocked_reason 非空的单另以“暂停”标识展示。
@@ -280,6 +306,8 @@
 - 例：某单转账返回付款方侧码后经 W9 回到 APPROVED（有 result=fail 的尝试），财务甲驳回 → 进入待确认，财务乙确认后才变为 REJECTED 并退回余额。
 - APPROVED 的单在 EXECUTE 之前仍可驳回；进入 PAYING 后不可驳回。
 - 按 C-08 默认处理，待财务确认。
+- 人工审核队列（2026-09-30）：只含 BR-WDR-30 判为 manual 的单；审核列表与详情展示 auto_decision 中未满足的条件（如 first_withdrawal、single_max、outside_hours），作为「转人工原因」。判为 auto 的单也保留在列表中可查，但不需要人工审核；审核人仍可在其 APPROVED 期间（EXECUTE 前）驳回，规则同上。
+- 同步落点（2026-09-30 拍板第一批）：规划/00 §3.2 D10「全部人工审核…自动到账规则组 P1」改为「自动到账规则组 + 风控转人工（MVP）」；规划/00 §4 范围裁决表「自动到账规则组 MVP | 人工审核 + 接口批量打款」行改为 MVP 实现；规划/00 §4 资金行「人工审核」补自动到账；规划/01 F-WDR-10 拆出自动到账规则组改为 M-内测，F-ADM-07 补自动判定结果与转人工原因；规划/05 B2-05、B2-09、F1-08 补自动判定；08 12_TEXT BR-TEXT-07「人工审核，工作日 24 小时内处理」措辞需按自动 / 人工两条路径复核。
 
 #### BR-WDR-11 细则 · 职责分离与第二人审批
 
@@ -290,7 +318,8 @@
 - 取代：
   - PRD v2.1 §13.2：「财务审核与财务出纳分成两个角色；超管不可审核或打款」
   - 后端功能规划 §12.1 B13：「A、B 待拍板」
-- 来源：规划/04 §4.2 W4、§11；规划/02 §12.5；规划/01 F-WDR-07、F-ADM-07；规划/06 Q-B3；后端功能规划 §2.9 审核、§3.3；PRD v2.1 §13.2
+  - 规划/00 D10 旧版：「全部人工审核」（每单都有人工审核人与执行人；自动到账路径改由 BR-WDR-30 替代控制）
+- 来源：规划/04 §4.2 W4、§11；规划/02 §12.5；规划/01 F-WDR-07、F-ADM-07；规划/06 Q-B3；后端功能规划 §2.9 审核、§3.3；PRD v2.1 §13.2；docs/changes/20260930-拍板第一批.md §3 D10
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
 - 角色按 规划/04 §11：super 和 finance 都能审核和执行，但同一张单的审核与执行不能是同一人。
@@ -299,6 +328,8 @@
 - 例：批次 30 单，合计 ¥19,999.00，最大单 ¥499.00 → 不需要第二人。再加入一单 ¥1.00，合计 ¥20,000.00 → 需要第二人；已有的批准随之失效。
 - 例：财务甲审核了单 X，又把 X 放进自己执行的批次 → X 被跳过，返回“执行人不能是审核人”；批次其余单照常执行。
 - 运营前提：内测前至少有 1 名 super 和 1 名 finance，且是两个不同的自然人；否则无法完成 W10 与手动成功。写入上线检查项。
+- 自动到账路径（2026-09-30，D10）：审核与执行均为系统，不适用「执行人 ≠ 审核人」，替代控制见 BR-WDR-30（金额上限低于第二人审批阈值、每单独立批次、日累计上限）。判为 auto 但 EXECUTE 未通过、转人工执行的单，执行人为人，审核人为系统，本条照常适用。
+- 同步落点（2026-09-30 拍板第一批）：规划/04 §11 后台角色表补「自动到账为系统操作，不占用 super / finance 的审核或执行身份」；规划/01 F-WDR-07 引用 BR-WDR-30。
 
 #### BR-WDR-12 细则 · 批次执行
 
@@ -309,7 +340,8 @@
 - 取代：
   - 后端功能规划 §2.9 payout-worker 规则 1：「transfer 任务 jobId=out_biz_no」
   - 规划/02 §5.3 时序图：「每单一个任务 jobId = withdrawal_id」
-- 来源：规划/04 §4.2 W4；规划/02 §5.3；规划/01 F-WDR-07；后端功能规划 §2.9 审核
+  - 本条旧版：「批次由人组建并执行；逐单判断不含通道开通」（D10、D12 旧版）
+- 来源：规划/04 §4.2 W4；规划/02 §5.3；规划/01 F-WDR-07；后端功能规划 §2.9 审核；docs/changes/20260930-拍板第一批.md §3 D10、D12
 - 需同步修改的规划文档：1 处（计数仅作记录，落点见 README §0.6）
 
 - 不整批重跑：一个批次 50 单中 3 单失败，对这 3 单各自处理（用户改账号后重提，或人工处理），不把 50 单重新执行。
@@ -317,6 +349,8 @@
 - 已有转账记录的单被拒绝，原因为“已有转账记录，只能手动成功（BR-WDR-16）或驳回（BR-WDR-10）”。要取消这一限制，须等 BR-WDR-22 ④ 验证“同一 out_biz_no 重提幂等”，并经负责人批准。
 - 例：批次 10 单，其中 1 单会员被冻结、1 单审核人 = 执行人 → 8 单进入 PAYING，2 单留在 APPROVED，结果页显示 2 条原因。
 - 验收：一张单经 W9 回到 APPROVED 后再次执行 → 生成新任务（execute_seq=2），并被 payout 进程处理。
+- 2026-09-30：自动到账的单由系统为每单建 1 个 kind=auto 批次，按 ①–③ 执行；② 增加「通道已开通」（BR-WDR-32）。
+- 同步落点（2026-09-30 拍板第一批）：规划/04 §3.2 payout_batches 增加 kind ∈ {manual, auto}；规划/05 B2-06 补自动批次与通道开通检查；规划/10 AC-S2 补自动到账用例（见 BR-WDR-30）。
 
 #### BR-WDR-13 细则 · payout 进程与打款前复核
 
@@ -326,7 +360,8 @@
 - 依赖平台能力：无
 - 取代：
   - 规划/02 §5.3 时序图：「payout 进程再校验单笔上限、单日总额、企业账户水位（水位改为只在 EXECUTE 检查）」
-- 来源：规划/02 §2、§3.1、§5.3、§12.6、§12.7；规划/04 §3.2 payout_attempts；规划/05 §3.3 B2-06；后端功能规划 §2.9 payout-worker 规则 1、4、5；PRD v2.1 §4.2 A7、§14.2
+  - 本条旧版：「只有 payout 进程能读取支付宝应用私钥；出站只允许访问支付宝网关、PG、Redis；非 prod 只能走支付宝沙箱」（扩为已启用通道）
+- 来源：规划/02 §2、§3.1、§5.3、§12.6、§12.7；规划/04 §3.2 payout_attempts；规划/05 §3.3 B2-06；后端功能规划 §2.9 payout-worker 规则 1、4、5；PRD v2.1 §4.2 A7、§14.2；docs/changes/20260930-拍板第一批.md §3 D12
 - 需同步修改的规划文档：3 处（计数仅作记录，落点见 README §0.6）
 
 - 先记后发的作用：进程在“请求已发出、响应未收到”时崩溃，重启后看到 pending 记录，只会走查询，不会再转一次。
@@ -336,6 +371,8 @@
 - 例：daily_cap=¥50,000，当日已发出 ¥49,800，本单 net ¥300 → 不转账，W9 回 APPROVED，hold_reason=daily_cap，告警财务。
 - 例：单子进入 PAYING 后会员 PROMO 因扣回变负 → ③ 命中 member_blocked，W9。
 - 验收：模拟转账超时 3 次（进程崩溃重启 3 次）后查询成功 → 支付宝沙箱侧该 out_biz_no 只有 1 笔。
+- 2026-09-30：密钥与出站白名单扩为「已启用通道」（企业支付宝 + 银行卡，BR-WDR-32）；本条复核步骤对两个通道相同，自动到账的单同样经过本条复核。
+- 同步落点（2026-09-30 拍板第一批）：规划/02 §12.6、§12.7 payout 进程出站白名单与 KMS 密钥补银行卡通道（供应商定后）。
 
 #### BR-WDR-14 细则 · 打款结果判定与只查不重提
 
@@ -353,6 +390,7 @@
 - needs_manual 之后：W10 处置页提供【立即查询】按钮，查询结果只存为凭证，不自动迁移状态。R2 每日对账仍覆盖这类单（BR-WDR-23）。
 - 例：T=10:00:00 转账超时；10:01 查询为处理中；10:05 查询成功 → W5，在 10:05 这次事务里写分录并通知用户。
 - 例：从 T 起 24 小时内每次查询都是“订单不存在” → 次日 10:00 置 needs_manual=true，转 BR-WDR-15，不再自动查询。
+- 本条对自动到账的单（BR-WDR-30）同样适用，不因自动审核而放宽（2026-09-30 D10 说明，规则不变）。
 
 #### BR-WDR-15 细则 · 24 小时未知人工处置
 
@@ -379,12 +417,15 @@
   - 规划/04 §4.2 W8：「APPROVED / PAYING（人工确认未打出）→ PAID_MANUAL」
   - 后端功能规划 §2.9、§3.3：「手动成功只允许从 PENDING_REVIEW 进入」
   - PRD v2.1 §11.5：「PENDING_REVIEW 或 PAYING（人工确认未出款）→ SUCCESS_MANUAL」
-- 来源：规划/04 §4.2 W8；规划/01 F-WDR-05、F-ADM-07；后端功能规划 §2.9、§3.3；PRD v2.1 §11.5；开发任务拆解 BF-09
+  - 本条旧版：「录入时必填：支付宝流水号」（扩为通道流水号，含银行转账流水号）
+- 来源：规划/04 §4.2 W8；规划/01 F-WDR-05、F-ADM-07；后端功能规划 §2.9、§3.3；PRD v2.1 §11.5；开发任务拆解 BF-09；docs/changes/20260930-拍板第一批.md §3 D12
 - 需同步修改的规划文档：1 处（计数仅作记录，落点见 README §0.6）
 
 - 例：支付宝接口场景未开通期间，财务线下转账 ¥98.00（net_fen=9800），录入流水号 2026101222001… → 甲录入、乙确认 → PAID_MANUAL。若录入金额为 ¥100.00，与 9800 不等 → 拒绝。
 - 例：某单执行后，转账返回付款方余额不足，经 W9 回到 APPROVED（尝试记录 result=fail，属于付款方侧码）→ 允许手动成功。这种情况只会在 BR-WDR-28 验证后、付款方侧码清单不为空时出现。若该单曾超时（result=unknown）→ 不允许手动成功，只能走 BR-WDR-15。
 - R2 按流水号核对手动成功单。
+- 银行卡收款的单在银行卡通道开通前只能走本条（BR-WDR-32 ①）：财务从企业对公账户转账，录入银行转账流水号，实付金额 = net_fen，对账按银行流水进行。
+- 同步落点（2026-09-30 拍板第一批）：规划/01 F-ADM-07「手动成功补录流水号」注明支付宝 / 银行两种流水号；规划/02 §8.5 对账补银行流水。
 
 #### BR-WDR-17 细则 · 开关、权限与付款方异常
 
@@ -394,13 +435,15 @@
 - 依赖平台能力：付款方侧失败码（BR-WDR-22 ⑤、BR-WDR-28）
 - 取代：
   - 规划/04 §11 紧急开关行：「finance 可改 payout.\*、withdraw.\*（收窄为三个开关，其余阈值须 super 生效）」
-- 来源：规划/04 §10.2、§11；规划/02 §14；后端功能规划 §2.9 payout-worker 规则 7
+- 来源：规划/04 §10.2、§11；规划/02 §14；后端功能规划 §2.9 payout-worker 规则 7；docs/changes/20260930-拍板第一批.md §3 D10
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
 - 例：批次 20 单执行到第 8 单时返回付款方余额不足（假设该码已按 BR-WDR-28 验证并列入清单）→ 第 8 单 W9，hold_reason=payer_side_after_transfer；第 9–20 单在复核时看到 queue_paused，也走 W9（hold_reason=queue_paused）；第 1–7 单已发出，照常查询。财务充值后解除暂停：第 9–20 单没有转账记录，可以重新执行；第 8 单只能手动成功或驳回。
 - 付款方侧码验证之前，余额不足类返回按未知处理，并由 BR-WDR-28 的“未识别业务码暂停队列”规则停住后续转账。
 - 允许 finance 置位 queue_paused，因为置位是停止出款、属于安全方向；解除也需要 step-up。
 - 用户侧：回到 APPROVED 的单仍按 APPROVED 显示（标题见 BR-TEXT-06，副文案见 BR-WDR-25），不单独告知用户平台余额不足。
+- 2026-09-30：withdraw.auto_payout.enabled 关闭属于安全方向，finance 可直接关闭（step-up 并告警）；开启与其余 withdraw.auto_payout.\* 阈值按本条阈值流程（finance 提议、super step-up 生效），开启另需负责人确认（BR-WDR-30）。
+- 同步落点（2026-09-30 拍板第一批）：规划/04 §10.2 紧急开关表增加 withdraw.auto_payout.enabled（默认 off）与 payout.channel_enabled.bank_card（默认 off）；规划/04 §11 紧急开关权限行同步。
 
 #### BR-WDR-18 细则 · 垫资水位与打款限额
 
@@ -421,7 +464,7 @@
 
 #### BR-WDR-19 细则 · 提现手续费
 
-- 状态：默认假设
+- 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §2 业务参数「Q-B3 手续费 = 0（与默认一致）」）
 - 默认值：手续费 0（规划/06 Q-B3、规划/01 F-WDR-08）
 - 决策人：财务
 - 依赖平台能力：无
@@ -436,7 +479,7 @@
 
 #### BR-WDR-20 细则 · 税额计算与年度台账
 
-- 状态：待决策
+- 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §2）；决策人为财务，由负责人一并确认（变更记录 §2 注 ³）
 - 默认值：SELF_REBATE：method=none，等税务师意见 06 Q-F6。SERVICE_FEE：按 D12（平台自建累计预扣）用 cumulative，税目与税率表由财务在 M-内测 前依据税务师意见书面给出。在给出之前，`withdraw.account_enabled.PROMO` 默认 off；负责人书面接受 method=none 的风险后才可开启。无论哪种情况，所得类型、tax_ytd、TAX_WITHHOLD 分录都要全部建好。
 - 决策人：负责人
 - 依赖平台能力：无
@@ -515,7 +558,7 @@
 
 #### BR-WDR-25 细则 · 用户侧状态文案
 
-- 状态：待决策（由默认假设改为待决策：“到账 / 入账”用词属 §14.3 C-02，需负责人拍板）
+- 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §2）（原为待决策：“到账 / 入账”用词属 §14.3 C-02；C-02 已由负责人在变更记录 §3 作出修改决定，用词只落在 BR-TEXT-01、06，本条分支条件不受影响）
 - 默认值：状态标题随 BR-TEXT-06、术语随 BR-TEXT-01（C-02 默认方案 A），本条不写；PENDING_REVIEW、APPROVED、PAYING 的副文案分支为本条新定，REJECTED、FAILED 副文案的原因与退回金额要素沿用 规划/01 F-WDR-09。C-02 改选方案 B 时只改 BR-TEXT-01、06 与 /v1/dict 字典，本条分支条件不变。
 - 决策人：负责人（原为运营；用词属 C-02，由负责人拍板）
 - 依赖平台能力：无
@@ -544,7 +587,7 @@
 - 账号类失败码的清单随 BR-WDR-28 的 definite_fail_codes 验证结果确定（BR-TEXT-08 维护码到文案的映射）；验证前 definite_fail_codes 为空，不会出现 W6，上表两行 W6 只在验证后生效。
 - 客服话术的状态标题按 BR-TEXT-06、副文案按上表；客服后台可以看到内部状态。
 - 文案经 `/v1/dict` 下发，客户端按版本缓存。
-- 按 C-02 默认处理，待负责人确认。
+- C-02 已由负责人裁决（变更记录 §3：结算前一律称「预估」，联盟结算并经核对入账后才用确定表达）；用词落在 BR-TEXT-01、06 与 /v1/dict 字典，本条分支条件不变。
 
 #### BR-WDR-26 细则 · 审核时效与结果通知
 
@@ -572,15 +615,20 @@
 
 #### BR-WDR-27 细则 · MVP 不做的提现能力
 
-- 状态：已确认
+- 状态：已确认（2026-09-30 负责人修改 D10、D12，本条范围随之改写：自动到账规则组移出本条、MVP 实现；通道增加银行卡。依据 docs/changes/20260930-拍板第一批.md §3）
 - 默认值：—
 - 决策人：负责人
 - 依赖平台能力：无
-- 取代：无
-- 来源：规划/00 §3.2 D10、§4；规划/01 F-WDR-10；后端功能规划 §2.9 通道；PRD v2.1 §2、§14.4；参考_花卷云查漏底稿 §7
+- 取代：
+  - 本条旧版：「自动到账规则组（金额阈值 ≤X 元、时段、首提不自动、当日入账不自动、次数）MVP 不实现」（D10 旧版，改为 MVP 实现，见 BR-WDR-30）
+  - 本条旧版：「三项提现预警指标用于自动决策（自动转人工、自动拦截或自动到账判定）MVP 不实现」（改为：命中即阻止自动打款、转人工；自动驳回与自动拦截仍不实现）
+  - 本条旧版：「MVP 只实现 AlipayChannel」（D12 旧版，改为 AlipayChannel 与 BankCardChannel）
+  - 本条旧版细则：「MVP 所有提现都人工审核（D10）」「withdraw.auto_payout.enabled 存在但为 false，接口拒绝把它设为 true（P1 之前不能开启）」
+- 来源：规划/00 §3.2 D10、§4；规划/01 F-WDR-10；后端功能规划 §2.9 通道；PRD v2.1 §2、§14.4；参考_花卷云查漏底稿 §7；docs/changes/20260930-拍板第一批.md §3 D10、D12
 
-- MVP 所有提现都人工审核（D10）。上述预警指标在 MVP 只以 risk_flags 的形式提示审核人（BR-WDR-10、BR-WDR-29），不自动决策。规则一览原写法把三项指标整体列为“不实现”，与本句不一致，已改为“自动决策不实现、打标实现”。
-- 例：配置项 `withdraw.auto_payout.enabled` 存在但为 false，接口拒绝把它设为 true（P1 之前不能开启）。
+- 风险标签与三项预警指标在 MVP 的用途：以 risk_flags 提示审核人（BR-WDR-10、BR-WDR-29），并作为自动到账的风控条件，命中即转人工（BR-WDR-30 ⑫）；不用于自动驳回或自动拦截申请。
+- 例：配置项 `withdraw.auto_payout.enabled` 按 BR-WDR-30 可以开启；灵工通道 FlexLaborChannel 的配置项不存在，不能开启。
+- 同步落点（2026-09-30 拍板第一批）：规划/01 F-WDR-10 只保留灵工通道与条件模式（P1），自动到账规则组拆出为 M-内测；规划/05 P1 清单去掉自动到账规则组；规划/00 §4 范围裁决表对应行。
 
 #### BR-WDR-28 细则 · 打款结果判定清单
 
@@ -601,14 +649,15 @@
 #### BR-WDR-29 细则 · 审核风险标签与提现预警指标
 
 - 状态：默认假设
-- 默认值：三项提现预警指标在 MVP 计算并打标、不自动决策（与 BR-WDR-27 一致，后端功能规划 §2.12「全人工期间只打标」）。③ 的口径与阈值以 BR-ID-37 为准（默认第 3 个账号起打标）；④ 的 30% 且 ≥3 单沿用 规划/01 F-RISK-03；⑤ 的 5000bp / 5000bp / 最少 5 单、⑥ 的 10000bp 为本条新定（花卷云只给出“超 X%”，未给值），理由：只作提示，偏宽松以减少审核噪音，内测后按命中率调整。
+- 默认值：三项提现预警指标在 MVP 计算并打标，不自动驳回；命中时阻止自动打款、转人工（与 BR-WDR-27、BR-WDR-30 一致；2026-09-30 D10 修改前的依据为后端功能规划 §2.12「全人工期间只打标」）。③ 的口径与阈值以 BR-ID-37 为准（默认第 3 个账号起打标）；④ 的 30% 且 ≥3 单沿用 规划/01 F-RISK-03；⑤ 的 5000bp / 5000bp / 最少 5 单、⑥ 的 10000bp 为本条新定（花卷云只给出“超 X%”，未给值），理由：只作提示，偏宽松以减少审核噪音，内测后按命中率调整。
 - 决策人：财务
 - 依赖平台能力：无（⑤ 只用订单同步已有的预估佣金与计佣金额，不依赖单独的佣金率字段）
 - 取代：
   - BR-WDR-27 旧版规则一览：「三项提现预警指标 MVP 不实现」（改为自动决策不实现、打标实现）
   - BR-WDR-10 旧版：「近 60 天维权失效占比高」等标签只列名称、未定义窗口与阈值
+  - 本条旧版：「风险标签只供审核人参考，不自动驳回、不自动放行、不改变校验结果」「全人工期间只打标」（D10 旧版；改为命中即阻止自动打款、转人工）
   - 本条旧版 ③：「本次请求的 device_id 在 30 天窗口内登录过的不同 user_id 数（含本人）≥ risk.withdraw.same_device_accounts（默认 3）」（与 BR-ID-37 的键 device_hash、720 小时窗口、只标第 3 个起的账号、配置 risk.device_login_accounts_limit 均不一致；旧写法会把同设备前 2 个账号也打标。改为引用 BR-ID-37，删除 risk.withdraw.same_device_accounts；分歧登记 14 §14.3）
-- 来源：参考_花卷云查漏底稿 §7 提现预警、§16 #19；后端功能规划 §2.12 风控（同设备多账号、恶意维权、提现预警）、§2.6 会员口径（首提、当日入账）；规划/01 F-RISK-03；08 §10 BR-ID-31
+- 来源：参考_花卷云查漏底稿 §7 提现预警、§16 #19；后端功能规划 §2.12 风控（同设备多账号、恶意维权、提现预警）、§2.6 会员口径（首提、当日入账）；规划/01 F-RISK-03；08 §10 BR-ID-31；docs/changes/20260930-拍板第一批.md §3 D10
 - 需同步修改的规划文档：2 处（规划/04 §3.2 withdrawals 增加 risk_flags_at 并定义 risk_flags 结构；规划/01 F-RISK-03 补三项预警指标，引用本条），未同步，登记于 README §0.6
 
 - 边界：比较一律用“>”（④⑤⑥）或“≥”（⑤ 的单笔佣金率与最少单数），按上表；③ 的边界按 BR-ID-37；恰好 3000bp 不命中 ④。
@@ -619,6 +668,89 @@
 - 例：近 60 天自购子订单 4 单且全部佣金率 ≥50% → 分母 4 &lt; 5，不计 ⑤。
 - 例：会员首次申请 ¥10，余额来自 70 天前确认收货、已入账的订单，近 60 天没有确认收货订单（分母 0）→ 同时打 first_withdrawal 与 withdraw_vs_received。
 - 阈值修改按 BR-WDR-17 的阈值流程：finance 提议、super step-up 后生效，并记审计。
+- 与自动到账的衔接（2026-09-30，D10）：自动判定（BR-WDR-30 ⑫）读取 W1 时写入的 risk_flags 快照，并实时检查 ⑨；任一标签或 risk_calc_failed 命中 → 判 manual，auto_decision 记录命中的标签 code。标签仍不自动驳回。本条默认值第 1 句「偏宽松以减少审核噪音」的理由是在“只作提示”前提下给出的；标签改为自动到账的闸门后，⑤⑥ 阈值偏宽松意味着更多单可自动打款，是否收紧由财务在自动到账开启前复核（见 7.3 第 12 条）。
+- 同步落点（2026-09-30 拍板第一批）：规划/01 F-RISK-03 补「提现风险标签命中即不自动打款、转人工（BR-WDR-29、BR-WDR-30）」；规划/04 §3.2 withdrawals 的 risk_flags 结构定义与 auto_decision 一并定义（与 README §0.6 已登记的 risk_flags_at 同一处）。
+
+#### BR-WDR-30 细则 · 自动到账规则组与风控转人工
+
+- 状态：待决策（负责人已定方向：MVP 就做自动到账规则组与风控规则，命中自动规则且未命中风控的提现自动打款，其余转人工审核，规则与阈值由后台配置；各条件的默认阈值与开关默认值待负责人、财务确认，变更记录 §6「自动到账规则阈值」）
+- 默认值（默认处理，待负责人确认，变更记录 §6）：
+  - ① `enabled`：默认 off。功能在 MVP 开发完成并验收；阈值经负责人、财务确认后，由 super step-up 开启并经负责人确认（BR-WDR-17）。off 时全部单转人工，与旧口径相同。
+  - ② `account_types`：默认 {SELF}。PROMO 在 BR-WDR-20 前提满足前本身关闭；开启后是否纳入自动由财务决定。
+  - ③ `channels`：默认 {alipay}。银行卡通道开通并验证前不纳入（BR-WDR-32）。
+  - ④ `single_max_fen`：默认 5000 分（¥50）。保存时校验：&lt; `payout.second_approval_single_fen`，且 ≤ `withdraw.max_amount_fen`。
+  - ⑤ `user_daily_max_fen`：默认 5000 分（¥50）。
+  - ⑥ `platform_daily_max_fen`：默认 200000 分（¥2,000）。保存时校验：≤ `payout.daily_cap_fen`。
+  - ⑦ `min_account_age_days`：默认 30 天（按 users.created_at 到申请时刻，满 30×24 小时）。
+  - ⑧ `min_paid_count`：默认 1，即首次提现不自动（与旧版「首提不自动」一致）。
+  - ⑨ `payee_change_cooldown_hours`：默认 168（7 天），按最近一条 payout_account_changes 或首次绑定时刻计。
+  - ⑩ `hours`：默认 [09:00, 21:00)（+08:00，每天），时段外提交的单转人工，不在时段开始时补判。
+  - ⑪ 未满 18 周岁不自动（固定条件，不设配置）。
+  - ⑫ ⑬：不设阈值，引用 BR-WDR-29、BR-WDR-05、BR-WDR-10。
+- 决策人：负责人、财务（阈值）；负责人（开启）
+- 依赖平台能力：打款结果判定按 BR-WDR-28（待验证）；自动到账不放宽 BR-WDR-14 只查不重提
+- 取代：
+  - 规划/00 §3.2 D10 旧版：「全部人工审核 + 后台批量调用支付宝接口打款；自动到账规则组 P1」
+  - BR-WDR-27 旧版：「自动到账规则组（金额阈值 ≤X 元、时段、首提不自动、当日入账不自动、次数）MVP 不实现」
+  - BR-WDR-10 旧版：「MVP 的提现单全部人工审核」
+  - BR-WDR-29 旧版：「风险标签只供审核人参考，不自动放行」
+- 来源：docs/changes/20260930-拍板第一批.md §3 D10；规划/00 §3.2 D10、§4；规划/01 F-WDR-10；后端功能规划 §2.9 通道、§2.12 风控；参考_花卷云查漏底稿 §7 自动到账规则组
+
+- 判定时点与并发：W1 事务提交后经 outbox 事件 withdrawal.created 触发，每单只判定一次。判定在 BR-WDR-07 同样的锁顺序下进行（先锁 users 行，再按 SELF → PROMO 锁余额行），⑤⑥ 的累计在 `pg_advisory_xact_lock('auto_payout_daily')` 内计算，然后以 CAS（status=PENDING_REVIEW）执行 W2；CAS 影响 0 行（人工已先处理）即结束，不再改 auto_decision 以外的字段。
+- ⑤⑥ 计数口径：review_mode=auto、reviewed_at 落在当前 +08:00 自然日、status ∉ {REJECTED, FAILED} 的单的 amount_fen 合计，含本单。
+- 旧版规则组中的「当日入账不自动」由 BR-WDR-29 ② credited_today 覆盖，「首提不自动」由 ⑧ 与 BR-WDR-29 ① 覆盖，「次数」由 BR-WDR-04 与 ⑤ 覆盖。
+- 职责分离的替代控制：自动路径的 W2、W4 均由系统执行（reviewer_id 为空，executor 记 system:auto_payout），不适用 BR-WDR-11「执行人 ≠ 审核人」；替代为 ④ 单笔上限低于第二人审批阈值、每单独立 kind=auto 批次（批次合计即单笔，不触发批次第二人审批）、⑤⑥ 日累计上限、⑫ 风控转人工。默认处理，待负责人确认。
+- EXECUTE 未通过：判 auto 并已 W2 的单，若 BR-WDR-12 ① 或 ③（payout.enabled、queue_paused、水位）或 ② 任一不满足，留在 APPROVED，auto_decision 追加 execute_blocked 及原因，进入人工批次，由人按 BR-WDR-11、12 执行。系统不自动重试 EXECUTE。
+- 可追溯：auto_decision = {result, failed_conditions[], rule_version, decided_at}；rule_version 为保存配置时递增的版本号，配置快照随版本留存，便于事后复盘为何自动打款。
+- 用户侧：不向用户展示自动规则与阈值，不承诺“秒到”或具体时效（对外承诺由负责人决定）；状态标题与副文案按 BR-TEXT-06、BR-WDR-25，自动到账的单同样经过「审核中 → 打款中 → 已到账」。
+- 告警：当日自动到账合计达到 platform_daily_max_fen 的 80% 时告警财务（并入 BR-WDR-24 告警清单，默认处理）。
+- 例（默认值）：会员注册 45 天、已到账提现 2 笔、10 天前换绑、无风险标签，10:30 申请 SELF ¥30 → auto：系统 W2，建 kind=auto 批次执行，进入 PAYING，其后按 BR-WDR-14 判定结果。
+- 例：同一会员 14:00 再申请 ¥30 → BR-WDR-04 每日 1 次先拦截（30303 daily_count）；若财务把每日次数调为 2，则 ⑤ 当日自动合计 60 > 50 → manual，failed_conditions=[user_daily_max]。
+- 例：首次提现 ¥10 → risk_flags 含 first_withdrawal，且 ⑧ 不满足 → manual。
+- 例：22:10 申请 → ⑩ 不满足 → manual，次日由人工审核。
+- 例：判 auto 后水位不足（BR-WDR-18）→ 单据留 APPROVED、auto_decision 追加 execute_blocked=watermark，出现在人工批次列表。
+- 同步落点（2026-09-30 拍板第一批）：规划/00 §3.2 D10 行、§4 资金行与范围裁决表「自动到账规则组 MVP」行；规划/01 F-WDR-10（自动到账规则组改 M-内测）、F-ADM-07、F-ADM-12 配置中心「提现设置」补自动到账规则、F-RISK-03；规划/04 §3.2 withdrawals 增加 review_mode、auto_decision，payout_batches 增加 kind，§4 状态机 4.2 行，§10 配置键 withdraw.auto_payout.\*；规划/05 B2-05（自动判定 worker）、B2-06（自动批次）、B2-09、F1-08（后台自动规则配置与转人工原因）；规划/06 Q-B3 增加「自动到账规则阈值」行（负责人、财务）；规划/10 AC-S2 新增自动到账用例（命中自动 → PAID_API；首提 / 超额 / 时段外 / 风险标签 → 转人工；判 auto 后水位不足 → 转人工批次；自动路径超时仍只查不重提）；08 14 §14.1 登记本条；08 README 规则索引增加本条；08 12_TEXT BR-TEXT-07 时效说明措辞复核。
+
+#### BR-WDR-31 细则 · 劳务协议签署
+
+- 状态：待决策（负责人已定方向：个人用户须签劳务协议，打款走企业支付宝与银行卡，具体在 UI / UX 中体现；协议文本、签署流程与电子签署方式待法务，变更记录 §6「劳务协议」）
+- 默认值（默认处理，待负责人、法务确认）：
+  - 适用范围：所有提现（SELF 与 PROMO）都须先签署；签一次对后续提现持续有效，直到后台发布需重签的新版本。
+  - 签署方式：App 内点击签署（勾选 + 按钮），服务端留存签署记录；是否需要接入第三方电子签名（CA 证书、签署存证）由法务决定，决定前按本条留存。
+  - 签署入口：提现流程内，实名 → 绑定收款账号 → 签署劳务协议 → 输入金额 → 二次验证 → 提交；也可在「我的 → 设置 → 协议」查看已签版本。签署本身不需要 step-up（提交提现时已有 step-up，BR-WDR-01）。
+  - 记录存储：沿用 consent_records（只插入），type=labor_agreement，另存 text_sha256 与签约主体快照；撤回不适用（签署后不提供在线解除，解除走客服与法务）。
+  - 保留期：与涉税记录同期（BR-WDR-21），用户注销后在去标识前保留。
+- 决策人：法务（协议文本、签署方式、未成年人）；负责人（适用范围）
+- 依赖平台能力：无（若法务要求第三方电子签名，新增供应商能力登记）
+- 取代：
+  - 规划/00 §3.2 D12 旧版：「方案 A：MVP 全部走企业支付宝，平台自建累计预扣」（未要求劳务协议）
+- 来源：docs/changes/20260930-拍板第一批.md §3 D12；规划/00 §3.2 D12；规划/04 §3.2 consent_records；08 BR-ID-12（同意记录机制）；BR-WDR-20
+
+- 未签署或所签版本已要求重签：`POST /v1/withdrawals` → 10004 `data.consent_type=labor_agreement`（BR-WDR-03 ⑥a），客户端弹劳务协议签署页；签署成功后用户重新点【提交】（新的 Idempotency-Key，BR-WDR-07）。
+- 签约主体快照：平台方取后台配置的运营主体名称与统一社会信用代码（签署时读取，写入记录，之后主体变更不改旧记录）；用户方取 user_id、realname 记录 ID 与脱敏姓名。签署时未实名 → 不允许签署（先走 BR-WDR-03 ④ 30304）。
+- 未成年人（14–18 周岁，BR-ID-26）能否签署劳务协议、是否需监护人同意，由法务决定；决定前按本条同样要求签署，SELF 限额仍按 BR-WDR-06。
+- 所得性质：负责人口径为「所得按劳务报酬处理」；所得类型（SELF→SELF_REBATE、PROMO→SERVICE_FEE）、计税方法与税额计算只在 BR-WDR-20 维护，本条不复述。两者如何对应（例如 SELF_REBATE 是否也按劳务报酬计税）待税务师意见（06 Q-F6）与法务协议文本一并确认，见 7.3 第 15 条。
+- 例：用户首次提现，已实名、已绑卡，未签协议 → 提交返回 10004（labor_agreement）→ 签署 v1 → 重新提交通过。
+- 例：后台发布 v2 并标记需重签 → 已签 v1 的用户下次提交返回 10004 → 签署 v2 后可提交；v2 发布前已创建的提现单不受影响。
+- 同步落点（2026-09-30 拍板第一批）：规划/00 §3.2 D12 行补「个人用户首次提现前签劳务协议」；规划/01 J6 第 2 步、§4.2 页面清单增加劳务协议签署页（或 Withdraw 流程内步骤）、F-WDR 增加签署功能行；规划/04 §3.2 consent_records 的 type 增加 labor_agreement 与 text_sha256、签约主体快照，§6.1 签署接口，§7 10004 行来源条目；规划/05 APP-09、B2-05 补签署步骤；规划/06 增加劳务协议文本与签署方式（法务）行；规划/10 AC-S2-21 补签署步骤；08 10_ID BR-ID-12 同意类型增加 labor_agreement；08 12_TEXT 10004 客户端动作与签署页文案；08 14 §14.1 登记本条；08 README 规则索引增加本条。
+
+#### BR-WDR-32 细则 · 银行卡打款通道
+
+- 状态：待决策（负责人已定方向：打款走企业支付宝与银行卡；银行卡通道供应商与接入方式待负责人确定，变更记录 §6「银行卡打款通道」）
+- 默认值（默认处理，待负责人确认）：`payout.channel_enabled.bank_card` 默认 off；off 期间银行卡收款的单只能人工审核后线下对公转账并走 W8；开通后按通道分别配置结果判定清单、限额、水位与对账，未验证前沿用 BR-WDR-28 的保守默认。`payout.channel_enabled.alipay` 默认 on（与现行口径一致）。
+- 决策人：负责人（供应商与接入方式）；财务（限额与水位）
+- 依赖平台能力：银行卡代付通道（供应商未定）：单笔 / 单日限额、户名校验、同一业务单号重提语义、明确失败码与查询状态、余额查询、按日对账单、沙箱；须在 规划/09 登记后验证（尚无 CAP 编号）
+- 取代：
+  - BR-WDR-27 旧版：「通道层抽象为 PayoutChannel 接口，MVP 只实现 AlipayChannel」
+  - 规划/00 §3.2 D12 旧版：「MVP 全部走企业支付宝」
+- 来源：docs/changes/20260930-拍板第一批.md §3 D12；规划/00 §3.2 D12；规划/04 §3.2 withdrawals.payout_channel；BR-WDR-13、14、18、22、23、28
+
+- 通道选择只看提现单快照（BR-WDR-02 ⑤），之后用户换绑不改变已创建单据的通道。
+- 企业支付宝通道的水位 W 取企业支付宝余额（BR-WDR-18）；银行卡通道的水位取对应付款账户余额，按通道分别计算与告警，不相加。
+- out_biz_no（BR-WDR-07）对两个通道都作为业务单号，长度与字符集取两个通道的交集，银行卡通道的约束随供应商验证确定。
+- 线下对公转账（off 期间）：由 finance 录入、另一人确认（BR-WDR-16），实付金额 = net_fen；R2 对账按银行流水核对流水号与金额（BR-WDR-23 规则按通道套用）。
+- 例：用户绑定银行卡后申请 SELF ¥100 → 进入人工审核（BR-WDR-30 ③ 不满足）→ 审核通过 → 批次执行时跳过，原因「银行卡通道未开通」→ 财务对公转账 ¥100 并录入银行流水号 → 另一人确认 → PAID_MANUAL。
+- 同步落点（2026-09-30 拍板第一批）：规划/00 §3.2 D12 行改为「企业支付宝 + 银行卡」；规划/01 F-WDR-06、F-WDR-07 引用本条，F-WDR-10 去掉「通道仅支付宝」的隐含前提；规划/02 §5.3、§12.6、§12.7 payout 进程与通道适配器、§8.5 对账补银行流水；规划/04 §3.2 withdrawals.payout_channel 取值 {alipay, bank_card}，§10.2 增加 payout.channel_enabled.&lt;channel>；规划/05 B2-06、B2-07 补银行卡通道；规划/06 Q-B3 增加「银行卡打款通道供应商」行（负责人）；规划/09 5_X 新增银行卡代付通道 CAP 条目；08 12_TEXT BR-TEXT-06、08 与 README §1.2「已到账：支付宝确认成功」措辞补银行卡；08 14 §14.1 登记本条；08 README 规则索引增加本条。
 
 ### 7.3 本主题未决问题
 
@@ -632,7 +764,11 @@
 8. 第二人批准人可以是审核人、W8 确认人可以是审核人，这是为了让两人团队能运转；团队 ≥3 人后是否要求更多不同的人（财务，BR-WDR-11）。
 9. 支付宝账单显示成功、而内部是经 W9 退回的 APPROVED 单（付款方侧码误判）时，没有对应的状态迁移路径（APPROVED → PAID_API）。目前只生成差错单并冻结会员；付款方侧码清单验证前不会出现这种情况，验证后需补定义（BR-WDR-23）。
 10. PRD v2.1 §14.4“奖励类首单确认收货后才可提现”随活动奖励放到 P1，P1 设计时需重新定义。
-11. 受 §14.3 跨主题分歧影响、已按「建议」列默认处理的条目：C-02（BR-WDR-25，负责人）、C-03（BR-WDR-03、08，负责人）、C-08（BR-WDR-05、08、10，财务）、C-09（BR-WDR-03、05，财务）、C-15（BR-WDR-06，法务；满周岁口径默认取 BR-ID-26 的生日次日 00:00）、C-28（BR-WDR-03、05，负责人）、C-01（BR-WDR-04 细则的状态名，负责人）。裁决结果与默认不同时，按条目中的「按 C-xx 默认处理」标注逐处回改。
-12. BR-WDR-29 的 ⑤⑥ 阈值为新定默认值，内测一个月后由财务按命中率与实际驳回率复核。
+11. 受 §14.3 跨主题分歧影响、已按「建议」列默认处理的条目：C-03（BR-WDR-03、08，负责人）、C-08（BR-WDR-05、08、10，财务）、C-09（BR-WDR-03、05，财务）、C-15（BR-WDR-06，法务；满周岁口径默认取 BR-ID-26 的生日次日 00:00）。裁决结果与默认不同时，按条目中的「按 C-xx 默认处理」标注逐处回改。2026-09-30 已结：C-01（BR-WDR-04）、C-28（BR-WDR-03、05）按默认由负责人确认（变更记录 §2）；C-02（BR-WDR-25）由负责人作出修改决定（变更记录 §3），用词落在 BR-TEXT-01、06。
+12. BR-WDR-29 的 ⑤⑥ 阈值为新定默认值，内测一个月后由财务按命中率与实际驳回率复核。2026-09-30 起这些标签同时是自动到账的闸门（BR-WDR-30 ⑫），原「只作提示、偏宽松」的理由需在开启自动到账前由财务复核。
+13. 自动到账规则组各条件的默认阈值与开关默认值（BR-WDR-30：enabled 默认 off、仅 SELF、仅支付宝、单笔 ¥50、每人每日 ¥50、全平台每日 ¥2,000、注册 ≥30 天、已到账 ≥1 笔、换绑后 7 天、09:00–21:00）以及自动路径的职责分离替代控制，待负责人、财务确认（变更记录 §6）。
+14. 银行卡打款通道的供应商与接入方式（BR-WDR-32，负责人，变更记录 §6）；确定前银行卡收款的单只能线下对公转账后走 W8。银行卡绑定的三要素核验依赖实名核验供应商能力（BR-WDR-02、规划/09 CAP-X-08）。
+15. 劳务协议（BR-WDR-31，法务，变更记录 §6）：协议文本、是否需第三方电子签名、未成年人能否签署；以及「所得按劳务报酬处理」与 BR-WDR-20 所得类型（SELF_REBATE、SERVICE_FEE）的对应关系，待法务与税务师意见（06 Q-F6）。
+16. 未签劳务协议复用 10004 + consent_type=labor_agreement，而非新分配 303xx 码（BR-WDR-03 ⑥a），码号分配待负责人确认（C-03）。
 
 ---

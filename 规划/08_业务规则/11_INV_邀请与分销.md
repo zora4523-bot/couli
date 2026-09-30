@@ -4,7 +4,7 @@
 
 ## 11. 邀请与分销（BR-INV）
 
-本节规定：邀请码、绑定渠道与校验、禁止关系、改上级、直推受益人、等级、下级可见范围、开关与 P1 奖励、P1 会员口径。共 23 条（已确认 1、默认假设 13、待决策 9）。
+本节规定：邀请码、绑定渠道与校验、禁止关系、改上级、计酬层级（直推 + 间推）、直推受益人、等级、下级可见范围、开关与 P1 奖励、P1 会员口径。共 23 条（已确认 7、默认假设 13、待决策 3）。
 
 订单状态统一按 BR-FUND-01 双状态书写（platform_status + rebate_status，C-01 默认处理）。与 规划/04 单一 order_status 的对照：O2「首次入库已归因」≈ rebate_status R2；O11「找回 / 后台改归属」≈ R3；INVALID ≈ rebate_status=VOID；CLAWED_BACK 同名；确认收货 = platform_status 首次到 RECEIVED（或经 P5 补写）。若负责人不采纳双状态，按 BR-FUND-01 的映射表回退。
 
@@ -15,23 +15,23 @@
 | BR-INV-01 | **邀请码生成与格式**<br>每个用户必须在账号创建的同一事务内由服务端生成 1 个邀请码，终身不变。字符集固定为 32 个字符 `23456789ABCDEFGHJKLMNPQRSTUVWXYZ`（去掉 0/O/1/I），长度等于 6，用 CSPRNG 均匀随机生成；(app_id, invite_code) 必须唯一。每个账号最多生成 5 个候选码（含首次）：每个候选码先按敏感词库（场景=invite_code，不区分大小写的子串匹配）过滤，再用 `INSERT … ON CONFLICT (app_id, invite_code) DO NOTHING` 或在 SAVEPOINT 内写入；唯一冲突或命中敏感词各计 1 次。5 个候选全部失败时回滚整个注册事务，注册接口返回 50001 并告警。已注销账号的邀请码不得回收或再分配。新 App 码空间与优券汇独立，不导入、不互认。用户自定义邀请码为 P1。 | 已确认 | users.invite_code（唯一 (app_id, invite_code)）；注册 / 落地页注册事务；敏感词库场景 invite_code；后台用户查询（按邀请码搜索）；错误码 50001；验收用例 AC-INV-01 |
 | BR-INV-02 | **邀请码输入校验与错误码**<br>【规范化】服务端对邀请码依次执行：Unicode NFKC 规范化 → 删除全部 Unicode 空白字符（含 \\s、U+3000）及零宽字符 U+200B–U+200D、U+FEFF → 转大写。规范化后为空字符串的：register 渠道视为未携带 invite_code（响应不含 invite_bind），backfill 与 landing 渠道返回 30401。不做 O→0 等纠错映射。<br>【邀请人不可用判定】定义唯一判定函数 `inviter_unavailable(u)` = u.risk_state ∈ {banned, appealing, frozen} OR u 存在 deletion_status ∈ {cooling, processing, done} 的注销单 OR u.phone_hmac IS NULL OR (u.realname_status=verified 且按 BR-INV-19 在判定时刻未满 18 周岁)；以调用时刻的状态为准。绑定校验（30401）、邀请页展示（BR-INV-18）、后台改上级（BR-INV-10）必须调用同一个函数，不得各自实现；快照与入账时直推受益人的有效性不调用本函数，按 BR-CALC-13（BR-INV-13）。<br>【校验顺序】backfill 与 register 渠道固定为：身份级别 phone（10005，仅 backfill）→ 开关 growth.invite_bind.enabled（关则 30408）→ 频控（42901）→ 本人已有上级或已用过自助绑定（30402）→ 补填期限（30404，仅 backfill）→ 补填条件：订单、找回申请或下级（30409，仅 backfill）→ 规范化后格式校验：长度≠6 或含字符集外字符（30401，不查库）→ 邀请人存在且 inviter_unavailable=false（否则 30401）→ 关系冲突（30403，BR-INV-08）。每一步命中即返回，不执行后续步骤。landing 渠道顺序见 BR-INV-05，后台改上级顺序见 BR-INV-10。<br>【文案】邀请人不存在或不可用一律返回 30401，文案统一为“邀请码无效”，不得暴露具体原因。<br>【频控】计数对象 = 三个渠道返回的全部 30401（含格式错误与空码）；计数键 = phone_hmac（三渠道共用），landing 渠道另按 IP 单独计数。当日（+08:00 自然日）同一键累计 30401 ≥5 次后，该键当日后续绑定请求在频控这一步返回 42901，Retry-After = 距次日 00:00 +08:00 的秒数。register 渠道命中时照常建号，invite_bind={failed, 42901}。 | 默认假设 | POST /v1/me/inviter；POST /v1/auth/login/sms（invite_code）；POST /v1/invites/landing-register；inviter_unavailable 公共判定函数（packages/domain）；错误码表 04 §7（30408、30409 由本主题占用，C-03）；客户端 / H5 错误提示文案；客服话术（邀请码无效）；验收用例 AC-INV-\* |
 | BR-INV-03 | **绑定渠道与先到先得**<br>MVP 自助绑定渠道只有 3 个，source 取值固定：`landing`（邀请落地页手机号注册，服务端直接绑定，BR-INV-05）、`register`（App 内新建账号时携带 invite_code，BR-INV-06）、`backfill`（“我的”补填，BR-INV-07）。每个账号自助绑定成功最多 1 次，关系取最先成功的一次，后到的任何渠道都不得覆盖（补填返回 30402，登录携带的 invite_code 被忽略）。绑定写库必须用条件更新 `WHERE parent_id IS NULL AND self_bind_used = false`，并以 Idempotency-Key 去重；成功时同事务写 self_bind_used=true、parent_bind_source、parent_bound_at、relation_change_logs。绑定需要被邀请人为 phone 级别（落地页天然满足）。Agent / AI 工具不得注册任何绑定上级接口（见 BR-AI）。 | 待决策 | users.parent_id、users.self_bind_used、users.parent_bind_source、users.parent_bound_at；relation_change_logs；POST /v1/invites/landing-register、POST /v1/auth/login/sms、POST /v1/me/inviter；Agent 工具注册表 CI 检查；验收用例 AC-INV-\* |
-| BR-INV-04 | **剪贴板邀请口令不进MVP**<br>MVP 不得在 App 启动时自动识别剪贴板中的邀请码/邀请口令用于绑定；注册页与补填页的邀请码输入框可提供“粘贴”按钮（用户点击后才读剪贴板，走 `clipboard.read` L2 手势规则）。粘贴抽取规则（三端一致）：对剪贴板文本做 NFKC 规范化并转大写，用正则 `(?<![0-9A-Z])[2-9A-HJ-NP-Z]{6}(?![0-9A-Z])` 取第一个匹配填入输入框；没有匹配时不填入，提示“未识别到邀请码”；不自动提交。提交后服务端仍按 BR-INV-02 校验。App 自己写入剪贴板的邀请码按 03 的 hash 规则不被商品剪贴板识别误判为商品。 | 待决策 | 注册页 / 补填页 UI（三端 + H5）；03 剪贴板识别规则；clipboard.read 桥方法；验收用例 |
+| BR-INV-04 | **剪贴板邀请口令自动识别（MVP）**<br>MVP 必须支持剪贴板邀请口令自动识别，读取方式、读取前提与读取时机只按 BR-ID-16（剪贴板合规规则）执行，本条不放宽：① 前提：本设备已同意当前版本隐私政策（基本模式不读，BR-ID-11），且满足 BR-ID-16 规定的系统权限、用户开关与平台提示方式（三端读取方式只在 BR-ID-16 维护）；② 时机：只在 BR-ID-16 规定的 App 回到前台（含冷启动进入前台）时刻，不在后台读取、不轮询；③ 触发对象：只对「可绑定」的用户触发——未登录（游客）或已登录且 parent_id IS NULL、self_bind_used=false、在补填期限内（/v1/config.invite.backfill_hours）；已有上级、已用过绑定机会、已过期限的用户不识别、不提示；④ 识别后只显示邀请提示条（展示抽取出的邀请码），用户点击确认才进入绑定：已登录走 backfill（POST /v1/me/inviter，BR-INV-07），游客把邀请码预填到登录注册页的邀请码输入框、随用户提交登录走 register（BR-INV-06）；不得自动提交，关闭提示条即放弃，同一内容 hash 24 小时只提示一次（F-CLIP-02）；⑤ 只上传抽取出的 6 位邀请码，不上传、不保存剪贴板原文（BR-ID-16）。抽取规则（三端一致，自动识别与输入框“粘贴”按钮共用）：对剪贴板文本做 NFKC 规范化并转大写，用正则 `(?<![0-9A-Z])[2-9A-HJ-NP-Z]{6}(?![0-9A-Z])` 取第一个匹配；没有匹配时不提示（粘贴按钮提示“未识别到邀请码”）。注册页与补填页的“粘贴”按钮保留（用户点击后才读，走 `clipboard.read` L2 手势规则）。服务端仍按 BR-INV-02 校验。App 自己写入剪贴板的邀请码与口令按 BR-ID-16 / 03 的 hash 规则排除，既不被商品识别误判为商品，也不触发邀请提示条；抽取结果等于本人邀请码时不提示。邀请口令与商品链接 / 口令同时出现时的优先级见细则（默认商品优先，待负责人确认）。 | 已确认 | 注册页 / 补填页 UI（三端 + H5）；ClipboardWatcher 邀请口令识别与邀请提示条（三端）；03 §4.6 剪贴板实现；/v1/config.clipboard 本地过滤规则；clipboard.read 桥方法；提示条文案键（BR-TEXT，待登记）；POST /v1/me/inviter、POST /v1/auth/login/sms；隐私政策剪贴板用途；验收用例 |
 | BR-INV-05 | **落地页注册绑定**<br>落地页只用两个接口：发码 `POST /v1/landing/sms-codes`（免签名、人机验证 44003 与发码频控见 BR-ID-32），注册并绑定 `POST /v1/invites/landing-register`（BR-ID-32 所称 `POST /v1/landing/login` 即本接口，路径按 13 保留规划写法；none 级别，Idempotency-Key 必填）。landing-register 入参 phone、sms_code、invite_code、agreed（协议勾选）、channel（可选渠道码），不再收 captcha_token（人机验证已在发码时完成）。落地页必须展示《用户协议》《隐私政策》勾选框（默认不勾），未勾选不得提交。校验顺序固定为：agreed=true（否则 10004）→ 开关（30408）→ 频控：同 IP 或同 phone_hmac 当日 30401 ≥5 次（42901）→ 邀请码规范化与格式（30401）→ 邀请人存在且 inviter_unavailable=false（30401）→ 短信验证码校验并核销（20002 / 20003，BR-ID-05）→ 手机号是否已注册（是则 `already_registered`）→ 同 IP 注册上限（BR-ID-32）→ 44001、不建号 → 建号并绑定。邀请码失败时不核销短信验证码；“已注册”判定必须在短信验证码校验通过之后。存在 phone_hmac 相同且注销状态不为 done 的账号（含 cooling、processing）时，不得修改任何关系，返回 `already_registered`；只存在已 done 的注销账号时视为新手机号。新号必须在同一事务内：创建用户（register_method=h5_landing，registered_channel 按 BR-ID-04 取渠道码）、写 parent_id=邀请人、parent_bind_source=landing、parent_bound_at、self_bind_used=true、relation_change_logs 一条、consent_records（agreement 与 privacy 各一条，version=当前版本，channel=h5_landing，accepted=true）。落地页不采集设备 ID，同设备校验延后到首次 App 登录（BR-INV-09）。落地页 `/i/{code}` 对有效码与无效码返回相同页面结构，不显示邀请人昵称或任何个人信息。 | 默认假设 | POST /v1/landing/sms-codes（人机验证，44003）；POST /v1/invites/landing-register 请求（agreed）与响应（result=already_registered、44001）；配置 landing.ip_register_limit；H5 invite-landing 页面（协议勾选框、统一页面结构）；users.register_method、users.registered_channel、users.phone_hmac 唯一约束；注销留存表（phone_hmac，留存见 BR-ID-30 ⑩）；consent_records（channel=h5_landing）；relation_change_logs；验收用例 AC-INV-02 |
 | BR-INV-06 | **注册页填写邀请码**<br>POST /v1/auth/login/sms 携带 invite_code 时：若手机号对应账号已存在，必须忽略 invite_code 且不报错；若本次请求新建账号，绑定在建号事务内用 SAVEPOINT 执行，绑定校验失败或写库异常时只回滚到 savepoint，账号照常提交，绑定失败不得阻止注册。响应仅在请求携带规范化后非空的 invite_code 时包含 `invite_bind`：{result: bound \| failed \| ignored_existing_user, code?: 30401 \| 30403 \| 30408 \| 42901 \| 50001}，其中 50001 表示绑定内部错误。failed 时 self_bind_used 保持 false，可在期限内补填。注册页绑定同样执行 BR-INV-08 的同设备校验（设备 ID 取请求签名中的 device_id）。config.invite.required 在 MVP 必须为 false。 | 默认假设 | POST /v1/auth/login/sms 响应结构；App 注册页提示文案；config.invite.required；验收用例 |
-| BR-INV-07 | **补填条件与期限**<br>POST /v1/me/inviter（phone 级别 + 请求签名 + Idempotency-Key）仅在同时满足以下条件时绑定成功，按 BR-INV-02 顺序校验：(a) parent_id IS NULL 且 self_bind_used=false，否则 30402；(b) 服务端当前时间 &lt; users.created_at + config.invite.backfill_hours（默认 168 小时，精确到秒，等于边界时刻即拒绝），否则 30404；(c) 本人为归属用户的订单数 = 0（orders.user_id=本人，任何 platform_status / rebate_status，含 rebate_status=VOID 或 CLAWED_BACK，自购与分享单都算），本人没有任何状态的找回申请（claim_status 任意值），且直属下级数 = 0（users.parent_id=本人，任何状态），否则 30409；(d) 通过 BR-INV-02 的邀请人校验与 BR-INV-08。成功只允许 1 次。补填成功前已付款、之后才入库或找回的订单，按 BR-INV-13 的付款时间规则不写直推受益人。 | 待决策 | POST /v1/me/inviter；/v1/config.invite.backfill_hours；“我的”页补填入口显隐；orders、order_claims、users 计数查询；错误码 30404、30409；客服话术（为什么不能补填）；验收用例 AC-INV-\* |
+| BR-INV-07 | **补填条件与期限**<br>POST /v1/me/inviter（phone 级别 + 请求签名 + Idempotency-Key）仅在同时满足以下条件时绑定成功，按 BR-INV-02 顺序校验：(a) parent_id IS NULL 且 self_bind_used=false，否则 30402；(b) 服务端当前时间 &lt; users.created_at + config.invite.backfill_hours（默认 168 小时，精确到秒，等于边界时刻即拒绝），否则 30404；(c) 本人为归属用户的订单数 = 0（orders.user_id=本人，任何 platform_status / rebate_status，含 rebate_status=VOID 或 CLAWED_BACK，自购与分享单都算），本人没有任何状态的找回申请（claim_status 任意值），且直属下级数 = 0（users.parent_id=本人，任何状态），否则 30409；(d) 通过 BR-INV-02 的邀请人校验与 BR-INV-08。成功只允许 1 次。补填成功前已付款、之后才入库或找回的订单，按 BR-INV-13 的付款时间规则不写直推受益人。 | 已确认 | POST /v1/me/inviter；/v1/config.invite.backfill_hours；“我的”页补填入口显隐；orders、order_claims、users 计数查询；错误码 30404、30409；客服话术（为什么不能补填）；验收用例 AC-INV-\* |
 | BR-INV-08 | **禁止绑定的关系**<br>以下情形必须返回 30403（文案“不能绑定该邀请人”）：① 邀请人 = 被邀请人；② 邀请人是被邀请人的任意深度下级（从邀请人沿 parent_id 向上遍历，遇到被邀请人即命中；遍历上限 1000 层，超限按命中处理并告警）；③ 同设备：被邀请人设备集合 = login_logs 中该用户保留期内全部登录成功记录的 device_id_hash（register、backfill 渠道再并入本次请求签名中 device_id 的 hash；后台改上级不并入操作人设备），邀请人设备集合 = login_logs 中该用户保留期内全部登录成功记录的 device_id_hash，两集合交集非空即命中。login_logs 只记录 sms/wechat/apple/huawei 登录成功事件，不含 token refresh 与 H5 换 token，留存见 BR-ID-30 ⑥；已注销用户按 F-ACC-10 只保留设备哈希（deleted_identities，留存见 BR-ID-30 ⑩、BR-ID-28），用于本校验。本规则适用于 register、backfill、后台改上级；landing 渠道按 BR-INV-09 事后复核。 | 默认假设 | login_logs（新表）、devices；POST /v1/me/inviter、POST /v1/auth/login/sms、后台改上级；risk_hits（记录命中）；隐私政策（登录日志留存期，见 BR-ID-30）；验收用例 |
 | BR-INV-09 | **落地页绑定的同设备复核**<br>对 parent_bind_source=landing 且 login_logs 中尚无该用户任何记录的账号，在其首次 App 登录成功（任一登录方式写入第一条 login_logs）的同一事务内执行 BR-INV-08 ③ 校验（被邀请人设备集合 = 本次登录的 device_id_hash）。命中时登录照常成功；parent_id 置 NULL，写 relation_change_logs(source=risk_same_device) 与 risk_hits，self_bind_used 保持 true（不再给自助绑定机会），不通知邀请人也不推送被邀请人；此后 GET /v1/me 的邀请人状态显示“未绑定”，补填返回 30402（文案“已使用过邀请绑定机会”）。未命中则关系保持。首次 App 登录前被邀请人不可能产生订单，因此不影响任何分佣快照。 | 默认假设 | 登录流程（POST /v1/auth/login/\* 成功分支）；users.parent_id；relation_change_logs、risk_hits、login_logs；GET /v1/me 邀请人状态；验收用例 |
 | BR-INV-10 | **不可自改绑与后台改上级**<br>用户端不得提供任何改绑或解绑上级的接口。后台改上级（含解绑为无上级）校验顺序固定为：操作人具备“改绑上级”权限且完成二次验证（step-up）并填写原因 → 目标用户直属下级数 = 0、订单数 = 0（任何状态）、无任何状态的找回申请（否则 30409）→ 新上级存在且 inviter_unavailable=false（BR-INV-02，否则 30401；解绑时跳过）→ BR-INV-08 关系冲突（30403；解绑时跳过）。后台改上级不受 BR-INV-07 的 168 小时期限约束，也不受 growth.invite_bind.enabled 约束。成功时同事务将 self_bind_used 置为 true、parent_bind_source=admin、parent_bound_at=操作时间，并写 relation_change_logs(user_id, old_parent_id, new_parent_id, source=admin, operator_id, reason, created_at +08:00)；解绑后用户不再获得自助绑定机会。已生成的分佣快照不得因改绑变化。 | 默认假设 | 后台用户详情“改上级”操作；04 §11 后台角色权限；users.self_bind_used、parent_bind_source、parent_bound_at；relation_change_logs；客服话术（用户要求改上级）；验收用例 |
-| BR-INV-11 | **关系存储与注销影响**<br>users.parent_id 是当前上下级关系的唯一权威来源；历史某一时刻的上级（BR-INV-13 按 paid_at 取值）只能由 relation_change_logs 按 created_at 重放得出（某时刻 t 的上级 = created_at ≤ t 的最后一条记录的 new_parent_id，无记录为无上级），因此所有变更必须同事务写 users.parent_id 与 relation_change_logs，source ∈ {landing, register, backfill, admin, risk_same_device, parent_deleted}。M-内测不建、不读闭包表 user_relation_closure（计酬只读 parent_id，深度 = 1），P1 做关系树视图时再按需建。上级注销到达 done 状态时，其直属下级 parent_id 必须置 NULL（source=parent_deleted），下级不因此获得新的自助绑定机会；注销 cooling/processing 期间关系不变，但按 BR-INV-02 inviter_unavailable=true，其邀请码对新绑定无效；此期间生成的快照中该上级的受益资格按 BR-CALC-13 判定（BR-INV-13）。上级在冷静期撤回注销后，冷静期内已生成的快照不重算。下级注销 done 后其行匿名化，parent_id 保留用于审计，但不计入上级的直邀人数（BR-INV-16）。 | 默认假设 | users.parent_id；relation_change_logs（新表）；user_relation_closure（推迟到 P1）；注销处理任务（04 §4.5）；02 growth 模块表清单 |
-| BR-INV-12 | **计酬层级只到直推**<br>每个子订单的分佣受益人最多两类：归属用户（自购返利或推广收益，见 BR-CALC-04、BR-CALC-24）与其直属上级（paid_at 时刻的上级，BR-INV-13）（直推分佣，流水 REFERRAL_CREDIT，入 PROMO 账户）。间推比例必须等于 0：commission_rules 的间推比例字段加数据库 CHECK (= 0)，后台不提供输入项；depth ≥2 的祖先不得出现在 commission_splits.beneficiaries。直推分佣 = floor(B × r_direct_bp / 10000)，单位分，向下取整，尾差归平台（公式唯一维护处为 BR-CALC-04，本条只约束层级）。在取得分销模式书面法律意见（06 Q-F5）且负责人另行决策并发布迁移之前，不得开启间推。 | 待决策 | commission_rules（间推字段 CHECK=0）；commission_splits.beneficiaries；packages/domain 分账纯函数；流水 REFERRAL_CREDIT；后台规则配置页；验收用例（算例表） |
-| BR-INV-13 | **直推受益人判定**<br>快照生成时点按 BR-CALC-10：子订单首次同时满足 platform_status ∈ {PAID, RECEIVED, SETTLED} 且已归因时（rebate_status R2 入库已归因，或 R3 找回 / 后台改归属；单一 order_status 写法下为 O2、O11），platform_status=DEPOSIT_PAID 时不生成；找回或改归属时 rebate_status 已为 VOID / CLAWED_BACK 的不生成。直推受益人 = 归属用户在订单 paid_at 时刻的上级（BR-CALC-12；由 relation_change_logs 重放，BR-INV-11），不是快照时刻的 users.parent_id；自购单与分享单都适用（分享单的直推受益人是分享者的上级，不是下单人的上级）。(1) paid_at 时刻归属用户没有上级（含绑定前已付款的订单：paid_at &lt; parent_bound_at，含补填前付款、之后才入库或找回的订单）→ 快照不写直推受益人，该份额归平台（COMMISSION_REVENUE）；(2) 有上级时，上级在快照生成时刻与入账时刻的有效性判定（active / forfeited / held、补入账）只按 BR-CALC-13 执行，本条不另列状态；已实名未满 18 周岁上级的处理按 BR-INV-19、BR-ID-26。`inviter_unavailable`（BR-INV-02）只用于绑定校验、邀请页展示与后台改上级，不用于快照与入账判定。受益人有效性口径分歧登记为 14 §14.3 C-30（负责人与财务裁决）。快照后换绑、解绑、升降级、上级撤回注销均不重算该单。任何情况下份额不得向更上层顺延。 | 待决策 | commission_splits 生成逻辑；rebate_status 迁移 R2、R3（BR-FUND-01）；orders.paid_at、users.parent_bound_at、relation_change_logs 按时点查询；流水 REFERRAL_CREDIT；客服话术（为什么没收到邀请分佣）；验收用例（分佣算例） |
-| BR-INV-14 | **等级定义与默认等级**<br>user_level 取值只有 L1、L2、L3；新账号注册时等级 = config `level.default`（默认 L1），游客报价按默认等级。等级只作为 commission_rules 的维度（平台 × 等级 × 订单类型）影响比例：r_self 取 commission_rules(platform=订单平台, level=归属用户在 paid_at 时刻的等级, order_type=订单 buy_type) 的 r_self_bp（分享单为对应分享比例；BR-CALC-06 称 r_own_bp）；r_direct 取 commission_rules(platform=订单平台, level=上级在 paid_at 时刻的等级, order_type=订单 buy_type) 的 r_direct_bp；「paid_at 时刻的等级」= level_change_logs 中 effective_at ≤ paid_at 的最后一条的 after（等号取新等级；注册时同事务写一条 source=register、before=NULL、after=level.default、effective_at=created_at 的记录；仍缺记录时取 L1 并告警，BR-CALC-12）；两者都写入 beneficiaries.level。规则发布校验：对每个 platform × order_type，max_level(r_self_bp 或分享比例) + max_level(r_direct_bp) + 活动加成上限（如有，归 BR-CALC）≤ 8000，不满足则不能发布；分账纯函数运行时断言各受益份额之和 ≤ B，违反时不写快照并告警。levels 表每级有 status；等级禁用后不得有新升入，已在该等级的用户保持不变。MVP 只允许后台手动调整等级（step-up + 原因），每次变更写 level_change_logs(user_id, before, after, source, operator_id, reason, effective_at, created_at)，MVP 手动调级 effective_at = created_at = 操作提交时刻（+08:00）；用户端等级界面、自动晋升与保级为 P1。等级变更只影响 paid_at ≥ effective_at 的订单，已有快照不重算；商品报价（quoteRebate）按当前等级实时计算。 | 待决策 | users.level；levels、level_change_logs（新表，含 effective_at；即 BR-CALC-12 所称 user_level_logs）；commission_rules 发布校验、commission_splits.beneficiaries.level；packages/domain 分账纯函数（份额和断言）；GET /v1/me（等级字段）；后台用户详情调级操作、规则配置页；BR-CALC-06 比例配置；LevelUpgrade 桥调用返回 unsupported（MVP） |
-| BR-INV-15 | **等级晋升条件**<br>晋升只看本人推广订单，不得使用下级人数、团队订单或团队业绩。自动晋升（P1 启用，MVP 不运行）：每日 03:00 +08:00 计算，统计窗口 = 前 30 个完整自然日 [D−30 00:00, D 00:00) +08:00；计数对象 = 本人为归属用户的子订单（自购 + 分享），且确认收货时间 received_at 落在窗口内、计算时刻 rebate_status 不是 VOID / CLAWED_BACK（单一 order_status 写法下即不是 INVALID / CLAWED_BACK）、基数 B > 0；计数 ≥ `level.promote.l3_min_orders`（默认 50）升 L3，≥ `level.promote.l2_min_orders`（默认 10）升 L2；只升不降（保级规则 P1）；目标等级已禁用时不升入。 | 待决策 | 等级晋升定时任务（P1）；配置项 level.promote.\*；level_change_logs；等级界面文案（P1）；财务单位经济模型（高等级比例成本） |
+| BR-INV-11 | **关系存储与注销影响**<br>users.parent_id 是当前上下级关系的唯一权威来源；历史某一时刻的上级（BR-INV-13 按 paid_at 取值）只能由 relation_change_logs 按 created_at 重放得出（某时刻 t 的上级 = created_at ≤ t 的最后一条记录的 new_parent_id，无记录为无上级），因此所有变更必须同事务写 users.parent_id 与 relation_change_logs，source ∈ {landing, register, backfill, admin, risk_same_device, parent_deleted}。M-内测不建、不读闭包表 user_relation_closure（计酬只沿 paid_at 时刻关系向上取两级、深度 ≤2，BR-INV-12；由 relation_change_logs 两跳回放即可），P1 做关系树视图时再按需建。上级注销到达 done 状态时，其直属下级 parent_id 必须置 NULL（source=parent_deleted），下级不因此获得新的自助绑定机会；注销 cooling/processing 期间关系不变，但按 BR-INV-02 inviter_unavailable=true，其邀请码对新绑定无效；此期间生成的快照中该上级的受益资格按 BR-CALC-13 判定（BR-INV-13）。上级在冷静期撤回注销后，冷静期内已生成的快照不重算。下级注销 done 后其行匿名化，parent_id 保留用于审计，但不计入上级的直邀人数（BR-INV-16）。 | 默认假设 | users.parent_id；relation_change_logs（新表）；user_relation_closure（推迟到 P1）；注销处理任务（04 §4.5）；02 growth 模块表清单 |
+| BR-INV-12 | **计酬层级为两级（直推 + 间推）**<br>每个子订单的分佣受益人最多三类：① 归属用户（自购返利或推广收益，BR-CALC-04、BR-CALC-24）；② 直推上级 = 归属用户在 paid_at 时刻的上级（BR-INV-13），直推分佣入 PROMO 账户（流水 REFERRAL_CREDIT）；③ 间推上级 = 归属用户在 paid_at 时刻的上级的上级（BR-CALC-05），间推分佣入 PROMO 账户（流水类型按 BR-FUND-15）。depth ≥3 的祖先不得出现在 commission_splits.beneficiaries，packages/domain 分账纯函数与快照写入必须断言受益人深度 ≤2；任何层级的份额不得向更上层顺延。直推、间推的份额公式、比例（后台可配、调整后只对新生成的分佣快照生效、不回溯）、合计上限、取整与尾差只在 BR-CALC-04 / 05 / 06 / 07 维护，本条只约束层级。不得收取任何入门费、会员费或购买门槛，不得以付费、购买或发展人数作为取得上级资格或计酬资格的条件；各级计酬只来自受益订单的真实联盟佣金，不得以发展人数、下级人数或团队业绩计酬（BR-INV-15、BR-INV-20）。 | 已确认 | commission_rules.r_indirect_bp（去掉 = 0 CHECK，BR-CALC-05）；commission_splits.beneficiaries（direct、indirect 角色，深度 ≤2 断言）；packages/domain 分账纯函数；relation_change_logs 两跳回放；流水 REFERRAL_CREDIT 与间推流水类型（BR-FUND-15）；后台规则配置页（间推比例配置项）；受益人推送（BR-TEXT-09）；验收用例（算例表） |
+| BR-INV-13 | **直推受益人判定**<br>快照生成时点按 BR-CALC-10：子订单首次同时满足 platform_status ∈ {PAID, RECEIVED, SETTLED} 且已归因时（rebate_status R2 入库已归因，或 R3 找回 / 后台改归属；单一 order_status 写法下为 O2、O11），platform_status=DEPOSIT_PAID 时不生成；找回或改归属时 rebate_status 已为 VOID / CLAWED_BACK 的不生成。直推受益人 = 归属用户在订单 paid_at 时刻的上级（BR-CALC-12；由 relation_change_logs 重放，BR-INV-11），不是快照时刻的 users.parent_id；自购单与分享单都适用（分享单的直推受益人是分享者的上级，不是下单人的上级）。(1) paid_at 时刻归属用户没有上级（含绑定前已付款的订单：paid_at &lt; parent_bound_at，含补填前付款、之后才入库或找回的订单）→ 快照不写直推受益人，该份额归平台（COMMISSION_REVENUE）；(2) 有上级时，上级在快照生成时刻与入账时刻的有效性判定（active / forfeited / held、补入账）只按 BR-CALC-13 执行，本条不另列状态；已实名未满 18 周岁上级的处理按 BR-INV-19、BR-ID-26。`inviter_unavailable`（BR-INV-02）只用于绑定校验、邀请页展示与后台改上级，不用于快照与入账判定。受益人有效性口径分歧登记为 14 §14.3 C-30（负责人与财务裁决）。快照后换绑、解绑、升降级、上级撤回注销均不重算该单。任何情况下份额不得向更上层顺延。间推受益人（上级的上级）的层级约束见 BR-INV-12，份额与判定见 BR-CALC-05。 | 已确认 | commission_splits 生成逻辑；rebate_status 迁移 R2、R3（BR-FUND-01）；orders.paid_at、users.parent_bound_at、relation_change_logs 按时点查询；流水 REFERRAL_CREDIT；客服话术（为什么没收到邀请分佣）；验收用例（分佣算例） |
+| BR-INV-14 | **等级定义与默认等级**<br>user_level 取值只有 L1、L2、L3；新账号注册时等级 = config `level.default`（默认 L1），游客报价按默认等级。等级只作为 commission_rules 的维度（平台 × 等级 × 订单类型）影响比例：r_self 取 commission_rules(platform=订单平台, level=归属用户在 paid_at 时刻的等级, order_type=订单 buy_type) 的 r_self_bp（分享单为对应分享比例；BR-CALC-06 称 r_own_bp）；r_direct 取 commission_rules(platform=订单平台, level=上级在 paid_at 时刻的等级, order_type=订单 buy_type) 的 r_direct_bp；「paid_at 时刻的等级」= level_change_logs 中 effective_at ≤ paid_at 的最后一条的 after（等号取新等级；注册时同事务写一条 source=register、before=NULL、after=level.default、effective_at=created_at 的记录；仍缺记录时取 L1 并告警，BR-CALC-12）；两者都写入 beneficiaries.level。规则发布校验：对每个 platform × order_type，max_level(r_self_bp 或分享比例) + max_level(r_direct_bp) + max_level(r_indirect_bp) + 活动加成上限（如有，归 BR-CALC）≤ 合计上限（数值与校验只在 BR-CALC-07 维护），不满足则不能发布；分账纯函数运行时断言各受益份额之和 ≤ B，违反时不写快照并告警。levels 表每级有 status；等级禁用后不得有新升入，已在该等级的用户保持不变。MVP 只允许后台手动调整等级（step-up + 原因），每次变更写 level_change_logs(user_id, before, after, source, operator_id, reason, effective_at, created_at)，MVP 手动调级 effective_at = created_at = 操作提交时刻（+08:00）；用户端等级界面、自动晋升与保级为 P1。等级变更只影响 paid_at ≥ effective_at 的订单，已有快照不重算；商品报价（quoteRebate）按当前等级实时计算。 | 已确认 | users.level；levels、level_change_logs（新表，含 effective_at；即 BR-CALC-12 所称 user_level_logs）；commission_rules 发布校验、commission_splits.beneficiaries.level；packages/domain 分账纯函数（份额和断言）；GET /v1/me（等级字段）；后台用户详情调级操作、规则配置页；BR-CALC-06 比例配置；LevelUpgrade 桥调用返回 unsupported（MVP） |
+| BR-INV-15 | **等级晋升条件**<br>晋升只看本人推广订单，不得使用下级人数、团队订单或团队业绩。自动晋升（P1 启用，MVP 不运行）：每日 03:00 +08:00 计算，统计窗口 = 前 30 个完整自然日 [D−30 00:00, D 00:00) +08:00；计数对象 = 本人为归属用户的子订单（自购 + 分享），且确认收货时间 received_at 落在窗口内、计算时刻 rebate_status 不是 VOID / CLAWED_BACK（单一 order_status 写法下即不是 INVALID / CLAWED_BACK）、基数 B > 0；计数 ≥ `level.promote.l3_min_orders`（默认 50）升 L3，≥ `level.promote.l2_min_orders`（默认 10）升 L2；只升不降（保级规则 P1）；目标等级已禁用时不升入。 | 已确认 | 等级晋升定时任务（P1）；配置项 level.promote.\*；level_change_logs；等级界面文案（P1）；财务单位经济模型（高等级比例成本） |
 | BR-INV-16 | **上级可见的下级信息**<br>MVP：上级只能通过 GET /v1/invites/me 看到直邀人数 direct_count = COUNT(users WHERE parent_id=本人 AND 该用户不存在 deletion_status=done 的注销单)，处于 cooling/processing 的下级、被封禁或冻结的下级仍计入，实时计算；不得返回下级列表。P1 页面 InvitedFriends：下级列表只允许包含下级昵称（经敏感词处理后的当前昵称）与注册日期（YYYY-MM-DD，+08:00），按注册时间倒序分页；不得返回或展示下级的 UID、手机号（含脱敏形式）、微信号/unionid、头像、等级、订单（任何字段）、订单数、GMV、收益、活跃状态。P1 上线前隐私政策须写明“你的昵称和注册日期将向邀请你的用户展示”。Agent 与客服不得向上级提供上述禁止信息。后台按角色权限可见（手机号脱敏）。 | 默认假设 | GET /v1/invites/me 响应；P1 InvitedFriends 页面与接口；Agent 工具（不得有查询下级的工具）；客服话术（上级询问下级订单）；隐私政策；验收用例 |
 | BR-INV-17 | **邀请分佣流水展示**<br>上级的 PROMO 账户中 REFERRAL_CREDIT 及对应 CLAWBACK 分录在用户端只展示：类型名（REFERRAL_CREDIT=“邀请好友购物分佣”，对应 CLAWBACK=“邀请好友购物分佣扣回”）、带符号金额（分→元，保留 2 位小数）、状态（REFERRAL_CREDIT 固定为“已入账”，CLAWBACK 固定为“已扣回”）、时间（分录 created_at，+08:00，精确到分钟）；不得展示下级昵称、商品标题/图片、订单号、订单金额、平台、下单时间。入账前（rebate_status ∈ {ESTIMATED, WAITING}）的直推分佣只以汇总金额计入“预估推广收益”（用户话术与状态对应见 README §1.2、BR-TEXT-01，状态口径见 BR-FUND-01）。 | 默认假设 | GET /v1/wallet 流水接口字段；H5 收益明细页；客服话术；验收用例 |
 | BR-INV-18 | **邀请页与落地页内容**<br>GET /v1/invites/me（phone 级别，未绑手机返回 10005）：本人为已识别的未满 18 周岁用户（BR-INV-19）时返回 30413（data.reason=self_minor，客户端文案与入口隐藏按 BR-INV-19）；其余情况返回 200：{can_invite: bool, invite_code, landing_url, poster{template_id, background_url, variables}, direct_count}。当 inviter_unavailable(本人)=true（BR-INV-02）且不属于上述未成年情形时，can_invite=false，invite_code、landing_url、poster 均为 null，direct_count 照常返回；客户端 can_invite=false 时显示“暂不可邀请”，不展示原因。landing_url = `{share_domains 当前可用域名}/i/{invite_code}`，可附加渠道码参数，URL 中不得含 UID、手机号、昵称等个人信息。邀请文案模板变量只有 {nickname}、{invite_code}、{download_url}；海报 M-内测为固定模板 + 后台配置背景图，多模板 P1。后台保存邀请文案模板时必须执行 BR-INV-20 禁用词与广告法绝对化用语检查，不通过不能保存；海报背景图上线前需人工审核并留审核记录（审核人、时间、结论）。规则说明页不得出现“最高返利”“稳赚”及 BR-INV-20 禁用词。 | 默认假设 | GET /v1/invites/me 响应（can_invite、30413）；InviteShare H5 页；invite-landing H5 页；后台邀请文案模板（禁用词检查）与海报背景配置（审核记录）；config.share_domains |
-| BR-INV-19 | **未成年人邀请限制**<br>本条是未成年人邀请与分享侧效果（30401、30413、入口隐藏与提示文案）的唯一维护处。年龄、满 N 周岁时刻、「识别」时点（realname verified 时刻）与推广收益入账、识别前已入账推广收益的处理只在 BR-ID-26 维护；提现限制只在 BR-WDR-06 维护。判定时刻 = 绑定校验、邀请或分享接口请求、快照生成或入账的服务端时刻。已识别且在判定时刻未满 18 周岁的用户：inviter_unavailable=true（BR-INV-02），他人用其邀请码绑定返回 30401「邀请码无效」（不带 reason、不透露邀请人年龄）；本人调用 GET /v1/invites/me（BR-INV-18）、POST /v1/shares 及邀请码生成 / 获取接口返回 30413（data.reason=self_minor），客户端隐藏邀请与分享赚入口并提示「未满 18 周岁暂不开放邀请与分享赚」；作为上级时，快照生成时刻未满 18 周岁则不写直推受益人，份额归平台（BR-INV-13）；已生成的直推快照在入账时刻受益人已被识别为未满 18 周岁的，该份额入账时改归平台（BR-ID-26 (b)）；识别前已入账的 REFERRAL_CREDIT 按 BR-ID-26 (c) 处理（待决策，默认冻结至满 18 周岁）。PROMO 余额的提现限制见 BR-WDR-06。已有的下级关系保留，满 18 周岁时刻之后生成的快照恢复正常。未实名用户无法判断年龄，按成年处理。 | 待决策 | 实名信息（年龄推算，BR-ID-26）；BR-INV-02 inviter_unavailable；commission_splits 生成与入账；PROMO 账户冻结；GET /v1/invites/me、POST /v1/shares、邀请码生成 / 获取接口（30413）；错误码 30413（新增）；客户端邀请与分享赚入口隐藏；验收用例（含 2-29 边界、满周岁当日与次日） |
-| BR-INV-20 | **分销用语与不做事项**<br>用户端、后台、接口字段、推送与客服话术不得使用“代理、运营商、总代、合伙人、团队业绩、团队奖、分红、下线”等层级或团队计酬用语，等级只称 L1/L2/L3。不得实现：付费升级或付费获得分佣资格、邀请即升级、按发展人数或团队业绩晋升、面向用户的团队业绩/出单/GMV 排行、间推收益展示。文案与代码需通过禁用词 CI 检查；后台可配置文案保存时执行同一词库检查（BR-INV-18）。 | 默认假设 | 全部 UI 文案与帮助中心；后台菜单命名与可配置文案；CI 禁用词检查；客服话术；规则说明页 |
+| BR-INV-19 | **未成年人邀请限制**<br>本条是未成年人邀请与分享侧效果（30401、30413、入口隐藏与提示文案）的唯一维护处。年龄、满 N 周岁时刻、「识别」时点（realname verified 时刻）与推广收益入账、识别前已入账推广收益的处理只在 BR-ID-26 维护；提现限制只在 BR-WDR-06 维护。判定时刻 = 绑定校验、邀请或分享接口请求、快照生成或入账的服务端时刻。已识别且在判定时刻未满 18 周岁的用户：inviter_unavailable=true（BR-INV-02），他人用其邀请码绑定返回 30401「邀请码无效」（不带 reason、不透露邀请人年龄）；本人调用 GET /v1/invites/me（BR-INV-18）、POST /v1/shares 及邀请码生成 / 获取接口返回 30413（data.reason=self_minor），客户端隐藏邀请与分享赚入口并提示「未满 18 周岁暂不开放邀请与分享赚」；作为上级时，快照生成时刻未满 18 周岁则不写直推受益人，份额归平台（BR-INV-13）；已生成的直推快照在入账时刻受益人已被识别为未满 18 周岁的，该份额入账时改归平台（BR-ID-26 (b)）；识别前已入账的 REFERRAL_CREDIT 按 BR-ID-26 (c) 处理（冻结至满 18 周岁，BR-ID-26 已确认 2026-09-30）。PROMO 余额的提现限制见 BR-WDR-06。已有的下级关系保留，满 18 周岁时刻之后生成的快照恢复正常。未实名用户无法判断年龄，按成年处理。 | 待决策 | 实名信息（年龄推算，BR-ID-26）；BR-INV-02 inviter_unavailable；commission_splits 生成与入账；PROMO 账户冻结；GET /v1/invites/me、POST /v1/shares、邀请码生成 / 获取接口（30413）；错误码 30413（新增）；客户端邀请与分享赚入口隐藏；验收用例（含 2-29 边界、满周岁当日与次日） |
+| BR-INV-20 | **分销用语与不做事项**<br>用户端、后台、接口字段、推送与客服话术不得使用“代理、运营商、总代、合伙人、团队业绩、团队奖、分红、下线”等层级或团队计酬用语，等级只称 L1/L2/L3。不得实现：付费升级或付费获得分佣资格、邀请即升级、按发展人数或团队业绩晋升、面向用户的团队业绩/出单/GMV 排行、面向用户的团队收益汇总或按下级层级分列的下级贡献展示（直推、间推分佣只按 BR-INV-17 单条流水展示）；不得收取任何入门费、会员费或购买门槛，不得以发展人数计酬（BR-INV-12）。文案与代码需通过禁用词 CI 检查；后台可配置文案保存时执行同一词库检查（BR-INV-18）。 | 默认假设 | 全部 UI 文案与帮助中心；后台菜单命名与可配置文案；CI 禁用词检查；客服话术；规则说明页 |
 | BR-INV-21 | **邀请开关与配置项**<br>紧急开关 growth.invite_bind.enabled（默认 on，10 秒内生效，改动需 step-up 并告警）为 off 时：backfill 返回 30408；register 渠道照常建号但 invite_bind={failed, 30408}；landing-register 返回 30408 且不建号；后台改上级不受影响；已有关系与分佣计算不受影响；关闭期间注册的用户补填期限不顺延。/v1/config.invite 下发 required（MVP 固定 false）与 backfill_hours（默认 168）。频控配置：invite.fail_limit_per_day=5。等级相关配置：level.default=L1、level.promote.l2_min_orders=10、level.promote.l3_min_orders=50、level.promote.window_days=30。 | 默认假设 | 配置中心 growth.invite_bind.enabled、config.invite、invite.fail_limit_per_day、level.\*；三个绑定接口；落地页暂停态 |
 | BR-INV-22 | **邀请奖励仅P1**<br>MVP（M-内测、M-公开）不得发放任何新人红包、签到奖励或邀请奖励。P1（W9 起）邀请奖励规则：奖励在被邀请人首单确认收货后才解锁；同设备、同支付宝、同实名各只能领 1 次；设日预算上限，预算扣减与发放同事务原子执行（条件更新 remaining_fen ≥ amount），扣不到即不发、不排队补发；手机号 HMAC 命中未过期注销留存记录（BR-ID-30 ⑩、BR-ID-28）的账号不计为有效新人（F-ACC-10）；同一 device_id 30 天内登录 ≥3 个账号的第 3 个账号起不发奖励（规划/01 E17 风控；08 尚无 BR-RISK 主题）；流水用 REWARD（sub_type=invite），计入 MKT_EXPENSE。“有效新人”口径见 BR-INV-23；奖励金额与预算数值在 P1 规格中定义。 | 默认假设 | 活动引擎（P1）；预算表 remaining_fen（P1）；注销留存表（phone_hmac，留存见 BR-ID-30 ⑩）；流水 REWARD；风控规则；验收用例（P1） |
 | BR-INV-23 | **会员口径仅P1（有效、活跃、新用户、有效新人）**<br>MVP（M-内测、M-公开）不得计算、存储、展示或使用任何会员口径标记，任何 MVP 规则不得以其为条件。P1 启用时：每个口径只能由 packages/domain 的纯函数计算（输入 = 用户、订单与流水事实、判定时刻；参数全部读配置中心 member.\*，修改写操作日志），后台任务、活动引擎、报表共用该函数，不得在 SQL 或客户端另写一版；每个口径附决策表 fixture，至少 3 条，覆盖边界值（2/3 笔、窗口首尾时刻）。默认口径（沿用优券汇）：① 有效用户 = login_logs 中存在首条 App 登录成功记录起永久有效。② 活跃用户：每日 00:10 +08:00 重算；窗口 = [D−member.active_days 00:00, D 00:00) +08:00（默认 30 个完整自然日，D 为重算当日）；计数 = 本人为归属用户的子订单（自购 + 分享）中 paid_at 落在窗口内、且重算时刻 platform_status ∈ {PAID, RECEIVED, SETTLED}、rebate_status ∉ {VOID, CLAWED_BACK} 的笔数；≥ member.active_orders（默认 3）即活跃；不得含邀请人数、下级人数或团队业绩条件（BR-INV-15、BR-INV-20）。③ 新用户 = 本人为归属用户、platform_status 曾到达 PAID 或之后状态的子订单数 = 0；首次跟单即去标，订单之后失效也不恢复。④ 有效新人（P1 邀请奖励与「有效邀请」计数共用）= 被邀请人 parent_bind_source ∈ {landing, register, backfill}（后台改上级不计）、已绑手机、首笔 platform_status 到达 RECEIVED 的子订单实付金额（分）≥ member.valid_newcomer_min_paid_fen，且不命中 BR-INV-22 的排除条件；该门槛由财务在 P1 规格给出，给出前有效新人判定不得启用。「首提」「当日入账」「冻结中」属提现主题（BR-WDR-19、BR-WDR-27），本条不定义。 | 待决策 | packages/domain 会员口径纯函数与决策表 fixture（P1）；配置 member.active_days、member.active_orders、member.valid_newcomer_min_paid_fen；每日 00:10 重算任务（P1）；活动引擎与邀请奖励（P1，BR-INV-22）；BR-WDR-19 手续费矩阵活跃度维度（P1）；后台会员查询筛选（P1） |
@@ -94,7 +94,7 @@
 - 决策人：负责人
 - 依赖平台能力：无
 - 取代：
-  - PRD修订_后端功能规划 §2.10 绑定上级：「优先级第②项“首次启动识别剪贴板邀请口令”（MVP 不采用，见 BR-INV-04）」
+  - PRD修订_后端功能规划 §2.10 绑定上级：「优先级第②项“首次启动识别剪贴板邀请口令”」（2026-09-30 起剪贴板邀请口令自动识别进 MVP，见 BR-INV-04；识别结果经 register / backfill 渠道绑定，不单列渠道与优先级）
 - 来源：规划/01 §5 J7、E12 F-INV-02；规划/04 §6.1、§6.4；规划/02 Agent 工具白名单；PRD修订_后端功能规划 §2.10
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
@@ -104,21 +104,31 @@
 - 例：用户 U 在 10-01 10:00 经落地页注册（parent=A），10-01 10:05 在 App 用同号登录并带 invite_code=B 的码 → 登录成功，parent 仍为 A，`invite_bind.result=ignored_existing_user`。
 - 并发：同一用户两个请求同时补填不同码，只有一条条件更新成功，另一条返回 30402。
 
-#### BR-INV-04 细则 · 剪贴板邀请口令不进MVP
+#### BR-INV-04 细则 · 剪贴板邀请口令自动识别（MVP）
 
-- 状态：待决策
-- 默认值：MVP 不做自动识别，仅提供用户点击的“粘贴”按钮，按统一正则取第一个匹配；理由：落地页已覆盖锁粉，自动读剪贴板有隐私审核风险
-- 决策人：负责人
-- 依赖平台能力：无
+- 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §3 BR-INV-04：「要自动识别，很重要，需要监听剪贴板；根据规则来，必须要做」）
+- 默认值：MVP 做自动识别；读取前提、时机与提示方式按 BR-ID-16；只对可绑定用户触发；识别后提示条 + 用户点击确认才绑定，不自动提交；抽取正则与 NFKC 规则不变；与商品口令同时出现时商品优先（待负责人确认）
+- 决策人：负责人（剪贴板读取方式的合规口径由 BR-ID-16 维护，决策人法务）
+- 依赖平台能力：iOS detectPatterns 探测与 UIPasteControl（CAP-X-02）；华为：返利与口令识别场景能否申请读取剪贴板权限（06 Q-G11，同 BR-ID-16）
 - 取代：
   - PRD修订_后端功能规划 §2.10：「② 首次启动识别剪贴板邀请口令（用户点击触发读取）」
-- 来源：PRD修订_后端功能规划 §2.10；规划/03 剪贴板实现要点、§5.3 L2；规划/01 E12 F-INV-02
+  - 本条旧写法（2026-09-30 前）：「剪贴板邀请口令不进MVP：MVP 不得在 App 启动时自动识别剪贴板中的邀请码/邀请口令用于绑定，仅提供用户点击的“粘贴”按钮；理由：落地页已覆盖锁粉，自动读剪贴板有隐私审核风险」
+- 来源：PRD修订_后端功能规划 §2.10；规划/03 剪贴板实现要点、§5.3 L2；规划/01 E12 F-INV-02；08 BR-ID-16；docs/changes/20260930-拍板第一批.md §3（BR-INV-04 行）
 
-- 理由：落地页注册已在服务端完成绑定，不依赖安装归因；启动读剪贴板会触发 iOS 粘贴提示、增加隐私审核风险，且与 03 的商品剪贴板识别规则冲突。
+- 绑定渠道不新增：自动识别只是把邀请码交给现有渠道，已登录走 backfill、游客走 register，source 仍只取 BR-INV-03 的三个值；先到先得、30402 等语义不变（落地页已绑定的用户按 ③ 不会被提示）。
+- 触发对象判定在客户端用 GET /v1/me 的邀请人状态与 /v1/config.invite.backfill_hours 做预判，服务端以 BR-INV-02 / BR-INV-07 校验为准；客户端预判错误时照常返回 30402 / 30404 / 30409，客户端按 BR-TEXT-14 提示。
+- 已登录但未绑手机（member）：点击提示条先引导绑手机（10005），绑定成功后再以同一邀请码调用 backfill；不在未绑手机时静默缓存后自动提交。
+- 游客预填的邀请码只保存在本机内存 / 本地存储、不上传，用户未提交登录即丢弃；有效期默认本次进程生命周期（待负责人确认）。
+- 与商品识别的关系（默认，待负责人确认）：同一段剪贴板文本若按 F-CLIP-02 / F-CLIP-03 命中商品链接或口令，只出商品提示条（clipboard.prompt），不再出邀请提示条；只有未命中商品规则、且本条抽取正则命中时才出邀请提示条。为降低普通文本误判，默认另加触发前提：文本含分享域名（config.share_domains）的落地页路径 `/i/{code}`，或含「邀请码」字样；该前提作为 /v1/config.clipboard 的可配置规则下发（默认值，待负责人确认）。
+- iOS 限制：detectPatterns 只能探测链接、数字等系统模式，不能判断任意 6 位字母数字；按默认前提，含落地页链接的邀请文案可由 probableWebURL 探测命中后出提示条、用户点提示条内 UIPasteControl 才读取；只有纯邀请码（不含链接）时 iOS 能否自动提示待 CAP-X-02 验证，验证前按“粘贴”按钮兜底。
+- 例：游客从微信复制好友邀请文案「… 邀请码 K7M2QX … https://{share_domain}/i/K7M2QX」，同意隐私政策后首次进入前台 → iOS 探测到链接出邀请提示条 → 用户点提示条读取 → 抽取 `K7M2QX` → 进入登录注册页并预填 → 用户提交登录 → 新建账号时按 register 渠道绑定。
+- 例：已登录、无上级、注册第 2 天的用户回到前台（Android 已开自动识别开关）→ 本地抽取 `K7M2QX` → 出邀请提示条 → 用户点「绑定」→ POST /v1/me/inviter → 服务端按 BR-INV-02 / BR-INV-07 校验。
+- 例：已有上级的用户复制同样文案回到前台 → 不识别、不提示。
+- 例：用户在本 App 邀请页复制自己的邀请文案后切回 → App 自写内容按 hash 排除，不提示。
 - 例：用户从微信复制“邀请码 K7M2QX”，在注册页点“粘贴”→ 抽取 `K7M2QX` 填入 → 用户点提交 → 服务端校验。
 - 例：剪贴板为“￥AB12CD￥ 邀请码 K7M2QX”→ 取第一个匹配。`AB12CD` 含 1 不匹配，因此填入 `K7M2QX`。
-- 例：剪贴板为商品链接、无 6 位候选 → 不填入，提示“未识别到邀请码”。
-- 若负责人决定 P1 做“首次启动剪贴板邀请口令”，需另行定义口令格式、与商品口令的区分、有效期。
+- 例：剪贴板为商品链接、无 6 位候选 → 粘贴按钮不填入，提示“未识别到邀请码”；自动识别走商品提示条。
+- 需同步修改的规划文档（2026-09-30）：规划/01 E12 F-INV-02 补剪贴板邀请口令自动识别（经 register / backfill 渠道）与验收要点；规划/01 E06 F-CLIP-01 / F-CLIP-02 补邀请口令用途与触发前提；规划/03 §4.6 ClipboardWatcher 增加邀请口令识别与邀请提示条；规划/00 §4 范围裁决表「剪贴板」行补邀请口令识别；规划/04 /v1/config.clipboard 增加邀请口令触发规则；08 BR-TEXT-14 字典登记邀请提示条文案键；规划/10 增加邀请口令自动识别用例（三端各一，含已有上级不提示、App 自写不提示）；隐私政策（06 Q-F1）剪贴板用途补「识别邀请码」
 
 #### BR-INV-05 细则 · 落地页注册绑定
 
@@ -157,8 +167,9 @@
 
 #### BR-INV-07 细则 · 补填条件与期限
 
-- 状态：待决策（原标默认假设；默认值本身写有「待负责人确认」，补填条件决定直推受益人归属，按 README §0.3 属订单归属口径）
+- 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §2）
 - 默认值：168 小时（不含边界）；无订单（含失效）、无任何找回申请、无下级；成功 1 次；01 的“7 天、无订单、无下级”已定，精确边界与订单/找回口径为代理细化；理由：失效单与找回申请也计入，防止先下单再挑上级
+- 负责人备注（2026-09-30，变更记录 §2 注 ²）：「有订单就不能补邀请码」，与条件 (c)（本人为归属用户的订单数 = 0，含已失效订单）一致，规则不变
 - 决策人：负责人
 - 依赖平台能力：无
 - 取代：
@@ -174,7 +185,7 @@
 - 例：用户 10-02 付款，联盟同步延迟，10-03 补填 A 成功，10-04 订单入库 → 订单 paid_at &lt; parent_bound_at，快照不写 A，份额归平台（BR-INV-13）。
 - 只转链未下单的用户仍可补填（不以 link_logs 为条件）。
 - 期限随 `/v1/config.invite.backfill_hours` 下发，客户端据此隐藏补填入口，服务端以自身时钟为准。
-- 订单状态按 BR-FUND-01 双状态书写：「任何状态」指任意 platform_status 与任意 rebate_status（单一 order_status 写法下即含 INVALID、CLAWED_BACK）；rebate_status=UNATTRIBUTED 的订单 user_id 为空，不属于本人，不计入。按 C-01 默认处理，待负责人确认。
+- 订单状态按 BR-FUND-01 双状态书写：「任何状态」指任意 platform_status 与任意 rebate_status（单一 order_status 写法下即含 INVALID、CLAWED_BACK）；rebate_status=UNATTRIBUTED 的订单 user_id 为空，不属于本人，不计入。按 C-01 默认处理，已由负责人确认 2026-09-30。
 
 #### BR-INV-08 细则 · 禁止绑定的关系
 
@@ -220,7 +231,7 @@
 - 例：U 注册第 3 天，无订单、无找回、无下级，客服核实 U 本想填 B 的码却误填 A → 运营主管 step-up 后改为 B，日志记录 A→B，self_bind_used=true。
 - 例：U 从未自助绑定，后台设上级 B 后又解绑 → U 不能再走 backfill（30402），防止用“后台解绑 + 自助补填”绕过只绑 1 次。
 - 例：U 已有 1 笔订单 → 后台改上级按钮置灰，接口返回 30409。
-- 改绑前已付款、之后入库的订单按 BR-INV-13 付款时间规则不写新上级，而是写 paid_at 时刻的上级（原上级；其快照、入账时的有效性按 BR-CALC-13；改绑前无上级则不写）。按 C-06 默认处理，待负责人确认。
+- 改绑前已付款、之后入库的订单按 BR-INV-13 付款时间规则不写新上级，而是写 paid_at 时刻的上级（原上级；其快照、入账时的有效性按 BR-CALC-13；改绑前无上级则不写）。按 C-06 默认处理，已由负责人确认 2026-09-30。
 - 例：U 的上级 A 于 10-05 10:00 被后台改为 B；U 10-05 09:30 付款的订单 10-06 入库 → 直推受益人 A；10-05 10:30 付款的订单 → B。
 - 条件采纳后端功能规划：有订单或下级后改绑会让历史/未来分佣受益人与用户认知不一致，并可能被用于转移下级。
 
@@ -235,30 +246,35 @@
 - 来源：规划/01 E12 F-INV-04、F-ACC-10；规划/02 模块表 growth；规划/04 §2.5 deletion_status、§3.2、§4.5；PRD修订_后端功能规划 §2.10 关系存储
 - 需同步修改的规划文档：3 处（计数仅作记录，落点见 README §0.6）
 
-- 闭包表改 P1 的理由：D8 固定计酬深度 1；补填与后台改绑都要求“无下级”，成环只需沿 parent_id 向上遍历即可判定（BR-INV-08），闭包表只增加维护成本。
+- 闭包表改 P1 的理由：D8 计酬深度固定为 2（直推 + 间推，2026-09-30 负责人确认），两跳回放不需要闭包表；补填与后台改绑都要求“无下级”，成环只需沿 parent_id 向上遍历即可判定（BR-INV-08），闭包表只增加维护成本。
 - 例：A 于 10-10 申请注销（cooling 至 10-17），10-17 进入 processing，10-20 done → 10-20 起 A 的直属下级 U、V 的 parent_id=NULL；U 在 10-14 付款、10-15 生成快照的订单，快照时 A 处于 cooling，按 BR-CALC-13 记 A 为 active；该单入账时 A 已进入 processing 或 done → forfeited，份额归平台（BR-INV-13）。
 - 例：A 在冷静期撤回注销 → 关系全程未变；冷静期内生成的快照已按 BR-CALC-13 记 A 为 active，不重算，入账照常。
-- relation_change_logs 同时承担 BR-CALC-12 所称「user_relation_logs（bound_at / unbound_at）」：bound_at = 该条 created_at，unbound_at = 同一用户下一条记录的 created_at；表名统一见 13。按 C-06 默认处理，待负责人确认。
+- relation_change_logs 同时承担 BR-CALC-12 所称「user_relation_logs（bound_at / unbound_at）」：bound_at = 该条 created_at，unbound_at = 同一用户下一条记录的 created_at；表名统一见 13。按 C-06 默认处理，已由负责人确认 2026-09-30。
 
-#### BR-INV-12 细则 · 计酬层级只到直推
+#### BR-INV-12 细则 · 计酬层级为两级（直推 + 间推）
 
-- 状态：待决策（原标默认假设；依据的 D8 本身是 规划/00 §3.2 待负责人 W1 确认的默认决策，且计酬层级属金额口径与合规定性）
-- 默认值：间推 = 0（CHECK 约束）；理由：D8 默认计酬深度 1，多层计酬的合规风险在取得书面法律意见前不可接受；解除需先取得 06 Q-F5 书面法律意见
+- 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §3 D8、BR-INV-12 行：「多层计酬（直推 + 间推）在实践中没有问题，不收入门费」；间推比例行：「先做成可配置，后台随时调整，按最后调整的生效」）
+- 默认值：计酬两级（直推 + 间推）；depth ≥3 不计酬；不收入门费或购买门槛；比例后台可配，数值与生效规则见 BR-CALC-05 / 06（默认值待定，变更记录 §6）
 - 决策人：负责人
 - 依赖平台能力：无
 - 取代：
   - PRD v2.1 §2、§15：「计酬不超过两层；MVP 间推默认 0（可配）」
-- 来源：规划/00 §3.2 D8；规划/01 §3 分账口径、E12 F-INV-04；规划/02 §8.3；规划/06 Q-B1、Q-F5；PRD修订_后端功能规划 §2.10 分佣规则 r_l2 CHECK=0；PRD v2.1 §15
+  - 本条旧写法（2026-09-30 前，标题「计酬层级只到直推」）：「每个子订单的分佣受益人最多两类（归属用户与直属上级）；间推比例必须等于 0：commission_rules 的间推比例字段加数据库 CHECK (= 0)，后台不提供输入项；depth ≥2 的祖先不得出现在 beneficiaries；在取得分销模式书面法律意见（06 Q-F5）且负责人另行决策并发布迁移之前，不得开启间推」
+- 来源：规划/00 §3.2 D8；规划/01 §3 分账口径、E12 F-INV-04；规划/02 §8.3；规划/06 Q-B1、Q-F5；PRD修订_后端功能规划 §2.10 分佣规则；PRD v2.1 §15；docs/changes/20260930-拍板第一批.md §3（D8、BR-INV-12、BR-CALC-05 行与间推比例行）
 
-- 例：B=1234 分，r_self=5000、r_direct=1000 → 自购 617、直推 floor(123.4)=123、平台 494。
-- 例：C→B→A（C 邀请 B，B 邀请 A），A 自购 B=1234 → B 得 123，C 得 0 且不出现在快照。
-- r_direct 默认值与比例配置归 BR-CALC-06 维护，跨等级比例上限的发布校验口径见 BR-INV-14。
-- 依据 D8，D8 属于 规划/00 §3.2 默认决策（待负责人 W1 确认）；法务只提供 06 Q-F5 书面意见。
+- 例：D 邀请 C，C 邀请 B，B 邀请 A（D→C→B→A）；A 自购一单 → 受益人只有 A（本人）、B（直推）、C（间推）；D 不出现在快照，也不得承接 B 或 C 失效的份额。各份额的金额算例只在 BR-CALC-04 / 05 维护。
+- 例：B 邀请 A，B 没有上级；A 自购 → 受益人为 A、B，间推份额为 0（按 BR-CALC-05 归平台）。
+- 间推受益人的取值时点、「paid_at 时无上级的上级」、注销 / 封禁 / 冻结 / 未成年时的处理均按 BR-CALC-05、BR-CALC-13 与直推同口径，本条不另列；直推受益人判定见 BR-INV-13。
+- 等级与比例：间推比例按间推受益人在 paid_at 时刻的等级取值（BR-CALC-06），发布时的跨等级合计上限把间推计入（BR-CALC-07、BR-INV-14）。
+- 用户端展示与隐私：间推分佣流水按 BR-INV-17 单条展示、不含任何下级或订单信息；间推上级不能看到二级下级的任何信息，直邀人数只计直属下级（BR-INV-16）；类型名文案在 BR-TEXT 登记。
+- 受益人推送：跟单与收益推送发给该订单全部受益人（归属用户、直推上级、间推上级，C-25），模板与触发只在 BR-TEXT-09 维护。
+- 合规边界：不收入门费、不以发展人数计酬、不使用「下线」「团队业绩」等层级或团队计酬用语（BR-INV-20）是两级计酬成立的前提，任何放宽走 00 §8 变更流程。
+- 需同步修改的规划文档（2026-09-30）：规划/00 §3.1 D8（已按本批改写，核对一致即可）、§4 范围裁决表「分销」行（「直推分佣（间推 0）」→ 两级计酬）、§6 主要变化表「直推 + 间推两层」行（「只直推一层」→ 两级计酬）；规划/01 §3 分账口径（间推 0 → 两级）、E12 F-INV-04（计酬深度 = 1 → 2）；规划/02 §8.2 科目 USER_PROMO 说明（分享单 + 直推分佣 → 含间推分佣）、§8.3 分录模板索引；规划/04 §2.4 流水类型（「不定义间推类型（D8）」改按 BR-FUND-15）与 §3.2 commission_rules.r_indirect_bp、commission_splits.beneficiaries 角色（direct、indirect）；规划/06 F 节 Q-F5（不再是开启间推的前置条件）、Q-B1「间推比例」行（固定为 0 → 后台可配）；08 13_命名与编码对照 D8 行与「（不设）间推分佣类型」行；规划/10 分账算例补间推受益人（含无间推上级、depth 3 不受益）
 
 #### BR-INV-13 细则 · 直推受益人判定
 
-- 状态：待决策
-- 默认值：分享单也给分享者的上级直推分佣（理由：PROMO 账户口径已含直推，与自购单一致）；备选仅自购单给直推；上级按 paid_at 时刻取值（理由：结果可重放，不受入库与找回延迟影响）；绑定前付款时份额归平台；上级有效性按 BR-CALC-13（C-30）；待负责人确认
+- 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §2）
+- 默认值：分享单也给分享者的上级直推分佣（理由：PROMO 账户口径已含直推，与自购单一致）；备选仅自购单给直推；上级按 paid_at 时刻取值（理由：结果可重放，不受入库与找回延迟影响）；绑定前付款时份额归平台；上级有效性按 BR-CALC-13（C-30）；负责人 2026-09-30 同意默认（变更记录 §2），其中 C-30 仍待裁决
 - 决策人：负责人
 - 依赖平台能力：各平台订单 paid_at 字段准确性（09 订单归属链路，待实测）
 - 取代：
@@ -268,37 +284,40 @@
 
 - 例：A 邀请 U；U 于 10-05 自购，订单 10-05 首次入库，B=1000，r_self=5000、r_direct=1000 → U 500、A 100、平台 400。
 - 例：A 在 10-04 被封禁，U 10-05 下单 → 按 BR-CALC-13 快照记 A 为 active；入账时 A 仍为 banned → forfeited，U 500、平台 500。A 若为 frozen → 该份额 held，解冻后补入账（BR-FUND-01 R5a）。
-- 例：U 是分享者，外部好友 X 通过 U 的分享链接下单（buy_type=share）→ U 得推广收益，U 的上级 A 得直推分佣（本条待决策项）。
+- 例：U 是分享者，外部好友 X 通过 U 的分享链接下单（buy_type=share）→ U 得推广收益，U 的上级 A 得直推分佣，A 的上级（如有）得间推分佣（BR-INV-12、BR-CALC-05）。
 - 例：U 10-02 付款，10-03 补填 A，10-04 订单入库 → paid_at &lt; parent_bound_at，不写 A。
 - 例：A 10-10 申请注销、10-12 撤回；U 10-11、10-13 入库的订单都写 A（cooling 不算失效，BR-CALC-13）。
 - 例：U 的定金单 10-01 付定金（platform_status=DEPOSIT_PAID，不生成快照），10-11 付尾款（→PAID）时生成快照；直推受益人与等级取值时刻见 11.3 第 10 条（默认 deposit_paid_at）。
 - 例：U 的订单 10-05 付款、10-06 已失效（rebate_status=VOID），10-08 找回通过 → 只设置 user_id 与 user_basis=claim（BR-FUND-01 R3b），不生成快照，无直推份额。
 - paid_at 取联盟订单付款时间，时区 +08:00；各平台 paid_at 是否可靠需在 09 验证（待实测；预售单以 deposit_paid_at 还是尾款时间为准见 11.3 第 10 条）。
-- 状态名按 BR-FUND-01 双状态书写（O2 ≈ R2、O11 ≈ R3，映射见本主题开头）。按 C-01 默认处理，待负责人确认。
-- 快照生成时点按 BR-CALC-10、上级取 paid_at 时刻按 BR-CALC-12，绑定前付款不写的排除条件保留。按 C-06 默认处理，待负责人确认。
+- 状态名按 BR-FUND-01 双状态书写（O2 ≈ R2、O11 ≈ R3，映射见本主题开头）。按 C-01 默认处理，已由负责人确认 2026-09-30。
+- 快照生成时点按 BR-CALC-10、上级取 paid_at 时刻按 BR-CALC-12，绑定前付款不写的排除条件保留。按 C-06 默认处理，已由负责人确认 2026-09-30。
 - 上级有效性改为只引用 BR-CALC-13：原 (2)「快照生成时刻 inviter_unavailable(该上级)=true（含封禁、申诉、冻结、注销 cooling/processing/done、已实名未满 18）→ 不写直推受益人」与 BR-CALC-13（banned/frozen/appealing 快照记 active、入账时判 forfeited 或 held，cooling 不算失效）结论相反，已删去；分歧登记 14 §14.3 C-30，待负责人与财务裁决。
 
 #### BR-INV-14 细则 · 等级定义与默认等级
 
-- 状态：待决策
-- 默认值：默认 L1；MVP 仅后台手动调级；r_direct 默认按上级在 paid_at 时刻的等级（理由：与上级自身等级激励一致；取值时刻按 BR-CALC-12），备选按归属用户等级；跨等级最大组合 ≤ 8000 发布校验；待负责人/财务确认
+- 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §2）
+- 默认值：默认 L1；MVP 仅后台手动调级；r_direct 默认按上级在 paid_at 时刻的等级（理由：与上级自身等级激励一致；取值时刻按 BR-CALC-12），备选按归属用户等级；跨等级最大组合（含间推）发布校验按 BR-CALC-07；负责人 2026-09-30 同意默认（变更记录 §2）
 - 决策人：负责人
 - 依赖平台能力：无
 - 取代：
   - PRD v2.1 §2：「P1 等级分佣界面（未说明 MVP 等级如何变化）」
   - 规划/01 §3 分账口径：「r_self + r_direct ≤ 8000（未说明跨等级组合如何校验）」
-- 来源：规划/00 §3.2 D8、§4；规划/01 §3、E12 F-INV-05/07；规划/04 §2.5、§3.2；PRD修订_后端功能规划 §2.10 等级
+  - 本条旧写法（2026-09-30 前）：「发布校验 = max_level(r_self_bp 或分享比例) + max_level(r_direct_bp) + 活动加成上限 ≤ 8000」（未含间推）
+- 来源：规划/00 §3.2 D8、§4；规划/01 §3、E12 F-INV-05/07；规划/04 §2.5、§3.2；PRD修订_后端功能规划 §2.10 等级；docs/changes/20260930-拍板第一批.md §3（间推比例行）
 - 需同步修改的规划文档：3 处（计数仅作记录，落点见 README §0.6）
 
 - 例：U 在 10-10 12:00:00 被后台从 L1 调到 L2；paid_at=10-10 11:59:59 的订单即使 10-11 才入库，仍按 L1 比例；paid_at=10-10 12:00:00（等于生效时刻）及以后的按 L2。
 - 例：taobao × self 下 r_self 为 L1 5000 / L2 5500 / L3 6000，r_direct 为 L1 1000 / L2 1500 / L3 2500 → 6000 + 2500 = 8500 > 8000，发布被拒（逐行校验会漏掉 L3 自购 + L3 上级的组合）。
 - 例：L3 被禁用后，自动晋升任务（P1）最多升到 L2；已是 L3 的用户保持 L3。
-- r_direct 按上级等级还是按归属用户等级取值属于金额口径，待负责人/财务确认。
-- 等级取值时刻由「快照时等级」改为「paid_at 时刻等级」（BR-CALC-12），与 BR-INV-13 上级取值时刻一致。按 C-06 默认处理，待负责人确认。
+- r_direct 按上级等级还是按归属用户等级取值属于金额口径；负责人 2026-09-30 同意默认（按上级在 paid_at 时刻的等级，变更记录 §2）。r_indirect_bp 按间推受益人等级取值（BR-CALC-05、BR-CALC-06）。
+- 发布校验原为两项之和，D8 改为两级计酬后把 max_level(r_indirect_bp) 计入（变更记录 §3 间推比例行，BR-CALC-07）；下例为两项时的示意，间推比例非 0 时同理相加。
+- 等级取值时刻由「快照时等级」改为「paid_at 时刻等级」（BR-CALC-12），与 BR-INV-13 上级取值时刻一致。按 C-06 默认处理，已由负责人确认 2026-09-30。
+- 需同步修改的规划文档（2026-09-30）：规划/01 §3 分账口径「r_self + r_direct ≤ 8000」改为引用 BR-CALC-07（含间推）；规划/04 §3.2 commission_rules 发布校验说明（计入 r_indirect_bp）；后台规则配置页校验提示（01 F-ADM-12）；规划/10 分账算例补含间推的跨等级发布校验用例
 
 #### BR-INV-15 细则 · 等级晋升条件
 
-- 状态：待决策
+- 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §2）
 - 默认值：L1 默认；近 30 个完整自然日本人子订单（确认收货、未失效、B>0）≥10 → L2、≥50 → L3；只升不降；理由：沿用 06 Q-B1 默认，改用确认收货口径防刷
 - 决策人：负责人
 - 依赖平台能力：无
@@ -309,7 +328,7 @@
 
 - 例：D=2026-11-01，窗口为 10-02 00:00 至 10-31 23:59:59；该窗口确认收货且未失效的本人子订单 12 笔 → 升 L2；其中 1 笔 11-02 退款扣回不影响已升等级。
 - 例：窗口内 60 笔，其中 15 笔 rebate_status=VOID → 有效 45 笔 → L2，不升 L3。
-- 状态名按 BR-FUND-01 双状态书写（INVALID ≈ VOID）。按 C-01 默认处理，待负责人确认。
+- 状态名按 BR-FUND-01 双状态书写（INVALID ≈ VOID）。按 C-01 默认处理，已由负责人确认 2026-09-30。
 - 按确认收货而非付款计数，防止“下单后退款刷等级”。
 - 自购是否计入：默认计入（“本人推广订单” = 本人链接产生的订单）；若负责人只认分享单，改计数口径即可。
 
@@ -386,16 +405,18 @@
 #### BR-INV-20 细则 · 分销用语与不做事项
 
 - 状态：默认假设
-- 默认值：按 D8 默认执行；D8 确认后改为已确认
+- 默认值：按 D8 执行（D8 已由负责人 2026-09-30 改为两级计酬并确认，变更记录 §3）；原写「D8 确认后改为已确认」，因 D8 以修改后的口径确认，本条状态是否改为已确认待负责人确认
 - 决策人：负责人
 - 依赖平台能力：无
 - 取代：
   - PRD v2.1 §2 范围表：「P1 团队收益页、排行榜」
-- 来源：规划/00 §3.2 D8、§4、§5；规划/01 §4 页面清单（TeamFans / RankList）；规划/07 §2 不做清单；PRD v2.1 §15；参考_花卷云功能查漏底稿 §17
+  - 本条旧写法（2026-09-30 前）：不做事项中的「间推收益展示」（D8 原为只做直推一层）
+- 来源：规划/00 §3.2 D8、§4、§5；规划/01 §4 页面清单（TeamFans / RankList）；规划/07 §2 不做清单；PRD v2.1 §15；参考_花卷云功能查漏底稿 §17；docs/changes/20260930-拍板第一批.md §3（D8 行）
 - 需同步修改的规划文档：1 处（计数仅作记录，落点见 README §0.6）
 
 - 例：邀请列表标题用“我邀请的好友”，不用“我的团队”；页面名用 InvitedFriends，不用 TeamFans。
-- 这些限制的依据是 D8；D8 属于 规划/00 §3.2 默认决策（待负责人确认），法务提供依据。解除需书面法律意见 + 负责人决策。
+- 这些限制的依据是 D8（2026-09-30 负责人确认两级计酬、不收入门费）；用语禁忌与不做清单是两级计酬的配套约束，不因间推开启而放宽，解除需负责人决策并走 00 §8 变更流程。
+- 需同步修改的规划文档（2026-09-30）：规划/00 §6 主要变化表「直推 + 间推两层」行（→ 两级计酬，不做三级及以上与团队计酬）；规划/07 §1 结论「多级分销与团队」行、§2「06 等级分佣」中「2 级分佣…不做（D8）」行、§5 明确不做表（「2 级分佣」改为三级及以上分佣、团队奖等不做）
 
 #### BR-INV-21 细则 · 邀请开关与配置项
 
@@ -444,13 +465,13 @@
 ### 11.3 本主题未决问题
 
 1. 推广自买单（规划/01 E17 风控，08 尚无 BR-RISK 主题：分享单下单人与推广者同设备/同支付宝/同收货手机号）判定作废推广收益时，推广者上级的直推分佣是否同时作废？默认：同时作废（整单视为违规）。需负责人确认。
-2. commission_rules 中 r_direct 按上级等级取值还是按下单归属用户等级取值？BR-INV-14 默认按上级在 paid_at 时刻的等级（已改为待决策），需负责人/财务确认。
-3. 分享单是否给分享者的上级直推分佣（BR-INV-13 待决策）？默认给。
+2. 已解决（2026-09-30）：r_direct 按上级在 paid_at 时刻的等级取值（BR-INV-14 默认，负责人确认，变更记录 §2）；序号保留。
+3. 已解决（2026-09-30）：分享单给分享者的上级直推分佣（BR-INV-13 默认，负责人确认，变更记录 §2）；间推同理（BR-CALC-05）；序号保留。
 4. risk_state=frozen（仅提现冻结）是否也使邀请人不可用、不受益直推分佣？BR-INV-02 默认纳入；若负责人认为 frozen 只影响提现，从 inviter_unavailable 中去掉 frozen，BR-INV-18 自动同步。直推受益人的 frozen 处理不走 inviter_unavailable，按 BR-CALC-13（held，C-30）。
 5. 被邀请人能否在 App 内看到自己的上级（昵称或邀请码）？规划 未定义；默认只显示“已绑定邀请人”，不显示对方信息。
-6. 晋升阈值（L2 ≥10、L3 ≥50）与各等级 r_self/r_direct 比例的具体取值需财务按单位经济模型确认（06 Q-B1、后端规划 B11），且须满足 BR-INV-14 跨等级最大组合 ≤ 8000。
-7. 分销模式书面法律意见（06 Q-F5）的取得时间；在此之前间推固定为 0，BR-INV-12 不变。
-8. 实名后发现未成年上级时，识别前已入账 REFERRAL_CREDIT 的处理由 BR-ID-26 (c) 统一决定（默认冻结至满 18 周岁，法务与负责人选定）；满 18 周岁时刻按 BR-ID-26（C-15 默认处理，待法务确认）。本主题不另行决定。
+6. 晋升阈值（L2 ≥10、L3 ≥50）已随 BR-INV-15 由负责人确认（2026-09-30）；各等级 r_self / r_direct / r_indirect 比例的具体取值需负责人与财务按单位经济模型确认（06 Q-B1、后端规划 B11；变更记录 §6 遗留），且须满足 BR-CALC-07 跨等级合计上限（含间推）。
+7. 已解决（2026-09-30）：负责人决定两级计酬（直推 + 间推），间推比例后台可配（BR-INV-12、BR-CALC-05），不再以 06 Q-F5 书面法律意见为开启间推的前置条件；Q-F5 是否仍需取得由 06 维护；序号保留。
+8. 实名后发现未成年上级时，识别前已入账 REFERRAL_CREDIT 的处理由 BR-ID-26 (c) 统一决定（冻结至满 18 周岁，BR-ID-26 已由负责人 2026-09-30 确认）；满 18 周岁时刻按 BR-ID-26（C-15 默认处理，待法务确认）。本主题不另行决定。
 9. 同设备判定窗口：BR-INV-08 默认 = login_logs 留存期（BR-ID-30 ⑥）；是否与 BR-ID-05 同设备注册上限的 30×24 小时口径统一，需负责人确认。
 10. BR-INV-13 付款时间规则依赖各平台 paid_at 准确（待实测）；预售单以定金付款时间（deposit_paid_at）还是尾款时间作为取上级与等级的 paid_at，需在 09 订单归属验证中确认，默认用 deposit_paid_at（更早者），并须与 BR-CALC-12 的 paid_at 取法一致。
 11. 04 §3.2 users.status 字段未定义取值；本主题封禁判定只用 risk_state，需账号主题定义 users.status 或删除该字段。

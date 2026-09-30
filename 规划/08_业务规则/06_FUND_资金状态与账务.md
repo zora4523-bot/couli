@@ -4,23 +4,25 @@
 
 ## 6. 资金状态与账务（BR-FUND）
 
-本节规定：返利状态流转、入账时点与凭证、扣回与补差、负余额、两账户、流水类型、不变量、月末核对与垫资。共 23 条（已确认 3、默认假设 8、待决策 10、待验证 2）。
+本节规定：返利状态流转、入账时点与凭证、扣回与补差、负余额、两账户、流水类型、不变量、月末核对与垫资。共 23 条（已确认 4、默认假设 8、待决策 9、待验证 2）。
 
 本节按 §14.3 的建议（默认处理）改写了 C-01、C-02、C-03、C-06、C-07、C-08、C-09 涉及的条目，C-16、C-17 的默认处理与本节原写法一致；各条细则末尾注明所按的分歧编号与决策人，裁决前按默认处理实现。
+
+2026-09-30 负责人拍板第一批（docs/changes/20260930-拍板第一批.md）：BR-FUND-01 与 C-01、C-06 已确认；BR-FUND-04 入账方向改为跟随联盟月结批量入账（§3），流程参数待决策（§6），本主题其他条目中依赖逐单入账的写法已对齐或在细则末行登记待改。
 
 ### 6.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
 | --- | --- | --- | --- |
-| BR-FUND-01 | **订单双状态模型**<br>每个子订单必须维护两个互相独立的状态字段：`platform_status`（平台订单状态，唯一写者 order-sync，只由联盟数据经平台状态映射表驱动，见 BR-FUND-02）与 `rebate_status`（返利状态，唯一写者 settlement）。`hold`、`rights_pending` 的唯一写者也是 settlement：hold 只经后台 hold/unhold 接口或风控引擎调用 R11 迁移；order_rights 只经 settlement 提供的命令写入（order-sync、rights-imports 调用该命令），rights_pending 在 order_rights 写入或变更的同一事务内重算（存在 status ∈ {PROCESSING, WAIT_COMMISSION} 的记录即为 true）。两个状态都只能经 specs/state-machines/\*.yaml 生成的 transition() 以 CAS（UPDATE … WHERE id=:id AND status=:from，row_version+1）迁移；影响 0 行视为并发冲突或非法迁移，重读后按迁移表判断。表外事件：状态与余额均不变；内部调用抛 IllegalTransition，不重试，记日志并告警；后台 API 返回 20902「订单状态已变化，请刷新后重试」（data.resource=order）。订单相关的余额与分录只能在该子订单 rebate_status 迁移（含状态不变的自迁移 R5a、R7、R9、R9b、R10、R14）的同一 PG 事务内变更，不得依赖 outbox 事件完成；提现、坏账核销、人工调账、联盟回款不伴随订单迁移，分别按 BR-WDR-09（账户约束 BR-FUND-14）、BR-FUND-12、BR-FUND-16、BR-FUND-20。用户可见订单状态 display_status 由 (platform_status, rebate_status, hold, rights_pending, 金额) 派生，不入库（BR-FUND-17）。同一子订单的所有处理按 order_key（`{platform}:{sub_order_id}`，BR-FUND-05）用 pg_advisory_xact_lock 串行。 | 待决策 | orders.status 拆为 orders.platform_status、orders.rebate_status、orders.hold、orders.rights_pending；orders.locked、row_version；order_status_history 增加 field 列（platform/rebate）；specs/state-machines/order-platform.yaml、order-rebate.yaml；测试 ID SM-ORD-O&lt;n> → SM-PLT-P&lt;n>、SM-REB-R&lt;n>；order_rights 写入命令（settlement 提供）；错误码 20902（data.resource=order）；GET /v1/orders、GET /v1/orders/{id} 的 status 字段改为派生 display_status；后台订单列表筛选；三端订单页状态展示 |
-| BR-FUND-02 | **平台状态映射与可入账事件**<br>platform_status 只能由 specs/order-status-map/&lt;platform>.csv 把平台状态码映射为内部事件后按 BR-FUND-01 的 P 表迁移；映射表之外的状态码必须告警并写入待处理表，不得丢弃、不得猜测。可入账事件由 specs/creditable-events.yaml 定义：taobao、jd、pdd = 确认收货；meituan = 订单完成或核销；P1 平台 vip、douyin = 确认收货，eleme = 订单完成或核销（P1 平台接入时按 规划/09 实测结果确认后才写入该文件，未写入的平台订单不进入 WAITING）。平台返回的无时区时间一律按 +08:00 解析。乱序与去重按 BR-ATTR-01（attr.mtime_ordering.&lt;platform>，默认 false 时只看 content_hash）。received_at 必须取平台返回的收货/完成时间，不得用我方同步时间代替；平台只给出「已结算」而未给出收货时，视为已收货，received_at 取平台结算时间字段，按 P5 迁移到 SETTLED。received_at 一旦写入不再覆盖（包括之后回传的真实收货时间），credit_due_at 不重算；后到的真实收货时间另存 orders.platform_received_at 备查。平台未返回可用时间字段时订单进待处理表，不进入 WAITING。订单接口回传的结算佣金写入 order_settlements（source=API，BR-FUND-09）。 | 待验证 | specs/order-status-map/&lt;platform>.csv；specs/creditable-events.yaml；orders.received_at、platform_received_at、platform_modified_at、settled_at；order_settlements；order_sync 待处理表；规划/09 平台能力验证表；验收用例：确认收货与结算乱序回放、更新时间相等内容不同回放 |
+| BR-FUND-01 | **订单双状态模型**<br>每个子订单必须维护两个互相独立的状态字段：`platform_status`（平台订单状态，唯一写者 order-sync，只由联盟数据经平台状态映射表驱动，见 BR-FUND-02）与 `rebate_status`（返利状态，唯一写者 settlement）。`hold`、`rights_pending` 的唯一写者也是 settlement：hold 只经后台 hold/unhold 接口或风控引擎调用 R11 迁移；order_rights 只经 settlement 提供的命令写入（order-sync、rights-imports 调用该命令），rights_pending 在 order_rights 写入或变更的同一事务内重算（存在 status ∈ {PROCESSING, WAIT_COMMISSION} 的记录即为 true）。两个状态都只能经 specs/state-machines/\*.yaml 生成的 transition() 以 CAS（UPDATE … WHERE id=:id AND status=:from，row_version+1）迁移；影响 0 行视为并发冲突或非法迁移，重读后按迁移表判断。表外事件：状态与余额均不变；内部调用抛 IllegalTransition，不重试，记日志并告警；后台 API 返回 20902「订单状态已变化，请刷新后重试」（data.resource=order）。订单相关的余额与分录只能在该子订单 rebate_status 迁移（含状态不变的自迁移 R5a、R7、R9、R9b、R10、R14）的同一 PG 事务内变更，不得依赖 outbox 事件完成；提现、坏账核销、人工调账、联盟回款不伴随订单迁移，分别按 BR-WDR-09（账户约束 BR-FUND-14）、BR-FUND-12、BR-FUND-16、BR-FUND-20。用户可见订单状态 display_status 由 (platform_status, rebate_status, hold, rights_pending, 金额) 派生，不入库（BR-FUND-17）。同一子订单的所有处理按 order_key（`{platform}:{sub_order_id}`，BR-FUND-05）用 pg_advisory_xact_lock 串行。 | 已确认 | orders.status 拆为 orders.platform_status、orders.rebate_status、orders.hold、orders.rights_pending；orders.locked、row_version；order_status_history 增加 field 列（platform/rebate）；specs/state-machines/order-platform.yaml、order-rebate.yaml；测试 ID SM-ORD-O&lt;n> → SM-PLT-P&lt;n>、SM-REB-R&lt;n>；order_rights 写入命令（settlement 提供）；错误码 20902（data.resource=order）；GET /v1/orders、GET /v1/orders/{id} 的 status 字段改为派生 display_status；后台订单列表筛选；三端订单页状态展示 |
+| BR-FUND-02 | **平台状态映射与可入账事件**<br>platform_status 只能由 specs/order-status-map/&lt;platform>.csv 把平台状态码映射为内部事件后按 BR-FUND-01 的 P 表迁移；映射表之外的状态码必须告警并写入待处理表，不得丢弃、不得猜测。可入账事件由 specs/creditable-events.yaml 定义：taobao、jd、pdd = 确认收货；meituan = 订单完成或核销；P1 平台 vip、douyin = 确认收货，eleme = 订单完成或核销（P1 平台接入时按 规划/09 实测结果确认后才写入该文件，未写入的平台订单不进入 WAITING）。平台返回的无时区时间一律按 +08:00 解析。乱序与去重按 BR-ATTR-01（attr.mtime_ordering.&lt;platform>，默认 false 时只看 content_hash）。received_at 必须取平台返回的收货/完成时间，不得用我方同步时间代替；平台只给出「已结算」而未给出收货时，视为已收货，received_at 取平台结算时间字段，按 P5 迁移到 SETTLED。received_at 一旦写入不再覆盖（包括之后回传的真实收货时间），settle_period 不重算（BR-FUND-04）；后到的真实收货时间另存 orders.platform_received_at 备查。平台未返回可用时间字段时订单进待处理表，不进入 WAITING。订单接口回传的结算佣金写入 order_settlements（source=API，BR-FUND-09）。 | 待验证 | specs/order-status-map/&lt;platform>.csv；specs/creditable-events.yaml；orders.received_at、platform_received_at、platform_modified_at、settled_at；order_settlements；order_sync 待处理表；规划/09 平台能力验证表；验收用例：确认收货与结算乱序回放、更新时间相等内容不同回放 |
 | BR-FUND-03 | **预估返利生成与变更**<br>订单已归因到用户且 platform_status ∈ {PAID, RECEIVED, SETTLED} 时，每个受益人的预估返利（分）= 按该订单唯一一份分佣快照（生成时点按 BR-CALC-10：已归因且 platform_status 首次 ∈ {PAID, RECEIVED, SETTLED} 的同一事务内生成，DEPOSIT_PAID 阶段不生成；等级与上级取 paid_at 时刻，按 BR-CALC-12；生成后不再改）的比例拆分当前基数 B_est 所得份额（拆分与舍入规则见 BR-CALC）；platform_status=DEPOSIT_PAID 或 rebate_status=UNATTRIBUTED 时预估计为 0 且不向用户展示金额。ESTIMATED 与 WAITING 阶段不得写任何分录、不得改变 account_balances。联盟回传的佣金或数量（部分退款、价保、比价降佣）变化时，在订单 upsert 的同一事务内更新 est_commission_fen、refunded_quantity，commission_version+1，预估随之重算。首次入库 B_est=0 的已归因订单为 ESTIMATED，展示「本单无返利」；B_est 由 >0 变为 0 按 BR-FUND-07 处理。 | 默认假设 | orders.est_commission_fen、refunded_quantity、commission_version；commission_splits（生成时点见 BR-CALC-10）；GET /v1/orders 预估金额字段；推送见 BR-TEXT-09；订单页 |
-| BR-FUND-04 | **入账时点与入账任务**<br>rebate_status 由 ESTIMATED 进入 WAITING 时必须写 credit_due_at = received_at + wait_days × 24 小时（wait_days 读配置 settle.wait_days.&lt;platform>，默认 15；修改只影响此后进入 WAITING 的订单）。入账任务 settle.credit 每日运行一次，名义时刻 run_at = 当日 00:05:00.000 +08:00（时间一律读注入的 Clock；补跑或重跑仍取该日 run_at，不用实际启动时刻），只处理同时满足以下条件的子订单：rebate_status=WAITING；credit_due_at ≤ run_at；hold=false；rights_pending=false；子订单入账基数（按 BR-FUND-05 取法）≥ settle.daily_min_fen（默认 0 分，即不设门槛），或 settle_commission_fen 已记录；orders.credit_requires_settle=true 且 settle_commission_fen 为空 → 跳过（BR-CALC-15、BR-CALC-25），与门槛分支同样显示 WAITING_SETTLE、不给预计日期（C-27 (e)，默认处理，待财务确认）。**入账开关**：平台开关 credit.enabled.&lt;platform>（BR-CALC-03，默认 off；读取时点与缓存同 settle.auto.enabled）为 off 时，入账任务跳过该平台全部子订单（含 R5a），其余平台照常；R4 照常进 WAITING 并写 credit_due_at；该平台 WAITING 订单 expected_credit_date 返回 null，display_status=CREDITING（BR-FUND-17，「入账核对中」，不显示日期），该平台商品详情与 display_status ∈ {DEPOSIT_PAID, PAID} 的订单不展示「确认收货满 {wait_days} 天后入账」；扣回、补差、失效不受该开关影响。开关由 off 改为 on 后，下一次任务按 credit_due_at 正常处理积压订单，不另设补跑；expected_credit_date 按下式把「开关最近一次打开时刻」并入 max(…)。**单批上限**：每次任务每个平台最多处理 settle.credit.max_orders_per_run 个子订单（默认 5000，默认处理，待财务确认），按 (credit_due_at, order_key) 升序取；超出部分保持 WAITING、由下一次任务优先处理，并告警财务 1 次。门槛按子订单判断，一单中除 held 受益人外的全部受益人同时入账或同时不入账；held 受益人解除后按 BR-FUND-01 R5a 单独入账。任务在处理每个子订单的事务开始前读取 settle.auto.enabled（缓存 ≤10 秒）：为 off 时立即结束本次任务，已提交的订单保持 CREDITED，未处理的保持 WAITING；开关恢复后不自动补跑，下一次任务照常处理所有 credit_due_at ≤ run_at 的订单；有权限者可在后台 step-up 后手动触发一次补跑。用户侧预计入账日 expected_credit_date（+08:00 日期，YYYY-MM-DD）= 首个 run_at ≥ max(credit_due_at, received_synced_at, 最近一次维权关闭或 hold 解除时刻, 该平台 credit.enabled 最近一次由 off 改为 on 的时刻) 的入账任务所在日期，其中 received_synced_at = 本系统写入 rebate_status=WAITING 的事务时刻（取注入的 Clock）；即通常为 credit_due_at 的日期部分，时间部分 > 00:05:00.000 时再加 1 天；维权中或 hold 期间、该平台 credit.enabled=off 期间返回 null（显示售后中 / 核对中，不给日期），解除或开关打开后按上式重算（G-16，默认处理，待负责人确认）。本条是 expected_credit_date 计算的唯一维护处，BR-TEXT-04 只维护其展示格式。用户侧只展示「预计 MM-DD 入账」，不得承诺「15 天到账」「15 天入账」；售后或审核暂停时改用 BR-FUND-17 对应文案。 | 待决策 | orders.credit_due_at、orders.received_synced_at、orders.credit_requires_settle；配置 settle.wait_days.&lt;platform>、settle.daily_min_fen、settle.auto.enabled、credit.enabled.&lt;platform>（BR-CALC-03）、settle.credit.max_orders_per_run；任务 settle.credit 调度与 run_at、后台手动补跑；GET /v1/orders/{id} expected_credit_date；订单页、钱包待入账预计日期；商品详情「入账」文案；客服话术「什么时候入账」；验收用例：时钟注入快进 15 天入账、credit_due_at=00:05:03 边界、收货同步晚于 credit_due_at、任务中途关闭开关、credit.enabled=off 跳过与打开后处理积压、单批上限溢出 |
-| BR-FUND-05 | **入账金额与入账凭证**<br>定义 order_key = `{platform}:{sub_order_id}`（如 `taobao:1234567`）；所有资金 uniq_key 与 advisory lock 都必须用 order_key，不得单用 sub_order_id。入账基数 B_credit 必须 = orders.settle_commission_fen（若非空，取值规则见 BR-FUND-09），否则 = 入账时刻 orders.est_commission_fen 最新值；按分佣快照比例重新拆分为各受益人份额与平台留存（平台留存 = B_credit − Σ受益人份额，尾差归平台）。每个份额 >0 的受益人写 1 张凭证，uniq_key=`{order_key}:{user_id}:{role}:CREDIT`；平台留存 >0 写 1 张凭证，uniq_key=`{order_key}:PLATFORM:CREDIT`；B_credit=0 时不写凭证，只迁移状态。同一子订单的全部凭证、account_balances 更新、orders.booked_base_fen=B_credit 与 rebate_status→CREDITED 必须在同一 PG 事务内完成；用户账户按 account_id 升序 SELECT … FOR UPDATE。uniq_key 冲突视为已入账，跳过且结果与首次相同。 | 待决策 | ledger_vouchers.uniq_key 唯一索引；ledger_entries；account_balances；orders.booked_base_fen；任务 settle.credit；事件 order.credited；属性测试：同一 (子订单,受益人,角色) 入账 ≤1 次；跨平台同号子订单各自入账；验收用例（AC-SET-nn，编号待 规划/05 分配）：重放入账只入账 1 次 |
-| BR-FUND-06 | **维权中与订单暂停**<br>子订单 rights_pending=true（存在 status ∈ {PROCESSING, WAIT_COMMISSION} 的 order_rights 记录）或 hold=true 时，入账任务必须跳过；二者都不改变 rebate_status。hold 只能对 rebate_status ∈ {ESTIMATED, WAITING} 设置：人工由 ops（风控）或 cs（客服）操作，风控引擎可以系统身份（actor=system:risk）自动 hold；unhold 只能由 ops 或 cs 人工执行（不要求与 hold 为同一人），系统不得自动 unhold；hold、unhold 都必须填原因码并写审计日志。CREDITED 之后不得 hold（改用账户提现冻结）。维权结果：失败 → 关闭记录、金额不变；全额成功 → 入账前按 BR-FUND-07、入账后按 BR-FUND-08；部分成功 → 按 BR-FUND-08 的新基数取值顺序确定 B_new（入账前改预估，入账后部分扣回）；联盟新佣金与应扣佣金都没有时，order_rights 置 WAIT_COMMISSION（仍阻止入账），等联盟回传新佣金后按 R7/R9 处理并关闭。无「处理中」信号的平台只在结果回传时处理。 | 待验证 | orders.hold、orders.rights_pending；order_rights 表（来源、类型、金额、应扣佣金、状态 PROCESSING/WAIT_COMMISSION/SUCCEEDED/FAILED、发生时间、平台维权单号、created_at）；后台订单 hold/unhold 操作与审计；风控引擎 system:risk 身份；/admin/v1/rights-imports；订单页展示文案 |
+| BR-FUND-04 | **入账时点与入账任务**<br>负责人已定方向（2026-09-30，变更记录 §3）：可提现入账跟随联盟月结，不再按确认收货后固定天数逐单入账；本条流程参数为默认处理，待负责人确认（变更记录 §6）。<br>① 预估：订单付款并经订单同步入库，即按 BR-FUND-03 生成预估收益（不可提现，不写分录）；order-sync 每日至少轮询一次联盟订单接口，更新平台状态与佣金（BR-FUND-02）。<br>② 待入账：platform_status 进入 RECEIVED 或 SETTLED 时按 R4 进入 WAITING，同一事务写 received_synced_at（取注入的 Clock）与结算周期 settle_period（YYYY-MM）= received_at 所在自然月（+08:00，取法读配置 settle.period_basis.&lt;platform>，默认 received_at）；settle_period 写入后不因 received_at 回补而重算，只能经差错单处理顺延（记审计）。<br>③ 账单导入：联盟对周期 M 出结算账单（出账日读配置 settle.statement_day.&lt;platform>，默认 M 的次月 20 日）后，结算明细经接口拉取或由 finance 在后台上传（settle.statement_source.&lt;platform> ∈ {api, upload}，默认 upload），逐行写 order_settlements(source=STATEMENT)（BR-FUND-09），并登记账单 statement_id = `{platform}:{M}:{导入序号}`、行数与结算佣金合计；整份导入完成后才能比对。<br>④ 逐单比对：对账单每一行，同时满足以下条件的子订单进入批次候选：按 order_key 找到我方子订单；rebate_status=WAITING；\|账单结算佣金 − 我方同步佣金\| ≤ settle.batch.match_tolerance_fen（默认 0 分；我方同步佣金 = 最新 source=API 的结算额，无则 est_commission_fen；差错单结论为「以账单为准」的视为一致）；hold=false；rights_pending=false。金额不一致、我方无单、我方为 ESTIMATED / VOID / CLAWED_BACK 的行生成差错单，不入账；hold 或维权中的行记「暂缓」，不生成差错单、不入账；我方 WAITING 且 settle_period=M 但账单无此单的生成差错单「应结未结」，订单保持 WAITING；rebate_status=CREDITED 的行不进批次，按 BR-FUND-09 补差。<br>⑤ 生成批次：候选按 (platform, M) 生成结算批次（状态 DRAFT），每批最多 settle.batch.max_orders 个子订单（默认 5000），超出按 order_key 升序拆为多批；批次列明子订单数、各受益人份额与平台留存合计、与账单合计的差额、差错单数与暂缓数。<br>⑥ 人工确认：批次须由 finance 或 super 在 step-up 后确认（记录 confirmed_by、confirmed_at；默认单人确认），或驳回（CANCELLED，记原因，批内订单保持 WAITING）；未确认的批次不得入账。<br>⑦ 批量入账：批次 CONFIRMED 后执行，每个子订单单独一个 PG 事务；事务内按 order_key 加锁重读，仍为 WAITING、hold=false、rights_pending=false，且 order_settlements 的 seq 与比对时一致，才按 BR-FUND-05 以 B_credit（= 账单结算额）写入账凭证并按 R5 迁移到 CREDITED；否则跳过（保持 WAITING，批次明细记原因，进入后续批次）。uniq_key 保证同一批次重放或跨批次重复只入账一次。每个子订单事务开始前读取 settle.auto.enabled 与 credit.enabled.&lt;platform>（缓存 ≤10 秒），任一为 off 立即停止，批次置 PARTIAL，已提交的保持 CREDITED、未处理的保持 WAITING；开关恢复后不自动续跑，由 finance step-up 后手动继续。每日 00:00 至当日资产快照完成（BR-FUND-18）期间不执行批次。<br>⑧ 补充批次：差错单处理完毕、hold 解除或维权关闭的子订单，finance 可对同一账单发起补充比对与批次（流程同 ④–⑦），不必等下一周期账单。<br>⑨ 平台入账开关 credit.enabled.&lt;platform>（BR-CALC-03，默认 off）为 off 时，该平台不得生成或执行结算批次，R4 照常进 WAITING 并写 settle_period；扣回、补差、失效不受本条开关与批次影响。<br>⑩ 一单中除 held 受益人（BR-CALC-13）外的全部受益人同批入账或同时不入账；held 受益人解除后按 BR-FUND-01 R5a 在后续批次（含补充批次）单独入账。<br>⑪ 用户侧预计入账：WAITING 订单由服务端返回 expected_credit_period（= settle_period），客户端不得自行推算；展示为「预计随 {平台} {月份} 联盟结算批次入账」一类表达，文案只在 BR-TEXT-04 维护；维权中、hold、该平台 credit.enabled=off 时返回 null；该平台周期 settle_period 的已确认批次全部执行完而本单仍为 WAITING，或当前日期（+08:00）晚于预计出账日 + settle.statement.grace_days（默认 10 天）仍无该周期已确认批次时，credit_overdue=true，按 BR-FUND-17 显示「入账核对中」。不得向用户承诺具体入账日期或天数。本条是预计入账计算的唯一维护处。 | 待决策 | orders.settle_period、orders.received_synced_at（删除 orders.credit_due_at）；结算账单登记（statement_id、platform、period、source、行数、佣金合计）；结算批次与批次明细（状态 DRAFT/CONFIRMED/EXECUTING/PARTIAL/DONE/CANCELLED，confirmed_by、confirmed_at，明细结果：入账 / 跳过 / 暂缓）；差错单类型「账单金额不一致」「应结未结」；配置 settle.period_basis.&lt;platform>、settle.statement_day.&lt;platform>、settle.statement_source.&lt;platform>、settle.batch.match_tolerance_fen、settle.batch.max_orders、settle.statement.grace_days、settle.auto.enabled、credit.enabled.&lt;platform>（BR-CALC-03）（删除 settle.wait_days.&lt;platform>、settle.daily_min_fen、settle.credit.max_orders_per_run）；删除每日任务 settle.credit；后台账单导入、比对结果、批次确认 / 驳回 / 继续执行、补充批次页；GET /v1/orders/{id} expected_credit_period、credit_overdue；订单页、钱包待入账预计入账表达；商品详情入账说明；客服话术「什么时候入账」；验收用例：账单导入 → 比对 → 确认 → 批量入账、金额不一致进差错单、hold 与维权暂缓后补充批次、批次重放只入账一次、执行中关闭开关后手动继续、credit.enabled=off 不生成批次、应结未结差错单 |
+| BR-FUND-05 | **入账金额与入账凭证**<br>定义 order_key = `{platform}:{sub_order_id}`（如 `taobao:1234567`）；所有资金 uniq_key 与 advisory lock 都必须用 order_key，不得单用 sub_order_id。入账基数 B_credit 必须 = orders.settle_commission_fen（若非空，取值规则见 BR-FUND-09），否则 = 入账时刻 orders.est_commission_fen 最新值；按分佣快照比例重新拆分为各受益人份额与平台留存（平台留存 = B_credit − Σ受益人份额，尾差归平台）。每个份额 >0 的受益人写 1 张凭证，uniq_key=`{order_key}:{user_id}:{role}:CREDIT`；平台留存 >0 写 1 张凭证，uniq_key=`{order_key}:PLATFORM:CREDIT`；B_credit=0 时不写凭证，只迁移状态。同一子订单的全部凭证、account_balances 更新、orders.booked_base_fen=B_credit 与 rebate_status→CREDITED 必须在同一 PG 事务内完成；用户账户按 account_id 升序 SELECT … FOR UPDATE。uniq_key 冲突视为已入账，跳过且结果与首次相同。 | 待决策 | ledger_vouchers.uniq_key 唯一索引；ledger_entries；account_balances；orders.booked_base_fen；结算批次执行（BR-FUND-04）；事件 order.credited；属性测试：同一 (子订单,受益人,角色) 入账 ≤1 次；跨平台同号子订单各自入账；验收用例（AC-SET-nn，编号待 规划/05 分配）：重放入账只入账 1 次 |
+| BR-FUND-06 | **维权中与订单暂停**<br>子订单 rights_pending=true（存在 status ∈ {PROCESSING, WAIT_COMMISSION} 的 order_rights 记录）或 hold=true 时，结算批次比对记暂缓、执行时跳过（BR-FUND-04）；二者都不改变 rebate_status。hold 只能对 rebate_status ∈ {ESTIMATED, WAITING} 设置：人工由 ops（风控）或 cs（客服）操作，风控引擎可以系统身份（actor=system:risk）自动 hold；unhold 只能由 ops 或 cs 人工执行（不要求与 hold 为同一人），系统不得自动 unhold；hold、unhold 都必须填原因码并写审计日志。CREDITED 之后不得 hold（改用账户提现冻结）。维权结果：失败 → 关闭记录、金额不变；全额成功 → 入账前按 BR-FUND-07、入账后按 BR-FUND-08；部分成功 → 按 BR-FUND-08 的新基数取值顺序确定 B_new（入账前改预估，入账后部分扣回）；联盟新佣金与应扣佣金都没有时，order_rights 置 WAIT_COMMISSION（仍阻止入账），等联盟回传新佣金后按 R7/R9 处理并关闭。无「处理中」信号的平台只在结果回传时处理。 | 待验证 | orders.hold、orders.rights_pending；order_rights 表（来源、类型、金额、应扣佣金、状态 PROCESSING/WAIT_COMMISSION/SUCCEEDED/FAILED、发生时间、平台维权单号、created_at）；后台订单 hold/unhold 操作与审计；风控引擎 system:risk 身份；/admin/v1/rights-imports；订单页展示文案 |
 | BR-FUND-07 | **入账前失效与部分退款**<br>rebate_status ∈ {UNATTRIBUTED, ESTIMATED, WAITING} 时收到 PLATFORM_INVALID、全额维权成功、PUNISH、BLACKLIST_HIT，或 B_est 由 >0 更新为 0 而平台未回传失效，必须迁移到 VOID（终态），记 reason_code（REFUND / RIGHTS / PUNISH / BLACKLIST / COMMISSION_ZERO），不写任何分录，事务内写 outbox 事件 order.invalidated。首次入库即 B_est=0 的订单不适用本条（见 BR-FUND-03）。COMMISSION_ZERO 判定只比较 platform_status ≠ DEPOSIT_PAID 时的 B_est：platform_status=DEPOSIT_PAID 期间 B_est 的任何变化（含 >0 变 0 或变为 null）都不触发本条；进入 PAID（P2）时的 B_est 视为 BR-FUND-03 的「首次 B_est」，为 0 时按「本单无返利」处理、不作废。联盟某次回传佣金字段缺失或为空时不覆盖已有 est_commission_fen（保留上次数值），不触发本条；est_commission_fen 只在从未收到数值时为 null，表示「未知」，不视为 0。部分退款、部分维权、价保、比价降佣只更新 refunded_quantity 与 est_commission_fen，状态不变，不写分录。VOID 后平台再回传有效状态不得自动复活，按 BR-FUND-22 处理。 | 默认假设 | orders.rebate_status、reason_code；事件 order.invalidated；推送「订单已失效」；订单页原因码文案 |
 | BR-FUND-08 | **入账后扣回**<br>rebate_status=CREDITED 时发生逆向事件（退款、维权成功、处罚、PLATFORM_INVALID、REFUND_AFTER_SETTLE、INVALID_AFTER_SETTLE、B 由 >0 变 0），必须在同一事务内按受益人写 CLAWBACK 凭证。京东实际佣金由 >0 变 0 的口径待 规划/09 验证，验证前按全额扣回处理并生成差错单人工复核。佣金变化（R9b：价保、比价降佣、联盟佣金调整）不属于逆向事件，不写 CLAWBACK，按 BR-FUND-01 R9b 处理（负差即时写负向 SETTLE_ADJUST，正差进 BR-FUND-09 候选）。新基数 B_new 按以下顺序取第一个可用值：①本次事件自带的联盟新佣金（订单同步回传的 est_commission_fen 或 settle_commission_fen，取本次更新的那个）；②order_rights 记录的应扣佣金，B_new = booked_base_fen − 应扣佣金；③都没有 → 不写扣回，order_rights 置 WAIT_COMMISSION，订单进待处理表并告警。整单失效时 B_new=0。受益人扣回金额 = 该受益人在该子订单上的已入账净额（CREDIT + Σ SETTLE_ADJUST − Σ 已有 CLAWBACK）− 按 B_new 和快照重拆的新应得，≤0 不写。平台留存差额 = 平台已入账净额 − 按 B_new 的新留存，可正可负，≠0 就写：正数 借 COMMISSION_REVENUE / 贷 UNION_RECEIVABLE；负数 借 UNION_RECEIVABLE / 贷 COMMISSION_REVENUE。本次全部凭证对 UNION_RECEIVABLE 的净影响必须 = −(booked_base_fen − B_new)，同事务 booked_base_fen=B_new。B_new=0 → CLAWED_BACK（终态），否则保持 CREDITED。uniq_key：受益人 `{order_key}:{user_id}:{role}:CLAWBACK:{rights_event_id}`，平台 `{order_key}:PLATFORM:CLAWBACK:{rights_event_id}`。rights_event_id 取值：来自维权/处罚接口或导入 → `R{order_rights.id}`；来自订单同步的平台状态变化 → `P{platform_status 迁移后的 row_version}`；来自订单同步的佣金变化 → `C{commission_version}`（同一份联盟数据重放时 commission_version 不变，不生成新键）。扣回只从 available 扣，允许 available 变负（BR-FUND-10），不得扣 frozen。 | 待决策 | ledger_type CLAWBACK 与 sub_type；order_rights（WAIT_COMMISSION）；orders.booked_base_fen；事件 order.clawed_back；推送/站内信「返利已扣回」；订单页已扣回详情（金额、原因、关联流水）；验收用例 AC-SET-nn（编号待 规划/05 分配，对应后端功能规划 §10.1 AC-MONEY-004）；属性测试：扣回 ≤ 已入账；UNION_RECEIVABLE 净影响 = −(B_old − B_new) |
-| BR-FUND-09 | **月结补差**<br>R1 联盟对账以联盟结算明细（结算报表或接口）为唯一依据。每个子订单的结算记录存 order_settlements(order_key, seq, source ∈ {API, STATEMENT}, settle_commission_fen, settled_at, content_hash)，每收到一条内容不同的记录 seq+1；orders.settle_commission_fen = 最新 STATEMENT 记录的金额，无 STATEMENT 时取最新 API 记录；API 与明细金额不一致时以明细为准并生成差错单。调度任务每日 02:00 检查各平台上一结算周期的明细是否已全部拉取，拉全后的次日运行 R1；finance 可手动触发。补差只针对 rebate_status=CREDITED 的子订单，逐受益人计算 diff = 按当前 settle_commission_fen 与快照重拆的应得份额 − 已入账净额（平台留存同法），按 settle_commission_fen 与 booked_base_fen 的大小分两路：①负差（settle_commission_fen &lt; booked_base_fen）：在写入该 settle_commission_fen 的同一事务内（订单同步回传结算额，或结算明细入库）立即写 SETTLE_ADJUST 凭证（diff≠0 才写），不等审批；②正差（settle_commission_fen > booked_base_fen）：R1 生成补差候选行（记录生成时的 seq）写入 settle_adjust_batches，须由 finance 发起、另一名 finance 或 super（≠发起人）step-up 复核后才写 SETTLE_ADJUST 凭证；写凭证时必须按 orders.settle_commission_fen 当前值与当前净额重算：diff=0 不写；候选行 seq ≠ 该订单当前 seq 时该行作废，不写；③相等：不补差。价保、比价降佣等佣金下调（结算额写入前的 est_commission_fen 变化）不等月结，按 BR-FUND-01 R9b 即时记账。两路 uniq_key 相同：受益人 `{order_key}:{user_id}:{role}:ADJ:{seq}`、平台 `{order_key}:PLATFORM:ADJ:{seq}`，同事务 booked_base_fen=settle_commission_fen。月结不得产生首次入账：结算明细中 WAITING 的子订单只记录结算额、不生成差错单，由 BR-FUND-04 入账任务按结算额入账（含低于日结门槛的订单）；ESTIMATED、VOID、CLAWED_BACK 或我方无订单的，生成差错单。负向补差允许 available 变负。 | 待决策 | order_settlements 表；settle_adjust_batches 表（只含正差）；orders.settle_commission_fen、booked_base_fen；订单同步与明细入库事务内的负差即时补差；/admin/v1/recon R1、正差补差批次发起与复核页；ledger_type SETTLE_ADJUST；差错单类型；订单页「与预估不同时显示差额原因」；验收用例 F-SET-05 重跑月结、结算修正 A→B→A |
+| BR-FUND-09 | **月结补差**<br>R1 联盟对账以联盟结算明细（结算报表或接口）为唯一依据。每个子订单的结算记录存 order_settlements(order_key, seq, source ∈ {API, STATEMENT}, settle_commission_fen, settled_at, content_hash)，每收到一条内容不同的记录 seq+1；orders.settle_commission_fen = 最新 STATEMENT 记录的金额，无 STATEMENT 时取最新 API 记录；API 与明细金额不一致时以明细为准并生成差错单。调度任务每日 02:00 检查各平台上一结算周期的明细是否已全部拉取，拉全后的次日运行 R1；finance 可手动触发。补差只针对 rebate_status=CREDITED 的子订单，逐受益人计算 diff = 按当前 settle_commission_fen 与快照重拆的应得份额 − 已入账净额（平台留存同法），按 settle_commission_fen 与 booked_base_fen 的大小分两路：①负差（settle_commission_fen &lt; booked_base_fen）：在写入该 settle_commission_fen 的同一事务内（订单同步回传结算额，或结算明细入库）立即写 SETTLE_ADJUST 凭证（diff≠0 才写），不等审批；②正差（settle_commission_fen > booked_base_fen）：R1 生成补差候选行（记录生成时的 seq）写入 settle_adjust_batches，须由 finance 发起、另一名 finance 或 super（≠发起人）step-up 复核后才写 SETTLE_ADJUST 凭证；写凭证时必须按 orders.settle_commission_fen 当前值与当前净额重算：diff=0 不写；候选行 seq ≠ 该订单当前 seq 时该行作废，不写；③相等：不补差。价保、比价降佣等佣金下调（结算额写入前的 est_commission_fen 变化）不等月结，按 BR-FUND-01 R9b 即时记账。两路 uniq_key 相同：受益人 `{order_key}:{user_id}:{role}:ADJ:{seq}`、平台 `{order_key}:PLATFORM:ADJ:{seq}`，同事务 booked_base_fen=settle_commission_fen。R1 补差不得产生首次入账：结算明细中 WAITING 的子订单只记录结算额、不生成差错单，由 BR-FUND-04 结算批次比对、人工确认后按结算额入账；ESTIMATED、VOID、CLAWED_BACK 或我方无订单的，生成差错单。负向补差允许 available 变负。 | 待决策 | order_settlements 表；settle_adjust_batches 表（只含正差）；orders.settle_commission_fen、booked_base_fen；订单同步与明细入库事务内的负差即时补差；/admin/v1/recon R1、正差补差批次发起与复核页；ledger_type SETTLE_ADJUST；差错单类型；订单页「与预估不同时显示差额原因」；验收用例 F-SET-05 重跑月结、结算修正 A→B→A |
 | BR-FUND-10 | **负余额规则**<br>只有 CLAWBACK、负向 SETTLE_ADJUST、负向 ADMIN_ADJUST 可以使 USER_\*.available_fen &lt; 0；其他任何写入（含 WITHDRAW_FREEZE、WITHDRAW_FEE、TAX_WITHHOLD）写入前必须校验结果 ≥0，frozen_fen ≥0 由数据库 CHECK 约束保证。available_fen &lt; 0 时该账户提现申请必须返回 30302；后续入账直接计入该账户，自然抵扣负数，不另写抵扣分录；SELF 与 PROMO 两账户不互抵、不自动划转。 | 已确认 | account_balances CHECK (frozen_fen >= 0)；POST /v1/withdrawals 校验、错误码 30302；GET /v1/wallet/summary negative_fen；钱包页待抵扣提示；验收用例 AC-SET-nn（编号待 规划/05 分配，对应后端功能规划 §10.1 AC-MONEY-004） |
 | BR-FUND-11 | **负余额跨账户提现限制**<br>用户任一账户（SELF 或 PROMO）available_fen &lt; 0 时，两个账户都不得提现；两账户仍不互抵、不划转资金。申请时的错误码与已有非终态提现单的处理见 BR-WDR-05。 | 待决策 | 见 BR-WDR-05；钱包页提示文案；客服话术 |
 | BR-FUND-12 | **负余额坏账核销**<br>账户 available 由 ≥0 变为 &lt;0 时记 negative_since = 当日会计日（00:00 +08:00 日切），回到 ≥0 时清空。每日 R3 后生成负余额报表；当 当前会计日 − negative_since ≥ ledger.bad_debt_days（默认 90）且 \|available_fen\| ≥ ledger.bad_debt_min_fen（默认 0，待财务）时生成核销候选单；同一账户同时最多 1 张 PENDING 候选单，已存在则不再生成。核销不得自动执行：必须由 finance 发起、另一名 finance 或 super（≠发起人）step-up 后批准。批准时重读 available：&lt;0 → 写 BAD_DEBT_WRITEOFF（借 BAD_DEBT / 贷 USER_\*.available，金额 = −当前 available_fen，不用候选单生成时的金额），使 available=0；≥0 → 候选单置 CANCELLED，不写凭证。凭证 uniq_key=`BADDEBT:{account_id}:{candidate_id}`。核销时给同实名、同设备、同收款账号的关联账户打风控标记。 | 待决策 | account_balances.negative_since；负余额报表、核销候选单（后台，PENDING/APPROVED/CANCELLED）；ledger_type BAD_DEBT_WRITEOFF；配置 ledger.bad_debt_days、ledger.bad_debt_min_fen；风控关联标记与申诉；隐私政策风控条款 |
@@ -33,14 +35,14 @@
 | BR-FUND-19 | **账务不变量与日终校验**<br>每日 01:00 +08:00 对会计日 D−1 运行 ledger_invariants.sql，校验：①每个用户账户 余额缓存 = 分录合计，且 期初 + 当日发生额 = 期末（daily_balances）；②每张凭证 Σ amount_fen = 0；③每个 (子订单, 受益人, 角色) 的 CREDIT 凭证 ≤1；④每 (子订单, 受益人, 角色) Σ CLAWBACK ≤ CREDIT + Σ 正向 SETTLE_ADJUST；⑤每个 CREDITED 或 CLAWED_BACK 子订单：该单订单类凭证（CREDIT、CLAWBACK、SETTLE_ADJUST、ADMIN_ADJUST RESTORE）对 UNION_RECEIVABLE 的净额 = booked_base_fen，且 Σ受益人已入账净额 ≤ booked_base_fen；⑥frozen_fen ≥0 且 = Σ 非终态提现单金额；⑦用户账户中每条使 balance_after_fen &lt;0 且较前一条下降的分录，其 ledger_type ∈ {CLAWBACK, SETTLE_ADJUST, ADMIN_ADJUST}；⑧platform_status=INVALID 或存在已成功的 INVALID_AFTER_SETTLE 维权、但 rebate_status 仍为 CREDITED 的子订单数 = 0。账户级差异（①⑥⑦⑧）：告警、生成差错单，并冻结涉及用户两个账户的提现。全局差异（②③④⑤）：告警，系统自动将 settle.auto.enabled 置 off（系统关闭不需 step-up），并冻结差异涉及的所有用户两个账户的提现。冻结方式：为每个涉及用户新增 1 条 withdraw_holds 记录（BR-WDR-05；reason=ledger_mismatch，source_ref=差错单 id，后台显示冻结来源 LEDGER_MISMATCH，不向用户展示），同一差错单对同一用户只新增 1 条；冻结生效期间提现申请返回 30303（data.reason=account_frozen）；与 30302 同时满足时按 BR-WDR-03 校验顺序优先返回 30303(account_frozen)；由 finance 在差错单关闭时 step-up 解除该条记录（写 released_at、released_by），同一用户的其他冻结记录不受影响。settle.auto.enabled 重新打开需有权限者 step-up。每张入账凭证提交后 5 分钟内做证实核对（凭证金额 = 分佣快照按 B_credit 重算的份额），不一致 5 分钟内告警并按账户级冻结该用户提现（同上新增 withdraw_holds）。 | 默认假设 | ledger_invariants.sql；daily_balances 表（新增）；withdraw_holds（reason=ledger_mismatch，BR-WDR-05）；错误码 30303 data.reason=account_frozen；开关 settle.auto.enabled（系统自动关闭）；告警规则；属性测试与并发测试；验收用例 AC-SET-nn（编号待 规划/05 分配，对应后端功能规划 §10.1 AC-MONEY-013） |
 | BR-FUND-20 | **垫资敞口与入账开关**<br>已入账未回款 = UNION_RECEIVABLE:{platform} 分录余额（按平台）。联盟回款必须由财务在后台录入或经 R1 确认后写凭证：借 CASH_ALIPAY（或银行科目）/ 贷 UNION_RECEIVABLE:{platform}。每日随资产快照（D+1 00:01，BR-FUND-18）计算各平台与合计的已入账未回款；合计 > ledger.advance_alert_fen 的每一天告警财务 1 次。紧急开关 settle.auto.enabled（默认 on）：人工修改需 step-up 并告警，10 秒内生效；系统按 BR-FUND-19 自动关闭不需 step-up；重新打开一律需有权限者 step-up。开关为 off 时入账任务按 BR-FUND-04 停止，订单保持 WAITING，不影响扣回与补差。 | 待决策 | 看板：已入账未回款（按平台与合计）、负余额总额；配置 ledger.advance_alert_fen；开关 settle.auto.enabled；后台联盟回款录入；R1 差错单 |
 | BR-FUND-21 | **负余额时未打款的提现单**<br>负余额对非终态提现单的处理（W2/W4/W8 守卫、事件 account.went_negative、同账户 W3 驳回、另一账户 blocked_reason=NEGATIVE_BALANCE_OTHER、PAYING 单走 W9）只在 BR-WDR-05 (a) 维护，本条不再单独规定；编号保留供 §14.3 C-08、C-21 及外部引用定位。 | 待决策 | 见 BR-WDR-05 (a) |
-| BR-FUND-22 | **作废或扣回订单的平台恢复**<br>rebate_status 为 VOID 或 CLAWED_BACK 的子订单不得因平台数据自动复活。仅当其 reason_code ∈ {REFUND, RIGHTS, COMMISSION_ZERO} 或进入原因为 PLATFORM_INVALID / INVALID_AFTER_SETTLE，且平台此后回传非失效状态或佣金恢复为 >0 时，才告警并生成差错单（类型「已作废订单被平台恢复」）；因 PUNISH、BLACKLIST_HIT 作废的订单，platform_status 照常更新，不告警、不生成差错单。差错单只能经 ADMIN_RESTORE 处理：ops 或 finance 发起，另一人（≠发起人）step-up 复核。R12：VOID → 按当前 platform_status 回到 ESTIMATED 或 WAITING（credit_due_at = received_at + wait_days 重算，已过期则由下一次入账任务入账），不写分录。R13：CLAWED_BACK → CREDITED，按当前联盟佣金与分佣快照重算各受益人与平台应得，与当前净额的差额写 ADMIN_ADJUST（sub_type=RESTORE，借 UNION_RECEIVABLE / 贷 USER_\*.available 或 COMMISSION_REVENUE），uniq_key 受益人 `{order_key}:{user_id}:{role}:RESTORE:{差错单 id}`、平台 `{order_key}:PLATFORM:RESTORE:{差错单 id}`，同事务 booked_base_fen=新基数。复核人也可决定不恢复，关闭差错单并记原因。 | 默认假设 | 迁移表 R12、R13（SM-REB-R12/R13）；差错单类型「已作废订单被平台恢复」；ADMIN_ADJUST sub_type RESTORE；后台差错单处理页（发起、复核）；告警规则 |
+| BR-FUND-22 | **作废或扣回订单的平台恢复**<br>rebate_status 为 VOID 或 CLAWED_BACK 的子订单不得因平台数据自动复活。仅当其 reason_code ∈ {REFUND, RIGHTS, COMMISSION_ZERO} 或进入原因为 PLATFORM_INVALID / INVALID_AFTER_SETTLE，且平台此后回传非失效状态或佣金恢复为 >0 时，才告警并生成差错单（类型「已作废订单被平台恢复」）；因 PUNISH、BLACKLIST_HIT 作废的订单，platform_status 照常更新，不告警、不生成差错单。差错单只能经 ADMIN_RESTORE 处理：ops 或 finance 发起，另一人（≠发起人）step-up 复核。R12：VOID → 按当前 platform_status 回到 ESTIMATED 或 WAITING（WAITING 时 settle_period 按 received_at 取；该周期批次已执行的，进入补充批次或下一周期批次，BR-FUND-04），不写分录。R13：CLAWED_BACK → CREDITED，按当前联盟佣金与分佣快照重算各受益人与平台应得，与当前净额的差额写 ADMIN_ADJUST（sub_type=RESTORE，借 UNION_RECEIVABLE / 贷 USER_\*.available 或 COMMISSION_REVENUE），uniq_key 受益人 `{order_key}:{user_id}:{role}:RESTORE:{差错单 id}`、平台 `{order_key}:PLATFORM:RESTORE:{差错单 id}`，同事务 booked_base_fen=新基数。复核人也可决定不恢复，关闭差错单并记原因。 | 默认假设 | 迁移表 R12、R13（SM-REB-R12/R13）；差错单类型「已作废订单被平台恢复」；ADMIN_ADJUST sub_type RESTORE；后台差错单处理页（发起、复核）；告警规则 |
 | BR-FUND-23 | **月末三项核对**<br>每月 1 日 01:30:00 +08:00（名义时刻，读注入的 Clock；须在当日 01:00 的 BR-FUND-19 日终校验完成后开始，最晚等到 03:00，超时告警并照常运行）对上月 M（M 月 1 日 00:00 至 M+1 月 1 日 00:00，+08:00）运行内部对账 R3 的月度核对，按 app_id、分 SELF/PROMO 与合计计算三个数（单位分）：X1 用户累计入账净额 = 截至 M 月末（accounting_date ≤ M 月末日）用户 available 子户上 REBATE_CREDIT、SHARE_CREDIT、REFERRAL_CREDIT、REWARD、CLAWBACK、SETTLE_ADJUST、ADMIN_ADJUST、BAD_DEBT_WRITEOFF 分录对用户余额的影响合计（贷记为正）；X2 用户期末余额 = M 月末日 asset_snapshots 的 total_available_positive_fen − total_negative_fen + total_frozen_fen；X3 用户累计已提现 = 截至 M 月末迁移到 PAID_API/PAID_MANUAL 的提现单 amount_fen 合计（取提现单表，以迁移事务的 Clock 时刻判断归属月份）。必须满足 X1 = X2 + X3，差额 ≠0 分即 P1 告警并生成差错单（类型「月末三项不平」），不自动冻结提现、不改开关（账户级定位与冻结由 BR-FUND-19 负责）。同一报表另列按平台的「上月联盟预估佣金」（paid_at 在 M 内且已归因子订单的 est_commission_fen 当前值合计）、「上月入账基数」（M 内 rebate_status→CREDITED 的子订单 booked_base_fen 合计）、UNION_RECEIVABLE:{platform} 期末余额，只供财务查看，不参与等式。重跑同一月份结果相同，差错单按 (app_id, 月份) 去重。 | 默认假设 | 任务 recon.monthly（依赖 BR-FUND-19 当日完成、BR-FUND-18 月末日快照）；/admin/v1/recon R3 月度报表与导出；差错单类型「月末三项不平」；告警规则；验收用例：构造入账、扣回、提现、核销后三项相等；篡改一笔提现单金额后生成差错单 |
 
 ### 6.2 细则
 
 #### BR-FUND-01 细则 · 订单双状态模型
 
-- 状态：待决策
+- 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §2）
 - 默认值：采用双状态（platform_status + rebate_status），取代 规划/04 的单一 order_status；理由：平台事实与资金事实分属不同写者，避免 O7/O8 语义混杂和入账后维权无状态可落，且后端功能规划已按此设计。分佣快照的生成时点按 BR-CALC-10（已归因且 platform_status 首次 ∈ {PAID, RECEIVED, SETTLED}；DEPOSIT_PAID 不生成），快照中的等级与上级按 BR-CALC-12 取 paid_at 时刻，R2、R3 均同（C-06）。
 - 决策人：负责人
 - 依赖平台能力：无
@@ -74,12 +76,12 @@ platform_status=SETTLED 只表示联盟订单状态为「结算」，不表示�
 |---|---|---|---|---|---|
 | R1 | — | 入库未归因 | — | UNATTRIBUTED | 无 |
 | R2 | — | 入库已归因 | — | ESTIMATED（platform_status 已为 RECEIVED/SETTLED 时同事务再按 R4 进 WAITING） | 无；platform_status ≠ DEPOSIT_PAID 时同事务生成分佣快照，DEPOSIT_PAID 时在之后 P2（→PAID）的同一事务内生成（BR-CALC-10） |
-| R3 | UNATTRIBUTED | CLAIM_APPROVED / ADMIN_REASSIGN | orders.locked=false（未被其他用户认领或改派） | ESTIMATED；platform_status 已为 RECEIVED/SETTLED 则直接 WAITING（credit_due_at 按原 received_at 计） | 无分录；同事务设置 user_id、user_basis（CLAIM_APPROVED→claim，ADMIN_REASSIGN→admin；BR-ATTR-09），locked=true；platform_status ≠ DEPOSIT_PAID 时同事务生成分佣快照（BR-CALC-10；等级与上级取 paid_at 时刻，BR-CALC-12） |
-| R3a | UNATTRIBUTED | SYNC_ATTRIBUTED（同步重跑用户归属成功，BR-ATTR-16） | orders.locked=false | ESTIMATED；platform_status 已为 RECEIVED/SETTLED 则 WAITING（credit_due_at 按原 received_at 计） | 无分录；写 user_id、user_basis=param，不置 locked；platform_status ≠ DEPOSIT_PAID 时同事务按 BR-CALC-10 生成分佣快照 |
+| R3 | UNATTRIBUTED | CLAIM_APPROVED / ADMIN_REASSIGN | orders.locked=false（未被其他用户认领或改派） | ESTIMATED；platform_status 已为 RECEIVED/SETTLED 则直接 WAITING（settle_period 按原 received_at 取，BR-FUND-04） | 无分录；同事务设置 user_id、user_basis（CLAIM_APPROVED→claim，ADMIN_REASSIGN→admin；BR-ATTR-09），locked=true；platform_status ≠ DEPOSIT_PAID 时同事务生成分佣快照（BR-CALC-10；等级与上级取 paid_at 时刻，BR-CALC-12） |
+| R3a | UNATTRIBUTED | SYNC_ATTRIBUTED（同步重跑用户归属成功，BR-ATTR-16） | orders.locked=false | ESTIMATED；platform_status 已为 RECEIVED/SETTLED 则 WAITING（settle_period 按原 received_at 取，BR-FUND-04） | 无分录；写 user_id、user_basis=param，不置 locked；platform_status ≠ DEPOSIT_PAID 时同事务按 BR-CALC-10 生成分佣快照 |
 | R3b | VOID 且 user_id 为空 | CLAIM_APPROVED / ADMIN_REASSIGN | orders.locked=false | VOID 不变 | 只写 user_id、user_basis、locked=true；不生成快照、无分录 |
-| R4 | ESTIMATED | platform_status→RECEIVED 或 SETTLED | — | WAITING | 无（写 credit_due_at） |
-| R5 | WAITING | CREDIT_DUE | BR-FUND-04 守卫 | CREDITED | B_credit>0 写入账凭证（BR-FUND-05）；B_credit=0 不写凭证、不推送入账 |
-| R5a | CREDITED | BENEFICIARY_RELEASE（受益人 held→active，BR-CALC-13） | 该受益人满足 BR-FUND-04 守卫；在 hold 解除后的下一次 00:05 入账任务处理 | 不变 | 该受益人单独入账，uniq_key 沿用 `{order_key}:{uid}:{role}:CREDIT`（保证只入一次）；转 forfeited 时份额记平台 `{order_key}:PLATFORM:FORFEIT:{uid}:{role}`（默认处理，待财务确认） |
+| R4 | ESTIMATED | platform_status→RECEIVED 或 SETTLED | — | WAITING | 无（写 received_synced_at、settle_period，BR-FUND-04） |
+| R5 | WAITING | SETTLE_BATCH_CREDIT（所在结算批次经人工确认后执行，BR-FUND-04） | BR-FUND-04 ④ 比对通过且 ⑦ 执行校验通过 | CREDITED | B_credit>0 写入账凭证（BR-FUND-05）；B_credit=0 不写凭证、不推送入账 |
+| R5a | CREDITED | BENEFICIARY_RELEASE（受益人 held→active，BR-CALC-13） | 该受益人满足 BR-FUND-04 ⑦ 执行校验；在解除后的下一个结算批次（含补充批次）处理 | 不变 | 该受益人单独入账，uniq_key 沿用 `{order_key}:{uid}:{role}:CREDIT`（保证只入一次）；转 forfeited 时份额记平台 `{order_key}:PLATFORM:FORFEIT:{uid}:{role}`（默认处理，待财务确认） |
 | R6 | UNATTRIBUTED / ESTIMATED / WAITING | 整单失效 / 全额维权 / 处罚 / 黑名单 / B 由 >0 变 0 | B 由 >0 变 0 分支：platform_status ≠ DEPOSIT_PAID，且新 B 非 null（BR-FUND-07） | VOID（终态） | 无（BR-FUND-07） |
 | R7 | ESTIMATED / WAITING | 部分退款 / 部分维权 / 佣金变化 | 新 B>0，或原 B 已为 0 | 不变 | 无（重算预估） |
 | R8 | CREDITED | 整单失效 / 全额维权 / 处罚 / 结算后退款或失效 / B 由 >0 变 0 / 黑名单人工复核确认（BLACKLIST_CONFIRMED，财务 step-up + 第二人复核；默认处理，待财务确认） | — | CLAWED_BACK（终态） | CLAWBACK（BR-FUND-08） |
@@ -100,7 +102,7 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 |---|---|
 | O1 | P1；rebate 按 R1/R2 入库，不计预估、不生成快照 |
 | O2 | P2（+ 新入库时 R1/R2）；已归因时同事务生成分佣快照 |
-| O3 | P3 + R4（写 received_at、credit_due_at） |
+| O3 | P3 + R4（写 received_at、settle_period） |
 | O4 | 平台失效：P6 + R6；全额维权、处罚、黑名单命中：只 R6，platform_status 不变；CREDITED 命中黑名单不自动扣回，见 BR-ATTR-26 |
 | O5 | R7 |
 | O6 | R5 |
@@ -113,20 +115,22 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 
 **为何拆分**：单一状态机下 O7「RECEIVED 收到结算→不变」丢失平台事实；O8 的 SETTLED 同时表示「联盟已结算」和「补差完成」；「入账后、平台结算前的维权」、hold、维权中都需要额外状态。拆分后平台事实与我方资金事实各有唯一写者。
 
-**例**：淘宝子订单 10-01 付款 → (PAID, ESTIMATED)；10-05 10:00 确认收货 → (RECEIVED, WAITING)；10-21 00:05 入账 → (RECEIVED, CREDITED)；此后联盟结算（示意：淘宝「订单结算」状态的出现时点待 规划/09 实测，可能紧随确认收货，与次月 20 日前后的联盟回款不是一回事）→ (SETTLED, CREDITED)；结算后维权成功 → (SETTLED, CLAWED_BACK)。
+**例**：淘宝子订单 10-01 付款 → (PAID, ESTIMATED)；10-05 10:00 确认收货 → (RECEIVED, WAITING)，settle_period=2026-10；联盟订单状态出现「结算」→ (SETTLED, WAITING)（示意：淘宝「订单结算」状态的出现时点待 规划/09 实测，可能紧随确认收货，与联盟出账、回款不是一回事）；11 月淘宝 10 月结算账单导入、比对、人工确认批次后入账 → (SETTLED, CREDITED)（BR-FUND-04）；结算后维权成功 → (SETTLED, CLAWED_BACK)。
 
 **异常**：VOID/CLAWED_BACK 后平台再回传有效状态，不自动复活，按 BR-FUND-22 处理。
 
 **并发冲突返回**：后台对订单的 hold/unhold、改派、恢复等写操作 CAS 影响 0 行时返回 20902，data.resource=order（与 BR-ATTR-20 的 order_attribution、BR-WDR-08 的 withdrawal 共用 20902，按 data.resource 区分）。
 
-按 C-01 默认处理（采用双状态，其他条目的单一 order_status 与 O 编号按上方两张映射表换算），待负责人确认；按 C-03 默认处理（20902 补 data.resource=order），待负责人确认；按 C-06 默认处理（快照生成时点按 BR-CALC-10、等级与上级取 paid_at），待负责人确认。
+按 C-01 默认处理（采用双状态，其他条目的单一 order_status 与 O 编号按上方两张映射表换算），已由负责人确认 2026-09-30；按 C-03 默认处理（20902 补 data.resource=order），待负责人确认；按 C-06 默认处理（快照生成时点按 BR-CALC-10、等级与上级取 paid_at），已由负责人确认 2026-09-30。
 
-按 C-27 默认处理：(a) R3a、(b) R14、(c) R3b 状态口径代理已补（按 BR-ATTR-16、20 与 BR-CALC-10 现有写法），待负责人确认；(d) R5a、(e) 入账守卫 credit_requires_settle（BR-FUND-04）、(f) CREDITED 命中黑名单只写 blacklist_hit_after_credit 进人工复核、扣回按 R8 BLACKLIST_CONFIRMED、(g) R9b 负差即时记账，待财务确认。
+按 C-27 默认处理：(a) R3a、(b) R14、(c) R3b 状态口径代理已补（按 BR-ATTR-16、20 与 BR-CALC-10 现有写法），已由负责人确认 2026-09-30；(d) R5a、(e) 入账守卫 credit_requires_settle（BR-FUND-04）、(f) CREDITED 命中黑名单只写 blacklist_hit_after_credit 进人工复核、扣回按 R8 BLACKLIST_CONFIRMED、(g) R9b 负差即时记账，待财务确认。
+
+2026-09-30 随 BR-FUND-04 月结口径对齐（变更记录 §3）：R3、R3a、R4 写 settle_period 取代 credit_due_at；R5 事件由 CREDIT_DUE 改为 SETTLE_BATCH_CREDIT；R5a 改为在后续结算批次处理；O3 映射与上方例子同改。双状态模型与迁移表结构不变。同步落点：规划/04 §4 状态机表 4.1 行（order-rebate.yaml R5 事件名、R4 写入字段）；BR-CALC-14、BR-CALC-25 中「CREDIT_DUE」改为 SETTLE_BATCH_CREDIT；05_CALC BR-CALC-13 细则「下一次 00:05 入账任务」。
 
 #### BR-FUND-02 细则 · 平台状态映射与可入账事件
 
 - 状态：待验证
-- 默认值：四个平台的可入账事件按上表；P1 平台 vip、douyin 按确认收货（来源：PRD修订_后端功能规划 §2.7 可入账事件）、eleme 按完成或核销（后端功能规划 B12 将其列为核销型，§2.7 未列，属推定）；三者均在接入时经 规划/09 实测确认后才写入 creditable-events.yaml；等待期全部 15 天（核销型订单是否不同见 6.3 第 9 条）。
+- 默认值：四个平台的可入账事件按上表；P1 平台 vip、douyin 按确认收货（来源：PRD修订_后端功能规划 §2.7 可入账事件）、eleme 按完成或核销（后端功能规划 B12 将其列为核销型，§2.7 未列，属推定）；三者均在接入时经 规划/09 实测确认后才写入 creditable-events.yaml；可入账事件只决定进入 WAITING，入账时点随联盟月结批次（BR-FUND-04），不再设收货后等待期。
 - 决策人：负责人
 - 依赖平台能力：taobao/jd/pdd 订单接口：确认收货与结算是否为两个独立状态、各自时间字段是否返回、状态出现顺序；淘宝「订单结算」状态与联盟回款日是否同一时点（决定入账基数多大比例直接取结算额）；京东实际佣金归零能否与部分维权区分；美团核销时间字段（W7）
 - 取代：
@@ -143,7 +147,7 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 | pdd | order_status 各值 | 收货时间字段（待实测） | 随订单状态 |
 | meituan | 完成/核销状态（W7） | 核销时间（待实测） | 随订单状态 |
 
-**例**：淘宝订单若在 10-05 14:30 直接回传「订单结算」且结算时间 = 10-05 14:30，则同一事务写 received_at=2026-10-05T14:30:00+08:00、platform_status=SETTLED（history 补写 RECEIVED、SETTLED 两条）、order_settlements(source=API)，rebate_status 由 ESTIMATED→WAITING。10-06 平台补回真实确认收货时间 10-04 20:00 → 写 platform_received_at，received_at 与 credit_due_at 不变。
+**例**：淘宝订单若在 10-05 14:30 直接回传「订单结算」且结算时间 = 10-05 14:30，则同一事务写 received_at=2026-10-05T14:30:00+08:00、platform_status=SETTLED（history 补写 RECEIVED、SETTLED 两条）、order_settlements(source=API)，rebate_status 由 ESTIMATED→WAITING。10-06 平台补回真实确认收货时间 10-04 20:00 → 写 platform_received_at，received_at 与 settle_period 不变。
 
 **乱序与去重**：只按 BR-ATTR-01（G-12）——配置 attr.mtime_ordering.&lt;platform>（默认 false）：false 时不按更新时间丢弃，只按 content_hash 去重；true 时 platform_modified_at 小于库内值丢弃、相等且 content_hash 不同照常处理。两种配置下状态倒退都按 BR-FUND-01 P10 不迁移、写待处理表并告警。理由：平台更新时间是否单调未经 规划/09 实测，默认不丢弃才不会漏掉退款等逆向更新。
 
@@ -165,66 +169,89 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 
 **推送**：对象、触发、合并与去重只在 BR-TEXT-09 维护（C-25）：自购受益人与 share 单分享者各推自己的份额，直推上级不推 ORDER_TRACKED（J7）；去重键 `{order_key}:{uid}:{role}:TRACKED`。按 C-25 默认处理，待负责人确认。
 
-**边界**：首次入库 B_est=0 的已归因订单（如 0 佣金商品）：ESTIMATED，展示「本单无返利」，不推送；此后照常 R4，到期 B_credit=0 → R5 进 CREDITED、不写凭证、不推送入账，订单页仍显示「本单无返利」（BR-FUND-17）。
+**边界**：首次入库 B_est=0 的已归因订单（如 0 佣金商品）：ESTIMATED，展示「本单无返利」，不推送；此后照常 R4，随结算批次 B_credit=0 → R5 进 CREDITED、不写凭证、不推送入账，订单页仍显示「本单无返利」（BR-FUND-17）。
 
 **快照时点**：已归因订单首次入库即为 DEPOSIT_PAID 时不生成分佣快照、不计预估；尾款付清（P2）的同一事务内生成快照，快照中的等级与上级取 paid_at 时刻（BR-CALC-10、BR-CALC-12）。例：10-01 20:00 付定金入库 → (DEPOSIT_PAID, ESTIMATED)，无快照；10-11 00:10 付尾款 → 同事务生成快照，等级与上级取 paid_at 时刻（预售单 paid_at 的取值以 BR-CALC-12 为准）。
 
-按 C-06 默认处理（快照生成时点与取值时点以 BR-CALC-10、BR-CALC-12 为准），待负责人确认。
+按 C-06 默认处理（快照生成时点与取值时点以 BR-CALC-10、BR-CALC-12 为准），已由负责人确认 2026-09-30。
 
 #### BR-FUND-04 细则 · 入账时点与入账任务
 
-- 状态：待决策
-- 默认值：满 15×24 小时后的首次 00:05 任务入账，预计入账日一般为收货日+16 天；维权或 hold 期间 credit_due_at 不顺延，解除后下一次任务入账。理由：严格满足「满 15 天」，避免在平台售后窗口内提前入账导致扣回和负余额；维权结果已明确，无需再观察。替代方案：按自然日（收货日记第 0 天，第 15 天 00:05 入账，实际观察期 14 天 0 时 6 分至 15 天 0 时 5 分）；维权期间顺延维权持续时长。
-- 决策人：负责人
-- 依赖平台能力：无
+- 状态：待决策（入账方向已由负责人 2026-09-30 确定，月结流程参数待负责人、财务确认；依据 docs/changes/20260930-拍板第一批.md §3 D11 / BR-FUND-04 / G-16 / 放量 S2 行、§6「月结结算流程参数」）
+- 负责人已定方向：「实际以联盟为准，下单就入账预估；追随联盟统一出账单日，后台人工核查无误后再执行结算；有接口可每天轮询」。落地为：①订单付款并同步入库即生成预估收益（不可提现）；②订单状态每日轮询联盟接口同步；③可提现入账不再按「确认收货满 N 天逐单入账」，改为跟随联盟月结：联盟出结算账单后，后台按账单逐单核对，人工确认无误后批量结算，写入可提现余额。
+- 默认值（流程参数，均为默认处理，待负责人确认（变更记录 §6））：
+
+| 参数 | 默认 | 理由 |
+|---|---|---|
+| 结算周期取法 settle.period_basis.&lt;platform> | received_at 所在自然月（+08:00）；平台先给结算后给收货时 received_at 本就取结算时间（BR-FUND-02） | 联盟一般按结算（确认收货）时间归月出账；各平台口径待 CAP-TB-08、CAP-JD-08、CAP-PDD-08、CAP-MT-08 核实后按平台配置 |
+| 出账日 settle.statement_day.&lt;platform> | 周期 M 的次月 20 日（taobao、jd、pdd、meituan 同） | 本主题原「联盟回款约次月 20 日前后」（BR-FUND-20，待核实）；只用于预计出账日与逾期判断，不触发入账 |
+| 账单获取方式 settle.statement_source.&lt;platform> | upload：finance 从联盟后台导出结算明细后在后台上传；对应 CAP 判为「支持」后可改 api 自动拉取 | 结算明细接口未经 09 实测；上传与接口两种来源都写 order_settlements(source=STATEMENT)，比对规则相同 |
+| 比对容差 settle.batch.match_tolerance_fen | 0 分（账单结算佣金与我方同步佣金须完全一致） | 负责人要求「核查无误」；不一致进差错单由人工判断，入账金额始终取账单结算额（BR-FUND-05），容差只决定是否要人工看 |
+| 确认人权限 | finance 或 super，step-up 后单人确认；记录 confirmed_by、confirmed_at；发起（生成批次）由系统在账单导入完成后自动执行，补充批次由 finance 手动发起 | 批次已经过系统逐单比对；替代方案：批次金额超过阈值时须第二人（≠首位确认人）复核，与 BR-FUND-09 正差复核一致 |
+| 批次上限 settle.batch.max_orders | 5000 个子订单（沿用原 settle.credit.max_orders_per_run 的取值） | 控制单次执行时长与单批垫资增量（BR-FUND-20）；超出拆多批分别确认 |
+| 逾期宽限 settle.statement.grace_days | 10 天 | 预计出账日后 10 天仍无已确认批次，用户侧改显示「入账核对中」，避免长期显示已过时的预计 |
+| 补充批次 | 允许，对同一账单由 finance 发起，流程同首批 | 差错单或维权 / hold 解除的订单不必多等一个月 |
+| hold / 维权中的账单行 | 记「暂缓」，不生成差错单 | 这类订单与账单并无不一致，只是暂不能入账；解除后进入补充批次或下一周期批次 |
+
+- 决策人：负责人（流程参数会同财务）
+- 依赖平台能力：CAP-TB-08、CAP-JD-08、CAP-PDD-08、CAP-MT-08（结算明细 / 账单的获取方式、出账日、结算周期归属口径、账单行能否按 sub_order_id 对应我方子订单）；订单每日轮询依赖 CAP-TB-07、CAP-JD-07、CAP-PDD-07
 - 取代：
   - 规划/01 §5 J1 步骤 6、规划/04 §2.3 RECEIVED 行：「预计到账日 = 收货日 + 15 天」
   - 规划/04 §2.3 PAID 行、规划/01 F-PROD-05、J1 步骤 1：「「确认收货 15 天后到账」」
   - 规划/06 Q-B2：「日结门槛（低于此预估佣金的子订单等月结）」
   - PRD修订_后端功能规划 §2.7：「每天 00:30 的任务把到期子订单入账」
   - PRD v2.1 §9.3：「维权失败→RECEIVED 恢复观察期剩余天数（暂停计时）」
-- 来源：规划/04 §1、§2.3、§4.1 O6；规划/02 §1 原则 8、§5.2；规划/06 Q-B2；规划/00 §2；PRD修订_后端功能规划 §2.7；规划/01 §5 J1、F-PROD-05
+  - 本条 2026-09-30 前写法：「逐单入账：进入 WAITING 写 credit_due_at = received_at + wait_days × 24 小时（settle.wait_days.&lt;platform>，默认 15）；入账任务 settle.credit 每日 00:05 运行，处理 credit_due_at ≤ run_at 的子订单；日结门槛 settle.daily_min_fen 与 credit_requires_settle 守卫；单批上限 settle.credit.max_orders_per_run；预计入账日 expected_credit_date = 首个 run_at ≥ max(credit_due_at, received_synced_at, 维权关闭或 hold 解除时刻, 开关打开时刻) 的日期」（负责人 2026-09-30 改为跟随联盟月结批量入账）
+  - 本条 2026-09-30 前默认值：「满 15×24 小时后的首次 00:05 任务入账，预计入账日一般为收货日+16 天；维权或 hold 期间 credit_due_at 不顺延」
+- 来源：规划/04 §1、§2.3、§4.1 O6；规划/02 §1 原则 8、§5.2；规划/06 Q-B2；规划/00 §2；PRD修订_后端功能规划 §2.7；规划/01 §5 J1、F-PROD-05；docs/changes/20260930-拍板第一批.md §3
 - 需同步修改的规划文档：6 处（计数仅作记录，落点见 README §0.6）
 
-**例 1**：received_at=2026-10-01T14:30+08:00 → credit_due_at=2026-10-16T14:30 → 10-16 任务不满足（晚于 run_at）→ 2026-10-17 00:05 入账；expected_credit_date=2026-10-17，用户看到「预计 10-17 入账」。
+**流程**（状态机不变，只改 R5 的触发）：订单付款同步入库 → ESTIMATED（预估收益）→ 确认收货同步 → WAITING（写 settle_period）→ 联盟出周期 M 账单 → 导入 → 逐单比对 → 生成批次（DRAFT）→ 人工确认（CONFIRMED）→ 批量入账（R5，WAITING → CREDITED）。入账后联盟再调整结算额，按 BR-FUND-09 补差；逆向事件按 BR-FUND-08 扣回，均与批次无关。
 
-**例 2**：received_at=2026-10-01T00:03+08:00 → credit_due_at=2026-10-16T00:03 ≤ 10-16 00:05:00 → 10-16 入账。
+**比对结果**（每个账单行只有一种结果）：
 
-**例 3**：received_at=2026-10-01T00:05:03 → credit_due_at=10-16T00:05:03 > run_at → 10-17 入账，expected_credit_date=10-17（即使 10-16 任务实际 00:05:10 才启动，也不入账）。
+| 账单行对应的我方子订单 | 结果 | 订单 |
+|---|---|---|
+| WAITING，金额在容差内，hold=false，rights_pending=false | 进批次候选 | 批次执行后 CREDITED |
+| WAITING，金额超出容差 | 差错单「账单金额不一致」 | 保持 WAITING；差错单结论「以账单为准」后进补充批次 |
+| WAITING，hold=true 或 rights_pending=true | 暂缓 | 保持 WAITING；解除后进补充批次或下一周期批次 |
+| ESTIMATED（收货同步缺失）/ VOID / CLAWED_BACK / 我方无单 | 差错单（类型沿用 BR-FUND-09） | 不入账 |
+| CREDITED | 不进批次，按 BR-FUND-09 补差 | 不变 |
+| （反向）我方 WAITING 且 settle_period=M，账单无此单 | 差错单「应结未结」 | 保持 WAITING；差错单处理可把 settle_period 顺延一个周期（记审计） |
 
-**例 4（收货同步晚于到期）**：received_at=2026-10-01T10:00，平台数据延迟，本系统 2026-10-20T15:00 才同步到收货（received_synced_at）→ credit_due_at=10-16T10:00 已过；首个 run_at ≥ 10-20T15:00 为 10-21 00:05 → expected_credit_date=10-21，10-21 入账。
+**例 1（正常）**：淘宝子订单 10-01 付款同步 → (PAID, ESTIMATED)，预估收益自购 617 分（不可提现）；10-05 14:30 确认收货，当日同步 → (RECEIVED, WAITING)，settle_period=2026-10，订单页按 BR-TEXT-04 展示「预计随淘宝 10 月联盟结算批次入账」一类表达。11-20 淘宝出 10 月账单，11-21 finance 上传；该行结算佣金 1234 = 我方同步佣金 1234 → 进批次 taobao:2026-10 第 1 批；11-21 16:00 finance step-up 确认 → 执行，B_credit=1234 入账 617/123/494（BR-FUND-05）→ (RECEIVED 或 SETTLED, CREDITED)。
 
-**边界**：credit_due_at 恰等于 run_at → 入账（≤）。任务跨日运行超时：仍以 run_at 判断，凭证 accounting_date 取凭证写入时 Clock 日期。
+**例 2（金额不一致）**：同上，账单结算佣金 1100、我方同步佣金 1234、容差 0 → 差错单「账单金额不一致」，不入账；财务核实后结论「以账单为准」→ 补充批次按 B_credit=1100 入账 550/110/440。
 
-**维权中 / hold**：到期时存在未关闭维权或 hold → 本次跳过，不顺延 credit_due_at（是否顺延见 6.3 第 4 条），此后每日任务重新判断；期间 expected_credit_date 返回 null（显示售后中 / 核对中，不给日期）；解除后按上式重算，即首个 run_at ≥ max(credit_due_at, received_synced_at, 解除时刻)（例：credit_due_at=10-16T14:03，维权 10-20T09:00 关闭 → 2026-10-21）。只有过了重算后的日期仍未入账才显示「入账核对中」（BR-FUND-18 credit_overdue=true）。按 G-16 默认处理，待负责人确认。received_at 写入后不变（BR-FUND-02），expected_credit_date 也不因平台补回真实收货时间而重算。
+**例 3（维权暂缓）**：账单含该单，但 11-18 起淘宝维权处理中（rights_pending=true）→ 暂缓，期间预计入账返回 null，订单显示售后中；12-02 维权失败关闭 → finance 发起补充批次入账，入账额仍为账单结算额；若维权成功则按 BR-FUND-07 作废，不入账。
 
-**门槛 >0 时**：入账基数 &lt; settle.daily_min_fen 且 settle_commission_fen 未记录的订单保持 WAITING，不展示预计入账日，显示「已收货，等待联盟结算后入账」；settle_commission_fen 记录后（订单同步或 R1 明细，BR-FUND-09），下一次任务按结算额以 REBATE_CREDIT 等入账类型首次入账（不是 SETTLE_ADJUST），不依赖 R1 审批。
+**例 4（应结未结）**：10-31 23:50 确认收货，settle_period=2026-10；淘宝 10 月账单无此单（联盟归入 11 月）→ 差错单「应结未结」，订单保持 WAITING；财务把 settle_period 顺延为 2026-11 并关闭差错单；12 月导入 11 月账单时正常比对入账。
 
-**须等结算的订单**：orders.credit_requires_settle=true（BR-CALC-15、BR-CALC-25）且 settle_commission_fen 为空 → 入账任务跳过，保持 WAITING，display_status 与门槛分支相同（WAITING_SETTLE，不显示预计日期）；settle_commission_fen 记录后下一次任务按结算额入账。按 C-27 (e) 默认处理，待财务确认。
+**例 5（执行中关闭开关）**：批次 5000 单执行到第 3000 单时 settle.auto.enabled 被置 off → 立即停止，批次 PARTIAL，3000 单已 CREDITED，其余 2000 单保持 WAITING；开关重新打开后 finance step-up 继续执行，已入账的 3000 单 uniq_key 已存在，不会重复入账。
 
-**held 受益人**：一单中除 held 受益人（BR-CALC-13）外的全部受益人同时入账；held 受益人解除后按 BR-FUND-01 R5a 在下一次 00:05 任务单独入账，转 forfeited 时份额记平台。按 C-27 (d) 默认处理，待财务确认。
+**边界**：账单结算佣金为 0 且我方同步佣金为 0 → 进批次，B_credit=0 只迁移状态、不写凭证（BR-FUND-05）。订单佣金变化（价保、部分退款）在 WAITING 期间照常按 BR-FUND-03、R7 更新预估；比对时以最新同步佣金为准。原日结门槛 settle.daily_min_fen 与 credit_requires_settle 守卫（BR-CALC-15、BR-CALC-25）在本口径下自然满足：入账一律取账单结算额，不存在「未结算先入账」的订单。
 
-**开关关闭 / 任务延迟**：订单保持 WAITING；预计入账日已过的订单展示「入账核对中」。
+**维权中 / hold**：比对与执行时 rights_pending=true 或 hold=true 的子订单都不入账（BR-FUND-06），不改变 rebate_status；期间预计入账返回 null（显示售后中 / 核对中）；解除后进入补充批次或下一周期批次，预计入账恢复为原 settle_period。
 
-**平台入账开关 credit.enabled.&lt;platform>**（BR-CALC-03 默认 off；S1 上线期间三平台均为 off，打开前须有 BR-CALC-03 验证证据，见 规划/05 S2 门槛）：
+**held 受益人**：一单中除 held 受益人（BR-CALC-13）外的全部受益人同批入账；held 受益人解除后按 BR-FUND-01 R5a 在后续批次（含补充批次）单独入账，转 forfeited 时份额记平台。按 C-27 (d) 默认处理，待财务确认。
 
-| 场景 | 入账任务 | 订单 display_status 与日期 | 入账时点文案 |
+**平台入账开关 credit.enabled.&lt;platform>**（BR-CALC-03 默认 off；打开前须有 BR-CALC-03 验证证据，见 规划/05 S2 门槛）：
+
+| 场景 | 结算批次 | 订单 display_status 与预计入账 | 入账说明文案 |
 |---|---|---|---|
-| off，ESTIMATED（DEPOSIT_PAID / PAID） | 不涉及 | DEPOSIT_PAID / PAID，expected_credit_date=null | 商品详情与订单页不展示「确认收货满 {wait_days} 天后入账」 |
-| off，WAITING（含 credit_due_at 已过） | 跳过该平台全部子订单（含 R5a） | CREDITING「入账核对中」，expected_credit_date=null，不显示日期；hold、维权中按 BR-FUND-17 先匹配 REVIEWING / RIGHTS_PENDING | 同上 |
-| off，钱包 | — | 该平台 WAITING 份额仍计入 pending_credit_fen，不参与 next_credit_date（BR-FUND-18） | — |
-| off → on | 下一次 00:05 任务按 credit_due_at ≤ run_at 正常处理积压，不另设补跑；受单批上限约束 | expected_credit_date = 首个 run_at ≥ max(credit_due_at, received_synced_at, 维权关闭或 hold 解除时刻, 开关打开时刻) | 恢复展示 |
-| on → off（如发现 N 取数错误） | 任务在处理每个子订单的事务开始前读开关（缓存 ≤10 秒），已提交的保持 CREDITED，未处理的保持 WAITING；扣回、补差、失效照常 | 同 off | 同 off |
+| off，ESTIMATED（DEPOSIT_PAID / PAID） | 不涉及 | DEPOSIT_PAID / PAID，expected_credit_period=null | 商品详情与订单页不展示入账说明 |
+| off，WAITING | 该平台不生成、不执行批次（含 R5a）；账单可导入，比对结果保留 | CREDITING「入账核对中」，expected_credit_period=null；hold、维权中按 BR-FUND-17 先匹配 REVIEWING / RIGHTS_PENDING | 同上 |
+| off，钱包 | — | 该平台 WAITING 份额仍计入 pending_credit_fen，不参与下一次预计入账（BR-FUND-18） | — |
+| off → on | 对已导入的账单重新比对生成批次，照常人工确认后执行 | 恢复按 settle_period 展示 | 恢复展示 |
+| on → off（如发现 N 取数错误） | 执行中的批次在下一个子订单事务前停止，置 PARTIAL；扣回、补差、失效照常 | 同 off | 同 off |
 
-**单批上限**：每次任务每个平台最多处理 settle.credit.max_orders_per_run 个子订单（默认 5000），按 (credit_due_at, order_key) 升序；超出的订单保持 WAITING，其 expected_credit_date 已早于今天时按 BR-FUND-17 显示 CREDITING「入账核对中」，下一次任务按同一顺序优先处理；发生溢出时告警财务 1 次。默认值理由：开关打开当天可能一次积压整个 S1 期间的订单，上限控制单日垫资增量（BR-FUND-20）与任务时长。按默认处理，上限取值待财务确认。
+**推送**：批次执行完成后，每用户汇总一条「已结算」推送（B_credit=0 的订单不计入；同日多批合并），模板、对象与去重按 BR-TEXT-09。
 
-**例（开关打开）**：淘宝 received_at=10-01T14:30，credit_due_at=10-16T14:30；credit.enabled.taobao 在 11-10 之前为 off → 进入 WAITING 起订单显示「入账核对中」、无日期，10-17 起每日任务跳过；11-10T10:00 打开 → expected_credit_date=11-11，11-11 00:05 入账。若当日该平台到期订单 7000 单 → 按 credit_due_at 升序入账 5000 单，其余 2000 单 11-12 00:05 入账，告警财务。
+**与 BR-TEXT-04 的分工**：expected_credit_period、credit_overdue 的计算（结算周期取法、维权 / hold / 开关期间返回 null、逾期判断）只在本条维护；BR-TEXT-04 只维护「预计随 {平台} {月份} 联盟结算批次入账」等展示文案与格式，两者不一致时以本条为准。
 
-**推送**：入账后每用户每日汇总一条「¥x 已入账」（B_credit=0 的订单不计入）。
+C-02 已由负责人改定（变更记录 §3）：结算前一律「预估」，结算批次核对入账后用「已结算」，用户侧文字以 BR-TEXT-01 为准；C-17（D+1 00:01 资产快照 → 00:05 入账）中的 00:05 每日入账任务随本口径取消，只保留「批次不在 00:00 至当日快照完成期间执行」（BR-FUND-18），待财务确认；G-16（expected_credit_date 并入维权关闭或 hold 解除时刻）随本口径改为 expected_credit_period，原算法作废；按 C-27 (d) 默认处理（held 受益人单独入账），待财务确认；C-27 (e)（credit_requires_settle 守卫）在本口径下自然满足，见上方边界。
 
-**与 BR-TEXT-04 的分工**：expected_credit_date 的计算（含 received_synced_at、维权关闭或 hold 解除时刻、配置快照、不因 received_at 回补重算）只在本条维护（G-16）；BR-TEXT-04 只维护日期格式与「确认收货满 {wait_days} 天后入账」等展示文案，两者不一致时以本条为准。
-
-按 C-02 默认处理（订单侧用「入账」：预计入账日、已入账、入账核对中），待负责人确认；按 C-17 默认处理（D+1 00:01 资产快照完成后 00:05 入账，BR-FUND-18），待财务确认；按 G-16 默认处理（expected_credit_date 并入维权关闭或 hold 解除时刻，期间返回 null），待负责人确认；按 C-27 (d)(e) 默认处理（held 受益人单独入账、credit_requires_settle 守卫），待财务确认。
+- 同步落点（2026-09-30 月结口径，逐项核对过引用处）：规划/00 §3.2 D11 行「逐单入账」改为月结批次口径，§4 范围裁决表「资金」行、§6 主要变化表「月结账单、会员月账单、分平台对账单 MVP」行的「逐单入账」同改；规划/01 §3 资金流图「确认收货满 wait_days → 逐单入账」、§5 J1 步骤 1「确认收货满 {wait_days} 天后入账」与步骤 6「到期入账」、E04 F-PROD-05 入账说明、E10 F-SET-02「逐单入账（D11）」与 F-SET-05 验收「T+15 入账」；规划/02 §1 原则 8「满 15 天」、§5.2 时序「资产快照 → settle.credit 入账」与「取 WAITING 且到期」、§8.5 R3 行「入账任务之后」；规划/03 §7.4 order_status 卡片 expected_credit_date；规划/04 §1 术语表「入账」行、§3.2 orders（删 credit_due_at、wait_days_snapshot，expected_credit_date 改为 expected_credit_period，增 settle_period）与新增结算账单、批次表、差错单类型，§4 状态机表 4.1 行入账守卫（R5 触发），§6.4 GET /v1/orders/{order_id} 与 §8.3 order_status 卡片 expected_credit_date → expected_credit_period，§10.1 服务端配置键删 settle.wait_days.&lt;platform>、增本条配置；规划/05 §3.3 B2-04「入账任务（快照 → 入账 → 日终校验）」、§4.1 入账闭环说明（「W2 末下单，最早 W5 末入账」按月结口径重估）；规划/06「08 待决策与分歧」表 B12 行（settle.wait_days.&lt;platform>）、Q-B2「入账等待期」行；规划/07 §1 资金行与 §2「结算设置」行的「逐单入账」；规划/09 CAP-TB-08、CAP-JD-08、CAP-PDD-08、CAP-MT-08 补结算账单获取方式、出账日、周期归属口径；规划/10 AC-S2-01-TB「收货满 15 天自动入账」、AC-S2-02、AC-S2-03（credit_due_at）、AC-S2-32 压缩时钟流程、G-16 行；规划/08：BR-TEXT-04 需改（预计入账表达、删 wait_days_snapshot 与「确认收货满 {wait_days} 天后入账」）、BR-TEXT-01（结算前统一为「预估」，已收货待结算时附「其中已收货」子行，已按负责人决定改写）、BR-TEXT-02 映射表 PAID / WAITING / WAITING_SETTLE / CREDITING 行与时间线、BR-TEXT-09 例 2「00:05 入账任务」、BR-TEXT-11 纯日期字段示例、12_TEXT 未决问题第 2、3 条；BR-CALC-14「入账任务执行 R5（CREDIT_DUE）」、BR-CALC-15 与 BR-CALC-25 的 credit_requires_settle 入账守卫（改为自然满足）、BR-CALC-23 (a) 适用范围（只剩批次入账后的结算额变更）、05_CALC 中 R5a「下一次 00:05 入账任务」与「收货 +15 天时尚未结算」例；BR-AI-06 与 08_AI 数据来源表 expected_credit_date；README §0.3 默认假设 × 平台能力表 BR-TEXT-04 行、§1.2「预计 MM-DD 入账」行；13 命名对照 D11 行、WAITING 行「settle.wait_days」、asset_snapshots 行「先于 00:05 入账」；14 §14.2 BR-FUND-04 行、§14.3 C-17 行、客服问答第 10 条
 
 #### BR-FUND-05 细则 · 入账金额与入账凭证
 
@@ -251,7 +278,7 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 
 **booked_base_fen**：该子订单最近一次记账所用基数；入账、扣回（BR-FUND-08）、补差（BR-FUND-09）、恢复（BR-FUND-22）同事务更新，供 BR-FUND-19 ⑤ 校验。
 
-**例**：order_key=taobao:1234567，B_credit=1234，自购 5000bp、直推 1000bp → 凭证 1（`taobao:1234567:42:self:CREDIT`）：借 UNION_RECEIVABLE 617 / 贷 USER_SELF:42 617；凭证 2：借 UNION_RECEIVABLE 123 / 贷 USER_PROMO:parent 123；凭证 3（`taobao:1234567:PLATFORM:CREDIT`）：借 UNION_RECEIVABLE 494 / 贷 COMMISSION_REVENUE 494；booked_base_fen=1234。重放同一任务：3 个 uniq_key 均已存在，余额不变。京东子订单号同为 1234567 时 order_key=jd:1234567，不冲突。
+**例**：order_key=taobao:1234567，B_credit=1234，自购 5000bp、直推 1000bp → 凭证 1（`taobao:1234567:42:self:CREDIT`）：借 UNION_RECEIVABLE 617 / 贷 USER_SELF:42 617；凭证 2：借 UNION_RECEIVABLE 123 / 贷 USER_PROMO:parent 123；凭证 3（`taobao:1234567:PLATFORM:CREDIT`）：借 UNION_RECEIVABLE 494 / 贷 COMMISSION_REVENUE 494；booked_base_fen=1234。重放同一批次：3 个 uniq_key 均已存在，余额不变。京东子订单号同为 1234567 时 order_key=jd:1234567，不冲突。
 
 **例（先结算后入账）**：收货后联盟已结算 1100 分，入账时 B_credit=1100 → 550/110/440，此后 R1 差额为 0。
 
@@ -270,9 +297,9 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 
 **用户展示**：rights_pending=true →「售后处理中，入账暂停」；hold=true →「入账核对中」，不展示内部原因（文字以 BR-TEXT-03 与 README §1.2 为准）。
 
-**例**：received_at=10-01 14:30，credit_due_at=10-16 14:30；10-12 淘宝维权处理中 → 10-17 00:05 跳过；10-20 维权失败关闭 → 10-21 00:05 入账，入账额不变。
+**例**：received_at=10-01 14:30，settle_period=2026-10；11-18 淘宝维权处理中 → 11-21 淘宝 10 月结算批次比对记暂缓、不入账；12-02 维权失败关闭 → 进入补充批次，人工确认后入账，入账额不变（BR-FUND-04 例 3）。
 
-**例（部分成功、佣金未更新）**：WAITING 订单 10-15 淘宝维权部分成功，接口只给退款金额、无应扣佣金，联盟佣金未变 → order_rights=WAIT_COMMISSION，继续跳过入账；10-18 联盟回传新佣金 → R7 重算预估并关闭记录，下一次任务入账。
+**例（部分成功、佣金未更新）**：WAITING 订单 10-15 淘宝维权部分成功，接口只给退款金额、无应扣佣金，联盟佣金未变 → order_rights=WAIT_COMMISSION，继续跳过入账；10-18 联盟回传新佣金 → R7 重算预估并关闭记录，随后续结算批次入账。
 
 **异常**：order_rights 处于 PROCESSING 或 WAIT_COMMISSION，且 now − created_at ≥ 60×24 小时 → 告警进人工；手工导入的维权/处罚清单（后台 rights-imports）与接口同等处理，按 (platform, sub_order_id, 平台维权单号) 去重。
 
@@ -290,7 +317,7 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 
 **例**：10-01 付款预估自购 617 分 → 10-03 买家退款，淘宝回传失效 → (INVALID, VOID)，reason_code=REFUND；钱包预估减少 617，余额与流水不变；推送「订单已失效：订单已退款」。
 
-**例（部分）**：WAITING 中退 1/2 → B_est 1234→617，份额 617→308，credit_due_at 不变。
+**例（部分）**：WAITING 中退 1/2 → B_est 1234→617，份额 617→308，settle_period 不变。
 
 **例（佣金归零）**：拼多多订单 WAITING，联盟回传佣金 0、状态仍为已收货 → VOID，reason_code=COMMISSION_ZERO，文案「订单已失效：平台取消了本单佣金」。
 
@@ -357,6 +384,8 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 **时点**：各平台结算状态出现时点与回款日待 规划/09 实测，R1 调度按实测结果配置；正差批次未批准前余额不变。补差负向时发站内信并附原因。
 
 按 C-07 默认处理（负差即时记账、双人复核只用于正差），待财务确认。
+
+- 随 BR-FUND-04 月结口径调整（变更记录 §3）：结算账单导入后同时驱动 BR-FUND-04 首次入账批次（WAITING）与本条 R1 补差（CREDITED），「每日 02:00 检查明细是否拉全、拉全后次日运行 R1」的调度需与 BR-FUND-04 ③ 账单导入合并；差错单类型需补 BR-FUND-04 的「账单金额不一致」「应结未结」；「取代」中 规划/01 F-SET-05「月结不产生首次入账」的表述需按新口径复核（首次入账现随月结账单批次发生，本条 R1 仍不产生首次入账）。待改，未重写。
 
 #### BR-FUND-10 细则 · 负余额规则
 
@@ -539,8 +568,8 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 | 1 | VOID | INVALID | 已失效（附原因） |
 | 2 | CLAWED_BACK | CLAWED_BACK | 已扣回 |
 | 3 | CREDITED 且无 CREDIT 凭证（B_credit=0） | NO_REBATE | 本单无返利 |
-| 4 | CREDITED 且存在 CLAWBACK | CREDITED_PART_CLAWED | 已入账（部分扣回 ¥x） |
-| 5 | CREDITED | CREDITED | 已入账（有补差时显示差额与原因，BR-TEXT-03） |
+| 4 | CREDITED 且存在 CLAWBACK | CREDITED_PART_CLAWED | 已结算（部分扣回 ¥x） |
+| 5 | CREDITED | CREDITED | 已结算（有补差时显示差额与原因，BR-TEXT-03） |
 | 6 | ESTIMATED 且 platform=DEPOSIT_PAID（不看 B_est，也不看 hold） | DEPOSIT_PAID | 已付定金 |
 | 7 | ESTIMATED/WAITING 且 B_est=0（B_est 为 null 不匹配） | NO_REBATE | 本单无返利 |
 | 8 | hold=true | REVIEWING | 入账核对中 |
@@ -558,6 +587,8 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 **例**：客服或 Agent 被问「我的返利到账了吗？」—先调订单接口取 display_status：得到 WAITING（expected_credit_date=2026-10-17）时按字典 `order_status.WAITING` 渲染；得到 CREDITED 时按 `order_status.CREDITED` 渲染；不得在接口返回前凭对话内容推断状态或金额。用词按 BR-TEXT-01，提现问题按 BR-TEXT-06。
 
 术语与禁用词按 C-02 默认处理（BR-TEXT-01 方案 A；禁用词归 BR-TEXT-13），待负责人确认；本条派生条件与 C-02 无关。
+
+- 随 BR-FUND-04 月结口径调整（变更记录 §3）：派生表第 11 行 WAITING_SETTLE（日结门槛、credit_requires_settle）在月结口径下不再出现，是否保留枚举待定；第 12 行「expected_credit_date 早于今天」改为 BR-FUND-04 ⑪ 的 credit_overdue；第 13 行「已收货，预计 MM-DD 入账」改为按 expected_credit_period 展示（文案 BR-TEXT-04）；「例」中 expected_credit_date=2026-10-17 同改。待改，未重写。
 
 #### BR-FUND-18 细则 · 钱包汇总与资产快照口径
 
@@ -581,6 +612,8 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 **与 BR-TEXT-01 钱包汇总口径的关系**：字段名已与 BR-TEXT-01 对齐（原 waiting_fen→pending_credit_fen、waiting_paused_fen→pending_credit_paused_fen、next_due_date→next_credit_date、due_overdue→credit_overdue，新增 withdrawn_fen、risk_paused_reason）。取值口径以本条为准，两处不同的有：estimated_fen 按 BR-FUND-05 基数取法 × 快照比例计算（BR-TEXT-01 写 rebate_min_fen 合计）；预计日已过时 next_credit_date 返回今天并置 credit_overdue=true（BR-TEXT-01 写返回 null）。BR-TEXT-01 已按 C-19 改用本条字段名。
 
 按 C-02 默认处理（用户侧「待入账」「入账核对中」），待负责人确认；按 C-17 默认处理（快照 D+1 00:01 写入，入账任务等快照完成，最晚 00:30），待财务确认。
+
+- 随 BR-FUND-04 月结口径调整（变更记录 §3）：next_credit_date（取最早 expected_credit_date）需改为按 expected_credit_period 的表达；credit_overdue 的判定改引 BR-FUND-04 ⑪；「入账任务 settle.credit 必须在当日快照完成后才开始，最晚等到 00:30」与「为何快照先于入账」中的 00:05 改为「结算批次不在 00:00 至当日快照完成期间执行」（BR-FUND-04 ⑦）；例中的日期同改。待改，未重写。
 
 #### BR-FUND-19 细则 · 账务不变量与日终校验
 
@@ -623,6 +656,8 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 
 企业支付宝水位 W/P 与暂停打款规则见 BR-WDR-18、BR-WDR-17。
 
+- 随 BR-FUND-04 月结口径调整（变更记录 §3）：「垫资周期：收货后约 15 天入账……平台最长垫付约 50 天」需按「联盟出账后批量入账」重估（入账时点接近联盟出账，垫资敞口大幅缩小，回款日仍待 规划/09 核实）；「开关为 off 时入账任务按 BR-FUND-04 停止」改为「结算批次执行按 BR-FUND-04 ⑦ 停止」。待改，未重写。
+
 #### BR-FUND-21 细则 · 负余额时未打款的提现单
 
 - 状态：待决策（随 §14.3 C-08、C-21，决策人：财务）
@@ -644,7 +679,7 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 | R12 | VOID | ADMIN_RESTORE | 差错单存在；发起人 ≠ 复核人；step-up；platform_status ≠ INVALID | ESTIMATED 或 WAITING | 无 |
 | R13 | CLAWED_BACK | ADMIN_RESTORE | 同上 | CREDITED | ADMIN_ADJUST(RESTORE) |
 
-**例（R12）**：10-03 退款失效 → VOID(REFUND)；10-06 淘宝回传「订单成功」（买家撤销退款）→ P9 platform_status=RECEIVED，告警，差错单；10-07 复核恢复 → WAITING，credit_due_at 按 received_at 计算。
+**例（R12）**：10-03 退款失效 → VOID(REFUND)；10-06 淘宝回传「订单成功」（买家撤销退款）→ P9 platform_status=RECEIVED，告警，差错单；10-07 复核恢复 → WAITING，settle_period 按 received_at 取，随结算批次入账（BR-FUND-04）。
 
 **例（R13）**：已入账 617/123/494 后全额扣回 → CLAWED_BACK；联盟恢复佣金 1234 → 差错单；复核恢复 → ADMIN_ADJUST +617/+123/+494，booked=1234，状态 CREDITED。
 
@@ -674,22 +709,23 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 
 ### 6.3 本主题未决问题
 
-1. BR-FUND-01：是否采用 platform_status + rebate_status 双状态模型取代 规划/04 单一 order_status（默认采用），需负责人拍板。
-2. BR-FUND-01 R2/R3、BR-FUND-03：分佣快照生成时点与等级、上级取值时点，现按 C-06 默认（生成时点按 BR-CALC-10，等级与上级取 paid_at，BR-CALC-12；原默认「找回单取批准时刻」已撤回），需负责人确认。
-3. BR-FUND-04：预计入账日按「满 15×24 小时后首个 00:05 入账日」（约收货日+16 天）还是按自然日「收货日+15 天」（实际观察期不足 15 天），需负责人拍板。
-4. BR-FUND-04：维权或 hold 期间 credit_due_at 是否顺延（默认不顺延，理由：维权结果已明确；替代：顺延维权持续时长），需负责人拍板；expected_credit_date 在维权 / hold 期间返回 null、解除后按 max(credit_due_at, received_synced_at, 解除时刻) 重算（G-16 默认），需负责人确认。
+1. 【已由负责人确认 2026-09-30，变更记录 §2】BR-FUND-01：是否采用 platform_status + rebate_status 双状态模型取代 规划/04 单一 order_status（默认采用），需负责人拍板。
+2. 【已由负责人确认 2026-09-30（C-06），变更记录 §2】BR-FUND-01 R2/R3、BR-FUND-03：分佣快照生成时点与等级、上级取值时点，现按 C-06 默认（生成时点按 BR-CALC-10，等级与上级取 paid_at，BR-CALC-12；原默认「找回单取批准时刻」已撤回），需负责人确认。
+3. 【已被取代：负责人 2026-09-30 改为跟随联盟月结批量入账，变更记录 §3；见本节第 18 条】BR-FUND-04：预计入账日按「满 15×24 小时后首个 00:05 入账日」（约收货日+16 天）还是按自然日「收货日+15 天」（实际观察期不足 15 天），需负责人拍板。
+4. 【已被取代：月结口径下无 credit_due_at，维权 / hold 期间暂缓、解除后进补充批次或下一周期批次，见 BR-FUND-04】BR-FUND-04：维权或 hold 期间 credit_due_at 是否顺延（默认不顺延，理由：维权结果已明确；替代：顺延维权持续时长），需负责人拍板；expected_credit_date 在维权 / hold 期间返回 null、解除后按 max(credit_due_at, received_synced_at, 解除时刻) 重算（G-16 默认），需负责人确认。
 5. BR-FUND-11：一个账户为负时，另一账户是否仍可提现（默认两账户都禁提），需财务拍板。
 6. BR-FUND-21（规则正文在 BR-WDR-05 (a)）：账户变负时同账户未打款提现单自动驳回（默认）还是暂停待回正，需财务拍板（对应 C-08）。
 7. 淘宝/京东/拼多多订单接口中「确认收货」与「结算」是否为独立状态、各自时间字段名与出现顺序；淘宝「订单结算」状态出现时点与联盟回款日是否同一时点（BR-FUND-02），需进 规划/09 实测并附接口样例。
 8. 各平台是否提供「维权处理中」信号、淘宝维权接口是否返回应扣佣金（BR-FUND-06、BR-FUND-08）；京东「实际佣金归零」能否与部分维权区分。
-9. 核销型订单（美团，W7；饿了么 P1）入账等待期是否不同于 15 天（后端功能规划 B12，W1），默认同为 15 天。
+9. 【已被取代：月结口径下不设收货后等待期，核销型订单同样随联盟账单批次入账】核销型订单（美团，W7；饿了么 P1）入账等待期是否不同于 15 天（后端功能规划 B12，W1），默认同为 15 天。
 10. 财务需给出：已入账未回款告警阈值 ledger.advance_alert_fen、坏账核销最低金额 ledger.bad_debt_min_fen、specs/ledger-rules.md 的科目表、凭证粒度与流水类型签字（W1 周三前）。
-11. 淘宝、京东、拼多多联盟实际结算/回款日（「次月 20 日前后」）待核实，影响 R1 调度与垫资测算。
+11. 淘宝、京东、拼多多联盟实际结算/回款日（「次月 20 日前后」）待核实，影响 R1 调度与垫资测算；月结口径下同时决定 BR-FUND-04 出账日 settle.statement_day.&lt;platform> 与结算周期取法（见第 18 条）。
 12. 本主题用户文案（BR-FUND-04、06、15、17、18 中的示意文字）的用词随 C-02 与 BR-TEXT-01 方案 A/B，需负责人拍板；拍板后只改 BR-TEXT-01、02、06 与字典，本主题派生条件与字段不变。
 13. BR-FUND-09：结算负差即时记账、正差双人复核（默认，C-07）还是所有补差都双人复核，需财务拍板。
 14. BR-FUND-19：账务差异冻结记入 withdraw_holds（reason=ledger_mismatch）并返回 30303(account_frozen)（默认，C-03、C-09），需负责人（错误码）与财务（冻结记录方式）确认。
 15. BR-FUND-05、BR-FUND-08：入账基数取法、凭证粒度与扣回流水类型（CLAWBACK vs 负向 SETTLE_ADJUST，C-16）已由默认假设改为待决策，需财务在 specs/ledger-rules.md 签字时一并确认。
-16. BR-FUND-04、BR-FUND-17：credit.enabled.&lt;platform>=off 期间 WAITING 订单显示 CREDITING「入账核对中」、不给日期，商品详情与未收货订单不展示入账时点文案（默认，复用 CREDITING 枚举，不新增 CREDIT_PAUSED）；开关打开后积压订单由下一次任务处理，单批上限 settle.credit.max_orders_per_run 默认 5000，需负责人确认展示、财务确认上限取值。
+16. BR-FUND-04、BR-FUND-17：credit.enabled.&lt;platform>=off 期间 WAITING 订单显示 CREDITING「入账核对中」、不给日期，商品详情与未收货订单不展示入账时点文案（默认，复用 CREDITING 枚举，不新增 CREDIT_PAUSED）；开关打开后积压订单由下一次任务处理，单批上限 settle.credit.max_orders_per_run 默认 5000，需负责人确认展示、财务确认上限取值。（2026-09-30 月结口径：开关打开后对已导入账单重新比对生成批次，单批上限改为 settle.batch.max_orders，默认仍 5000，见第 18 条。）
 17. BR-FUND-07、BR-FUND-17：DEPOSIT_PAID 阶段佣金变化不触发 COMMISSION_ZERO、付尾款时 B_est=0 按「本单无返利」不作废、佣金缺失不覆盖已有值（默认处理），需负责人确认。
+18. BR-FUND-04 月结流程参数（变更记录 §6「月结结算流程参数」，默认处理，待负责人、财务确认）：结算周期取法（默认 received_at 所在自然月）、各平台出账日（默认次月 20 日）、账单获取方式（默认 finance 上传，CAP 支持后可改接口）、比对容差（默认 0 分）、确认人权限（默认 finance 或 super 单人 step-up 确认，替代：超阈值第二人复核）、批次上限（默认 5000）、逾期宽限（默认 10 天）、允许补充批次、hold / 维权中的账单行记暂缓而非差错单。
 
 ---
