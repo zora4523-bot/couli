@@ -171,7 +171,7 @@ platform = B − own − direct                 // ≥ 0 由 BR-CALC-07 保证
 
 - 同一版本内 3 平台 × 3 等级 × 2 类型 = 18 行必须齐全。
 - 例：(pdd, L2, self) 订单，归属用户 L2 → r_own 取 (pdd, L2, self).r_own_bp=5000；上级 L1 → r_direct 取 (pdd, L1, self).r_direct_bp=1000。
-- 美团（W7）接入前先把 meituan 加入 commission.platforms，并补齐 6 行，否则新版本发布被拒。
+- 美团（P1，D15）接入前先把 meituan 加入 commission.platforms，并补齐 6 行，否则新版本发布被拒。
 
 #### BR-CALC-07 细则 · 比例合计上限校验
 
