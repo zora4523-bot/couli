@@ -1,0 +1,179 @@
+# 09 平台能力验证 · 2. 淘宝（taobao，含天猫）
+
+返回 [README](README.md)（用法、总览矩阵、验证计划）
+
+## 2. 淘宝（taobao，含天猫）
+
+### 2.1 主表
+
+权限状态一律"待确认"（材料中没有新 App 任何一项权限已获批的证据）。
+
+| 编号 | 能力 | 用于 | 链路 | 需要的接口与权限 | 权限状态 | 状态 | 已知事实（来源） | 限额与限制 | 验证实验与通过标准 | 不支持时怎么办 | 负责人 | 截止 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CAP-TB-01 | 商品识别：链接、短链、淘口令、分享长文案 → 商品 ID（含规格 / SKU） | S1 粘贴识别、分享接收（PRD 10.18）、Agent resolve_link；`POST /v1/inputs/parse`；product_key（BR-PROD） | ① | `taobao.tbk.dg.general.link.convert`（万能转链。权限按入参分开：`material_list`（URL / 口令转链）为邀约制权限、有申请门槛，分"①联盟推广链接转链 ②天猫/淘宝复制链接转链"两类，申请时须说明；`is_target_coupon`、`coupon_id` 两个入参为"邀约制权限，仅面向 KA 淘宝客"；只传 `item_dto`（item_id + sku_id）按 ID 转链是否需要邀约，原文未写，**待核实（V-01 书面询问）**〔TOP-65409，2026-09-30 评审抽查原文·中（抓取摘要）〕）<br>`taobao.tbk.tpwd.convert`（淘口令解析，候选，以官方文档为准）<br>`taobao.tbk.item.info.upgrade.get`（补标题、图、店铺、价格；需淘宝客基础权限） | 待确认 | 未开始 | · 万能转链入参 `material_list`（URL 或口令，逗号分隔）、`material_dto.material_url`、`item_dto`（item_id + sku_id + coupon_id）；出参 `item_id`、`sku_id`、`material_type`（1 单品 2 店铺 3 会场 4 承接开放 5 优惠券 6 直播间 7 淘积木页；枚举名按 2026-09-30 评审抽查的原文照抄）〔TOP-65409·中（抓取摘要）〕<br>· 出参 `extra_info` 用于"转链成功但需补充说明"，示例"skuid已失效"〔TOP-65409·中（抓取摘要）〕<br>· 物料搜索的 `q` 不支持传淘宝客链接，不能用搜索代替链接解析〔TOP-64759·中（抓取摘要）〕<br>· 联盟商品 ID 已改为字符串（≤50 位）：前半段每次交互都变，后半段只对单个账号、同一商品在一定范围内稳定，不再支持原数字 ID〔评审 F-31；TKS-33752·中〕<br>· PRD v2.1 §10.2 的 `taobao.tbk.sc.tpwd.convert`、`taobao.tbk.sc.general.link.convert` 是服务商版；新 App 以推广者自有应用接入，应核对推广者版（dg / 无 sc 前缀）〔PRD v2.1 §10.2；TOP 文档目录·中〕<br>· 第三方服务（订单侠）能解出口令里的 PID，非官方能力〔DDX-54-8·中〕 | 万能转链 `material_list`（链接 / 口令）转链为邀约制，`item_dto` 按 ID 转链是否受限待核实；tpwd.convert 权限现状未知；口令格式多变（旧版 `￥xx￥`、新版 `/CZ0001 xxx/`），须宽松抽取后交接口判定；商品 ID 是动态串，不能直接做主键；不做页面采集（00 §6；评审 F-92），不能请求 m.tb.cn 落地页抽 ID | 实验见 §2.2。<br>**通过**：有权限时，≥30 条样本中 ≥90% 解析出 item_id 且与人工标注一致；同一样本 3 次调用 item_id 后半段一致率 100%（否则改 BR-PROD 的 product_key 规则）；带规格样本拿到 sku_id 的比例写入报告；识别调用记录 P50 / P95（§0.6 延迟预算）。无权限时拿到联盟"不予开通 / 审核中"书面答复。<br>**证据**：`fixtures/union-recordings/taobao/cap-tb-01/`、识别率与 ID 稳定性报告、权限申请截图 | 服务端返回 30132，App 显示"这个淘宝口令暂时无法识别，试试用商品名搜索"，搜索框预填文案中抽出的标题片段（title_hint），用户手动选商品；链接能直接取到新版字符串 item_id 的（如 `item.taobao.com?id=…`）直接走详情接口；规格拿不到时卡片标"规格以下单页为准"，不展示规格价；开关 `parse.tpwd.enabled` 关 | 人+代理 | W1（依赖万能转链获批，见 §7.0） |
+| CAP-TB-02 | 商品详情与价格：原价、券面额与门槛、券后价、运费、规格价、库存、活动价（百亿补贴等） | 商品卡与详情价格口径（BR-PRICE）、Agent get_rebate_quote、`/v1/links/{id}/open` 点击复核（BR-PRICE-13）、price_snapshot | ② | `taobao.tbk.item.info.upgrade.get`（≤20 个 item_id；权限包"淘宝客【推广者】商品物料获取"）<br>万能转链（promotion_price 与券字段）<br>`taobao.tbk.item.details.upgrade.get`（详细版，候选，以官方文档为准） | 待确认 | 未开始 | · item.info 入参 `item_id`（≤20）、`ip`（影响邮费获取）、`biz_scene_id`（1 动态 ID 转链场景 / 2 消费者比价场景 / 3 商品库导购场景；不填默认 1）、`promotion_type`（1 自购省 / 2 推广赚）、`relation_id`、`get_tlj_info`〔TOP-64763·中（抓取摘要）〕<br>· 出参含 `reserve_price`、`zk_final_price`、`final_promotion_price`、`final_promotion_path_list`、`promotion_tag_list`、预售字段（`presale_start_time`、`presale_end_time`、`presale_deposit`、`presale_discount_fee_text`）、`volume`、`tlj_remain_num`〔TOP-64763·中（抓取摘要）〕<br>· 万能转链 `promotion_price` 为到手价，单位分；券 `coupon_amount`、`coupon_desc`（如"满129减80"）、`coupon_start_time`、`coupon_end_time`、`coupon_remain_count`〔TOP-65409·中（抓取摘要）〕<br>· 2023-10 升级版新增标准化优惠信息、预估到手价、预热到手价、预估凑单价、利益点标签、优惠券 ID〔TKS-51162·中〕<br>· 物料搜索响应有 `predict_rounding_up_price`、`future_activity_promotion_price`，无库存与 SKU 字段〔SDK-TKS-MAT·中〕<br>· 销量、库存、评价已改为模糊值〔评审 §7.2 #29；DDX-ALIMAMA，公告日期待核实·中〕<br>· 联盟价格通常不含 88VIP 价、淘金币抵扣、第三方淘礼金〔PRD v2.1 §10.6.1·中〕<br>· 花卷云转链把"百亿补贴（淘宝）""超值买返""签到红包"作为 specialGoods 单独传参，说明活动商品走独立转链路径〔L-HJ-API 第 328 行·中〕 | 单次 ≤20 个；价格为联盟口径预估值，不含会员价与跨店满减；库存、销量为模糊值；未见 SKU 级价格字段；`ip` 只说影响邮费，是否含运费未写明 | 实验见 §2.2。<br>**通过**：字段对照表能回答"券后价取哪个字段、单位、是否含运费、SKU 价是否可得"；按 §0.6"价格一致"（BR-PRICE-02 对照通过条件）判定：白名单样本单独列出（每条附截图）并补样，白名单外样本误差须为 0 分，任一不一致即不通过；取价调用记录 P50 / P95。<br>**证据**：`fixtures/union-recordings/taobao/cap-tb-02/`、下单页截图、字段映射表 `specs/union/taobao.md` 草稿 | 口径不明：卡片只显示"券 ¥X（满 Y 可用）"和"以下单页为准"，不展示券后价与预估返后价；运费未知时价格旁固定标"不含运费"；规格价拿不到时只显示"起"价；无库存字段时不承诺"有货"，只在接口返回下架 / 不可推广时置灰并显示"商品已下架"（30141） | 人+代理 | W1 |
+| CAP-TB-03 | 关键词搜索与筛选：价格区间、有券、排序、分页上限 | `GET /v1/products/search`、Agent search_products（D2） | 其他 | `taobao.tbk.dg.material.optional.upgrade`（物料搜索升级版；文档标注免费、不需要授权；权限包同 TB-02） | 待确认 | 未开始 | · 入参 `adzone_id` 必填；`q`；`page_no` 默认 1；`page_size` 默认 20、范围 1–100；`sort` 可选 tk_rate_des、tk_rate_asc、total_sales、tk_rate、tk_mkt_rate、tk_total_sales、tk_total_commi、final_promotion_price、match；`start_price`/`end_price`（元）；`has_coupon`；`is_tmall`；`cat`（≤10）；`material_id` 默认 80309；`biz_scene_id`〔TOP-64759·中（抓取摘要）〕<br>· 出参 `item_id`（新淘宝客商品 ID）、`final_promotion_price`、`commission_rate`、`coupon_share_url`、`title`、`pict_url`、`volume`（30 天销量）、`user_type`（0 淘宝 1 天猫）〔TOP-64759·中（抓取摘要）〕<br>· 旧版推广者物料 API 计划 2023 年双11 后逐步下线，升级版须按权限包迁移〔TKS-51162·中〕 | 单页 ≤100；`q` 不支持链接；销量模糊；结果可能受账号与 adzone 影响 | 实验见 §2.2。<br>**通过**：得到每个参数的实际行为表（排序方向、价格过滤口径、最大页数）；P95 ≤2 秒（Agent 超时统一引用 §0.6 / 01 F-AGENT-12）；无权限报错 0 次；产出"权益 × 平台"映射表：01 F-AGENT-04 的 benefits（coupon / big_coupon / taolijin / subsidy / high_rebate）各对应哪个参数或物料库（候选：coupon → `has_coupon`；taolijin、subsidy → `material_id` 物料库，清单来自 TB-10；high_rebate → `sort=tk_rate_des`；big_coupon → 服务端按券面额二次过滤，阈值由 08 定），每项附录制样例；映射不到的标"不支持"。<br>**证据**：`fixtures/union-recordings/taobao/cap-tb-03/`、参数行为表与延迟分布 | 淘宝页签显示"淘宝搜索暂时不可用"，返回 5 分钟内缓存（标 stale）或运营商品池；Agent 回复"淘宝暂时查不到，先看看京东 / 拼多多"，其他平台不受影响；价格过滤口径与需求不符时服务端二次过滤，筛选项旁说明"按券后价筛选"。某个 benefit 映射不到：Agent 固定回复"淘宝暂不支持按 X 筛选，已按关键词为你找到这些商品"（X 取权益名），不假装已筛选 | 代理写脚本 / 人部署与批准 / 探测环境执行 | W1 |
+| CAP-TB-04 | 佣金：佣金率、预估佣金、比价订单（预判与订单标识）、服务费 | quoteRebate（`rebate_min_fen` / `rebate_max_fen`）、`orders.is_price_compare` / `commission_rate_min_bp` / `commission_rate_max_bp`、N（raw_n_fen）、B（base_fen）与分佣快照（BR-CALC-02、BR-CALC-25、BR-CALC-27） | ② | item.info / material.optional / 万能转链（`commission_rate`、`income_rate`、`subsidy_*`；`biz_scene_id=2` 做比价预判定）<br>`taobao.tbk.order.details.get`（订单侧） | 待确认 | 未开始 | · 2024-11-13 公告、2024-12-04 生效：比价预判定改为入参"场景 ID 2 + 商品 ID"，在取商品信息或转链时判定，比价佣金率由 `commission_rate` / `income_rate` 透出；涉及万能转链、单品券高效转链、物料搜索升级版、商品详情升级版〔TKS-62779·中〕<br>· 2020-07-22 旧规则：接口返回 `max_commission_rate` / `min_commission_rate`，订单用 `flow_source` 标识；实测平均降佣约 5–6 个百分点（2–10）〔VEAPI-490·中〕<br>· 花卷云订单字段 `flow_source` 0=否、1=是〔L-HJ-API 第 258、263 行·中（花卷云口径）〕<br>· 订单 `total_commission_rate` 含技术服务费比率、不含专项服务费比率；`alimama_rate` / `alimama_share_fee` 为技术服务费比率与金额；`tk_total_rate` = 佣金比率 × 分成比率〔TOP-43328·中（抓取摘要）〕<br>· 每笔佣金扣 10% 技术服务费；渠道 ID 订单 10% 专项服务费自 2022-10-01 起新订单免收〔评审 §7.2 #18、#21；VEAPI-543·中〕<br>· 详情与物料出参含 `subsidy_rate`、`subsidy_amount`、`subsidy_type`、`topn_rate`、`cpa_reward_*`〔TOP-64763·中（抓取摘要）〕<br>· 补贴类佣金（如佣金膨胀）只在分享场景拿得到，自购按自购口径估算〔L-BE §2.2；TOP-65409·中〕 | 比价判定只在调用时预判，最终以订单为准；`commission_rate` 是否含补贴、是否已扣技术服务费须按字段说明换算；补贴类佣金在订单接口中是否与基础佣金分开返回（单列），结论决定 union.taobao.subsidy_itemized（BR-CALC-25）；2026 年规则是否再变未知 | 实验见 §2.2。<br>**通过**：得出"展示佣金率 = 哪个字段 × 哪个系数"公式，并用真实订单验证：预估佣金与订单 `pub_share_pre_fee` 按 §0.6"佣金一致"判定：偏差 ≤1 分的样本 ≥90%，其余归入 §0.6 佣金白名单，白名单外 ≤1 条；比价订单能在订单数据中被识别（`flow_source` 或其他字段）。<br>**证据**：`fixtures/union-recordings/taobao/cap-tb-04/`、真实订单对照表 | 比价预判拿不到：卡片按 BR-PRICE-07 无权限规则判定，判为 `rebate_basis=price_compare_risk` 时显示预估返利区间，附 BR-PRICE-17 rebate_compare 口径说明；订单侧识别不了比价单：按结算佣金入账，差额走 SETTLE_ADJUST，订单详情按 BR-TEXT-03 差额行展示原因 order_reason.SETTLE_DIFF（能识别为比价单时用 order_reason.PRICE_COMPARE）。文案措辞以 BR-TEXT-14、BR-PRICE-17 为准（G-06） | 人+代理 | W2（订单核对随 TB-07 下单） |
+| CAP-TB-05 | 用户归因：渠道备案 relation_id（与 special_id 区别）、order_scene、双品牌下同一买家在两个 App 的区分 | union_bindings、订单用户归属（02 §7.3）、30101 / 30102 / 30151、D1 双品牌隔离（BR-ATTR） | ③ | `taobao.tbk.sc.publisher.info.save`（私域用户备案；需买家淘宝 OAuth session；联盟账号需"渠道管理"高级权限，扣分不能达到 9 分及以上〔二手〕）<br>`taobao.tbk.sc.publisher.info.get`（查询备案，候选，以官方文档为准）<br>`taobao.tbk.sc.invitecode.get`（渠道邀请码，候选，以官方文档为准）<br>淘宝 OAuth2.0（Web Server Flow） | 待确认 | 未开始 | · publisher.info.save 需用户 session；入参 `inviter_code`（必填）、`info_type`（必填，默认 1）、`relation_from`、`offline_scene`、`online_scene`、`note`、`register_info`；出参 `relation_id`、`special_id`、`account_name`、`desc`；常见错误"重复绑定渠道""重复绑定粉丝"〔TOP-37988·中（抓取摘要）〕<br>· 同一渠道方（淘宝账号）在不同推广者名下生成不同 relation_id；推论：同一推广者名下同一淘宝账号只有一个 relation_id〔ANNAER（2019）；CSDN-112307893·中〕<br>· relation_id 标识推广渠道，须拼在转链参数里，商品库不受限；special_id 标识会员（买家淘宝账号），由系统识别、不依赖链接参数，但只能推官方营销商品库，门槛约近 30 天日均 UV>200、付款订单>40〔评审 §7.2 #16；TKS-5100（2019–2020 规则，待核实）·中〕<br>· 订单接口 `order_scene`：1 所有订单、2 渠道订单、3 会员运营订单，默认 1；订单出参 relation_id"若订单来自渠道方的推广则展示"，special_id"若订单来自会员的购买则展示"〔TOP-43328·中（抓取摘要）〕<br>· 渠道方须支付宝实名，一个身份证只能登记为一个渠道方；渠道方被扣满 54 分，名下所有 relation_id 失效〔评审 §7.2 #17；DDX-A15（2019）·中〕<br>· 渠道专属 PID 只有 20 个名额，删除后不能恢复〔VEAPI-545·低〕<br>· W2 级授权不能刷新，须引导用户重新授权〔TOP-OAUTH·中（抓取摘要）〕 | relation_id 属于"联盟账号 × 淘宝账号"，不属于 App；两 App 共用联盟账号时，同一淘宝账号大概率拿到同一 relation_id，App 归属只能靠 adzone_id；relation_id 被扣分失效或在花卷云侧被"清除 PID&RID / 渠道 ID 黑名单"时，两 App 同时受影响 | 实验见 §2.2。<br>**通过**：书面结论（a）账号 X 在新 App 备案后 relation_id 是否与优券汇相同；（b）两笔交叉订单的 adzone_id 都等于"最后点击"那个 App 的推广位，且新 App 按白名单只收下自己那笔、优券汇后台只入账另一笔（双向验证）；（c）order_scene 哪一路能拿到带 relation_id 的订单；（d）点击有效期：点击后 D+1、D+3、D+7 各下 1 单（期间不点其他推广链接），订单 adzone_id / relation_id 是否保留，结论与 06 Q-G13 书面答复互证，回写 BR-ATTR、01 F-ORD-08 的 15 天窗口与 JumpTip 文案；（e）备案巡检：用 publisher.info.get 查 X、Y 两个账号，返回的 relation_id 与订单中的一致（决定 01 F-LINK-09 能否按用户巡检）。任一不满足 → 升级为待决策"新 App 申请独立联盟账号"。<br>**证据**：`fixtures/union-recordings/taobao/cap-tb-05/`、两 App 后台订单截图、结论与决策建议 | 备案权限未批：转链前判断能力开关，淘宝卡片按钮显示 BR-TEXT-14 platform_coming_soon，仍可看券与价格、可跳转但明确提示 BR-TEXT-14 no_rebate_hint，不用无跟单链接冒充返利链接。adzone 无法可靠区分两 App：`convert.enabled.taobao=off`，走待决策"新 App 申请独立联盟账号"，期间淘宝卡片显示 BR-TEXT-14 platform_no_rebate。备案失效：订单进未归因池，用户看到 BR-TEXT-14 30102 行文案（error.30102；RELATION_INVALID，可找回）。文案措辞以 BR-TEXT-14 为准（G-06）。special_id 在 MVP 只存不用。publisher.info.get 不可用或与订单不一致：01 F-LINK-09 只保留"连续 3 笔订单 relation_id 为空"这一失效信号，取消"按用户调用备案查询校验"，写入第 8 节 | 人+代理 | W0 申请与建媒体；W1–W2 订单实验（D+7 用例 W2 末） |
+| CAP-TB-06 | 转链：产出形态（长链、短链、口令、scheme、小程序路径）、有效期、是否需要 SKU | `POST /v1/links/convert`、`/v1/links/{id}/open`、`/v1/shares`、link_logs | ③ | 万能转链（带 adzone_id + relation_id，可选 sku_id、coupon_id、external_id；`material_list` 转链为邀约制，`coupon_id` 仅面向 KA，`item_dto` 按 ID 转链是否需邀约待核实，见 TB-01）<br>`taobao.tbk.tpwd.create`（生成口令；候选，以官方文档为准——接口名只见于 DDX 二手资料；是否需单独申请待确认）<br>`taobao.tbk.spread.get`（长链转短链，候选，以官方文档为准）<br>`taobao.tbk.privilege.get`（单品券高效转链，候选降级） | 待确认 | 未开始 | · 万能转链出参 `cps_long_url`、`cps_short_url`、`coupon_long_url`、`coupon_short_url`、`cps_short_tpwd`、`coupon_short_tpwd`、`cps_full_tpwd`、`coupon_full_tpwd`；入参 `required_link_type` 指定需要的形态〔TOP-65409·中（抓取摘要）〕<br>· 入参 `relation_id`（渠道管理 ID）、`special_id`、`uvid`、`item_dto.sku_id`、`item_dto.external_id`（外部用户标记）、`item_dto.dx`（1 转通用计划，否则转最优佣金）〔TOP-65409·中（抓取摘要）〕<br>· tpwd.create 只接受 uland 或 s.click 开头的淘客链接〔DDX-6-9；评审 F-32·中〕<br>· 淘宝没有京东 subUnionId / 拼多多 custom_parameters.sid 那样的点击级参数，来源回填只能靠同用户同商品 / 同店 15 天窗口近似〔L-BE §2.4；02 §7.3·中（规划推断，external_id 未验证）〕<br>· 2024-10 起微信可直接打开淘宝链接；群聊与归因保留待真机验证〔评审 F-32；SINA-WX·中〕 | `material_list` 转链为邀约制（`item_dto` 按 ID 转链待核实）；不返回 scheme 与小程序路径（唤起见 TB-11）；无已证实的点击级参数 | 实验见 §2.2。<br>**通过**：每种形态至少 1 条录制样本；各形态有效期有实测天数，或起测满 30 天未失效（记"≥30 天"），W1 只要求起测；得出 `external_id` 是否在订单中回传的结论；转链 P95 ≤1.5 秒，并与 01、02 合并满足 §0.6 串行 P95 ≤2.5 秒（V-13 实测）。<br>**证据**：`fixtures/union-recordings/taobao/cap-tb-06/`、形态 × 有效期 × 用途表、`specs/platform-matrix.csv` 淘宝行草稿 | 万能转链 `material_list` 权限未获批：①先用万能转链 `item_dto`（item_id + sku_id）按 ID 转链（前提：V-01 书面确认该用法不需邀约；item_id 来自 TB-01 降级路径，如 `item.taobao.com?id=…` 链接或用户在搜索结果中选定的商品）；②仍不可用时用候选降级接口 privilege.get 按 item_id 转链；③都不可用则 `convert.enabled.taobao=off`，按钮"稍后再试"（50301），不返回用户原链接冒充返利链接。联盟链接实际有效期未核实前，按 BR-ATTR-13 ② W_link 过期重转，过期后的 open 行为见 BR-ATTR-05；重转后价格变化的提示按 BR-PRICE-13 | 代理写脚本 / 人部署与批准 / 探测环境执行 | W1 起测；有效期结论 ≤W5（满 30 天即结案） |
+| CAP-TB-07 | 订单同步：字段、时间窗、分页、QPS、付款到可查询延迟、预售、部分退款 | order-sync.taobao、`specs/order-status-map/taobao.csv`、orders 表、跟单推送（目标 P95 ≤5 分钟） | ③ | `taobao.tbk.order.details.get`（文档标注不需要用户授权；新 App appkey 的订单查询权限是否随联盟账号待确认） | 待确认 | 未开始 | · `query_type` 1 创建、2 付款、3 结算、4 更新时间；时间跨度日常 ≤3 小时，618、双11、年货节等大促 ≤20 分钟；开始时间须在近 90 天内〔TOP-43328·中（抓取摘要）〕<br>· `page_size` 1–100（默认 20）；`page_no` 1–100；第二页起须带 `position_index` 游标，`jump_type` -1 上一页 / 1 下一页〔TOP-43328·中（抓取摘要）〕<br>· 同一账号 1 秒总请求约 200 次，其中 API 调用约 40 次〔TOP-43328·中（抓取摘要）〕<br>· `tk_status` 请求取值：11 拍下未付款、12 付款、13 关闭、14 确认收货、3 结算成功；`member_type` 2 二方、3 三方〔TOP-43328·中（抓取摘要）〕<br>· 出参 `trade_id`（子订单）、`trade_parent_id`、`adzone_id`、`site_id`、`relation_id`、`special_id`、`alipay_total_price`、`pay_price`、`pub_share_pre_fee`、`pub_share_fee`、`total_commission_rate`、`subsidy_fee`、`refund_tag`（0 非维权 1 维权）、`tk_order_role`、`flow_source`、`item_id`、`item_num`、`tk_create_time`、`tk_paid_time`、`tk_earning_time`、`modified_time`、预售 `tk_deposit_time`、`deposit_price`、`tb_deposit_time`〔TOP-43328·中（抓取摘要）〕<br>· 维权和退款不回写订单接口，要用 relation.refund 单独查；订单号按字符串存〔评审 §7.2 #20；VEAPI-TB82·中〕<br>· 2026 天猫双11：10-15 预售，10-20 20:00 付尾款，现货到 11-13〔评审 §7.2 #28；BBT-1111·中〕 | 窗口 3 小时（大促 20 分钟）；最多 100 页 × 100 条 = 单窗口 1 万条；约 40 次/秒；近 90 天；部分退款金额不在订单接口里 | 实验见 §2.2。<br>**通过**：6 类订单均录到完整状态序列；付款到可查询延迟有实测 P50 / P95（目标 P95 ≤5 分钟，达不到则改用户话术"下单后约 N 分钟显示"）；状态映射表覆盖全部出现过的 tk_status；限流错误码有文档来源或正常运行中的录制（不主动触发，§0.2 硬规则 5）；① 每笔测试订单都有买家端订单号截图，并写明对应接口哪个字段（trade_parent_id / trade_id，回答 U-42 与 01 F-ORD-09 找回、F-ORD-12 黑名单用哪个号）；② 至少 1 笔不带 relation_id 的订单（新 App adzone 转链、不带 relation_id）出现在拉单结果里，证明"未归因池"可形成；③ 找到确认收货时间字段（tk_earning_time 为结算时间，不是收货时间），与买家点确认收货的时刻相差 ≤10 分钟，供 01 F-SET-02"确认收货满 15 天"使用；找不到时写明以哪个字段近似。预售定金单单独验收：截止 10-21（10-20 20:00 付尾款后），截止前只录到定金阶段的，`result.md` 标"部分支持（缺尾款阶段）"，01 F-ORD-06 状态机的 DEPOSIT_PAID 分支暂按回放开发。<br>**证据**：`fixtures/union-recordings/taobao/cap-tb-07/<scenario>/`、延迟统计与状态序列、`specs/order-status-map/taobao.csv` | 订单权限未批：只用录制回放开发，淘宝返利不上线（`convert.enabled.taobao=off`），卡片显示 BR-TEXT-14 platform_coming_soon。接口失败 / 限流：窗口进死信，恢复后按水位补拉，订单页显示 BR-TEXT-14 待跟单卡 pending_track_card（延迟分钟数 n 取 order_sync.delay_hint_min.taobao，本项实测后填）；超过 30 分钟未出现的订单引导订单找回（BR-ATTR-17、BR-ATTR-21）。部分退款字段缺失时以维权接口为准，订单详情显示 BR-TEXT-03「部分退款（入账前）」提示。文案措辞以 BR-TEXT-14 / BR-TEXT-03 为准（G-06） | 人+代理 | W2（预售用例 10-21） |
+| CAP-TB-08 | 维权、处罚、退款、结算数据 | S2：order_rights、INVALID / CLAWED_BACK 迁移、扣回分录、对账（BR-FUND） | 其他 | `taobao.tbk.relation.refund`（维权退款订单查询；候选，以官方文档为准——接口名与字段来自 SDK 转述；权限待确认，可能随渠道管理 / 会员运营权限）<br>`taobao.tbk.dg.punish.order.get`（处罚订单，候选，以官方文档为准）<br>order.details.get `query_type=3`（结算） | 待确认 | 未开始 | · relation.refund 入参 `search_type`（1 维权发起时间、2 正向订单结算时间、3 维权完成时间、4 订单创建时间）、`refund_type`（1 二方、2 三方）、`biz_type`（1 渠道关系 ID、2 会员关系 ID）、`start_time`、`page_no`〔SDK-TOP-REFUND·中〕<br>· 维权结果字段含 `relation_id`、`special_id`、`tb_trade_id`、`tb_trade_parent_id`、`refund_fee`、`refund_status`（4 创建、2 成功、3 失败、11 多次、12 待扣推广者、13 已扣推广者、14 待扣卖家、15 已扣卖家）、`earning_time`、`tk_refund_time`、`tk_refund_suit_time`、`modified_time`〔SDK-TKS-REFUND（服务商版）·中〕<br>· 淘宝联盟每月 20 日结算上一自然月确认收货的订单〔评审 §7.2 #21；TKS-18992·中〕<br>· 花卷云支持后台导入维权单、违规单、渠道单并补同步，说明接口数据有缺口需人工补〔L-BE §2.5 F-55·中〕 | 维权接口按渠道 / 会员两类分开；处罚接口无官方文档；结算只有订单级 `tk_earning_time` 与 `pub_share_fee`，联盟月度打款金额无接口（后台报表人工对账） | 实验见 §2.2。<br>**08a 通过（维权 / 退款 / 处罚映射，截止 W3）**：维权单在接口出现并能与 trade_id 关联；得到 refund_status 变化序列并逐个映射到扣回事件；处罚接口至少 1 次成功响应（可为空列表）。<br>**08b 通过（首个月结对账，截止 11-27）**：11-20 联盟结算后导出结算报表，与接口 pub_share_fee 汇总对账，差额按 §0.6 对账白名单归类，白名单外差额 ≤1 笔且合计 ≤1 元。08b 只是 SETTLE_ADJUST 规则定稿的前提，不是 S2 放量门槛（§1.1）。<br>**证据**：`fixtures/union-recordings/taobao/cap-tb-08/`、结算对账表（脱敏） | 维权 / 处罚接口无权限：后台"导入维权单 / 违规单 / 渠道单"CSV（01 F-ORD-10、F-ADM-05，M-内测）每周人工导入；入账观察期从 15 天延长为到联盟月结后再入账（配置项），订单页显示"等待联盟结算后到账（预计 X 月 20 日后）" | 人+代理 | 08a W3；08b 11-27 |
+| CAP-TB-09 | 淘礼金：我方创建、归属规则、与推广位关系；素材淘礼金 A/B/C 判定 | PRD 10.6 我方淘礼金（00 D7：默认进 MVP、W4、第一个可砍项）、10.6.1 素材淘礼金 `tlj_kind`、OTHER_TLJ 原因码、淘礼金专属 adzone | 其他 | `taobao.tbk.dg.vegas.tlj.create`（文档标注不需要用户授权；联盟账号需淘礼金权限与余额）<br>`vegas.tlj.stop` / `vegas.tlj.report` / `vegas.tlj.list.report` / `vegas.tlj.share.convert`（候选，以官方文档为准）<br>item.info（`get_tlj_info=1`）<br>万能转链 / tpwd.convert（A/B/C 判定） | 待确认 | 未开始 | · tlj.create 必填 `adzone_id`、`item_id`、`total_num`、`per_face`（元，2 位小数）、`user_total_win_num_limit`、`send_start_time`、`security_switch`（须 true）；出参 `rights_id`、`send_url`、`vegas_code`、`available_fee`（账户余额）、`item_today_num_left`〔TOP-40173·中（抓取摘要）〕<br>· 官方礼金活动规则：优先级"官方礼金商品推广 > 单品推广 > 联盟超级红包推广 > 间接商品推广"；用户首次经淘客 A 领取礼金后下单，佣金归 A，不被后续淘客截单〔THOR-TLJ（年份未标）·中〕<br>· 公开资料的归属优先级"预售 > 淘礼金 > 超级红包 > 口令"〔PRD v2.1 §10.6.1（待联盟确认）·低〕<br>· 万能转链已知出参中没有明确的淘礼金 / 权益归属字段；`commission_type` 取值 MKT、SP、COMMON、ZX、BRAND_MARKET、BRAND_EXCLUSIVE、SUPER_LINK〔TOP-65409·中〕<br>· tpwd.convert 返回 `origin_pid`（原推广位），可用于判定 A〔SDK-TKS-TPWD·低〕<br>· 淘礼金专属推广位两 App 不得共用（花卷云要求淘礼金 PID 不与其他 PID 重复）〔L-DUAL §1.2 硬规则 4·高〕 | 消耗我方预算（available_fee）；每日可创建数量有限（item_today_num_left）；B 与 C 的区分目前没有已知字段 | 实验见 §2.2。<br>**通过**：找到至少一个字段或字段组合，把 ≥30 条样本按截图结论分为 A/B/C，准确率 100%（30/30）；找不到则书面结论"无法区分，一律按 C"。我方淘礼金实验订单归到新 App 淘礼金 adzone。<br>**证据**：`fixtures/union-recordings/taobao/cap-tb-09/`、淘宝 App 截图、判定表 | 判定字段找不到：所有素材淘礼金按 C 处理——卡片用我方转链（有返利、无淘礼金），写明"这条素材里的淘礼金是第三方发的，通过本 App 购买领不到；本 App 预估返 ¥Y"，不标"淘礼金"标签；"复制原口令"按钮默认关。我方淘礼金权限或预算未批：`tlj.enabled=off`，Agent 对"XX 淘礼金"请求回复"现在没有可领的淘礼金"，改展示有券商品 | 人+代理 | W3（淘礼金样本 06 Q-D6 W2 到位；05 排在 W3） |
+| CAP-TB-10 | 物料推荐（首页信息流、猜你喜欢） | 首页物料流 `GET /v1/pages/{page_key}/sections/{section_id}/items`（M-内测）、商品池、Agent 无关键词兜底 | 其他 | `taobao.tbk.dg.material.recommend`（物料精选升级版；候选，以官方文档为准——官方文档本轮未取到，来源 TKS-51162、SDK）<br>`taobao.tbk.optimus.tou.material.ids.get`（物料 ID 列表；候选，以官方文档为准，来源同上）<br>权限包同 TB-02 | 待确认 | 未开始 | · 2023-10 升级版推广者接口包括 dg.material.optional.upgrade、dg.material.recommend、optimus.tou.material.ids.get、item.info.upgrade.get；旧物料精选 dg.optimus.material 计划双11 后下线〔TKS-51162·中〕<br>· 官方礼金活动曾通过物料精选（投放 ID 55172）下发〔THOR-TLJ·低〕 | 个性化推荐须上传设备标识（device_value），涉及个人信息，须用户同意并可关闭；dg.material.recommend 官方文档本轮未取到（字段来自 SDK-TKS-REC） | 实验见 §2.2。<br>**通过**：得到可用 material_id 清单与每库样例；字段能复用 TB-02 的价格映射。<br>**证据**：`fixtures/union-recordings/taobao/cap-tb-10/` | 无权限或无个性化同意：首页淘宝信息流改读运营商品池（后台维护），不展示"猜你喜欢"，显示"精选好物"；个性化开关关闭时不传设备标识 | 代理写脚本 / 人部署与批准 / 探测环境执行 | W3 |
+| CAP-TB-11 | App 唤起与归因保持：百川 SDK、scheme、Universal Link / App Link / 鸿蒙 App Linking、未安装降级 | `specs/platform-matrix.csv` 淘宝行、convert 响应 primary / fallbacks、link_jump 上报、鸿蒙里程碑（D4、HM-04） | ③ | 百川电商 SDK（iOS / Android / HarmonyOS）`openByUrl`：需新 App 包名 / Bundle ID 的百川 AppKey + 安全图片；鸿蒙版 AppKey 须加白；openByUrl 需"淘宝客基础页面包"〔评审 F-29〕<br>`taobao://` / `tbopen://` scheme（候选，以官方为准） | 待确认 | 未开始 | · 百川 SDK 最新：Android 标准版 4.2.0.0（2025-12-02）、旗舰版 5.0.2.6；iOS 标准版 4.1.0.5（2026-04-08）、旗舰版 5.0.0.18；HarmonyOS 1.0.1（2026-04-08）〔BC-SDK·中（抓取摘要）〕<br>· 鸿蒙 SDK 要求 DevEco Studio 5.0.3.700+、API 12+、真机 NEXT.0.0.31+，仅 Stage 模型；提供 init、openByUrl、login、logout、authorize；须安全图片 yw_1222.jpg 与 AppKey 加白〔BC-HM·中（抓取摘要）〕<br>· openByUrl 的 AlibcTaokeParams 含 pid、subPid、unionId、relationId、materialSourceUrl、extParams〔BC-PARAM（搜索摘要）·中〕<br>· 百川不能对 s.click 链接做二次转换，推广链接须自行生成〔评审 §7.2 #26·中〕 | 百川鸿蒙版官方称"开放初期接入"，须加白；scheme 直拉不保证归因；手淘是否支持 Universal Link / App Link / App Linking 打开推广链接未知 | 实验见 §2.2。<br>**通过**：三端 × 已安装 / 未安装 × 各方式形成矩阵，每格有"拉起成功 / 归因保留"两个是否结论；每端被选为首选（primary）的路径 ≥3 单且全部归因正确，备选（fallback）路径各 ≥1 单归因正确；每端至少有一种方式"已安装时归因保留"；未安装时 H5 下单是否保留归因有 ≥1 单结论。<br>**证据**：`fixtures/union-recordings/taobao/cap-tb-11/`、真机录屏、三端矩阵 | 路径矩阵以 BR-ATTR-27 为准，文案措辞以 BR-TEXT-14 为准（G-06），本列只写行为。鸿蒙百川不可用或不保留归因：鸿蒙端淘宝降级为 H5 打开推广链接，按钮旁显示 BR-TEXT-14「鸿蒙淘宝降级 H5」行提示；H5 也不保留归因时，鸿蒙端淘宝只展示券与价格，按钮改为复制淘口令去淘宝打开，并提示以淘宝内下单为准（这两句 BR-TEXT-14 尚未收录，暂沿用原措辞"复制淘口令去淘宝打开""以淘宝内下单为准"，待补键；若口令路径实测也丢归因，按 BR-ATTR-27 该端隐藏购买按钮，显示 BR-TEXT-14「某端全部路径丢归因」行）。未安装淘宝：若本实验证实 H5 下单保留归因，用 H5（系统浏览器）打开推广链接下单；否则按钮与提示用 BR-TEXT-14「淘宝未安装（H5 未验证归因时）」行（原 09 两句"安装淘宝后下单才有返利""已复制口令，安装并打开淘宝即可查看"已并入该行），同时复制口令；归因未验证时追加提示"返利可能无法跟踪，如未显示订单可申请找回"（BR-TEXT-14 尚未收录，待补键） | 人+代理 | W2（依赖 V-03 百川 AppKey 与鸿蒙加白获批，见 §7.0；与 05 HM-04 W1–W2 对齐） |
+| CAP-TB-12 | 配额、授权令牌有效期与续期、测试环境 / 沙箱、测试订单报备、响应录制存档 | union_credentials 巡检、令牌桶配额切分、replay / mock 模式、W0 权限申请（06 Q-C16、Q-G5） | 其他 | 淘宝开放平台 OAuth2.0 与应用控制台（新 App 推广者自有应用） | 待确认 | 未开始 | · 物料搜索升级版、商品详情升级版、万能转链、订单查询、淘礼金创建的文档均标注"不需要授权"（只用 appkey 签名）；私域备案 publisher.info.save 需要用户 session〔TOP-64759、TOP-64763、TOP-43328、TOP-40173、TOP-37988、TOP-65409·中（抓取摘要）〕<br>· access_token 时长与应用标签、状态有关；只有订购类第三方应用可以 refresh；W2 级授权不能刷新〔TOP-OAUTH·中（抓取摘要）〕<br>· 订单接口：同一账号每秒总请求约 200 次，API 约 40 次〔TOP-43328·中（抓取摘要）〕<br>· 推广者自 2023-10-17 起可自主申请"淘宝客【推广者】商品物料获取"权限包；万能转链 `material_list` 转链为邀约制、`is_target_coupon` / `coupon_id` 仅面向 KA，`item_dto` 按 ID 转链是否需邀约原文未写〔TKS-51162；TOP-65409·中〕<br>· 联盟账号权限 ≠ 新 App 开放平台应用权限，须逐项确认；优券汇现走花卷云应用授权，禁止用花卷云 `dhcc.oauth.*` 为新 App 转链或拉单〔评审 F-29；L-BE §2.2·高〕<br>· 推广者违规可被关闭 API 权限、2 个月内不得再申请〔评审 §7.2 #24；ALIMAMA-1578·中〕 | 多数淘客接口靠 appkey 调用，没有长期 token 需要续期；真正会过期的是备案时的买家 session（一次性使用）；沙箱对淘客接口的支持情况未知，测试只能用真实账号小额下单 | 实验见 §2.2。<br>**通过**：权限跟踪表每项有状态与书面回复；配额计算口径（按 appkey 还是按联盟账号）有书面答复或控制台截图；各接口 QPS 阈值取控制台 / 文档值，允许压测时（§0.2 硬规则 5）补实测值，限流错误码入表；fixtures 脱敏校验在 CI 通过。<br>**证据**：`evidence/capabilities/CAP-TB-12/`（权限跟踪表、配额表、联盟书面答复截图）、CI 脱敏校验日志 | 权限未批的接口在 `config/union-endpoints.yaml` 标 replay，只用录制回放开发；淘宝整体未批时 `convert.enabled.taobao=off`、`convert.off_reason.taobao=not_launched`，京东、拼多多照常上线，淘宝卡片按钮显示 BR-TEXT-14 platform_coming_soon。配额不足时按 02 §6.2 先停商品池刷新，再停提醒冷层 | 人 | 权限跟踪表 W0（09-30 提交）；配额实测 W1（依赖获批，见 §7.0） |
+| CAP-TB-13 | 价格可观测性（降价提醒）：按商品 ID 批量查价、单次成本、限流、可接受频率、价格是否随用户或渠道不同 | S3 第一类提醒 price_drop（PRD 10.19 / 10.20）、tracked_item 分层调度、发送前复核、price_snapshot 预埋（BR-WATCH） | ⑤ | item.info.upgrade.get（每次 ≤20 个，免费，不需要用户授权）<br>万能转链（发送前复核 / 点击时实时价，单个，带用户 relation_id；按 `item_dto` 调用，是否需邀约待核实，见 TB-01） | 待确认 | 未开始 | · item.info 单次最多 20 个 item_id，免费；入参含 relation_id、promotion_type、biz_scene_id、ip〔TOP-64763·中（抓取摘要）〕<br>· 联盟价格不含 88VIP 价、淘金币、跨店满减等个人优惠；提醒口径只能是联盟券后价〔PRD v2.1 §10.19·中〕<br>· 商品 ID 前半段每次交互都变，后半段在一定范围内稳定；按 ID 批量查价依赖 product_key → 最近 raw_item_id 的映射〔评审 F-31·中〕<br>· 平台不提供价格历史，历史只能靠我方观测积累；不做页面采集（00 §6；评审 F-92）〔PRD v2.1 §10.20（产品决定）·高〕 | 每次调用 20 个商品；日配额未知；旧 raw_item_id 过期后能否继续查价未知；价格是否因 relation_id / 渠道不同未知 | 实验见 §2.2。<br>**通过**：给出结论（a）跨用户共享查价是否成立（价差为 0 或可忽略）；（b）raw_item_id 可复用时长；（c）1 万个 tracked_item 在默认层 6 小时频率下日调用量（≈ 1 万 ÷ 20 × 4 = 2000 次）≤ 配额的 10%（与 02 §6.2 商品池刷新占比一致），否则给出降频方案；（d）接口价与下单页价按 §0.6"价格一致"判定一致率 ≥90%。其中（a）的 20 个商品跨 relation_id 价差、（b）的"24 小时后旧 raw_item_id 能否复用"、单次批量上限，作为子实验提前到 W1–W2 做（并入 V-11 / V-21），W1 末供 §8 product_key 与 tracked_item 键定论；完整 7 天观测在 W8。<br>**证据**：`fixtures/union-recordings/taobao/cap-tb-13/`、成本与频率表 | 配额不足：降低冷层与默认层频率，提醒页固定说明"我们约每 X 小时检查一次，价格以下单页为准"。查价失败不生成提醒；连续失败 >24 小时提醒状态显示"暂时无法获取价格"，缺失价格不当 0 元。价格随 relation_id 变化：不做跨用户共享，改按用户查价并降低每用户提醒数上限。旧 raw_item_id 失效：按标题 + 店铺重新检索，检索不到则提醒置为"商品可能已下架" | 代理写脚本 / 人部署与批准 / 探测环境执行 | 子实验 W2；7 天观测 W8（11-23 → 11-29） |
+| CAP-TB-14 | 系统分享载荷：淘宝 App 分享面板能否选到本 App，传入的是文本、短链、口令还是图片 | R3 链路④、分享面板接收（PRD 10.18，SH-01～03） | ④ | 本 App 分享接收（见 X-01）；淘宝侧无接口 | 不需要（接收方为自有代码） | 未开始 | · 淘宝 App 分享面板是否列出系统分享或第三方 App、分享时传出的内容：未找到任何公开资料〔X-01 检索无结果·低〕 | 分享面板由淘宝控制，随版本变化，我方无法保证入口存在 | 执行 X-01 实验中的淘宝部分，并按 TB-01 实验第 2 步把原始载荷（UTI / MIME + 文本，脱敏）存 `fixtures/input-samples/taobao/share/<os>.jsonl`。<br>**通过**：iOS、Android、鸿蒙各端至少一条分享路径能选到本 App，且收到的文本经 parse_input 识别出平台与商品；达不到的端标"不支持"。<br>**证据**：同 X-01 | 按 X-01 的降级：引导"在淘宝里点【复制链接】，回到这里粘贴"；只收到图片时提示"暂不支持识别图片，请分享链接或复制口令" | 人+代理 | W1 |
+
+### 2.2 淘宝实验展开（未知项 + 步骤）
+
+**CAP-TB-01 商品识别**
+
+未知项：
+- 新 App 自有 appkey 能否拿到万能转链 `material_list` 的两类邀约权限（①联盟推广链接 ②淘宝 / 天猫复制链接），审批周期多久；只传 `item_dto`（item_id + sku_id）按 ID 转链是否也需要邀约（V-01 书面询问）。
+- `taobao.tbk.tpwd.convert` 是否仍可新申请、是否已下线、返回字段是否仍含 `origin_pid`。
+- m.tb.cn 短链、s.click、uland、a.m.taobao.com、新版 CZ 前缀口令分别能否被万能转链识别，识别率多少。
+- 用户分享某个规格时，口令或链接里是否带 skuId；万能转链返回的 sku_id 是用户选的规格还是默认规格。
+- 淘宝 App 系统分享面板在 iOS / Android / 鸿蒙实际传给第三方 App 的载荷形态（见 TB-14）。
+- 天猫、淘宝特价版、百亿补贴页面链接能否解析出商品。
+- 同一商品两次解析返回的 item_id 后半段是否一致、稳定多久（决定 product_key = `tb:` + 后半段是否成立）。
+- 解析失败的错误码全集（文档只给了 `isv.invalid-parameter` 等示例）。
+
+步骤：
+1. 人：W0 第 1 天在联盟后台为新 App appkey 提交万能转链（两类）与口令解析权限申请，截图存档；从 3–5 个发单群、淘宝 App 分享面板（iOS / Android / 鸿蒙各 1 台真机）收集 ≥30 条样本，覆盖 m.tb.cn 短链、s.click、uland、item.taobao.com、detail.tmall.com、旧版口令、新版 CZ 口令、分享长文案、带规格分享；每条人工标注真实商品与规格（06 Q-D5）。
+2. 人：在测试 App 的分享扩展里记录淘宝 App 分享传入的原始载荷，脱敏后存 `fixtures/input-samples/taobao/share/`。
+3. 代理：写 `tools/probe/taobao/tb01_resolve.ts`，对每条样本依次调用万能转链（material_list）、tpwd.convert（如有权限），记录 item_id、sku_id、material_type、extra_info、错误码、耗时；同一样本间隔 1 小时、24 小时各再调一次，比较 item_id 后半段。
+4. 代理：响应脱敏（去掉 relation_id、adzone 以外的账号信息）存 `fixtures/union-recordings/taobao/cap-tb-01/<样本id>.json`，生成识别率报告。
+
+**CAP-TB-02 价格口径**
+
+未知项：`final_promotion_price` 与 `predict_rounding_up_price` 的口径区别，哪个等于"券后价"；到手价是否含运费，`ip` 影响哪个字段；传 sku_id 转链时 `promotion_price` 是否为该 SKU 的到手价；有没有"是否有货 / 已下架"字段，还是只能靠错误码（如 10000 商品不可推广）；百亿补贴、官方立减在 `final_promotion_path_list` 中如何体现，是否须专门的活动转链；relation_id、promotion_type 是否改变价格（还是只改佣金）；item.info 价格单位是元字符串还是分。
+
+步骤：
+1. 人：选 20 个商品（普通、有券、满减门槛、天猫、预售、百亿补贴、多规格价差大、包邮与不包邮各若干），在淘宝 App 下单页截图记录当时到手价、规格价、运费（不付款）。
+2. 代理：写 `tools/probe/taobao/tb02_price.ts`，截图后 5 分钟内对同批商品调 item.info（不同 ip、relation_id、promotion_type 组合）与万能转链（带 / 不带 sku_id），输出字段对照表。
+3. 代理：响应存 `fixtures/union-recordings/taobao/cap-tb-02/`，生成"接口字段 → BR-PRICE 价格口径"映射表草稿（`specs/union/taobao.md`）。
+
+**CAP-TB-03 搜索**
+
+未知项：最大可翻页深度；benefits 各项（淘礼金、补贴、大额券）有没有可用的物料库 material_id 或筛选参数；`start_price`/`end_price` 过滤的是折扣价还是到手价；`sort=final_promotion_price` 的方向是否须带 `_asc`/`_des` 后缀；同一关键词在优券汇与新 App 的 adzone 下返回是否不同；appkey 级 QPS / 日上限。
+
+步骤：
+1. 代理：写 `tools/probe/taobao/tb03_search.ts`，10 个关键词（含品牌词"伊利 纯牛奶"、长尾词、英文词）× 各 sort × has_coupon true/false × 价格区间，翻页直到无结果，记录 total_results、实际可翻页数、每页耗时。
+2. 代理：校验价格区间过滤后结果的 final_promotion_price / zk_final_price 是否全部落在区间内；对 benefits 候选参数（has_coupon、各 material_id、tk_rate_des 排序）各跑 3 个关键词，录制并填"权益 × 平台"映射表。
+3. 响应脱敏存 `fixtures/union-recordings/taobao/cap-tb-03/<keyword>/<params>.json`。
+
+**CAP-TB-04 佣金**
+
+未知项：`biz_scene_id=2` 时 commission_rate 返回比价后佣金率还是区间，是否仍有 min/max 字段；2026 年 `flow_source` 实际取值（文本还是数字）；commission_rate 单位（百分比字符串如 "20.00" 还是万分比）；自购（promotion_type=1）与分享（=2）佣金差多少，promotion_type=2 标注"代理模式专属"，新 App 是否属于该模式；专项服务费 2026 现行费率，渠道订单与会员运营订单是否不同。
+
+步骤：
+1. 代理：写 `tools/probe/taobao/tb04_commission.ts`，对 TB-02 的 20 个商品分别以 biz_scene_id=1/2、promotion_type=1/2 调详情与转链，输出佣金字段对照。
+2. 人：W1–W2 真实下单（与 TB-07 合并）时，同一商品一笔从 App 搜索进入（非比价场景），一笔先在淘宝搜到再粘贴到 App（比价场景），记录订单 flow_source 与 pub_share_pre_fee。
+3. 代理：把预判与订单实际佣金对比，存 `fixtures/union-recordings/taobao/cap-tb-04/`。
+
+**CAP-TB-05 用户归因（双品牌关键实验，对应 06 Q-G1、后端规划 V1）**
+
+未知项：
+- 同一淘宝账号在优券汇（花卷云）已备案后，新 App 用同一联盟账号的邀请码再调 publisher.info.save，返回"重复绑定渠道"还是同一 relation_id；报错时能否用 publisher.info.get 取回。
+- 新 App 能否拿到独立渠道邀请码（relation_app 取值），它是否影响 relation_id。
+- order_scene=1 的结果里渠道订单是否带 relation_id；是否须 1、2 两路都拉（02 与后端规划写法不一致）。
+- 渠道订单的 adzone_id 是否必须是"渠道专属 PID"；新 App 需几个渠道专属 PID，20 个名额是否与优券汇共用。
+- 同一用户在两个 App 都有 15 天内点击时，订单按"最后点击"归到哪个 adzone；两 App relation_id 相同时，订单上的 relation_id 与 adzone_id 是否总来自同一次点击。
+- 用户在淘宝内经千问助手下单是否保留 relation_id（06 Q-G4、后端规划 V8）。
+- 备案所需 OAuth 授权页在鸿蒙端的承载方式（百川 authorize 还是 H5）。
+
+步骤：
+1. 人：W0 在联盟后台为新 App 建媒体与推广位（PRD v2.1 写 4 个：自购 / 分享 / Agent / 淘礼金；06 Q-C16 写 ≥5 个，以 06 为准），确认是否需要渠道专属 PID，截图；在花卷云"忽略的 PID / 不入库的 PID"填入全部新推广位并截图（V-04）。
+2. 人：准备 2 个测试淘宝账号：X 已在优券汇备案，Y 从未备案（06 Q-H5）。
+3. 代理：写 `tools/probe/taobao/tb05_binding.ts`（OAuth 回调 + publisher.info.save + publisher.info.get），人用 X、Y 在新 App 测试包完成授权；记录 relation_id、special_id、desc、错误码，并与优券汇后台显示的 X 的 relation_id 比对。
+4. 人：用 X 分别从优券汇与新 App 各点一次同一商品链接，间隔 10 分钟，在后点的 App 里下单（小额、可退款的真实商品），再反过来做一次。
+5. 代理：用 order.details.get 分别按 order_scene=1/2/3 拉取，记录 adzone_id、relation_id、special_id、site_id；响应脱敏存 `fixtures/union-recordings/taobao/cap-tb-05/`。
+6. 人（有条件时）：在淘宝内经千问助手完成 1 单，核对 relation_id 与 adzone_id（06 Q-G4）。
+7. 人：点击有效期——用 Y 点击新 App 链接后不再点其他推广链接，分别在 D+1、D+3、D+7 各下 1 单（共 3 单，受 §0.2 硬规则 5 限额约束），代理核对订单 adzone_id、relation_id；同时由人向联盟书面询问点击有效期（06 Q-G13）。
+8. 代理：用 publisher.info.get 查 X、Y，比对返回 relation_id 与步骤 5 订单中的值。
+
+**CAP-TB-06 转链**
+
+未知项：各形态链接与口令的有效期，是否有 expire 字段；`item_dto.external_id` 是否出现在订单数据里（若出现，淘宝就有点击级参数，可替代 15 天近似回填）；不传 sku_id 时用户进入默认规格还是商品页，传 sku_id 是否影响跟单；转链响应能否看出所用推广位 / relation_id 生效；转链结果能否跨用户复用（规则禁止，但须确认链接内是否已固化 relation_id）；只传 `item_dto` 按 ID 转链是否需要邀约权限（V-01）；万能转链不可用时 privilege.get 是否可用、是否支持 relation_id。
+
+步骤：
+1. 代理：写 `tools/probe/taobao/tb06_convert.ts`，对 TB-02 商品各转一次（带 relation_id、带 / 不带 sku_id、带 external_id=link 短码），记录全部形态字段与耗时；对短链与口令每天用 TB-01 接口解析一次直至失效，记录有效天数。
+2. 人：TB-05 的真实下单使用带 external_id 的链接，检查订单数据是否回传该值。
+3. 代理：响应脱敏存 `fixtures/union-recordings/taobao/cap-tb-06/`，生成 `specs/platform-matrix.csv` 淘宝行草稿。
+
+**CAP-TB-07 订单同步**
+
+未知项：大促期 20 分钟窗口从哪天开始强制、由接口报错还是公告通知；付款到可查询的延迟分布；预售定金阶段 tk_status 与尾款后变化序列，尾款未付如何失效；部分退款（多件退一件）时 item_num、alipay_total_price、pub_share_pre_fee 是否变化；价保是否改变佣金、体现在哪个字段；modified_time 是否在每次状态 / 金额变化时都更新（防旧覆盖依赖它）；天猫订单如何标识；单窗口超过 1 万条时的行为。
+
+步骤：
+1. 人：W1–W2 用 TB-05 的测试账号在新 App 下 6 类真实订单：普通单、天猫单、多件单（随后退 1 件）、全额退款单、预售定金单（10-15 后下定金，10-20 付尾款）、确认收货单；另下 1 笔不带 relation_id 的订单（验证未归因池）；每单记录付款时刻、确认收货时刻，并截买家端订单号。
+2. 代理：写 `tools/probe/taobao/tb07_orders.ts`，每 1 分钟按 query_type=4、order_scene=1/2 拉最近 20 分钟窗口，记录每单首次出现时刻、每次字段变化（diff），直到状态稳定；同时测 page / position_index 翻页；不主动触发订单接口限流（§0.2 硬规则 5），限流错误码以文档为准。
+3. 代理：按订单脱敏（买家信息、订单号后 6 位打码）存 `fixtures/union-recordings/taobao/cap-tb-07/<scenario>/`，生成 `specs/order-status-map/taobao.csv` 草稿。
+
+**CAP-TB-08 维权与结算**
+
+未知项：relation.refund 是否只返回渠道 / 会员订单，普通 adzone 订单的维权如何获取；punish.order.get 的入参、时间窗、字段；结算后维权扣回在哪个接口、哪个字段体现（refund_status 12/13 与订单 pub_share_fee 的关系）；联盟月结金额能否通过接口核对（报表接口待确认）；维权接口时间窗与页数上限。
+
+步骤：
+1. 人：对 TB-07 中确认收货后的 1 笔订单发起售后退款（小额），记录发起与完成时刻。
+2. 代理：写 `tools/probe/taobao/tb08_rights.ts`，每 30 分钟按 search_type=1/3、biz_type=1 调 relation.refund，按 punish.order.get（若有权限）近 60 天拉一次，同时观察订单接口 refund_tag 变化；响应脱敏存 `fixtures/union-recordings/taobao/cap-tb-08/`。
+3. 人：次月 20 日后导出联盟后台结算报表，与订单接口 pub_share_fee 汇总核对。
+
+**CAP-TB-09 淘礼金**
+
+未知项：转链或解析结果中能否看出口令携带的淘礼金、出资方 / 创建推广位（B vs C）；vegas_code、rights_id 是否出现在解析结果或订单数据中；品牌 / 商家开放淘礼金用我方 adzone + relation_id 重转后权益是否保留（B 类是否真实存在）；淘礼金创建是否支持 relation_id / 渠道专属 PID，领取后订单 relation_id 是否仍是领取人的；tlj.create 的 campaign_type、use_start/end_time 等可选参数与每日创建上限；2026 年淘礼金与超级红包、预售的归属优先级（06 Q-G3）。
+
+步骤：
+1. 人：W0–W1 从 3–5 个发单群收集 ≥30 条带淘礼金的真实口令（06 Q-D6），记录来源群与素材原文。
+2. 代理：写 `tools/probe/taobao/tb09_tlj.ts`，对每条：a）tpwd.convert（若有权限）记录 origin_pid；b）万能转链（material_list=原口令，adzone=新 App 自购位 + 测试 relation_id）记录全部出参；c）item.info(get_tlj_info=1)。
+3. 人：用测试账号在淘宝 App 打开我方转链结果，截图是否仍显示"淘礼金 X 元"。
+4. 人（D7 未被推翻且淘礼金权限获批后）：用淘礼金专属 adzone 创建 1 个 1 元 × 2 份的淘礼金，自己领取并下单，检查订单 adzone_id / relation_id。
+5. 代理：汇总 30 条样本的字段与截图结论成判定表，脱敏存 `fixtures/union-recordings/taobao/cap-tb-09/`。
+
+**CAP-TB-10 物料推荐**
+
+未知项：dg.material.recommend 官方参数与分页上限；可用 material_id 清单与各库更新频率；device_value 加密方式与合规要求（是否可用 OAID / IDFA / 华为 OAID）。
+
+步骤：代理写 `tools/probe/taobao/tb10_feed.ts`，调 optimus.tou.material.ids.get 取 material_id 列表，再对每个库调 dg.material.recommend 翻页，记录条数、字段、与物料搜索字段是否一致；脱敏存 `fixtures/union-recordings/taobao/cap-tb-10/`。
+
+**CAP-TB-11 唤起与归因保持（对应 05 HM-04）**
+
+未知项：百川鸿蒙版 openByUrl 是否支持 relationId、是否支持备案所需 authorize（06 Q-G11）；scheme 直接打开 s.click / uland 链接时归因是否保留（三端分别）；手淘是否支持 Universal Link / Android App Link / 鸿蒙 App Linking 打开推广链接；未安装淘宝时 H5（内置 WebView 或系统浏览器）下单是否保留归因；微信内打开淘宝短链下单是否保留归因（见 X-03）；百川 SDK 隐私合规要求（首次启动前不得初始化等）对冷启动唤起的影响。
+
+步骤：
+1. 人：W0 申请新 App 的百川 AppKey（iOS / Android / 鸿蒙），提交鸿蒙加白（V-03）。
+2. 代理：在三端最小探测 App（V-37，不依赖正式客户端）实现 4 种打开方式：百川 openByUrl(s.click)、scheme、通用链接 / App Link / App Linking、H5；`tools/probe/taobao/tb11_jump.ts` 为每种方式生成带独立 adzone 的链接（或同 adzone 不同商品）以便区分。
+3. 人：每端每种方式先各下 1 笔小额真实订单（已安装 / 未安装淘宝各一轮），定出首选路径后再补到首选 ≥3 单（受 §0.2 硬规则 5 限额约束），记录是否拉起、是否落到正确商品页、订单是否带新 App adzone 与 relation_id。
+4. 代理：客户端 link_jump 上报与订单录制存 `fixtures/union-recordings/taobao/cap-tb-11/`。
+
+**CAP-TB-12 配额与凭据**
+
+未知项：新 App appkey 日调用总量与各接口 QPS（非订单接口）；淘宝客接口是否有沙箱；联盟是否有"测试订单报备"机制（自购测试单是否会被判自买作弊扣分）；联盟规则是否允许存档接口响应（含价格、订单）用于回放测试及存档期限；新 App 自有应用审核周期，是否要求 App 已上架或已备案（06 Q-G5）。
+
+步骤：
+1. 人：W0 第 1 天按权限清单（物料获取包、万能转链两类、口令解析、私域备案、订单、维权、处罚、淘礼金、百川）逐项提交并截图，建跟踪表（负责人、提交日、状态）；向联盟对接人书面询问测试订单报备、沙箱、日配额、响应存档是否允许。
+2. 代理：写 `tools/probe/taobao/tb12_quota.ts`。先按 §0.2 硬规则 5 确认配额计算口径：按联盟账号计时不压测，只记录控制台配额与文档值；按 appkey 计时，经人批准后在 10-14 前 02:00–06:00 对搜索与详情做阶梯压测（1 → 5 → 10 → 20 QPS，每档 1 分钟），首个限流即停并记录错误码与阈值，提前 1 个工作日通知优券汇运营；把全部探测脚本改为读取 `config/union-endpoints.yaml` 的 real / replay / mock 模式。
+3. 代理：写 `tools/probe/fixtures-lint.ts` 脱敏校验（禁止手机号、完整订单号、买家昵称），接入 CI。
+
+**CAP-TB-13 价格可观测性（P1）**
+
+未知项：用 30 分钟前、24 小时前、7 天前取得的 raw_item_id 调 item.info 是否仍返回；不同 relation_id / promotion_type / ip 下 final_promotion_price 是否变化；appkey 日调用上限与 QPS（1 万 tracked_item、默认层每 6 小时约 2000 次/天，热层另计）；券后价字段更新时效；大促预热价（future_activity_promotion_price）能否用来提前判定。
+
+步骤：
+1. 代理：写 `tools/probe/taobao/tb13_observe.ts`，选 100 个商品（含 TB-02 的 20 个），每小时批量查价一次、连续 7 天；对其中 20 个用 3 个不同测试 relation_id 与 promotion_type=1/2 各查一次；记录 raw_item_id 过期行为、字段变化次数、错误率、耗时。
+2. 人：第 1、4、7 天对 10 个商品在淘宝下单页截图比对。
+3. 代理：输出每商品价格变动次数分布（用于分层阈值）、跨 relation_id 价差、按 1 万 / 5 万 tracked_item 推算的日调用量与配额占比；脱敏存 `fixtures/union-recordings/taobao/cap-tb-13/`。
+
+### 2.3 淘宝双品牌（D1）归因风险
+
+1. relation_id 属于"联盟账号 × 淘宝账号"。两个 App 共用联盟账号时，同一淘宝账号很可能拿到同一个 relation_id（二手资料推论），App 归属只能靠 adzone_id。
+2. 优券汇已备案的用户在新 App 再备案时，可能报"重复绑定渠道"，须用 publisher.info.get 取回已有 relation_id，待 TB-05 验证。
+3. 联盟按"最后点击"归属（待 TB-05 证实）。同一用户在两个 App 15 天内都有点击时，订单归最后点击的 adzone。这是规则结果，客服话术须能解释（BR-ATTR）。
+4. relation_id 在花卷云侧被清除、拉黑，或渠道方被扣满分失效时，两个 App 同时受影响，新 App 无法独立控制。
+5. 渠道专属 PID 可能只有 20 个名额且与优券汇共用（低可信），会限制新 App 推广位数量。
+6. 花卷云必须把新 App 全部 adzone 填入"忽略的 PID / 不入库的 PID"，并做双向真实订单验证（TB-05 步骤 4）。
+
+TB-05 失败时走待决策项"新 App 申请独立联盟账号"（代价：高级权限要重新申请，万能转链 `material_list` 邀约权限可能拿不到）。
+
+---
