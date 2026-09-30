@@ -12,15 +12,15 @@
 
 | 编号 | 规则 | 状态 | 影响面 |
 | --- | --- | --- | --- |
-| BR-TEXT-01 | **收益术语唯一含义**<br>用户可见文案与客服话术中，下列词只能按本表含义使用（后台与报表口径编码见 BR-TEXT-21）。**结算前一律称「预估」**：「预估返 / 预估返利」指自购返利从商品卡下单前估算、订单付款直到联盟结算并经后台核对入账前的全部阶段（订单 rebate_status ∈ {ESTIMATED, WAITING}，BR-FUND-01；含已收货等待联盟结算、售后中、核对中）；「预估推广收益」指 PROMO 账户（分享单、直推与间推分佣）同阶段金额；「预估收益」只作不区分账户时的合计称呼；三者均不可提现；用户侧不再单列「待入账」金额或状态，不使用「待结算」「结算中」。**联盟结算并经后台核对、按月结批次计入可提现余额后（BR-FUND-04）才用确定表达**：订单侧「已结算」（rebate_status=CREDITED，含部分扣回、已补差），已结算金额自购称「实返」、PROMO 称「推广收益」。「可提现」等于 withdrawable_fen = max(available_fen, 0)，available_fen &lt; 0 时负数部分显示为「待抵扣」（negative_fen，BR-FUND-18）；「冻结中」等于 frozen_fen（审核中与打款中提现单的金额）；「已到账」只指提现 withdrawal_status ∈ {PAID_API, PAID_MANUAL}；「已提现」等于已到账提现单申请金额 amount_fen 的累计。「入账」只作动作词（结算金额计入可提现余额，如「预计随淘宝 10 月联盟结算后入账」、流水「自购返利入账」），不作订单状态名。用户可见文案不得出现「返利到账」「佣金」（含推广佣金、比价佣金、确认收货佣金、结算佣金）。口径与花卷云「预估佣金 / 结算佣金；结算状态 未结 / 已结 / 已失效」一致（对照见细则）。按负责人决定（C-02，变更记录 §3），取代原方案 A。 | 已确认 | dict_items（order_status.&lt;display_status>、withdrawal_status、ledger_type 文案）；GET /v1/wallet/summary 字段按 BR-FUND-18（withdrawable_fen、negative_fen、frozen_fen、pending_credit_fen、pending_credit_paused_fen、estimated_fen、withdrawn_fen、risk_paused_reason；预估合计与预计入账周期字段待 BR-FUND-18 随月结改写时定；订单预计入账周期 expected_credit_period 见 BR-FUND-04 ⑪），本条只定文案；Wallet、OrderList、OrderDetail、ProductDetail 页面；推送模板 ORDER_TRACKED / CREDITED；客服话术库；docs/glossary.md；Agent explain_order 话术；specs/banned-words.yaml（BR-TEXT-13：「预估收益」「已结算」移出用户侧禁用词） |
+| BR-TEXT-01 | **收益术语唯一含义**<br>用户可见文案与客服话术中，下列词只能按本表含义使用（后台与报表口径编码见 BR-TEXT-21）。**结算前一律称「预估」**：「预估返 / 预估返利」指自购返利从商品卡下单前估算、订单付款直到联盟结算并经后台核对入账前的全部阶段（订单 rebate_status ∈ {ESTIMATED, WAITING}，BR-FUND-01；含已收货等待联盟结算、售后中、核对中）；「预估推广收益」指 PROMO 账户（分享单、直推与间推分佣）同阶段金额；「预估收益」只作不区分账户时的合计称呼；三者均不可提现；用户侧不再单列「待入账」金额或状态，不使用「待结算」「结算中」。**联盟结算并经后台核对、按月结批次计入可提现余额后（BR-FUND-04）才用确定表达**：订单侧「已结算」（rebate_status=CREDITED，含部分扣回、已补差），已结算金额自购称「实返」、PROMO 称「推广收益」。「可提现」等于 withdrawable_fen = max(available_fen, 0)，available_fen &lt; 0 时负数部分显示为「待抵扣」（negative_fen，BR-FUND-18）；「冻结中」等于 frozen_fen（审核中与打款中提现单的金额）；「已到账」只指提现 withdrawal_status ∈ {PAID_API, PAID_MANUAL}；「已提现」等于已到账提现单申请金额 amount_fen 的累计。「入账」只作动作词（结算金额计入可提现余额，如「售后处理中，入账暂停」、流水「自购返利入账」），不作订单状态名。用户可见文案不得出现「返利到账」「佣金」（含推广佣金、比价佣金、确认收货佣金、结算佣金）。口径与花卷云「预估佣金 / 结算佣金；结算状态 未结 / 已结 / 已失效」一致（对照见细则）。按负责人决定（C-02，变更记录 §3），取代原方案 A。 | 已确认 | dict_items（order_status.&lt;display_status>、withdrawal_status、ledger_type 文案）；GET /v1/wallet/summary 字段按 BR-FUND-18（withdrawable_fen、negative_fen、frozen_fen、pending_credit_fen、pending_credit_paused_fen、estimated_fen、withdrawn_fen、risk_paused_reason；预估合计与预计入账周期字段待 BR-FUND-18 随月结改写时定；订单预计结算月份 expected_credit_period 见 BR-FUND-04 ⑪），本条只定文案；Wallet、OrderList、OrderDetail、ProductDetail 页面；推送模板 ORDER_TRACKED / CREDITED；客服话术库；docs/glossary.md；Agent explain_order 话术；specs/banned-words.yaml（BR-TEXT-13：「预估收益」「已结算」移出用户侧禁用词） |
 | BR-TEXT-02 | **订单状态用户文案映射**<br>订单列表与详情的状态文案必须由服务端返回的 display_status（子订单粒度；由 BR-FUND-01 的 platform_status、rebate_status 与 hold、rights_pending、金额按 BR-FUND-17 派生表从上到下取第一个匹配项，本条不另定派生顺序）按下表一一映射，文案取自 /v1/dict 的 order_status.&lt;display_status>；rebate_status=UNATTRIBUTED（未归因池，user_id 为空）的订单不得出现在任何用户接口；buy_type=share 的订单只出现在分享者的 scope=share 列表，金额前缀用「预估推广收益 / 推广收益」；直推分佣（REFERRAL）订单不得以订单形式出现在邀请人的任何列表或详情，只在余额流水按 BR-TEXT-19 显示；详情页按钮 = 状态固有按钮 + reason.action 按钮（BR-TEXT-05），最多 2 个，有 reason.action 时它为主按钮；未知状态编码必须显示 order_status.UNKNOWN 文案，不得显示编码原文。 | 默认假设 | dict_items.order_status（按 display_status 编码）；GET /v1/orders、GET /v1/orders/{order_id}（display_status、reason、reason_action、est_rebate_fen、actual_fen、clawback_fen、expected_credit_period、credit_overdue（BR-FUND-04 ⑪，取代 expected_credit_date）、timeline、is_other_product）；Agent order_status 卡片；OrderList、OrderDetail 页面；验收用例 F-ORD-07（每状态 fixture + 三端截图；share 跨商品；按钮组合）；客服话术库 |
 | BR-TEXT-03 | **订单差额与异常提示**<br>订单金额与首次预估不同、部分退款、维权中、入账延迟、比价风险时，必须在状态文案下按本表叠加提示；差额 = 当前金额 − initial_est_fen（该用户角色在分佣快照生成时（BR-CALC-10）的金额，单位分；首次预估为区间时取上限 rebate_max_fen；找回单以批准时生成的快照为准，BR-FUND-01 R3）；差额行只在 rebate_status=CREDITED（display_status ∈ {CREDITED, CREDITED_PART_CLAWED}）且 \|差额\| ≥ 1 分时显示；rebate_status ∈ {ESTIMATED, WAITING} 只在部分退款时显示「预估返 ¥{initial} → ¥{current}」，其他预估波动不显示差额；维权中、hold、入账延迟由 display_status（RIGHTS_PENDING、REVIEWING、CREDITING）表达，提示文案按本条；差额原因取该子订单最近一次写入的 diff 类 reason_code，无记录时用 SETTLE_DIFF；同时满足多项时按本条优先级；风控 hold 原因不得向用户透出。 | 默认假设 | orders / commission_splits（initial_est_fen、diff_reason_code、refunded_quantity_at_credit）；GET /v1/orders/{order_id}（diff_fen、diff_reason、display_status）；OrderDetail 页面；客服话术库；验收用例：部分退款（入账前 / 后）、比价区间、结算补差、维权中、hold 超期、维权与超期同时满足 fixture |
-| BR-TEXT-04 | **预计入账日口径**<br>入账跟随联盟月结（联盟出账后经后台核对、批量结算入可提现余额，BR-FUND-04），用户侧不再按「收货日 + wait_days」给出预计入账日期，不得承诺具体入账日期或天数。已收货订单（display_status=WAITING）展示「预计随 {platform_name} {credit_period} 联盟结算后入账」：credit_period 取服务端返回的 expected_credit_period（YYYY-MM，= 该单结算周期 settle_period；取法、何时为 null 与逾期判断 credit_overdue 只由 BR-FUND-04 ⑪ 维护，本条不写死出账日与周期取法），客户端只格式化（同年「10 月」，跨年「2025 年 12 月」）、不得推算；字段为 null 时不显示月份；RIGHTS_PENDING、REVIEWING、WAITING_SETTLE、CREDITING 不展示月份；商品详情与 display_status=PAID 的订单只显示「确认收货后随联盟月度结算入账」，不得写具体天数或日期（不得出现「15 天」「满 N 天」），入账开关 credit.enabled.&lt;platform>=off 时不展示（BR-FUND-04）；平台未返回可用收货时间的订单不进 WAITING（BR-FUND-02，G-14）。 | 默认假设 | GET /v1/orders/{order_id} expected_credit_period、credit_overdue（BR-FUND-04 ⑪，取代 expected_credit_date 的用户侧展示）；Agent order_status 卡片；GET /v1/wallet/summary 预计入账周期（BR-FUND-18）；ProductDetail「确认收货后随联盟月度结算入账」文案（texts，无变量）；验收用例：各 display_status 是否展示月份、字段为 null 时不显示、跨年格式、入账开关关闭时不展示入账时点文案、文案不出现天数与日期（周期取法与逾期用例归 BR-FUND-04）；客服话术 |
+| BR-TEXT-04 | **预计入账日口径**<br>入账跟随联盟月结（月结账单日按联盟返回的结算数据生成月结账单、后台确认后批量结算入可提现余额，BR-FUND-04），用户侧不再按「收货日 + wait_days」给出预计入账日期，不得承诺具体入账日期或天数。已收货订单（display_status=WAITING）展示**预计结算月份**「预计 {credit_period} 结算」，不显示确认收货月（例：10 月确认收货、联盟一般次月结算 → 「预计 11 月结算」）：credit_period 取服务端返回的 expected_credit_period（YYYY-MM，预计结算月份；取值、何时为 null 与逾期判断 credit_overdue 只由 BR-FUND-04 ⑪ 维护，本条不写算法），客户端只格式化（同年「11 月」，跨年「2027 年 1 月」）、不得推算；字段为 null 时不显示月份；RIGHTS_PENDING、REVIEWING、WAITING_SETTLE、CREDITING 不展示月份；商品详情与 display_status=PAID 的订单只显示「确认收货后随联盟月度结算入账」，不得写具体天数或日期（不得出现「15 天」「满 N 天」），入账开关 credit.enabled.&lt;platform>=off 时不展示（BR-FUND-04）；平台未返回可用收货时间的订单不进 WAITING（BR-FUND-02，G-14）。 | 默认假设 | GET /v1/orders/{order_id} expected_credit_period、credit_overdue（BR-FUND-04 ⑪，取代 expected_credit_date 的用户侧展示）；Agent order_status 卡片；GET /v1/wallet/summary 预计结算月份（BR-FUND-18）；ProductDetail「确认收货后随联盟月度结算入账」文案（texts，无变量）；验收用例：显示的是结算月份而非收货月（10 月收货 →「预计 11 月结算」）、各 display_status 是否展示月份、字段为 null 时不显示、跨年格式、入账开关关闭时不展示入账时点文案、文案不出现天数与日期（周期取法与逾期用例归 BR-FUND-04）；客服话术 |
 | BR-TEXT-05 | **原因码字典与文案**<br>订单 reason 只能取下表编码（规划/ 命名为准），每个编码必须在 dict_items 配置 kind（void / diff / claim）、title、desc、claimable、action；rebate_status ∈ {VOID, CLAWED_BACK}（display_status INVALID、CLAWED_BACK）的订单只能带 void 类原因，金额变化必须带 diff 类原因；claim 类编码（NOT_TRACKED、RELATION_INVALID）不得写入已归因订单的 orders.reason，只用于 explain_order、找回页查询结果；action 取值枚举 CLAIM（找回页）、REAUTH（AuthSheet）、CONTACT_CS（客服会话页）、APPEAL（申诉页），以数组存储，当前每个编码最多 1 个；reason_sub 存在时用 order_reason_sub.&lt;SUB>.desc 替换 desc，显示为「{title}：{sub.desc}」；其他文档的旧编码在同步 / 导入时映射到本表，不得新增同义编码；用户可见文案不得出现「佣金」；每个编码必须有 fixture 与截图。 | 默认假设 | contracts/enums/order_reason.json、contracts/enums/reason_action.json；dict_items.order_reason（kind、title、desc、claimable、action）、dict_items.order_reason_sub；orders.reason、orders.reason_sub；维权导入 rights-imports 映射；OrderDetail、Agent explain_order、找回页；客服话术库；验收用例：每编码 fixture + 截图；claim 类编码不出现在已归因订单 |
 | BR-TEXT-06 | **提现状态用户文案**<br>提现记录状态文案必须由 withdrawal_status 按下表映射：PENDING_REVIEW 与 APPROVED 均显示「审核中」；PAYING 显示「打款中」（含结果未知期间）；PAID_API 与 PAID_MANUAL 均显示「已到账」；REJECTED 显示「未通过」且附「余额已退回」与原因；FAILED 显示「打款未成功」且附「余额已退回」与原因，【修改收款账号】入口只对账号类失败码显示（BR-TEXT-08）；「已到账」金额显示 net_fen = amount_fen − fee_fen − tax_fen，由服务端返回；PAID_MANUAL 的收款渠道名取人工补录记录的 payout_channel，不得固定写「支付宝」。 | 默认假设 | dict_items.withdrawal_status；GET /v1/withdrawals、GET /v1/withdrawals/{id}（net_fen、fee_fen、tax_fen、payout_channel_name、masked_account、fail_action）；Withdraw、WithdrawRecord 页面；推送 WD_SUCCESS / WD_REJECTED / WD_FAILED；客服话术库 |
 | BR-TEXT-07 | **提现时效与超时进度**<br>提现页与审核中状态（PENDING_REVIEW、APPROVED）必须展示「人工审核，工作日 24 小时内处理，节假日顺延」；「处理」指审核结束（口径见 BR-WDR-26）。审核超时的进度推送与站内信使用模板 WD_OVERDUE，文案见细则。超时的触发与去重见 BR-WDR-26（deadline 计算、触发状态、检查间隔、夜间顺延、发送前复查、幂等键均只在该条维护）。 | 默认假设 | config: withdraw.sla_text；推送 / 站内信模板 WD_OVERDUE（新增）；Withdraw 页面；客服话术；验收 AC-S2-20、AC-S2-29 |
 | BR-TEXT-08 | **提现驳回与失败原因**<br>REJECTED 的用户原因必须取自字典 withdraw_reject_reason 的编码文案，审核人可另填内部备注 reject_note 但不得展示给用户；FAILED 的用户原因必须由支付宝错误码经映射表 withdraw_fail_reason 转成用户文案，未命中映射时显示兜底文案；withdraw_fail_reason 映射表只决定展示文案，不决定状态：只有 payout 服务维护的明确失败码白名单才能触发 W6→FAILED 与 WITHDRAW_RETURN，白名单以外的码（含 SYSTEM_ERROR、超时、未收录码）一律保持 PAYING，按 W7 查询，24 小时仍未知转人工，禁止置 FAILED 或退回余额；【修改收款账号】入口只对账号类失败码（PAYEE_\*）显示；原因文案不得包含风控规则细节。 | 默认假设 | dict_items.withdraw_reject_reason、withdraw_fail_reason；payout 服务明确失败码白名单（代码常量 + 测试）；withdrawals.reject_reason（改存编码）、withdrawals.fail_code、新增 reject_note（内部）；后台提现审核页（原因下拉）；WithdrawRecord 页面；推送 WD_REJECTED / WD_FAILED、失败短信；验收用例：白名单外错误码不退回余额 |
-| BR-TEXT-09 | **交易通知文案模板**<br>交易类通知必须使用下表模板（notify-templates 可改措辞，变量与含义不得改），标题与首句按 BR-TEXT-20 校验；所有金额变量均为 BR-TEXT-10 格式化后的字符串（已含 ¥ 与负号），模板中不得再写 ¥ 或 -；SELF 与 PROMO 账户分别使用各自模板，PROMO 用「推广收益」不用「返利」；术语按 BR-TEXT-01（结算前「预估」，结算后「已结算」）。**推送对象**：跟单与收益类通知（ORDER_TRACKED、ORDER_INVALID、CREDITED、CLAWBACK）发给该子订单全部份额 > 0 的受益人：订单归属用户（自购本人或 share 单分享者）、直推上级、间推上级（C-25 负责人决定；角色与份额见 BR-CALC-04、BR-CALC-05、BR-CALC-24）；发给直推、间推上级的通知只含金额与状态，不含商品标题、图片、SKU、下级昵称、手机号、订单号等任何订单明细或个人信息，也不带失效或扣回原因（同 BR-TEXT-19、BR-TEXT-18 的 J7 隐私要求）。触发：ORDER_TRACKED 在子订单已归因到用户（BR-FUND-01 R2）且 platform_status 首次 ∈ {PAID, RECEIVED, SETTLED} 时触发（含 DEPOSIT_PAID→PAID（P2）、同步即为 PAID、结算先到时补写的 P5），B_est=0（display_status=NO_REBATE）不触发（BR-FUND-17「跟单成功」条件），该受益人份额为 0 时不发给该受益人，每个 (子订单, 受益人, 角色) 最多 1 次，幂等键 {order_key}:{uid}:{role}:TRACKED（order_key 见 BR-FUND-05）；合并窗口为固定窗口，自用户第 1 个待推事件时刻 t0 起 5 分钟，在 t0+5min 发送（单笔也延迟到 t0+5min），窗口内同类事件合并，按 SELF、分享（share）、邀请（直推 + 间推）三类分别成条，t0+5min 之后到达的事件开启新窗口；CREDITED 日汇总于 D 日 09:00(+08:00) 发送，统计 [D-1 09:00, D 09:00) 内写入的 REBATE_CREDIT / SHARE_CREDIT / REFERRAL_CREDIT（含间推流水，类型名以 BR-FUND-15 为准）流水（按 created_at，SETTLE_ADJUST 不计），0 笔不发，D 日 09:00 有月结结算批次（BR-FUND-04）正在执行时在该批次完成后发送，每用户每日 1 条，幂等键 user_id:CREDITED:D；找回通过的订单（BR-FUND-01 R3）不发 ORDER_TRACKED，只发 CLAIM_RESULT（上级仍按本条收到邀请类 ORDER_TRACKED）；platform_status=DEPOSIT_PAID 不推送；频控与免打扰见细则（引用 BR-WATCH-15）。 | 默认假设 | messages.yaml / notify-templates（新增 ORDER_TRACKED / ORDER_INVALID / CLAWBACK 的邀请类模板）；outbox 事件 order.created / order.status_changed / order.credited / order.clawed_back / withdrawal.changed / claim.resolved 消费者（按受益人扇出）；推送与站内消息；短信模板（BR-TEXT-20）；验收用例：预售单跟单推送、5 分钟窗口边界、SELF / 分享 / 邀请分条、直推与间推上级各收 1 次且不含商品与下级信息、上级份额为 0 不推、日汇总窗口、结算批次延迟、找回单不重复推送、金额变量无重复符号 |
+| BR-TEXT-09 | **交易通知文案模板**<br>交易类通知必须使用下表模板（notify-templates 可改措辞，变量与含义不得改），标题与首句按 BR-TEXT-20 校验；所有金额变量均为 BR-TEXT-10 格式化后的字符串（已含 ¥ 与负号），模板中不得再写 ¥ 或 -；SELF 与 PROMO 账户分别使用各自模板，PROMO 用「推广收益」不用「返利」；术语按 BR-TEXT-01（结算前「预估」，结算后「已结算」）。**推送对象**：跟单与收益类通知（ORDER_TRACKED、ORDER_INVALID、CREDITED、CLAWBACK）发给该子订单全部份额 > 0 的受益人：订单归属用户（自购本人或 share 单分享者）、直推上级、间推上级（C-25 负责人决定；角色与份额见 BR-CALC-04、BR-CALC-05、BR-CALC-24）；发给直推、间推上级的通知只含金额与状态，不含商品标题、图片、SKU、下级昵称、手机号、订单号等任何订单明细或个人信息，也不带失效或扣回原因（同 BR-TEXT-19、BR-TEXT-18 的 J7 隐私要求）。触发：ORDER_TRACKED 在子订单已归因到用户（BR-FUND-01 R2）且 platform_status 首次 ∈ {PAID, RECEIVED, SETTLED} 时触发（含 DEPOSIT_PAID→PAID（P2）、同步即为 PAID、结算先到时补写的 P5），B_est=0（display_status=NO_REBATE）不触发（BR-FUND-17「跟单成功」条件），该受益人份额为 0 时不发给该受益人，每个 (子订单, 受益人, 角色) 最多 1 次，幂等键 {order_key}:{uid}:{role}:TRACKED（order_key 见 BR-FUND-05）；合并窗口为固定窗口，自用户第 1 个待推事件时刻 t0 起 5 分钟，在 t0+5min 发送（单笔也延迟到 t0+5min），窗口内同类事件合并，按 SELF、分享（share）、邀请（直推 + 间推）三类分别成条，t0+5min 之后到达的事件开启新窗口；CREDITED 在结算批次完成后发送（BR-FUND-04：同一月结账单一次确认（首批或补充批次）的批次全部执行完，或因开关停止置 PARTIAL 时对已入账部分），统计这次执行写入的 REBATE_CREDIT / SHARE_CREDIT / REFERRAL_CREDIT（含间推流水，类型名以 BR-FUND-15 为准）流水（SETTLE_ADJUST 不计），每用户汇总 1 条，0 笔不发；完成时刻落在免打扰时段（notify.quiet_hours，BR-WATCH-15，当前默认 [22:00, 08:00)）时顺延到免打扰结束后发送，发送时仍按完成时的统计；幂等键 user_id:CREDITED:{settle_run_id}:{part}（settle_run_id 为该次确认的执行编号，part 为第几次执行完成：正常为 1，PARTIAL 后手动继续执行完为 2，依此类推）；找回通过的订单（BR-FUND-01 R3）不发 ORDER_TRACKED，只发 CLAIM_RESULT（上级仍按本条收到邀请类 ORDER_TRACKED）；platform_status=DEPOSIT_PAID 不推送；频控与免打扰见细则（引用 BR-WATCH-15）。 | 默认假设 | messages.yaml / notify-templates（新增 ORDER_TRACKED / ORDER_INVALID / CLAWBACK 的邀请类模板）；outbox 事件 order.created / order.status_changed / order.credited / order.clawed_back / withdrawal.changed / claim.resolved 消费者（按受益人扇出）；推送与站内消息；短信模板（BR-TEXT-20）；验收用例：预售单跟单推送、5 分钟窗口边界、SELF / 分享 / 邀请分条、直推与间推上级各收 1 次且不含商品与下级信息、上级份额为 0 不推、结算批次完成即推、完成时刻在免打扰时段顺延到结束、PARTIAL 与继续执行各推 1 次、找回单不重复推送、金额变量无重复符号 |
 | BR-TEXT-10 | **金额格式化**<br>接口金额一律为整数分（_fen），前端用整数运算格式化，不得用浮点：展示为可选负号 + 「¥」 + 元，最多两位小数并去掉末尾 0 与多余小数点；不加千分位；负数用 ASCII「-」置于「¥」前；流水正数加「+」；返利区间在 min &lt; max 时用「–」（U+2013，前后无空格）连接两端，min = max 时显示单值，min = max = 0 时显示「暂无返利」（列表隐藏返利标签）；返利、价格金额由服务端计算，客户端不得自行乘佣金率；服务端渲染推送、短信时使用同一格式化函数，模板变量为格式化后的字符串。 | 已确认 | specs/client-behavior.md 测试向量；PriceTag、RebateTag 组件（iOS / Android / 鸿蒙 / H5）；推送、短信模板渲染（服务端同一格式化函数）；后台金额列 |
 | BR-TEXT-11 | **时间与日期格式化**<br>服务端时间字段一律 ISO 8601 带 +08:00，纯日期字段（如价格历史 start_date；订单预计入账为年月字段 expected_credit_period，格式见 BR-TEXT-04）用 YYYY-MM-DD 字符串；客户端展示一律按 Asia/Shanghai 时区换算，不随设备时区变化，使用 24 小时制；列表中的过去时间：与当前日期（+08:00，以服务端校准后的时钟为准）同一天「今天 HH:mm」，前一天「昨天 HH:mm」，同一年「MM-DD」，其他「YYYY-MM-DD」；未来时间：同年「MM-DD HH:mm」，跨年「YYYY-MM-DD HH:mm」，不用「明天」等相对词；纯日期字段：与今天同年显示「MM-DD」，否则「YYYY-MM-DD」，不使用「今天 / 明天」；订单时间线与提现记录详情精确到分钟「YYYY-MM-DD HH:mm」。 | 默认假设 | specs/client-behavior.md 测试向量；三端与 H5 时间格式化工具；OrderList、OrderDetail、WithdrawRecord、消息列表 |
 | BR-TEXT-12 | **文案来源与字典机制**<br>业务文案取值顺序必须为：/v1/config.texts[key] → /v1/dict[enum][code] → 包内默认（由同一份 contracts/texts.default.json 生成）；接口枚举字段只返回编码；客户端业务页面不得硬编码中文业务文案（lint 规则拦截）；文案变量用 {name} 占位，变量值为 null、未提供或空字符串视为缺失（0 不算缺失），缺失时回落到该 key 的包内默认，包内默认仍含该缺失变量时整条文案不渲染（元素隐藏）并上报埋点 text_var_missing（key、变量名），不得显示「{」原文；字典带版本号，客户端按版本缓存，启动时及 config 中 dict_version 变化时刷新；服务端生成的推送、短信、Agent 话术必须读同一字典。 | 已确认 | GET /v1/dict、GET /v1/config（texts、dict_version、jump_tip、jump_tip.&lt;platform>.claims_enabled）；dict_items、config_items；contracts/texts.default.json（新增）；三端与 H5 文案加载模块、lint 规则、埋点 text_var_missing；JumpTip 已读记录按 BR-ATTR-21（服务端按 user_id + platform）；后台字典 / 文案编辑页 |
@@ -45,6 +45,7 @@
 - 取代：
   - 本条原默认方案 A（C-02）：「订单侧「已入账 / 已收货，等待入账 / 预计入账日 / 确认收货满 N 天后入账」，提现保留「已到账」；「预估返」只指 ESTIMATED、WAITING 的预估，「待入账」只指 WAITING；「预估收益」「已结算」用户侧禁用」（负责人选「要改」，按变更记录 §3 C-02 行取代；提现侧「已到账」原义不变）
   - 本条原术语表「待入账：已确认收货、等待观察期满（rebate_status=WAITING）」「已入账：已写入该账户可用余额」（逐单观察期满入账改为跟随联盟月结批次入账，变更记录 §3 D11 行）
+  - 本条 2026-09-30 月结初稿中依赖收货月的示例与进度行：「预计随淘宝 10 月联盟结算后入账」「预计随 {平台} {月份} 联盟结算后入账」（月份为确认收货月）（负责人 2026-09-30 补充，变更记录 §10：显示预计结算月份，一般为确认收货次月）
   - 规划/04 §2.3 用户侧状态映射：「CREDITED / SETTLED 显示「已到账」；RECEIVED「已收货，等待到账」」
   - 规划/01 §5 J4、J6 与 F-MSG-02：「已收货等待到账 → 已到账；钱包「待到账」；通知「已到账（每日汇总）」」
   - 规划/01 §5 J6 第 1 步、F-WDR-01：「冻结中（附原因）——风控冻结不再计入冻结中，改为顶部「提现已暂停」提示」
@@ -53,7 +54,7 @@
   - PRD修订_后端功能规划 2.16：「预估收益 → 待入账 → 已入账 → 已提现（作为报表口径保留，用户侧不用「预估收益」）」
   - 参考_花卷云功能查漏底稿 §12：「预估（付款）→预估结算→确认收货→已返现，另有未结算」
   - PRD v2.1 §9.3：「credit_status：ESTIMATED → HOLDING → CREDITED → REVERSED」
-- 来源：规划/04 §1 术语表、§2.3、§2.4、§3.2 account_balances、§4.2 W4–W8；规划/01 §1、§5 J4/J6/J7、F-WDR-01、F-WDR-09、F-MSG-02；规划/02 §5.2；PRD修订_后端功能规划 2.16、3.2；PRD v2.1 §9.3；参考_花卷云功能查漏底稿 §12、§16 #33；README §1.2；docs/changes/20260930-拍板第一批.md §3（C-02、BR-TEXT-01 行；D11、BR-FUND-04 行）
+- 来源：规划/04 §1 术语表、§2.3、§2.4、§3.2 account_balances、§4.2 W4–W8；规划/01 §1、§5 J4/J6/J7、F-WDR-01、F-WDR-09、F-MSG-02；规划/02 §5.2；PRD修订_后端功能规划 2.16、3.2；PRD v2.1 §9.3；参考_花卷云功能查漏底稿 §12、§16 #33；README §1.2；docs/changes/20260930-拍板第一批.md §3（C-02、BR-TEXT-01 行；D11、BR-FUND-04 行）；docs/changes/20260930-拍板第一批.md §10（负责人 2026-09-30 补充）
 - 需同步修改的规划文档：6 处（计数仅作记录，落点见 README §0.6）
 
 **术语对照表（唯一口径）**：资金术语含义只在本表维护。BR-FUND-17 只维护 display_status 派生条件与「状态和金额只取接口」，BR-WDR-25 只维护提现副文案分支，README §1.2 为索引；三处与本表不一致时以本表为准。
@@ -78,9 +79,9 @@
 
 **「入账」「已入账」「已到账」与原方案 A 的关系**（C-02 负责人选「要改」，新口径取代方案 A）：
 - 原方案 A 订单侧「已入账」「待入账」「已收货，等待入账」「确认收货满 N 天后入账」作废：订单结算后的状态词改为「已结算」，结算前一律用「预估」；「待入账」不再作为用户侧金额或状态名。
-- 「入账」保留为动作词，只描述「已结算金额计入可提现余额」这一动作（如「预计随 {平台} {月份} 联盟结算后入账」「售后处理中，入账暂停」、流水名「自购返利入账」），不得单独作状态名；「已入账」不再出现在用户侧状态、金额名与推送标题中，后台与报表仍用 CREDITED「已入账」口径（BR-TEXT-21）。
+- 「入账」保留为动作词，只描述「已结算金额计入可提现余额」这一动作（如「售后处理中，入账暂停」、流水名「自购返利入账」），不得单独作状态名；「已入账」不再出现在用户侧状态、金额名与推送标题中，后台与报表仍用 CREDITED「已入账」口径（BR-TEXT-21）。
 - 提现侧「已到账」沿用原方案 A 的含义（仅指 PAID_API / PAID_MANUAL），不改为「提现成功」；「返利到账」仍禁用，避免订单与提现同词异义。
-- 不设「待结算」「结算中」中间态名：负责人要求结算前一律称「预估」，已收货订单只用说明性短语「已收货，等待联盟结算」（BR-TEXT-02）与「预计随 {平台} {月份} 联盟结算后入账」（BR-TEXT-04）表达进度，金额仍叫「预估返」；这两个词继续列在 BR-TEXT-13 禁用词中。
+- 不设「待结算」「结算中」中间态名：负责人要求结算前一律称「预估」，已收货订单只用说明性短语「已收货，等待联盟结算」（BR-TEXT-02）与「预计 {月份} 结算」（BR-TEXT-04，月份为预计结算月份）表达进度，金额仍叫「预估返」；这两个词继续列在 BR-TEXT-13 禁用词中。
 
 **花卷云口径对照**（只作对照，字段与编码按 D19 不沿用）：预估佣金 ↔ 预估返 / 预估推广收益（用户侧不出现「佣金」）；结算佣金 ↔ 已结算金额（实返 / 推广收益）；结算状态「未结」↔ 结算前（ESTIMATED、WAITING，用户侧「预估」），「已结」↔ 已结算（CREDITED），「已失效」↔ 已失效（VOID）或已扣回（CLAWED_BACK）。
 
@@ -88,10 +89,10 @@
 - 可提现 ¥{withdrawable_fen}；negative_fen > 0 时另显示「待抵扣 ¥{negative_fen}」，提现按钮置灰（BR-WDR-05）。冻结中 ¥{frozen_fen}。
 - 风控冻结（risk_state=frozen）与提现冻结记录（withdraw_holds，BR-WDR-05）不改变余额、不计入冻结中，只在钱包顶部显示「提现已暂停：{reason}」；reason 取字典 risk_msg.&lt;code> 文案（BR-TEXT-14），不得写风控规则细节；下发字段由 BR-WDR-05 定义。
 - 预估：SELF 显示「预估返 ¥{预估合计}」，PROMO 显示「预估推广收益 ¥{预估合计}」；预估合计 = 该账户结算前全部份额（BR-FUND-18 的 estimated_fen 与 pending_credit_fen 两部分，不含定金阶段与未归因订单），由服务端返回合计值，客户端不相加（字段名待 BR-FUND-18 随月结改写时定）；注「按联盟最新预估计算，以联盟结算金额为准」。
-- 预估下附进度行（只作说明，不是独立状态）：「其中已收货 ¥{pending_credit_fen}」；服务端返回预计入账周期时附「预计随 {平台} {月份} 联盟结算后入账」（周期取值按 BR-FUND-04 ⑪，多平台时的取法按 BR-FUND-18），credit_overdue=true 时附「入账核对中」，未返回时不显示月份；pending_credit_paused_fen > 0 时另附「其中 ¥{pending_credit_paused_fen} 暂缓入账」，不说明是维权还是 hold。保留「其中已收货」分项的理由：告诉用户哪部分会进入下一次联盟月结，金额名仍为「预估」。
+- 预估下附进度行（只作说明，不是独立状态）：「其中已收货 ¥{pending_credit_fen}」；服务端返回预计结算月份时附「预计 {月份} 结算」（月份取值按 BR-FUND-04 ⑪，多平台时的取法按 BR-FUND-18），credit_overdue=true 时附「入账核对中」，未返回时不显示月份；pending_credit_paused_fen > 0 时另附「其中 ¥{pending_credit_paused_fen} 暂缓入账」，不说明是维权还是 hold。保留「其中已收货」分项的理由：告诉用户哪部分会进入下一次联盟月结，金额名仍为「预估」。
 - 已提现 ¥{withdrawn_fen}（BR-FUND-18：Σ 本账户 PAID_API / PAID_MANUAL 提现单 amount_fen）；提现记录中逐单展示「实际到账 {net}」。
 
-例：用户 A 自购账户有 3 单：(PAID, ESTIMATED) 预估 ¥2.5、(RECEIVED, WAITING) 预估 ¥4（淘宝订单 10 月确认收货，expected_credit_period=2026-10）、(RECEIVED, CREDITED) ¥6；无提现。接口返回 withdrawable_fen=600、pending_credit_fen=400、estimated_fen=250、预估合计 650、withdrawn_fen=0 → 钱包显示「可提现 ¥6｜预估返 ¥6.5（其中已收货 ¥4，预计随淘宝 10 月联盟结算后入账）｜已提现 ¥0」。用户问「返利到账了吗」，客服回答：「¥6 已结算，可提现；另有预估返 ¥6.5，其中已收货的 ¥4 预计随淘宝 10 月联盟结算后入账，¥2.5 待确认收货」。
+例：用户 A 自购账户有 3 单：(PAID, ESTIMATED) 预估 ¥2.5、(RECEIVED, WAITING) 预估 ¥4（淘宝订单 10 月确认收货，联盟尚未返回结算时间，expected_credit_period=2026-11）、(RECEIVED, CREDITED) ¥6；无提现。接口返回 withdrawable_fen=600、pending_credit_fen=400、estimated_fen=250、预估合计 650、withdrawn_fen=0 → 钱包显示「可提现 ¥6｜预估返 ¥6.5（其中已收货 ¥4，预计 11 月结算）｜已提现 ¥0」。用户问「返利到账了吗」，客服回答：「¥6 已结算，可提现；另有预估返 ¥6.5，其中已收货的 ¥4 预计 11 月结算，¥2.5 待确认收货」。
 
 **后台 / 报表专用词**：「联盟结算佣金」（联盟月结付给平台的钱）只在后台与报表出现，BR-TEXT-13 按字段范围校验；「预估收益」用户侧与报表均可用，报表中须带口径编码（BR-TEXT-21）。
 
@@ -110,8 +111,9 @@
 - 取代：
   - PRD修订_后端功能规划 3.2：「按 union_status + rebate_status 组合映射（PAID+ESTIMATED 等）」（双状态按 BR-FUND-01 采纳，字段名以 platform_status + rebate_status 为准；本条改为按派生的 display_status 映射文案）
   - 本条原方案 A 文案（2026-09-30 随 C-02、D11 取代）：PAID hint「确认收货满 {wait_days} 天后入账」；WAITING「已收货，等待入账」+「预计 {expected_credit_date} 入账」；CREDITED「已入账」；CREDITED_PART_CLAWED「已入账（部分扣回 {z}）」；RIGHTS_PENDING hint「售后结束后重新计算入账日」；时间线「预计入账 {expected_credit_date} → 入账 {credited_at}」
+  - 本条 2026-09-30 月结初稿文案：WAITING hint「预计随 {platform_name} {credit_period} 联盟结算后入账」、时间线「预计随 {platform_name} {credit_period} 联盟结算」（credit_period 为确认收货月）（负责人 2026-09-30 补充，变更记录 §10：改为预计结算月份「预计 {credit_period} 结算」）
   - PRD v2.1 §9.3：「PRESALE_DEPOSIT、RIGHTS_PROTECTING、PLATFORM_SETTLED 状态名」（分别映射 platform_status=DEPOSIT_PAID、display_status=RIGHTS_PENDING、platform_status=SETTLED；原映射「DEPOSIT_PAID、RECEIVED+维权提示、SETTLED」按 C-01 改写）
-- 来源：规划/04 §2.3、§4.1、§8.3；规划/01 §5 J4、J7 第 5 条、J8、F-ORD-07；PRD修订_后端功能规划 2.5、3.2；PRD v2.1 §9.3；docs/changes/20260930-拍板第一批.md §3（C-02、D11 行）
+- 来源：规划/04 §2.3、§4.1、§8.3；规划/01 §5 J4、J7 第 5 条、J8、F-ORD-07；PRD修订_后端功能规划 2.5、3.2；PRD v2.1 §9.3；docs/changes/20260930-拍板第一批.md §3（C-02、D11 行）；docs/changes/20260930-拍板第一批.md §10（负责人 2026-09-30 补充）
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
 **映射表**（C-02 负责人决定后的文案，术语见 BR-TEXT-01）
@@ -120,11 +122,11 @@
 | --- | --- | --- | --- | --- | --- |
 | DEPOSIT_PAID | (DEPOSIT_PAID, ESTIMATED) | 已付定金 | 不显示金额 | 尾款付清后计算返利 | — |
 | PAID | (PAID, ESTIMATED) | 已付款，返利待确认 | 预估返 ¥x 或 ¥a–¥b | 确认收货后随联盟月度结算入账（BR-TEXT-04）；比价风险提示按 BR-TEXT-03 | — |
-| WAITING | (RECEIVED 或 SETTLED, WAITING) | 已收货，等待联盟结算 | 预估返 ¥x | 预计随 {platform_name} {credit_period} 联盟结算后入账（BR-TEXT-04；expected_credit_period 为 null 时不显示） | — |
-| WAITING_SETTLE | WAITING，入账基数低于 settle.daily_min_fen 且结算额未记录（门槛默认 0，即默认不出现） | 已收货，等待联盟结算后入账 | 预估返 ¥x | 不显示预计入账周期（BR-FUND-04） | — |
+| WAITING | (RECEIVED 或 SETTLED, WAITING) | 已收货，等待联盟结算 | 预估返 ¥x | 预计 {credit_period} 结算（BR-TEXT-04；credit_period 为预计结算月份，expected_credit_period 为 null 时不显示） | — |
+| WAITING_SETTLE | WAITING，入账基数低于 settle.daily_min_fen 且结算额未记录（门槛默认 0，即默认不出现） | 已收货，等待联盟结算后入账 | 预估返 ¥x | 不显示预计结算月份（BR-FUND-04） | — |
 | CREDITING | WAITING，credit_overdue=true（BR-FUND-04 ⑪；原按 expected_credit_date 早于今天，派生条件由 BR-FUND-17 调整） | 入账核对中 | 预估返 ¥x | 如有疑问请联系客服（BR-TEXT-03） | — |
 | RIGHTS_PENDING | ESTIMATED 或 WAITING，rights_pending=true | 售后处理中，入账暂停 | 预估返 ¥x | 售后结束后随联盟结算入账（BR-TEXT-03） | — |
-| REVIEWING | ESTIMATED 或 WAITING，hold=true | 入账核对中 | 预估返 ¥x | 如有疑问请联系客服；不显示 hold 原因与预计入账周期（BR-TEXT-03） | — |
+| REVIEWING | ESTIMATED 或 WAITING，hold=true | 入账核对中 | 预估返 ¥x | 如有疑问请联系客服；不显示 hold 原因与预计结算月份（BR-TEXT-03） | — |
 | NO_REBATE | ESTIMATED / WAITING 且 B_est=0，或 CREDITED 且无入账凭证（B_credit=0） | 本单无返利 | 不显示金额 | — | — |
 | CREDITED | (RECEIVED 或 SETTLED, CREDITED)，无 CLAWBACK | 已结算 | 实返 ¥y（含结算补差） | 差额行（BR-TEXT-03） | 去提现 |
 | CREDITED_PART_CLAWED | CREDITED 且存在 CLAWBACK（部分扣回，含入账后部分退款） | 已结算（部分扣回 {z}） | 实返 ¥y | 差额行（BR-TEXT-03） | 去提现 |
@@ -141,15 +143,15 @@
 
 **share 单（分享者视角）**：状态文案同上；金额行「预估推广收益 ¥x」/「推广收益 ¥y」；不展示买家信息。子订单 product_key 与分享时 link_id 登记的商品不一致时，标题显示「好友购买的其他商品」，不展示标题、图片、SKU（平台是否存在跨商品归因见 规划/09，待实测）。
 
-**时间线**（详情页）：付款 {paid_at} → 收货 {received_at} → 预计随 {platform_name} {credit_period} 联盟结算（BR-TEXT-04，expected_credit_period 为 null 时该节点只显示「联盟结算」）→ 已结算 {credited_at}；display_status 为 INVALID / CLAWED_BACK 时追加「失效 / 扣回 {time}」节点，CREDITED_PART_CLAWED 追加「部分扣回 {time}」节点；未发生的节点置灰；时间格式见 BR-TEXT-11。
+**时间线**（详情页）：付款 {paid_at} → 收货 {received_at} → 预计 {credit_period} 结算（BR-TEXT-04，credit_period 为预计结算月份；expected_credit_period 为 null 时该节点只显示「联盟结算」）→ 已结算 {credited_at}；display_status 为 INVALID / CLAWED_BACK 时追加「失效 / 扣回 {time}」节点，CREDITED_PART_CLAWED 追加「部分扣回 {time}」节点；未发生的节点置灰；时间格式见 BR-TEXT-11。
 
-例：子订单 (PAID, ESTIMATED)，预估区间 320–450 分 → 列表「已付款，返利待确认｜预估返 ¥3.2–¥4.5」；10 月收货后 (RECEIVED, WAITING)、预估 450 分、expected_credit_period=2026-10 → 「已收货，等待联盟结算｜预估返 ¥4.5｜预计随淘宝 10 月联盟结算后入账」；月结批次核对入账后 → 「已结算｜实返 ¥4.5」。(SETTLED, CLAWED_BACK) + PUNISH → 按钮「联系客服」（主）+「查看流水」。
+例：子订单 (PAID, ESTIMATED)，预估区间 320–450 分 → 列表「已付款，返利待确认｜预估返 ¥3.2–¥4.5」；10 月收货后 (RECEIVED, WAITING)、预估 450 分、联盟尚未返回结算时间、expected_credit_period=2026-11 → 「已收货，等待联盟结算｜预估返 ¥4.5｜预计 11 月结算」；月结批次核对入账后 → 「已结算｜实返 ¥4.5」。(SETTLED, CLAWED_BACK) + PUNISH → 按钮「联系客服」（主）+「查看流水」。
 
 **边界**：部分退款不改变 rebate_status（BR-FUND-01 R7 / R9），入账前只改金额与差额行，入账后写 CLAWBACK（sub_type=PART_REFUND）使 display_status 变为 CREDITED_PART_CLAWED；hold、维权中不是 rebate_status，而是 display_status 的派生条件（REVIEWING、RIGHTS_PENDING），提示文案按 BR-TEXT-03。
 
 按 C-01 默认处理，已由负责人确认 2026-09-30；入账后部分退款按 C-16 默认处理，待财务确认。
 
-需同步修改的规划文档（2026-09-30 C-02 / D11 改写，未同步）：规划/01 §5 J4「已收货，等待入账（附预计入账日）→ 已入账」改为「已收货，等待联盟结算（附预计入账周期）→ 已结算」；规划/04 §2.3 `display_status` 行说明「订单侧一律「入账」口径，BR-TEXT-01 方案 A」改为按 BR-TEXT-01 C-02 口径；/v1/dict 字典键 order_status.PAID（hint）、.WAITING、.CREDITED、.CREDITED_PART_CLAWED、.RIGHTS_PENDING（hint）文案（契约建立时写入 contracts/texts.default.json）；规划/04 §6.4 `GET /v1/orders/{order_id}` 与 §8.3 `order_status` 卡片的 `expected_credit_date` 字段（改为 expected_credit_period、credit_overdue，BR-FUND-04 ⑪）；规划/03 §7.4 order_status 卡片「预计入账日（expected_credit_date）」；规划/10 §3.4 状态覆盖表 WAITING、CREDITED 行对应用例与 AC-S2-01-TB / -JD、AC-S2-09、AC-S2-12-TB 中的文案断言。
+需同步修改的规划文档（2026-09-30 C-02 / D11 改写，未同步）：规划/01 §5 J4「已收货，等待入账（附预计入账日）→ 已入账」改为「已收货，等待联盟结算（附预计入账周期）→ 已结算」；规划/04 §2.3 `display_status` 行说明「订单侧一律「入账」口径，BR-TEXT-01 方案 A」改为按 BR-TEXT-01 C-02 口径；/v1/dict 字典键 order_status.PAID（hint）、.WAITING、.CREDITED、.CREDITED_PART_CLAWED、.RIGHTS_PENDING（hint）文案（契约建立时写入 contracts/texts.default.json）；规划/04 §6.4 `GET /v1/orders/{order_id}` 与 §8.3 `order_status` 卡片的 `expected_credit_date` 字段（改为 expected_credit_period、credit_overdue，BR-FUND-04 ⑪）；规划/03 §7.4 order_status 卡片「预计入账日（expected_credit_date）」；规划/10 §3.4 状态覆盖表 WAITING、CREDITED 行对应用例与 AC-S2-01-TB / -JD、AC-S2-09、AC-S2-12-TB 中的文案断言。。2026-09-30 补充（变更记录 §10，预计结算月份）：/v1/dict order_status.WAITING hint 与时间线节点文案改为「预计 {credit_period} 结算」；规划/01 §5 J4「附预计入账日」改为「附预计结算月份」；规划/10 AC-S2-01-TB / -JD、AC-S2-12-TB 中 WAITING 文案断言改为「预计 11 月结算」一类（已 grep 核对上述位置仍为旧写法）
 
 #### BR-TEXT-03 细则 · 订单差额与异常提示
 
@@ -188,37 +190,38 @@
 #### BR-TEXT-04 细则 · 预计入账日口径
 
 - 状态：默认假设
-- 默认值：入账时点对用户只表达为「随 {平台} {月份} 联盟结算后入账」，月份取服务端返回的 expected_credit_period（= 结算周期 settle_period，按 BR-FUND-04 ⑪ 计算，唯一维护处），本条只定展示；不给具体日期、不写天数；拿不到收货时间的订单不进 WAITING（BR-FUND-02；G-14，负责人 2026-09-30 确认，变更记录 §2）；expected_credit_period 返回 null 的情形见 BR-FUND-04 ⑪。理由：负责人把入账改为跟随联盟月结、后台人工核对后批量结算（变更记录 §3 D11 行），按收货日推算的日期已不成立；各平台出账日与核对耗时未定（变更记录 §6「月结结算流程参数」），只给月份可避免对外承诺具体日期。
+- 默认值：入账时点对用户只表达为预计结算月份「预计 {月份} 结算」，月份取服务端返回的 expected_credit_period（预计结算月份，按 BR-FUND-04 ⑪ 计算，唯一维护处；负责人 2026-09-30 补充：看联盟返回字段，一般次月结算上月确认收货的订单，变更记录 §10），本条只定展示，不显示确认收货月；不给具体日期、不写天数；拿不到收货时间的订单不进 WAITING（BR-FUND-02；G-14，负责人 2026-09-30 确认，变更记录 §2）；expected_credit_period 返回 null 的情形见 BR-FUND-04 ⑪。理由：负责人把入账改为跟随联盟月结、后台人工核对后批量结算（变更记录 §3 D11 行），按收货日推算的日期已不成立；各平台出账日与核对耗时未定（变更记录 §6「月结结算流程参数」），只给月份可避免对外承诺具体日期。
 - 决策人：负责人
-- 依赖平台能力：各平台联盟结算账单的出账周期与出账日、结算账单覆盖的订单范围（按确认收货月份还是其他口径），以及京东、拼多多订单接口是否返回确认收货时间（规划/09 订单同步与结算项，待实测）；淘宝收货时间字段同样待接口样例确认
+- 依赖平台能力：各平台订单接口是否返回联盟结算时间及其语义（是否即联盟向推广者结算的月份，决定预计结算月份以联盟为准的部分）、联盟结算周期与结算日、结算覆盖的订单范围（按确认收货月份还是其他口径），以及京东、拼多多订单接口是否返回确认收货时间（规划/09 订单同步与结算项，待实测）；淘宝收货时间字段同样待接口样例确认
 - 取代：
   - 本条原口径（2026-09-30 随 D11、BR-FUND-04 月结改写取代）：「expected_credit_date 由服务端计算，以 YYYY-MM-DD 返回，页面「预计 {expected_credit_date} 入账」；wait_days_snapshot 在进入 WAITING 时写入；商品详情与 PAID 订单显示「确认收货满 {wait_days} 天后入账」」
+  - 本条 2026-09-30 月结初稿：「已收货订单展示「预计随 {platform_name} {credit_period} 联盟结算后入账」，credit_period = 该单结算周期 settle_period（确认收货月）；{月份} 表示联盟结算周期（账期），不是出账或入账发生的月份」（负责人 2026-09-30 补充，变更记录 §10：显示预计结算月份，不显示收货月）
   - 规划/04 §2.3、规划/01 §5 J1 第 6 步：「预计到账日 = 收货日 + 15 天」
   - PRD修订_后端功能规划 3.2：「预计到账日 = credit_due_at」
   - PRD v2.1 §9.3：「预计入账日（收货日 + 观察期）」
-- 来源：规划/04 §2.3、§4.1 O3/O6；规划/02 §5.2；规划/00 D11；PRD修订_后端功能规划 2.6、3.2；docs/changes/20260930-拍板第一批.md §3（D11、BR-FUND-04、G-16 行；C-02 行）
+- 来源：规划/04 §2.3、§4.1 O3/O6；规划/02 §5.2；规划/00 D11；PRD修订_后端功能规划 2.6、3.2；docs/changes/20260930-拍板第一批.md §3（D11、BR-FUND-04、G-16 行；C-02 行）；docs/changes/20260930-拍板第一批.md §10（负责人 2026-09-30 补充）
 - 需同步修改的规划文档：3 处（计数仅作记录，落点见 README §0.6）
 
-- 结算周期 settle_period 的取法（默认确认收货所在自然月，按平台配置）、各平台出账日、后台核对与批量结算的时点、维权或 hold 期间返回 null、逾期判断 credit_overdue、入账开关打开后的处理只在 BR-FUND-04 维护，本条不复述、不写死；wait_days 不再用于用户侧文案。{月份} 表示联盟结算周期（账期），不是出账或入账发生的月份。
+- 预计结算月份的取值（联盟返回结算时间时以联盟为准、未返回时的推算）、月结账单日、后台核对与批量结算的时点、维权或 hold 期间返回 null、逾期判断 credit_overdue、入账开关打开后的处理只在 BR-FUND-04 ⑪ 维护，本条不复述、不写算法；wait_days 不再用于用户侧文案。{月份} 表示预计结算月份（预计完成结算、计入可提现余额的月份），不是确认收货月份。
 
 展示：
 
 | 项 | 规则 |
 | --- | --- |
 | 月份格式 | expected_credit_period 为 YYYY-MM 字符串（+08:00 口径）；与今天同年显示「{M} 月」，否则「{YYYY} 年 {M} 月」；客户端只格式化，不推算、不改写 |
-| 文案 | 订单：「预计随 {platform_name} {credit_period} 联盟结算后入账」（platform_name 取字典平台显示名）；钱包预估进度行同一文案（BR-TEXT-01），多平台时的取法按 BR-FUND-18 |
+| 文案 | 订单：「预计 {credit_period} 结算」（不带平台名，订单卡片已显示平台）；钱包预估进度行同一文案（BR-TEXT-01），多平台时的取法按 BR-FUND-18 |
 | 显示月份的 display_status | 仅 WAITING 且月份非 null |
 | 不显示月份的 display_status | DEPOSIT_PAID、PAID、RIGHTS_PENDING、REVIEWING、WAITING_SETTLE、CREDITING（「入账核对中」，BR-TEXT-03），以及结算后各状态；credit_overdue=true 时不得把月份自动改写为下个月（由 BR-FUND-17 派生为 CREDITING「入账核对中」） |
 | 入账时点文案 | 商品详情与 display_status=PAID 的订单显示「确认收货后随联盟月度结算入账」，不含天数与日期变量；credit.enabled.&lt;platform>=off 时不展示（BR-FUND-04 开关表） |
 | 禁止 | 不得出现「15 天」「满 N 天」「预计 MM-DD 入账」等具体天数或日期承诺；客服与 Agent 同样只说月份（BR-TEXT-18） |
 
-例：淘宝订单 2026-10-08 确认收货，服务端按 BR-FUND-04 返回 expected_credit_period=2026-10 → 订单「已收货，等待联盟结算｜预估返 ¥4.5｜预计随淘宝 10 月联盟结算后入账」；该周期结算批次核对入账后显示「已结算｜实返 ¥4.5」。若 credit_overdue=true（该周期批次已执行完本单仍未入账，或超过预计出账日宽限仍无批次，BR-FUND-04 ⑪）→ display_status=CREDITING，显示「入账核对中」，不显示月份。
+例：淘宝订单 2026-10-08 确认收货，联盟尚未返回结算时间，服务端按 BR-FUND-04 ⑪ 返回 expected_credit_period=2026-11 → 订单「已收货，等待联盟结算｜预估返 ¥4.5｜预计 11 月结算」（不显示「10 月」）；联盟返回结算时间后月份以服务端返回为准，客户端不自行改写；月结账单核对入账后显示「已结算｜实返 ¥4.5」。若 credit_overdue=true（BR-FUND-04 ⑪）→ display_status=CREDITING，显示「入账核对中」，不显示月份。跨年：2026-12 确认收货 → 服务端返回 2027-01 → 「预计 2027 年 1 月结算」。
 
 边界：expected_credit_period 何时返回 null（ESTIMATED、维权中 / hold、credit.enabled.&lt;platform>=off 等）及解除后的恢复见 BR-FUND-04 ⑪；本条只按上表决定是否展示（G-16 随 D11 改为 expected_credit_period，原算法作废，见 BR-FUND-04）。
 
 按 C-01 默认处理，已由负责人确认 2026-09-30。合稿修订：原细则中的 run_at 00:05、00:01～00:30 快照等待与四个计算例已删，以 BR-FUND-04 为准（原复述缺 credit.enabled.&lt;platform>=off 分支）；入账时刻 C-17 只在 BR-FUND-04、BR-FUND-18 维护。2026-09-30 按 D11 月结改写：删去「预计 {expected_credit_date} 入账」与「确认收货满 {wait_days} 天后入账」，改为按 expected_credit_period 展示月份。
 
-需同步修改的规划文档（2026-09-30 D11 / C-02 改写，未同步）：08 README §0.3「默认假设 × 平台能力」表 BR-TEXT-04 行（依赖部分改为「联盟出账周期、结算账单覆盖范围与确认收货时间」）、§1.2「预计 MM-DD 入账」行；规划/01 §1 定位表「按订单给出原因码和预计入账日」、§4.2 OrderDetail「预计入账日」、§5 J1 第 1 步「确认收货满 {wait_days} 天后入账」与第 6 步「确认收货 → 预计入账日 → 到期入账」、J4「附预计入账日」、F-AGENT-06「explain_order（原因码 + 预计入账日）」；规划/04 §2.3 display_status 行「文案、预计入账日见 BR-TEXT-02、BR-TEXT-04」、§6.4 `GET /v1/orders/{order_id}`「预计入账日 expected_credit_date」、§8.3 `order_status` 卡片 `expected_credit_date`（均改为 expected_credit_period、credit_overdue，BR-FUND-04 ⑪）；规划/03 §7.4 order_status 卡片「预计入账日（expected_credit_date）」；规划/10 AC-S2-01-TB / -JD（「收货满 15 天自动入账」整条随 BR-FUND-04 改写）、AC-S2-02（预计入账日算法与 wait_days 配置变更断言）、AC-S2-03 ②（expected_credit_date=2026-10-21）、AC-S2-33（next_credit_date 断言）、§6 G-14、G-16 行。
+需同步修改的规划文档（2026-09-30 D11 / C-02 改写，未同步）：08 README §0.3「默认假设 × 平台能力」表 BR-TEXT-04 行（依赖部分改为「联盟出账周期、结算账单覆盖范围与确认收货时间」）、§1.2「预计 MM-DD 入账」行；规划/01 §1 定位表「按订单给出原因码和预计入账日」、§4.2 OrderDetail「预计入账日」、§5 J1 第 1 步「确认收货满 {wait_days} 天后入账」与第 6 步「确认收货 → 预计入账日 → 到期入账」、J4「附预计入账日」、F-AGENT-06「explain_order（原因码 + 预计入账日）」；规划/04 §2.3 display_status 行「文案、预计入账日见 BR-TEXT-02、BR-TEXT-04」、§6.4 `GET /v1/orders/{order_id}`「预计入账日 expected_credit_date」、§8.3 `order_status` 卡片 `expected_credit_date`（均改为 expected_credit_period、credit_overdue，BR-FUND-04 ⑪）；规划/03 §7.4 order_status 卡片「预计入账日（expected_credit_date）」；规划/10 AC-S2-01-TB / -JD（「收货满 15 天自动入账」整条随 BR-FUND-04 改写）、AC-S2-02（预计入账日算法与 wait_days 配置变更断言）、AC-S2-03 ②（expected_credit_date=2026-10-21）、AC-S2-33（next_credit_date 断言）、§6 G-14、G-16 行。。2026-09-30 补充（变更记录 §10，预计结算月份；已 grep 核对以下位置仍为旧写法）：08 README §0.3 表 BR-TEXT-04 行依赖部分补「联盟结算时间字段及语义」、§1.2「预计 MM-DD 入账」行改为「预计 {月份} 结算」；08 15 BR-TEXT-04 行（依赖平台能力补联盟结算时间）；08 14 §14.2 BR-TEXT-04 行；08_AI 数据来源表 expected_credit_date → expected_credit_period（预计结算月份）；规划/01 §1 定位表与 §4.2 OrderDetail「预计入账日」改为「预计结算月份」；规划/03 §7.4、规划/04 §6.4 与 §8.3 expected_credit_period 含义注明「预计结算月份」；规划/10 AC-S2-02 改为断言结算月份（10 月收货 →「预计 11 月结算」；有联盟结算时间时取联盟）
 
 #### BR-TEXT-05 细则 · 原因码字典与文案
 
@@ -350,15 +353,16 @@
 #### BR-TEXT-09 细则 · 交易通知文案模板
 
 - 状态：默认假设
-- 默认值：推送对象按负责人决定（C-25：有收益的都要推送，变更记录 §3）为该子订单全部受益人（归属用户、直推上级、间推上级）；模板措辞随 BR-TEXT-01（C-02 负责人决定）；上级通知只给金额与状态；ORDER_TRACKED 按 platform_status 首次进入 PAID 及之后状态触发、本单无返利不推；5 分钟固定窗口，SELF / 分享 / 邀请三类分条；CREDITED 每日 09:00 汇总前 24 小时流水；DEPOSIT_PAID 不推；找回单本人只发 CLAIM_RESULT。理由：规划/ 只定了通知清单与频控，未定模板、窗口、发送时刻与找回单是否重复推送；上级模板措辞与「邀请」合并分类为代理按 C-25 补的默认，运营可在 notify-templates 改措辞。
+- 默认值：推送对象按负责人决定（C-25：有收益的都要推送，变更记录 §3）为该子订单全部受益人（归属用户、直推上级、间推上级）；模板措辞随 BR-TEXT-01（C-02 负责人决定）；上级通知只给金额与状态；ORDER_TRACKED 按 platform_status 首次进入 PAID 及之后状态触发、本单无返利不推；5 分钟固定窗口，SELF / 分享 / 邀请三类分条；CREDITED 在结算批次完成后每用户汇总 1 条，完成时刻在免打扰时段则顺延到免打扰结束（负责人 2026-09-30 补充后统一口径，与 BR-FUND-04 一致）；DEPOSIT_PAID 不推；找回单本人只发 CLAIM_RESULT。理由：规划/ 只定了通知清单与频控，未定模板、窗口、发送时刻与找回单是否重复推送；上级模板措辞与「邀请」合并分类为代理按 C-25 补的默认，运营可在 notify-templates 改措辞。
 - 决策人：运营（推送对象：负责人，C-25 已定）
 - 依赖平台能力：无
 - 取代：
   - 本条原口径（C-25 默认方案，负责人选「要改」，2026-09-30 按变更记录 §3 取代）：「直推上级不发 ORDER_TRACKED（J7）；直推分佣不发 ORDER_TRACKED；自购受益人与 share 单分享者各推自己的份额，直推上级不推；窗口内同账户类型事件合并，SELF 与 PROMO 分别成条」
   - 本条原方案 A 模板（2026-09-30 随 C-02 取代）：CREDITED「有 {n} 笔返利已入账，共 {sum}，可提现」等「已入账」措辞；「D 日 09:00 入账任务未完成则在任务完成后发送」（随 D11 改为月结结算批次）
+  - 本条 2026-09-30 前 CREDITED 发送时点：「CREDITED 日汇总于 D 日 09:00(+08:00) 发送，统计 [D-1 09:00, D 09:00) 内写入的流水，D 日 09:00 有月结结算批次正在执行时在该批次完成后发送，每用户每日 1 条，幂等键 user_id:CREDITED:D」（与 BR-FUND-04「批次执行完成后推送」两种写法并存；2026-09-30 统一为结算批次完成后推送、免打扰时段顺延，变更记录 §9 第 4 项、§10）
   - 规划/02 §5.2：「order.credited → 推送「已到账」（每日汇总）」
   - PRD修订_后端功能规划 2.14：「ORDER_TRACKED 由 order.attributed 触发（以 规划/ 事件名为准，触发条件按本条「首次进入 PAID」）」
-- 来源：规划/01 §5 J1 第 5–6 步、J7 第 5 条、F-MSG-02、F-MSG-04；规划/04 §4.1 O2；PRD修订_后端功能规划 2.14；PRD v2.1 §6、§9.3；docs/changes/20260930-拍板第一批.md §3（C-25 行；D8、BR-INV-12、BR-CALC-05 行；C-02 行；D11 行）
+- 来源：规划/01 §5 J1 第 5–6 步、J7 第 5 条、F-MSG-02、F-MSG-04；规划/04 §4.1 O2；PRD修订_后端功能规划 2.14；PRD v2.1 §6、§9.3；docs/changes/20260930-拍板第一批.md §3（C-25 行；D8、BR-INV-12、BR-CALC-05 行；C-02 行；D11 行）；docs/changes/20260930-拍板第一批.md §10（负责人 2026-09-30 补充）
 - 需同步修改的规划文档：1 处（计数仅作记录，落点见 README §0.6）
 
 | code | 渠道 | 模板 |
@@ -387,12 +391,12 @@
 - {amount} 在 CLAWBACK 中为负值格式（如 -¥3.2）；{rebate} 为区间时按 BR-TEXT-10 格式化；合并求和对下限、上限分别求和：两单 ¥1–¥2 与 ¥3 → 「预估返共 ¥4–¥5」。
 - title_short = 商品标题先按 BR-TEXT-20 去平台前缀与「官方」，再按 Unicode 扩展字素簇取前 12 个 + 「…」；原标题 ≤12 个字素时不加「…」。邀请类模板不得使用 title_short 及任何商品、下级变量，模板保存校验只允许 {rebate}、{rebate_sum}、{amount}、{n}。
 - 上级隐私：直推、间推上级收到的通知只含金额与状态，点击跳转钱包余额流水（BR-TEXT-19，不可跳订单），不跳订单详情；客服对上级的答复同样不透露下级订单（BR-TEXT-18）。
-- 频控与免打扰：通知分类、频控初值与免打扰时段见 BR-WATCH-15（已确认）；跟单与收益类属交易（服务）类，不受营销类 22:00–08:00 限制，也不计入 BR-WATCH-15 的订阅类每日推送上限；条数由本条 5 分钟合并窗口与 (子订单, 受益人, 角色) 去重控制（上级下线多时是否另设每日上限见 12.3 未决问题）。
+- 频控与免打扰：通知分类、频控初值与免打扰时段见 BR-WATCH-15（已确认）；跟单与收益类属交易（服务）类，不受营销类 22:00–08:00 限制（CREDITED 例外：完成时刻在免打扰时段 notify.quiet_hours 内的顺延到时段结束，同 BR-WDR-26 WD_OVERDUE 的顺延做法），也不计入 BR-WATCH-15 的订阅类每日推送上限；条数由本条 5 分钟合并窗口与 (子订单, 受益人, 角色) 去重控制（上级下线多时是否另设每日上限见 12.3 未决问题）。
 
 例 1：用户 14:00:10、14:03:40 两单跟单 → t0=14:00:10，14:05:10 推 1 条「2 笔订单跟单成功，预估返共 ¥7.3」；14:06:00 第三单 → 新窗口，14:11:00 推「跟单成功：…」。
-例 2：D=11-21，11-20 月结结算批次核对后写入 2 笔 REBATE_CREDIT（¥4.5、¥6）→ 11-21 09:00 推「有 2 笔返利已结算，共 ¥10.5，已计入可提现余额」；11-21 11:00 另一批次补入 1 笔 → 计入 11-22 09:00 的汇总。
+例 2：11-24 16:00 finance 确认 2026-10 月结账单并立即结算，16:20 全部批次执行完，用户写入 2 笔 REBATE_CREDIT（¥4.5、¥6）→ 16:20 推「有 2 笔返利已结算，共 ¥10.5，已计入可提现余额」；11-26 11:00 补充批次完成、补入 1 笔 → 11:00 另推 1 条。定时结算 11-25 22:30 执行完 → 顺延到 11-26 08:00 推送。
 
-营销类 22:00–08:00 不发；交易类不受限，但 CREDITED 固定 09:00、WD_OVERDUE 的发送时刻按 BR-WDR-26。
+营销类 22:00–08:00 不发；交易类不受限，但 CREDITED 完成时刻在免打扰时段的顺延到时段结束、WD_OVERDUE 的发送时刻按 BR-WDR-26。
 
 例 3：京东子订单同步时平台已回传「完成」、已归因，B_est=0 → display_status=NO_REBATE，不发 ORDER_TRACKED；同一子订单后续 B_est 变为 >0 也不补发（BR-FUND-03：预估金额后续变化不推送）。
 
@@ -402,7 +406,7 @@
 
 ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-FUND-03 引用本条）：该子订单全部份额 > 0 的受益人各推自己的份额——归属用户（自购本人或 share 单分享者）、直推上级、间推上级；幂等键由原 order_id:TRACKED 改为 {order_key}:{uid}:{role}:TRACKED（order_key 定义见 BR-FUND-05）。C-25 按负责人决定（变更记录 §3：有收益的都要推送），取代原「直推上级不推」默认。
 
-需同步修改的规划文档（2026-09-30 C-25 / C-02 / D11 改写，未同步）：08 §14 C-25 行（改为按负责人决定、推给全部受益人）、C-02 行；BR-FUND-03 推送引用处（原「删去直推上级」说明）；规划/01 §5 J7（补「上级收到跟单与收益通知，只含金额与状态」一句并引用本条）、F-MSG-02「已入账（每日汇总）」改为「已结算（每日汇总）」并注明推送对象含直推、间推上级；规划/01 §5 J1 第 6 步「推送返利已入账」；规划/02 §5.2 时序图「order.credited → 推送 CREDITED 模板」（无文案复述，按受益人扇出时核对）；规划/04 §2.5 `notify_template.code` 行（邀请类模板变体，code 不变）；规划/10 AC-S1-24（补直推、间推上级各收 1 条且不含商品与下级信息、上级份额 0 不推的断言）。
+需同步修改的规划文档（2026-09-30 C-25 / C-02 / D11 改写，未同步）：08 §14 C-25 行（改为按负责人决定、推给全部受益人）、C-02 行；BR-FUND-03 推送引用处（原「删去直推上级」说明）；规划/01 §5 J7（补「上级收到跟单与收益通知，只含金额与状态」一句并引用本条）、F-MSG-02「已入账（每日汇总）」改为「已结算（每日汇总）」并注明推送对象含直推、间推上级；规划/01 §5 J1 第 6 步「推送返利已入账」；规划/02 §5.2 时序图「order.credited → 推送 CREDITED 模板」（无文案复述，按受益人扇出时核对）；规划/04 §2.5 `notify_template.code` 行（邀请类模板变体，code 不变）；规划/10 AC-S1-24（补直推、间推上级各收 1 条且不含商品与下级信息、上级份额 0 不推的断言）。。2026-09-30 补充（CREDITED 推送时点统一为结算批次完成后推送、免打扰顺延；已 grep 核对以下位置仍为旧写法）：规划/01 F-MSG-02「已入账（每日汇总）」改为「已结算（结算批次完成后推送）」；规划/02 §5.2 时序图「推送 CREDITED 模板（每日汇总，BR-TEXT-09）」删「每日汇总」；08 14 §14.2 BR-TEXT-09 行；规划/10 AC-S2 月结用例补推送时点与免打扰顺延断言
 
 #### BR-TEXT-10 细则 · 金额格式化
 
@@ -750,7 +754,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 需同步修改的规划文档：1 处（计数仅作记录，落点见 README §0.6）
 
 - 话术库条目结构：{场景, 引用 dict key 列表, 标准回复模板, 可执行动作（找回 / 重新授权 / 申诉 / 转财务）}。
-- 例：用户问「我的返利怎么还没到」，订单 (RECEIVED, WAITING)、display_status=WAITING、expected_credit_period=2026-10 → 标准回复「这笔订单已收货，预估返 ¥4.5，预计随淘宝 10 月联盟结算后入账，结算后可在钱包提现」（2026-09-30 随 C-02、D11 改写，原「预计 10-17 入账」）。订单 display_status=INVALID、reason=OTHER_TLJ → 「下单时使用了其他推广者的淘礼金，订单归对方，这笔没有返利」。
+- 例：用户问「我的返利怎么还没到」，订单 (RECEIVED, WAITING)、display_status=WAITING、expected_credit_period=2026-11 → 标准回复「这笔订单已收货，预估返 ¥4.5，预计 11 月结算，结算后可在钱包提现」（2026-09-30 随 C-02、D11 改写，原「预计 10-17 入账」；同日按负责人补充改为预计结算月份，原「预计随淘宝 10 月联盟结算后入账」，变更记录 §10）。订单 display_status=INVALID、reason=OTHER_TLJ → 「下单时使用了其他推广者的淘礼金，订单归对方，这笔没有返利」。
 - 例：邀请人问「我邀请的好友买了什么」→ 「为保护好友隐私，只能看到推广收益金额，看不到好友的订单」。
 - BLACKLIST 与 hold：客服后台可见内部原因，但对用户只说字典文案并引导申诉。
 - 验收：抽取话术库全部条目跑禁用词扫描与 dict key 存在性校验。
@@ -842,8 +846,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 ### 12.3 本主题未决问题
 
 1. 已关闭（C-02，负责人 2026-09-30，变更记录 §3）：原「BR-TEXT-01 方案 A/B（订单侧用「入账」还是继续用「到账」）」；负责人决定结算前一律称「预估」、结算后用「已结算」，取代方案 A，提现侧保留「已到账」（BR-TEXT-01）。
-2. 入账时刻：D11 改为跟随联盟月结批次后，原 C-17「00:01 快照 → 00:05 每日入账」随 BR-FUND-04 改写，批次时点只在 BR-FUND-04、BR-FUND-18 维护（待财务确认）；BR-TEXT-04 不含时刻与算法，时刻变更不改本主题；CREDITED 日汇总推送时刻仍按 BR-TEXT-09。
-3. 入账改为跟随联盟月结（D11，变更记录 §3），wait_days 不再用于用户侧文案；各平台联盟出账周期与出账日、结算账单覆盖的订单范围、京东与拼多多是否返回确认收货时间需在 规划/09 核实，结算周期取法与 expected_credit_period 只在 BR-FUND-04 ⑪ 维护（BR-TEXT-04；月结流程参数为变更记录 §6 遗留项）。
+2. 入账时刻：D11 改为跟随联盟月结批次后，原 C-17「00:01 快照 → 00:05 每日入账」随 BR-FUND-04 改写，批次时点只在 BR-FUND-04、BR-FUND-18 维护（待财务确认）；BR-TEXT-04 不含时刻与算法，时刻变更不改本主题；CREDITED 推送时点按 BR-TEXT-09（2026-09-30 统一为结算批次完成后推送、免打扰时段顺延，与 BR-FUND-04 一致）。
+3. 入账改为跟随联盟月结（D11，变更记录 §3），wait_days 不再用于用户侧文案；各平台联盟出账周期与出账日、结算账单覆盖的订单范围、京东与拼多多是否返回确认收货时间需在 规划/09 核实，结算周期取法与 expected_credit_period 只在 BR-FUND-04 ⑪ 维护（BR-TEXT-04；月结流程参数为变更记录 §6 遗留项）。2026-09-30 负责人补充（变更记录 §10）：用户侧显示预计结算月份（联盟返回结算时间时以联盟为准，否则确认收货月 + 1），不再显示收货月；联盟「结算时间」字段语义未实测，若实为确认收货时间，显示月份会早于实际结算月份（见 BR-FUND 6.3 第 19 条）。
 4. EXPIRED_CLICK 能否判定、click_valid_days 每平台取值、后点击是否覆盖归因（BR-ATTR、规划/09）；决定 JumpTip 两句承诺何时启用。
 5. 支付宝转账业务失败码清单与「明确失败」白名单（BR-TEXT-08）需沙箱实测；白名单确定前所有失败码按未知处理。
 6. 代扣个税、手续费的展示与分录（BR-TEXT-06、BR-TEXT-19）随 规划/00 D12 税务师意见确认。
