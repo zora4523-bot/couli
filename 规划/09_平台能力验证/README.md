@@ -424,7 +424,7 @@
 | *-05 | 点击有效期短于 W_backfill 暂定值 360 小时（BR-ATTR-13 ③；D+1 / D+3 / D+7 用例丢归因） | JumpTip 文案、订单回流窗口 | BR-ATTR-13 ① W_click（attr.click_window_days.&lt;platform>）、③ W_backfill（attr.backfill_window_hours）；BR-ATTR-15（来源回填） | link_log 回填窗口配置 | 无；窗口改为实测值 |
 | *-01、*-02、*-06 | 识别 + 报价 + 转链串行 P95 >2.5 秒 | T1 出卡改为"先出卡、转链异步"，去购买按钮延后激活 | BR-AI（出卡时机） | Agent T1 编排、商品卡组件的"转链中"状态 | 无 |
 | *-03 | 某个 benefit 在某平台映射不到参数 | Agent 对该权益固定回复"X 暂不支持按 Y 筛选" | BR-AI（Agent 回答口径） | search_products 的 benefits 参数按平台可空 | 无 |
-| MT-05、MT-06、MT-07、MT-12 | 美团权限 10-19 前未获批，或 sid 不回传 / 两 App 无法区分 | 美团返利延后；按 00 变更流程评估启用 05 砍项第 5 条"美团延到 P1" | BR-ATTR（美团用户键） | `convert.enabled.meituan`；F-ORD-13 | 美团 W7 接入推迟，不影响三家 |
+| MT-05、MT-06、MT-07、MT-12 | 美团权限 10-19 前未获批，或 sid 不回传 / 两 App 无法区分 | 美团返利延后；按 00 变更流程评估启用 05 砍项第 4 条"美团延到 P1" | BR-ATTR（美团用户键） | `convert.enabled.meituan`；F-ORD-13 | 美团 W7 接入推迟，不影响三家 |
 | TB-09 | A/B/C 无法区分或尚未接入 | 素材按 unknown 展示；“复制原口令”默认关；淘礼金请求只出关闭提示 | BR-AI-17、BR-TEXT-15、BR-ATTR-24 | tlj_kind=unknown；tlj.enabled=off | 无（D7 后续接入） |
 | X-12 | 分享扩展或剪贴板因审核被驳回 | 首发去掉扩展；剪贴板只留系统粘贴控件 | — | — | 上架时间可能顺延一个审核周期 |
 
