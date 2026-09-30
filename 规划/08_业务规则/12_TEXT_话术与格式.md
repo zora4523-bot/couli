@@ -30,7 +30,7 @@
 | BR-TEXT-16 | **AI 生成内容标识**<br>Agent 对话页必须在每轮 AI 回复区显示统一标识，文案唯一取 texts.ai_label，默认「内容由 AI 生成，仅供参考」；SSE meta.ai_label 必须与该值相同（服务端从同一配置读取），客户端以 meta.ai_label 为准、缺失时用包内默认；tool.status 的 display_text 只描述动作（如「正在搜索淘宝」），不得包含用户输入原文或工具参数；金额、链接、口令只能出现在卡片中，text.delta 出站过滤与 trace 记录按 BR-AI-06；Agent 页顶部与「关于」页公示模型名称与登记编号，公示文案唯一取 config.agent.filing_text（含登记编号；agent.filing_no 只作后台保存校验用，不直接展示，BR-AI-12），未取得时为空且 Agent 入口只对员工白名单开放（D16、BR-AI-12），不得显示占位或虚构编号。本条是 AI 标识文案与配置键的唯一维护处，合规义务见 BR-ID-15。 | 默认假设 | SSE meta.ai_label；config.texts.ai_label、config.agent.filing_text、config.agent.model_label；AiLabel 组件、Agent 页顶部与关于页；Agent tool.status display_text 模板；OutputGuard（BR-AI-06） |
 | BR-TEXT-17 | **广告推广标识**<br>product_card.ad_label 字段必须保留，客户端遇到非 null 值必须在卡片角标原样展示，不在客户端判断业务条件；法务定性前按保守默认：首页运营位（运营手选、商家付费或置顶）与分享海报返回 ad_label=「推广」，搜索自然结果与 Agent 按相关性排序的卡片返回 null；法务定性后按结论改服务端下发规则并写入本条。 | 待决策 | product_card.ad_label；ProductCard 组件；SDUI 首页运营位；分享海报；config：ad_label 场景规则 |
 | BR-TEXT-18 | **客服话术一致性**<br>客服话术库、FAQ、帮助中心、Agent 规则答疑（search_rules）与 explain_order 输出中涉及订单、返利、推广收益、提现状态和原因的表述，必须使用 BR-TEXT-01 术语并引用字典 key 渲染，不得另写同义说法；后台订单与提现详情必须同时显示「内部编码 + 用户看到的文案」；客服不得承诺字典与 expected_credit_date 以外的入账或到账时间，不得使用 BR-TEXT-13 禁用词，不得向邀请人透露下级的订单信息（J7）；字典或原因码文案变更时，话术库对应条目必须在同一次发布内更新（发布检查项）。 | 默认假设 | 客服话术库（后台 articles 或独立表）；帮助中心 H5；Agent search_rules 规则库、explain_order；后台订单详情、提现详情页；发布检查清单 |
-| BR-TEXT-19 | **余额流水用户文案**<br>余额流水的类型名称必须按下表由 ledger_type 映射（字典 ledger_type.&lt;CODE>.name；CLAWBACK 的 sub_type=PART_REFUND 用 ledger_type.CLAWBACK.name_part_refund）；金额按 BR-TEXT-10 带符号显示，符号表示对可用余额的影响；列表范围按 BR-FUND-15：只展示 available 子户分录与每张打款成功提现单的 1 条 WITHDRAW_PAID 汇总条目；WITHDRAW_FEE、TAX_WITHHOLD 不单独成行，只作汇总条目明细（「代扣个税 {tax}」「手续费 {fee}」）；跳转：自购与 share 单的 REBATE_CREDIT / SHARE_CREDIT / CLAWBACK / SETTLE_ADJUST 跳转关联子订单，WITHDRAW_\* 跳转提现单；REFERRAL_CREDIT 以及受益角色为 referrer 的 CLAWBACK / SETTLE_ADJUST 只显示「邀请好友订单」与金额、日期精确到日，不可跳转，不展示下级昵称与任何订单信息（J7）；ADMIN_ADJUST、BAD_DEBT_WRITEOFF 无关联单据时不显示跳转，显示 ledger_type.&lt;CODE>.hint 说明。 | 默认假设 | dict_items.ledger_type（name、hint）；GET /v1/wallet/ledger（link_type、link_id、masked 标记）；余额流水 H5；客服话术 |
+| BR-TEXT-19 | **余额流水用户文案**<br>余额流水的类型名称必须按下表由 ledger_type 映射（字典 ledger_type.&lt;CODE>.name；CLAWBACK 的 sub_type=PART_REFUND 用 ledger_type.CLAWBACK.name_part_refund）；金额按 BR-TEXT-10 带符号显示，符号表示对可用余额的影响；列表范围按 BR-FUND-15：只展示 available 子户分录与每张打款成功提现单的 1 条 WITHDRAW_PAID 汇总条目；WITHDRAW_FEE、TAX_WITHHOLD 不单独成行，只作汇总条目明细（「代扣个税 {tax}」「手续费 {fee}」）；跳转：自购与 share 单的 REBATE_CREDIT / SHARE_CREDIT / CLAWBACK / SETTLE_ADJUST 跳转关联子订单，WITHDRAW_\* 跳转提现单；REFERRAL_CREDIT（sub_type=DIRECT 与 INDIRECT）以及受益角色为 referrer（direct / indirect）的 CLAWBACK / SETTLE_ADJUST 只显示「邀请好友订单」与金额、日期精确到日，不可跳转，不展示下级昵称、层级与任何订单信息（J7）；sub_type=INDIRECT 的名称用 ledger_type.REFERRAL_CREDIT.name_indirect（BR-CALC-05、BR-INV-20，「间推」只作内部术语）；ADMIN_ADJUST、BAD_DEBT_WRITEOFF 无关联单据时不显示跳转，显示 ledger_type.&lt;CODE>.hint 说明。 | 默认假设 | dict_items.ledger_type（name、hint）；GET /v1/wallet/ledger（link_type、link_id、masked 标记）；余额流水 H5；客服话术 |
 | BR-TEXT-20 | **推送短信分享渠道约束**<br>推送、短信、分享的标题与首句不得以平台名称开头（正则 ^[【\\[]?(淘宝\|天猫\|京东\|拼多多\|美团\|阿里\|支付宝) 命中即拒），标题任何位置不得出现「官方」；校验在模板保存时与渲染后各做一次：商品标题变量（#标题#、title_short）渲染前去掉开头匹配 ^[【\\[]?(淘宝\|天猫\|京东\|拼多多\|美团\|阿里\|支付宝)[】\\]]? 的前缀并删除「官方」二字，模板不得以 #标题# 开头作为推送标题，渲染后仍命中则不发送并记录 template_render_blocked；App 图标、名称、启动页不得含平台商标；分享文案模板只允许变量 #标题# #券后价# #口令# #链接#，后台可配且过 BR-TEXT-13 校验；微信好友 / 群默认「文案 + 短链」，朋友圈默认海报；短信签名与模板长度、敏感词以短信服务商审核规则为准。 | 待验证 | notify-templates、短信模板；share 模板配置（F-SHARE-02/03）；推送标题与商品标题变量清洗函数；应用商店物料与启动页；后台模板保存校验、埋点 template_render_blocked |
 | BR-TEXT-21 | **报表金额列口径与刷新标注**<br>后台页面与报表（含导出文件表头）中每个收益类金额列必须同时标明三项：口径编码（只能取 ESTIMATED 预估收益、WAITING 待入账、CREDITED 已入账、WITHDRAWN 已提现、UNION_SETTLED 联盟结算佣金、UNION_RECEIVED 联盟已回款之一，定义见细则）、数据截至时刻（+08:00，精确到分钟，显示格式按 BR-TEXT-11）、刷新方式（「实时」或实际刷新周期）；不得使用「确认收货佣金」「结算佣金」「预估结算」「未结算」「已返现」等未定义叫法；不同口径的金额不得在同一单元格相加，需要合计时分列展示；同一报表的口径编码与刷新方式由报表定义文件声明，列头由其生成，不手写。 | 默认假设 | 后台报表页与导出表头组件；报表定义文件（specs/reports/\*.yaml，新增 metric_basis、refresh 字段）；docs/glossary.md；后台资产快照报表、佣金对账报表、运营日报 |
 
@@ -726,14 +726,14 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 依赖平台能力：无
 - 取代：
   - PRD修订_后端功能规划 分录表：「TAX_WITHHELD 借 U_\*_FROZEN（映射为 规划/ 的 TAX_WITHHOLD，口径一致）」
-- 来源：规划/04 §2.4 流水类型、§3.2 withdrawals；规划/01 §5 J7 第 5 条、F-WDR-01；规划/00 D12；PRD修订_后端功能规划 资金分录
+- 来源：规划/04 §2.4 流水类型、§3.2 withdrawals；规划/01 §5 J7 第 5 条、F-WDR-01；规划/00 D12；docs/changes/20261001-间推二级奖励.md（INDIRECT 名称）；PRD修订_后端功能规划 资金分录
 - 需同步修改的规划文档：1 处（计数仅作记录，落点见 README §0.6）
 
 | ledger_type | 名称 | 符号（可用余额视角） | 跳转 |
 | --- | --- | --- | --- |
 | REBATE_CREDIT | 自购返利入账 | + | 子订单 |
 | SHARE_CREDIT | 分享收益入账 | + | share 子订单 |
-| REFERRAL_CREDIT | 邀请分佣入账（显示「邀请好友订单」） | + | 不跳转 |
+| REFERRAL_CREDIT | 邀请分佣入账（显示「邀请好友订单」）；sub_type=INDIRECT 显示「邀请奖励」（默认，文案待定，key ledger_type.REFERRAL_CREDIT.name_indirect） | + | 不跳转 |
 | CLAWBACK | 订单扣回（sub_type=PART_REFUND 时显示「部分退款扣回」） | - | 子订单；referrer 角色不跳转 |
 | SETTLE_ADJUST | 结算补差（只表示联盟结算额差异，sub_type SETTLE_DIFF / PRICE_COMPARE / PRICE_PROTECT；入账后部分退款不用此类型） | ± | 子订单；referrer 角色不跳转 |
 | WITHDRAW_FREEZE | 提现冻结 | - | 提现单 |
@@ -748,6 +748,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 例 2：提现 1000 分、代扣 80 分成功 → 「提现冻结 -¥10」「提现到账 ¥9.2 已转入支付宝」（明细：申请 ¥10，代扣个税 ¥0.8，手续费 ¥0）。
 例 3：驳回 → 「提现冻结 -¥10」「提现退回 +¥10」。
 例 4：下级订单入账给上级 150 分 → 「邀请分佣入账｜邀请好友订单｜+¥1.5｜10-17」，不可点击。
+例 4b（间推开关开启）：间推份额 61 分 → 「邀请奖励｜邀请好友订单｜+¥0.61｜10-17」，不可点击，不显示层级或「二级」「间推」字样。「邀请奖励」与 P1 REWARD sub_type=invite（BR-INV-22）同名，定稿文案时须区分，改名只改字典。
 例 5：自购订单入账 800 分后退 1 件（共 2 件）→ 流水「部分退款扣回｜-¥4」，点击跳转该子订单（BR-FUND-08）。
 
 入账后部分退款写 CLAWBACK（sub_type=PART_REFUND），不写负向 SETTLE_ADJUST；按 C-16 默认处理，待财务确认。名称「部分退款扣回」的字典 key 为 ledger_type.CLAWBACK.name_part_refund。
