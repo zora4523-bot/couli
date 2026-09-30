@@ -13,15 +13,15 @@
 | 编号 | 规则 | 状态 | 影响面 |
 | --- | --- | --- | --- |
 | BR-CALC-01 | **金额与比例的数据类型**<br>所有金额必须以整数分存储与运算（PG bigint，字段后缀 _fen，TS 用 bigint）；所有比例必须以整数万分之一存储（字段后缀 _bp，1500 = 15%）。金额运算只能调用 packages/money，分账纯函数只能放在 packages/domain；任何金额路径禁止出现 number 浮点、parseFloat、toFixed、Math.round。对外契约 contracts/openapi.yaml 中所有 \*_fen 字段一律为 integer（int64，单位分），前端按整数处理，只在展示层除以 100 格式化。 | 已确认 | packages/money（mulDivFloor / mulDivCeil）；packages/domain；所有 \*_fen / \*_bp 字段；contracts/openapi.yaml 金额字段为 integer（int64，单位分），见 04 §5；lint 规则 |
-| BR-CALC-02 | **分佣基数 B 的定义**<br>分佣基数 B = max(0, N_base − tlj_deduct_fen)。N_base 为联盟口径的推广者收入：已扣平台技术服务费、不含补贴类佣金，单位分（字段映射见 BR-CALC-03、BR-CALC-18）。tlj_deduct_fen 只在我方淘礼金 normal 模式下非 0（BR-CALC-19），其余为 0。不再扣除任何平台预留。取值阶段：settle_commission_fen 为空时取最新预估收入；一旦 settle_commission_fen 非空，N_base 只取结算收入，之后预估字段的变化只存档，不参与计算。commission_splits 中 raw_n_fen 存联盟原值（可为负），base_fen 存计算用的 B（≥ 0），platform_retain_fen = base_fen − Σ用户份额 ≥ 0。每单四段金额与平台预估利润见 BR-CALC-27。 | 待决策 | orders.est_commission_fen / settle_commission_fen（语义：已扣技术服务费的推广者收入）；commission_splits.raw_n_fen / base_fen / platform_retain_fen；毛利报表；R1 联盟对账；specs/commission-examples.csv |
+| BR-CALC-02 | **分佣基数 B 的定义**<br>分佣基数 B = max(0, floor(N_base × (10000 − reserve_bp) / 10000) − tlj_deduct_fen)。N_base 为联盟口径的推广者收入：已扣平台技术服务费、不含补贴类佣金，单位分（字段映射见 BR-CALC-03、BR-CALC-18）。reserve_bp 为平台预留比例（整数万分之一，0–10000），属于分佣规则版本，每个平台一个值，不按等级、订单类型或个人区分（BR-CALC-06）；快照按 paid_at 选定规则版本（BR-CALC-11）时同时取定该订单平台的 reserve_bp，此后入账与调整重算都用快照中的 reserve_bp。预留金额 reserve_fen = N_base − floor(N_base × (10000 − reserve_bp) / 10000) 归平台，取整尾差归平台；N_base ≤ 0 时先置 0，reserve_fen = 0。tlj_deduct_fen 只在我方淘礼金 normal 模式下非 0（BR-CALC-19），其余为 0。取值阶段：settle_commission_fen 为空时取最新预估收入；一旦 settle_commission_fen 非空，N_base 只取结算收入，之后预估字段的变化只存档，不参与计算。commission_splits 中 raw_n_fen 存联盟原值（可为负），reserve_bp、reserve_fen 存所用预留比例与预留金额，base_fen 存计算用的 B（≥ 0），platform_retain_fen = base_fen − Σ用户份额 ≥ 0（不含预留，平台合计见 BR-CALC-04）。每单四段金额与平台预估利润见 BR-CALC-27。 | 待决策 | orders.est_commission_fen / settle_commission_fen（语义：已扣技术服务费的推广者收入）；commission_rule_reserves.reserve_bp；commission_splits.raw_n_fen / reserve_bp / reserve_fen / base_fen / platform_retain_fen；后台分佣规则页（各平台预留比例）；商品卡 / Agent 报价（BR-CALC-20）；毛利报表；R1 联盟对账；specs/commission-examples.csv |
 | BR-CALC-03 | **各平台 N 的取数字段**<br>每个平台的 UnionAdapter 必须把订单接口中'已扣技术服务费的推广者预估收入 / 结算收入'映射为 N（再按 BR-CALC-18 拆出 n_base_fen 与 subsidy_commission_fen）。映射写在 specs/attribution.md 并附录制报文，还须与联盟后台同一订单的推广者收入逐单核对一致，证据路径记入 09 表对应 CAP。验证通过前：该平台订单只展示预估，不执行 CREDIT_DUE 入账（含 M3 白名单内测，由 credit.enabled.&lt;platform> 控制，默认 off）；convert.enabled.&lt;platform> 不得对公众打开。若平台返回的是未扣服务费的毛收入，Adapter 按 N = gross − ceil(gross × fee_bp / 10000) 扣除（服务费向上取整，N 取保守值）。fee_bp 优先取订单报文中的服务费率字段；报文没有时取配置 union.&lt;platform>.service_fee_bp（按订单类型配置，每个取值附来源，未核实的标'待核实'）；两处都没有，订单进待处理表并告警，不得按 0 处理。 | 待验证 | UnionAdapter.&lt;platform>.toN()；配置 union.&lt;platform>.service_fee_bp、credit.enabled.&lt;platform>；specs/attribution.md；规划/09_平台能力验证/（对应 CAP 的结论，按 09 README §0.4 回填）；订单同步录制 fixture |
-| BR-CALC-04 | **分账公式与受益人（通用与自购单）**<br>每个已归因子订单的分账必须按下式计算：本人份额 = floor(B × r_own_bp / 10000)，受益人为订单归属用户；直推份额 = floor(B × r_direct_bp / 10000)，受益人为归属用户在 paid_at 时的直接上级（BR-CALC-12），无上级时为 0；间推份额 = floor(B × r_indirect_bp / 10000)，只在所选规则版本 indirect_enabled=true 时产生，受益人为直推上级在 paid_at 时的上级（BR-CALC-05、BR-CALC-12），缺任一层时为 0；平台留存 = B − 本人份额 − 直推份额 − 间推份额。r_own_bp、r_direct_bp、r_indirect_bp 按 BR-CALC-06 取与订单 platform、order_type 对应的行。自购单（order_type=self）本人份额入 SELF 账户，直推、间推份额入 PROMO；分享单的比例与受益人见 BR-CALC-24。order_type 取 orders.buy_type，由归因流程（BR-ATTR）写入，splitCommission() 不自行判断。 | 已确认 | packages/domain splitCommission()；commission_splits.beneficiaries；ledger REBATE_CREDIT / REFERRAL_CREDIT；订单详情页预估返利；验收用例 AC-SET-待编号（参考文档编号 AC-MONEY-001，规划/ 未定义；编号规则见 13 §13.2） |
+| BR-CALC-04 | **分账公式与受益人（通用与自购单）**<br>每个已归因子订单的分账必须按下式计算：本人份额 = floor(B × r_own_bp / 10000)，受益人为订单归属用户；直推份额 = floor(B × r_direct_bp / 10000)，受益人为归属用户在 paid_at 时的直接上级（BR-CALC-12），无上级时为 0；间推份额 = floor(B × r_indirect_bp / 10000)，只在所选规则版本 indirect_enabled=true 时产生，受益人为直推上级在 paid_at 时的上级（BR-CALC-05、BR-CALC-12），缺任一层时为 0；平台留存 = reserve_fen + B − 本人份额 − 直推份额 − 间推份额（reserve_fen 为 BR-CALC-02 的预留金额；B − Σ用户份额 部分记 platform_retain_fen）。r_own_bp、r_direct_bp、r_indirect_bp 按 BR-CALC-06 取与订单 platform、order_type 对应的行。自购单（order_type=self）本人份额入 SELF 账户，直推、间推份额入 PROMO；分享单的比例与受益人见 BR-CALC-24。order_type 取 orders.buy_type，由归因流程（BR-ATTR）写入，splitCommission() 不自行判断。 | 已确认 | packages/domain splitCommission()；commission_splits.beneficiaries；ledger REBATE_CREDIT / REFERRAL_CREDIT；订单详情页预估返利；验收用例 AC-SET-待编号（参考文档编号 AC-MONEY-001，规划/ 未定义；编号规则见 13 §13.2） |
 | BR-CALC-05 | **间推比例与开关**<br>计酬最多两级（BR-INV-12）。间推（直推上级的上级）由规则版本开关控制：commission_rule_versions.indirect_enabled（默认 false）+ commission_rules.r_indirect_bp（smallint NOT NULL DEFAULT 0，CHECK 0–8000）。indirect_enabled=false 的版本中 r_indirect_bp 必须全为 0，splitCommission() 不产生 indirect 受益人。indirect_enabled=true 时：间推份额 = floor(B × r_indirect_bp / 10000)，r_indirect_bp 取 (platform, 间推受益人在 paid_at 的等级, order_type) 行，入 PROMO，流水 REFERRAL_CREDIT、sub_type=INDIRECT，所得类型同直推；受益人取值见 BR-CALC-12 / BR-INV-13，失效见 BR-CALC-13；间推受益人与归属用户或直推受益人为同一人（异常数据）时间推份额归平台并告警。开启、关闭、改比例只能通过发布新规则版本（BR-CALC-11 按 paid_at 选版本，不回溯快照）；发布 indirect_enabled=true 的版本须 step-up + 财务角色第二人审批 + 审计，试算报告含间推份额列（BR-CALC-22）。depth ≥ 3 的祖先永不计酬。 | 待决策 | commission_rules.r_indirect_bp 与 CHECK；commission_rule_versions.indirect_enabled；packages/domain splitCommission()（indirect 分支）；后台分佣规则页（开关、比例列、审批）；ledger REFERRAL_CREDIT sub_type=INDIRECT；关系闭包表（MVP 不用于计佣） |
-| BR-CALC-06 | **比例配置维度与默认值**<br>commission_rules 每行 = (rule_version_id, platform, level, order_type ∈ {self, share}, r_own_bp, r_direct_bp, r_indirect_bp)，唯一 (rule_version_id, platform, level, order_type)；版本级字段 indirect_enabled 在 commission_rule_versions（BR-CALC-05）。r_own_bp 用于订单归属用户，按其等级取行；r_direct_bp 用于直接上级，按上级等级取同 platform、同 order_type 的行；r_indirect_bp 用于间推受益人，按其等级取同 platform、同 order_type 的行（等级取值时点见 BR-CALC-12）。发布时版本内必须覆盖配置 commission.platforms × {L1, L2, L3} × {self, share} 的全部组合，缺任一组合则整个版本拒绝发布，不允许回退到其他平台或等级。订单平台在所选版本中没有对应行时，订单进待处理表并告警，不生成快照。 | 待决策 | commission_rules 表结构、唯一约束与种子数据；配置 commission.platforms；后台分佣规则页；商品卡 / Agent 报价；specs/commission-examples.csv；等级页展示文案 |
+| BR-CALC-06 | **比例配置维度与默认值**<br>commission_rules 每行 = (rule_version_id, platform, level, order_type ∈ {self, share}, r_own_bp, r_direct_bp, r_indirect_bp)，唯一 (rule_version_id, platform, level, order_type)；版本级字段 indirect_enabled 在 commission_rule_versions（BR-CALC-05）；平台预留比例在 commission_rule_reserves，每行 = (rule_version_id, platform, reserve_bp ∈ 0–10000)，唯一 (rule_version_id, platform)（BR-CALC-02）。r_own_bp 用于订单归属用户，按其等级取行；r_direct_bp 用于直接上级，按上级等级取同 platform、同 order_type 的行；r_indirect_bp 用于间推受益人，按其等级取同 platform、同 order_type 的行（等级取值时点见 BR-CALC-12）。发布时版本内必须覆盖配置 commission.platforms × {L1, L2, L3} × {self, share} 的全部组合，缺任一组合则整个版本拒绝发布，不允许回退到其他平台或等级；版本内还必须对 commission.platforms 中每个平台各有一条 reserve_bp，缺任一平台同样拒绝发布，不回退到上一版本的值。订单平台在所选版本中没有对应行时，订单进待处理表并告警，不生成快照。 | 待决策 | commission_rules 表结构、唯一约束与种子数据；commission_rule_reserves（每平台预留比例）；配置 commission.platforms；后台分佣规则页；商品卡 / Agent 报价；specs/commission-examples.csv；等级页展示文案 |
 | BR-CALC-07 | **比例合计上限校验**<br>规则发布时必须对每个 (平台, 订单类型) 校验：max_等级(r_own_bp) + max_等级(r_direct_bp) + max_等级(r_indirect_bp) + 活动加成_bp ≤ 8000（indirect_enabled=false 的版本 r_indirect_bp 为 0）；任一单项 &lt; 0 或 > 8000 也拒绝发布。校验不通过返回错误并不生成新版本。 | 待决策 | commission_rules 发布接口；后台分佣规则页校验提示；DB CHECK（单项 0–8000）；验收用例 AC-SET-待编号（参考文档编号 AC-MONEY-014，规划/ 未定义） |
 | BR-CALC-08 | **舍入与尾差归属**<br>每个用户份额必须单独按 floor 取整到分（对非负数向下取整）；平台留存 = B − Σ用户份额，承接全部尾差；禁止先按比例算平台份额再倒推用户份额，禁止四舍五入。 | 待决策 | packages/money floor/ceil；packages/domain splitCommission()；specs/ledger-rules.md；属性测试 |
 | BR-CALC-09 | **调整按新基数全额重算**<br>任何基数变化（部分退款、价保、结算差额）后，必须用快照比例对新基数 B_new 全额重算每个受益人的应得额，再以'差额 = 新应得 − 已入账（或原预估）'生成调整；禁止对基数差额 ΔB 直接乘比例取整。受益人状态规则：status=forfeited 的受益人新应得恒为 0，不生成任何调整；受益人已注销或 risk_state=banned 时，负向差额照常扣回，正向差额归平台（记 COMMISSION_REVENUE 并写 forfeit_reason）；受益人处于 frozen / appealing 时，负向差额照常扣回，正向差额与 BR-CALC-13 的 hold 一样延后，状态解除后再按当时状态处理。 | 待决策 | settlement 补差任务；CLAWBACK / SETTLE_ADJUST 金额计算；commission_split_amounts；specs/ledger-rules.md；属性测试（多次调整后等于一次性计算） |
-| BR-CALC-10 | **分佣快照生成时点与不可变范围**<br>分佣快照必须在子订单首次同时满足'platform_status ∈ {PAID, RECEIVED, SETTLED}'且'已归因到用户'时生成，与触发它的迁移在同一事务写入 commission_splits：入库时已满足 → 入库事务（BR-FUND-01 R2）；已归因但 platform_status=DEPOSIT_PAID → 不生成快照、不计预估（rebate_status=ESTIMATED，预估为 0），在 platform_status 迁到 PAID（P2）的事务内生成；未归因（rebate_status=UNATTRIBUTED）→ 在找回通过或后台改归属（R3）的事务内生成，此时 platform_status 仍为 DEPOSIT_PAID 的，推迟到 P2。未归因订单已为 rebate_status=VOID（对应单一 order_status 的 INVALID；未归因订单不会进入 CLAWED_BACK）时找回通过或改派，按 BR-FUND-01 R3b 只写 user_id、user_basis（BR-ATTR-09）、locked=true，不生成快照、无分录，rebate_status 不变。快照一经生成，rule_version_id、order_type、activity_type、rebate_mode、各受益人的 user_id / role / account_type / ratio_bp / level 不可修改；受益人状态变化与各版本金额只能追加记录，不得覆盖快照行。 | 默认假设 | commission_splits / commission_split_amounts / commission_split_beneficiary_events 表结构与唯一约束；order-sync 入库流水线；BR-FUND-01 迁移 R2 / R3 / P2（含入库即 RECEIVED 时 R2 同事务进 WAITING）；订单详情页（定金阶段文案、失效找回文案）；SM-REB-R2、SM-REB-R3、SM-PLT-P2 测试 |
+| BR-CALC-10 | **分佣快照生成时点与不可变范围**<br>分佣快照必须在子订单首次同时满足'platform_status ∈ {PAID, RECEIVED, SETTLED}'且'已归因到用户'时生成，与触发它的迁移在同一事务写入 commission_splits：入库时已满足 → 入库事务（BR-FUND-01 R2）；已归因但 platform_status=DEPOSIT_PAID → 不生成快照、不计预估（rebate_status=ESTIMATED，预估为 0），在 platform_status 迁到 PAID（P2）的事务内生成；未归因（rebate_status=UNATTRIBUTED）→ 在找回通过或后台改归属（R3）的事务内生成，此时 platform_status 仍为 DEPOSIT_PAID 的，推迟到 P2。未归因订单已为 rebate_status=VOID（对应单一 order_status 的 INVALID；未归因订单不会进入 CLAWED_BACK）时找回通过或改派，按 BR-FUND-01 R3b 只写 user_id、user_basis（BR-ATTR-09）、locked=true，不生成快照、无分录，rebate_status 不变。快照一经生成，rule_version_id、order_type、activity_type、rebate_mode、reserve_bp、各受益人的 user_id / role / account_type / ratio_bp / level 不可修改；受益人状态变化与各版本金额只能追加记录，不得覆盖快照行。 | 默认假设 | commission_splits / commission_split_amounts / commission_split_beneficiary_events 表结构与唯一约束；order-sync 入库流水线；BR-FUND-01 迁移 R2 / R3 / P2（含入库即 RECEIVED 时 R2 同事务进 WAITING）；订单详情页（定金阶段文案、失效找回文案）；SM-REB-R2、SM-REB-R3、SM-PLT-P2 测试 |
 | BR-CALC-11 | **规则版本生效时点**<br>每个规则版本必须带 effective_from（ISO 8601 +08:00，须 ≥ 发布时刻，下调比例时见 BR-CALC-22），且必须严格大于所有已发布且未撤销版本的 effective_from，否则拒绝发布。快照选用'effective_from ≤ paid_at 的已发布、未撤销版本中 effective_from 最大的一个'（边界含等号，比较精度到秒）。未到 effective_from 的已发布版本可以撤销（status=revoked，须 step-up 并写审计，不改内容）；已生效版本不可撤销、不可修改、不可删除，回滚 = 发布一个新版本。规则变更不回溯已生成的快照。联盟返回的无时区时间一律按 +08:00 解析，存 timestamptz。paid_at 为平台付款时间，预售单取尾款付清时间；平台不提供尾款时间时按本条细则的降级顺序取值。找回、改派订单同样按 paid_at 选版本，不按批准时刻，并在订单与快照记 paid_at_source。 | 默认假设 | commission_rules 版本表：effective_from、status（published / revoked）；快照版本选择查询；orders.paid_at / paid_at_source；后台规则发布页（生效时间必填、撤销未生效版本）；近 7 天试算报告 |
 | BR-CALC-12 | **等级与上级的取值时点**<br>快照中本人等级与上级等级都取 paid_at 时刻的有效等级：取 level_change_logs 中 effective_at ≤ paid_at 的最后一条（等号取新等级，BR-INV-14）；等级日志缺失时取注册默认等级 L1 并告警，人工核实后如需补差走 ADMIN_ADJUST。直推受益人取 paid_at 时刻有效的上级（relation_change_logs 按 created_at 重放：bound_at ≤ paid_at 且未解除的上级，bound_at / unbound_at 由相邻记录的 created_at 推出，BR-INV-11）；paid_at 时尚无上级 → 直推份额为 0，事后绑定不补。间推受益人（indirect_enabled=true 时）= 直推上级在 paid_at 时刻的上级，同样按 relation_change_logs 重放；任一层在 paid_at 时不存在 → 间推份额归平台，事后绑定不补。 | 默认假设 | level_change_logs（需有 effective_at）；relation_change_logs（bound_at = 该条 created_at，unbound_at = 同一用户下一条记录的 created_at，BR-INV-11；表名见 13 §13.8）；commission_splits.beneficiaries.level；等级变更接口；邀请绑定接口 POST /v1/me/inviter |
 | BR-CALC-13 | **受益人失效时份额归平台**<br>受益人失效时其份额归平台留存，不得向上顺延给更上级，也不得转给其他受益人；本条对直推与间推受益人同样适用（直推上级失效时，间推份额仍按间推受益人自身状态判定，不因此上移或下移）。快照生成时判定：受益人不存在或已注销（deletion_status ∈ {processing, done}）→ forfeited，终局不变；risk_state 为 banned、frozen、appealing 的受益人在快照中记 active，不在快照阶段剥夺。入账任务执行时逐受益人判定：已注销或 risk_state=banned → 追加 forfeited 事件并写 forfeit_reason，份额计入 COMMISSION_REVENUE，此后不再补发；risk_state ∈ {frozen, appealing} → 该受益人入账延后（held），其他受益人照常入账，状态恢复 normal 后由入账任务补入账（订单已 CREDITED 时按 BR-FUND-01 R5a），转为 banned 时再判 forfeited；注销冷静期（deletion_status=cooling）不算失效，照常入账（提现限制见 BR-FUND）。订单级风控命中（BLACKLIST_HIT）仍按 BR-FUND-07 整单作废（入账前 R6 → VOID；对应 04 O4），与受益人级 forfeited 分开。受益人级 held 只记在 commission_split_beneficiary_events，不设置订单级 hold 字段（hold 只由人工或风控按 BR-FUND-06 设置）。已入账的份额不因事后封禁而扣回（资金冻结见 BR-FUND-14 与风控 规划/01 E17）。 | 默认假设 | splitCommission() 入参 beneficiary_status；settlement 入账任务（hold 与补入账）；commission_split_beneficiary_events；users.risk_state / deletion_status；客服话术（为何上级没拿到分佣、为何返利延后） |
@@ -30,15 +30,15 @@
 | BR-CALC-16 | **比价订单的计算与展示**<br>比价订单不得使用特殊比例：订单分账一律以联盟返回的（已降佣的）N 按 BR-CALC-04 / BR-CALC-24 计算，订单记 is_price_compare、commission_rate_min_bp、commission_rate_max_bp，实返与预估不同时差额原因码为 PRICE_COMPARE；比价订单的订单列表、订单详情、入账流水三处金额必须一致。下单前报价的比价风险展示只按 BR-PRICE-07（C-22）。 | 待验证 | orders.is_price_compare / commission_rate_min_bp / commission_rate_max_bp；商品卡与详情页比价区间展示见 BR-PRICE-07；订单差额原因 PRICE_COMPARE；验收用例 F-ORD-11 |
 | BR-CALC-17 | **自购与分享报价口径（三平台）**<br>下单前报价必须按订单类型分别估算（由 UnionAdapter.quoteN(product, sku, order_type) 输出，见 BR-CALC-20），订单侧 N 一律直接取联盟订单接口返回值，我方不得对订单再乘任何折算系数。拼多多：自购报价 N = floor(分享口径佣金 × self_buy_factor_bp × account_level_factor_bp / 10000 / 10000)，一次乘完再一次 floor（mulDivFloor(x, a×b, 100000000n)）；分享报价 N = floor(分享口径佣金 × account_level_factor_bp / 10000)；转链必须透传 search_id。淘宝：自购与分享分别用 promotion_type=1 / 2 取佣金；新 App 取不到某一口径时，报价取可得口径中的较低值。京东：PLUS 买家可能按 plusCommissionShare 或 0 计佣，报价按非 PLUS 口径并在详情页提示'PLUS 会员购买部分商品可能无返利'。 | 待验证 | UnionAdapter.&lt;platform>.quoteN()；配置中心 union.pdd.\*；商品卡 / Agent 报价；分享面板预估收益；规划/09_平台能力验证/（对应 CAP 的结论，按 09 README §0.4 回填） |
 | BR-CALC-18 | **平台补贴与补贴类佣金**<br>平台补贴（平台出资给消费者的优惠）与补贴类佣金（佣金膨胀、超级补贴等单独计的推广者收入）不得计入 B，归平台留存；订单的基础佣金部分照常分账。UnionAdapter 统一输出 n_base_fen（不含补贴类佣金）与 subsidy_commission_fen 两个字段：联盟给的是含补贴的总额 + 补贴明细时，n_base_fen = 总额 − 补贴；分字段返回时直接映射。B 只用 n_base_fen（BR-CALC-02）；R1 对账用 n_base_fen + subsidy_commission_fen 对联盟总额。自购报价不得包含只在分享场景才有的补贴类佣金。联盟未单列补贴类佣金时的处理见 BR-CALC-25。 | 待验证 | UnionAdapter 输出 n_base_fen / subsidy_commission_fen；orders.activity_type / subsidy_commission_fen；商品卡自购 / 分享报价；毛利报表；R1 对账 |
-| BR-CALC-19 | **我方淘礼金订单的返利**<br>来自我方淘礼金推广位（pid_scene=taolijin）的订单，默认 rebate_mode=none：本人份额与直推份额都等于 0，全部 N 归平台以抵淘礼金预算。运营可按商品池条目把 rebate_mode 设为 normal，此时 B = max(0, N_base − tlj_deduct_fen)，再按 BR-CALC-04 分账。tlj_deduct_fen 取我方淘礼金发放记录 tlj_grants 中与该订单 (user_id, item_id) 匹配、状态为已使用、领取时间 ≤ paid_at 的最近一条记录的面额；匹配不到 → 订单进待处理表并告警，按 rebate_mode=none 计算。联盟 N 是否已扣红包由配置 union.taobao.tlj_n_net_of_redpacket 决定（默认 false，待 09 表验证）；为 true 时 tlj_deduct_fen = 0。其他推广者的淘礼金订单不归本 App（见 BR-ATTR）。 | 待决策 | tlj_pool_items.rebate_mode；tlj_grants（匹配键与状态）；配置 union.taobao.tlj_n_net_of_redpacket；splitCommission() 输入 activity_type；淘礼金卡片'预估返利'展示（默认不展示）；04 §2.2 pid_scene 表 |
-| BR-CALC-20 | **报价预估与计算函数一致**<br>商品卡、商品详情、Agent 查返利、分享面板、订单预估、入账、补差必须调用同一个 splitCommission() 纯函数。报价计算只在本条维护（BR-PRICE-06 只引用）：报价 = splitCommission(B_quote) 中的本人份额，B_quote 按 BR-CALC-02 由 N_quote 得出（当前 B_quote = N_quote）。N_quote 由各平台 UnionAdapter.quoteN(product, sku, order_type) 输出，定义为'按报价时刻的券后价（final_price_fen）与该订单类型对应的推广者收入率算出、已扣技术服务费、不含补贴类佣金（淘宝佣金膨胀等，BR-CALC-18）、淘礼金与平台补贴的预估推广者收入'；全部整数运算、每次乘除后向下取整：gross = floor(final_price_fen × rate_bp / 10000)，fee = floor(gross × tech_fee_bp[platform] / 10000)，N_quote = gross − fee；rate_bp 由 Adapter 把平台佣金率字段按十进制字符串解析（不用浮点），各平台自购 / 分享口径差异在 Adapter 内换算（BR-CALC-17），计佣层不感知平台差异。字段口径未经 09 表 CAP-TB-04、CAP-JD-04、CAP-PDD-04 验证前，报价一律取可得口径中的较低值。报价使用报价时刻生效的规则版本、查看者等级（未登录用注册默认等级 L1）与调用方传入的 order_type（各展示对象取值见 BR-PRICE-06）。报价不持久化。展示（标签、零值、区间、口径说明文案、金额格式）只按 BR-PRICE-06 / 07 / 08 / 17，本条不规定展示。 | 待验证 | UnionAdapter.&lt;platform>.quoteN()；GET /v1/products/{product_key} 预估返利；Agent rebate_quote 卡片；分享面板预估收益；packages/domain quoteRebate() / splitCommission()；配置 tech_fee_bp[platform]；specs/commission-examples.csv；验收：同输入时展示报价 = 入账预估 |
+| BR-CALC-19 | **我方淘礼金订单的返利**<br>来自我方淘礼金推广位（pid_scene=taolijin）的订单，默认 rebate_mode=none：本人份额与直推份额都等于 0，全部 N 归平台以抵淘礼金预算。运营可按商品池条目把 rebate_mode 设为 normal，此时 B 按 BR-CALC-02 计算（先扣平台预留，再减 tlj_deduct_fen），再按 BR-CALC-04 分账。tlj_deduct_fen 取我方淘礼金发放记录 tlj_grants 中与该订单 (user_id, item_id) 匹配、状态为已使用、领取时间 ≤ paid_at 的最近一条记录的面额；匹配不到 → 订单进待处理表并告警，按 rebate_mode=none 计算。联盟 N 是否已扣红包由配置 union.taobao.tlj_n_net_of_redpacket 决定（默认 false，待 09 表验证）；为 true 时 tlj_deduct_fen = 0。其他推广者的淘礼金订单不归本 App（见 BR-ATTR）。 | 待决策 | tlj_pool_items.rebate_mode；tlj_grants（匹配键与状态）；配置 union.taobao.tlj_n_net_of_redpacket；splitCommission() 输入 activity_type；淘礼金卡片'预估返利'展示（默认不展示）；04 §2.2 pid_scene 表 |
+| BR-CALC-20 | **报价预估与计算函数一致**<br>商品卡、商品详情、Agent 查返利、分享面板、订单预估、入账、补差必须调用同一个 splitCommission() 纯函数。报价计算只在本条维护（BR-PRICE-06 只引用）：报价 = splitCommission(B_quote) 中的本人份额，B_quote 按 BR-CALC-02 由 N_quote 扣除平台预留得出：B_quote = floor(N_quote × (10000 − reserve_bp) / 10000)，reserve_bp 取报价时刻生效规则版本中该平台的值（报价不含淘礼金扣除）。N_quote 由各平台 UnionAdapter.quoteN(product, sku, order_type) 输出，定义为'按报价时刻的券后价（final_price_fen）与该订单类型对应的推广者收入率算出、已扣技术服务费、不含补贴类佣金（淘宝佣金膨胀等，BR-CALC-18）、淘礼金与平台补贴的预估推广者收入'；全部整数运算、每次乘除后向下取整：gross = floor(final_price_fen × rate_bp / 10000)，fee = floor(gross × tech_fee_bp[platform] / 10000)，N_quote = gross − fee；rate_bp 由 Adapter 把平台佣金率字段按十进制字符串解析（不用浮点），各平台自购 / 分享口径差异在 Adapter 内换算（BR-CALC-17），计佣层不感知平台差异。字段口径未经 09 表 CAP-TB-04、CAP-JD-04、CAP-PDD-04 验证前，报价一律取可得口径中的较低值。报价使用报价时刻生效的规则版本（比例与预留比例）、查看者等级（未登录用注册默认等级 L1）与调用方传入的 order_type（各展示对象取值见 BR-PRICE-06）。报价不持久化。展示（标签、零值、区间、口径说明文案、金额格式）只按 BR-PRICE-06 / 07 / 08 / 17，本条不规定展示。 | 待验证 | UnionAdapter.&lt;platform>.quoteN()；GET /v1/products/{product_key} 预估返利；Agent rebate_quote 卡片；分享面板预估收益；packages/domain quoteRebate() / splitCommission()；配置 tech_fee_bp[platform]；specs/commission-examples.csv；验收：同输入时展示报价 = 入账预估 |
 | BR-CALC-21 | **分账不变量与算例测试**<br>splitCommission() 必须以 fast-check 属性测试断言：每份 ≥ 0；Σ用户份额 ≤ B；平台留存 = B − Σ用户份额；相同输入输出相同；对全程 active 的受益人，多次调整后的份额 = floor(B_final × r)；forfeited 受益人份额恒为 0。specs/commission-examples.csv 必须在 W1 由财务给出 ≥ 20 例并全部作为参数化测试通过。生产每日 01:00 +08:00 校验前一自然日（+08:00）内快照或金额版本有变化的订单：每单 Σ当前应得额 ≤ base_fen；违例时告警，并冻结该订单全部受益人的提现，直至人工解除。 | 已确认 | packages/domain 测试；specs/commission-examples.csv；ledger_invariants.sql；每日 01:00 校验任务；CI 必过检查 |
-| BR-CALC-22 | **规则发布与回滚流程**<br>修改 commission_rules 必须：finance 起草（草稿记录 base_version_id）→ 系统校验 BR-CALC-06 完整性与 BR-CALC-07 上限 → 用试算样本生成差异报告 → super 经 step-up 发布 → 在 effective_from 生效。发布接口校验 publisher_id ≠ drafter_id（super 起草的版本也须由另一名 super 发布）；发布时当前最新已发布版本 ≠ base_version_id 则拒绝，须基于新版本重新试算；下调任一比例时 effective_from ≥ 发布时刻 + 24 小时。已发布版本不可编辑；回滚通过发布新版本实现，未生效版本可按 BR-CALC-11 撤销。所有操作写审计日志。 | 默认假设 | /admin/v1 commission-rules 接口（drafter_id、publisher_id、base_version_id）；后台分佣规则页；audit-logs；验收用例 AC-SET-待编号（参考文档编号 AC-MONEY-014，规划/ 未定义） |
+| BR-CALC-22 | **规则发布与回滚流程**<br>修改 commission_rules 必须：finance 起草（草稿记录 base_version_id）→ 系统校验 BR-CALC-06 完整性（含每个平台的 reserve_bp）与 BR-CALC-07 上限 → 用试算样本生成差异报告（含各平台预留比例与预留金额列） → super 经 step-up 发布 → 在 effective_from 生效。发布接口校验 publisher_id ≠ drafter_id（super 起草的版本也须由另一名 super 发布）；发布时当前最新已发布版本 ≠ base_version_id 则拒绝，须基于新版本重新试算；下调任一比例时 effective_from ≥ 发布时刻 + 24 小时（上调任一平台的 reserve_bp 会降低用户所得，按下调比例处理，同样适用）。已发布版本不可编辑；回滚通过发布新版本实现，未生效版本可按 BR-CALC-11 撤销。所有操作写审计日志。 | 默认假设 | /admin/v1 commission-rules 接口（drafter_id、publisher_id、base_version_id）；后台分佣规则页；audit-logs；验收用例 AC-SET-待编号（参考文档编号 AC-MONEY-014，规划/ 未定义） |
 | BR-CALC-23 | **入账后调整的记账时点与审批**<br>订单入账后（rebate_status=CREDITED）只在两类事件发生时生成调整，且只对差额 ≠ 0 的受益人生成调整行：(a) 联盟结算额写入或变更（orders.settle_commission_fen 按 BR-FUND-09 更新；对应 04 O8）——差额 &lt; 0 的受益人在该次更新的同一事务内立即记负向 SETTLE_ADJUST，不等审批；差额 > 0 的受益人生成补差候选（写入 BR-FUND-09 的 settle_adjust_batches），由 finance 发起、另一名 finance 或 super（≠ 发起人）step-up 复核后记账，驳回则不记账并保留候选与驳回理由。rebate_status 始终保持 CREDITED；该单正差候选全部处理完（批准或驳回）之前记为补差未完成（对应单一 order_status 的 CREDITED），处理完后对应单一 order_status 的 SETTLED。(b) 部分退款 / 部分维权（BR-FUND-01 R9）与佣金下调（R9b：价保、比价降佣、联盟佣金调整；对应 04 O10）——负向调整自动记账，不需审批：部分退款、部分维权写 CLAWBACK（BR-FUND-08）；R9b 在新 B &lt; booked_base_fen 时同事务写负向 SETTLE_ADJUST（sub_type=PRICE_PROTECT / PRICE_COMPARE / SETTLE_DIFF，uniq_key 见 BR-FUND-01 R9b）；正向差额此时不记账，进 BR-FUND-09 候选，由 (a) 在结算时处理（C-27 (g) 默认处理，待财务确认）。 | 待决策 | settlement 补差任务；settle_adjust_batches 表（BR-FUND-09）与后台发起 / 复核页；BR-FUND-01 R9 / R9b / R10；ledger SETTLE_ADJUST / CLAWBACK；订单详情差额展示 |
 | BR-CALC-24 | **分享单的分账**<br>分享单（order_type=share）只按订单归属用户（分享者）分账：分享者份额 = floor(B × r_own_bp / 10000)，r_own_bp 取 BR-CALC-06 中 (platform, 分享者等级, share) 行，入 PROMO 账户；直推份额 = floor(B × r_direct_bp / 10000)，受益人为分享者在 paid_at 时的直接上级，r_direct_bp 取 (platform, 上级等级, share) 行，入 PROMO；所选版本 indirect_enabled=true 时，间推份额 = floor(B × r_indirect_bp / 10000)，受益人为分享者上级的上级，r_indirect_bp 取 (platform, 间推受益人等级, share) 行，入 PROMO（BR-CALC-05）。实际购买者即使也是本 App 用户，也不产生自购份额（每个子订单只有一个归属用户，见 BR-ATTR）。分享者经自己的分享链接下单时按哪种 buy_type 计算由 BR-ATTR 决定；决定之前这类订单按 self 计算并记入 SELF 账户。 | 待决策 | packages/domain splitCommission()（share 分支）；commission_splits.beneficiaries；ledger SHARE_CREDIT / REFERRAL_CREDIT；分享面板预估收益；orders.buy_type（BR-ATTR） |
 | BR-CALC-25 | **联盟未单列补贴类佣金时的处理**<br>某平台订单接口未把补贴类佣金与基础佣金分开返回（BR-CALC-18 无法拆出 subsidy_commission_fen）时，补贴部分是否分给用户由财务决定。决定前：N 整体计入 B，订单照常展示预估，但该平台订单在 settle_commission_fen 为空时不执行 CREDIT_DUE 入账（R5），等联盟结算值到达后再按 BR-CALC-14 入账（入库时置 orders.credit_requires_settle=true，判定同 BR-CALC-15，不使用 hold 字段）；并在 09 表记录该平台'补贴类佣金未单列'。 | 待决策 | 配置 union.&lt;platform>.subsidy_itemized；orders.credit_requires_settle；settlement 入账任务（结算前不入账分支，需并入 BR-FUND-04 入账守卫）；订单详情入账时间文案；规划/09_平台能力验证/（对应 CAP 的结论，按 09 README §0.4 回填） |
 | BR-CALC-26 | **联盟报文金额与比例的换算**<br>联盟报文中的元金额必须按十进制字符串解析为分，禁止 parseFloat 与 Number 运算：小数不超过 2 位时精确换算；超过 2 位时按 floor 取整到分，原字符串保存在 raw_payload 供对账。报文字段为 JSON number 时，必须用保留数字原文的 JSON 解析（如 JSON.parse reviver 的 context.source 或 lossless-json）取得字面值字符串再解析，不得先转成 JS number。百分比字符串（如 '20.00' 表示 20%）同样按十进制字符串换算为 bp，超过 2 位小数时 floor；字段单位（百分比还是万分比）以 09 表验证结论为准。转换函数放在 packages/money：yuanStrToFen()、pctStrToBp()；非法格式（空串、非数字、科学计数法无法精确解析）抛错，订单进待处理表，不得按 0 处理。 | 默认假设 | packages/money yuanStrToFen() / pctStrToBp()；UnionAdapter 报文解析；orders.raw_payload；lint 规则（Adapter 目录同样禁止 parseFloat） |
-| BR-CALC-27 | **每单四段金额与平台预估利润**<br>每个已生成分佣快照的子订单，必须在快照生成时（BR-CALC-10）以及此后每写入一个 commission_split_amounts 新版本时，在同一事务按该版本落四段金额（整数分）：① 联盟佣金总额 n_total_fen = n_base_fen + subsidy_commission_fen（BR-CALC-03 / BR-CALC-18 输出，已扣技术服务费，可为负）；② 基数前扣除 pre_base_deduct_fen = n_total_fen − base_fen（含补贴类佣金、淘礼金扣除 tlj_deduct_fen、负 N 置 0 的部分；不设平台预留比例，见 BR-CALC-02）；③ 分佣基数 base_fen（B）；④ 平台预估利润 platform_est_profit_fen = n_total_fen − 该版本 Σ用户份额 amount_fen（forfeited 为 0，held 仍计入） − tlj_redpacket_fen。tlj_redpacket_fen = 我方淘礼金订单（pid_scene=taolijin）按 BR-CALC-19 的匹配键在 tlj_grants 中匹配到的红包面额，不论 rebate_mode；union.taobao.tlj_n_net_of_redpacket=true 或非我方淘礼金订单为 0；我方淘礼金订单匹配不到时 tlj_redpacket_fen 与 platform_est_profit_fen 记 null，报表显示'待核'，不得按 0 计算。四段金额只用于毛利报表、经营看板与 R1 对账，不参与分账，不向用户展示。 | 待决策 | commission_split_totals（新增，唯一 (order_id, commission_version)，只追加）；orders 冗余当前版本四段金额；毛利报表与经营看板「平台预估利润」；R1 联盟对账；specs/commission-examples.csv |
+| BR-CALC-27 | **每单四段金额与平台预估利润**<br>每个已生成分佣快照的子订单，必须在快照生成时（BR-CALC-10）以及此后每写入一个 commission_split_amounts 新版本时，在同一事务按该版本落四段金额（整数分）：① 联盟佣金总额 n_total_fen = n_base_fen + subsidy_commission_fen（BR-CALC-03 / BR-CALC-18 输出，已扣技术服务费，可为负）；② 基数前扣除 pre_base_deduct_fen = n_total_fen − base_fen（含补贴类佣金、平台预留 reserve_fen、淘礼金扣除 tlj_deduct_fen、负 N 置 0 的部分，见 BR-CALC-02）；③ 分佣基数 base_fen（B）；④ 平台预估利润 platform_est_profit_fen = n_total_fen − 该版本 Σ用户份额 amount_fen（forfeited 为 0，held 仍计入） − tlj_redpacket_fen。tlj_redpacket_fen = 我方淘礼金订单（pid_scene=taolijin）按 BR-CALC-19 的匹配键在 tlj_grants 中匹配到的红包面额，不论 rebate_mode；union.taobao.tlj_n_net_of_redpacket=true 或非我方淘礼金订单为 0；我方淘礼金订单匹配不到时 tlj_redpacket_fen 与 platform_est_profit_fen 记 null，报表显示'待核'，不得按 0 计算。四段金额只用于毛利报表、经营看板与 R1 对账，不参与分账，不向用户展示。 | 待决策 | commission_split_totals（新增，唯一 (order_id, commission_version)，只追加）；orders 冗余当前版本四段金额；毛利报表与经营看板「平台预估利润」；R1 联盟对账；specs/commission-examples.csv |
 
 ### 5.2 细则
 
@@ -62,15 +62,16 @@
 
 #### BR-CALC-02 细则 · 分佣基数 B 的定义
 
-- 状态：待决策（原标默认假设；B 的定义属金额口径、决策人为财务，按 README §0.3 应为待决策）
-- 默认值：B = N_base（− 淘礼金 normal 模式的红包扣除），不设 reserve_bp；平台留存靠 BR-CALC-07 的 8000 上限保证。理由：沿用规划/01 §3 口径与 06 Q-B1 默认，财务 W1 随 ledger-rules.md 签字确认
-- 决策人：财务
+- 状态：待决策（先扣平台预留、按平台设置、按 paid_at 选版本不回溯的机制由负责人 2026-10-01 确认；各平台 reserve_bp 取值待负责人 / 财务在后台设置，随 ledger-rules.md 签字记录）
+- 默认值：B = max(0, floor(N_base × (10000 − reserve_bp) / 10000) − tlj_deduct_fen)；种子版本各平台 reserve_bp = 0，上线前由负责人在后台按平台填写（例：淘宝 1300）
+- 决策人：负责人（机制）；负责人 / 财务（各平台取值）
 - 依赖平台能力：无
 - 取代：
+  - 规划/08 BR-CALC-02 原文（2026-09-30）：「分佣基数 B = max(0, N_base − tlj_deduct_fen)……不再扣除任何平台预留」；原默认值：「不设 reserve_bp；平台留存靠 BR-CALC-07 的 8000 上限保证」
   - PRD修订_后端功能规划 §2.6 / §0.4 B10：「B = N − floor(N × reserve_bp[platform] / 10000)，预留淘宝 15%、京拼唯 10%、抖音 15%、美团饿了么 2%；约束 r_buyer+r_l1+r_l2 ≤ 10000」
   - 参考_花卷云功能查漏底稿 §2 分佣基数：「实际计算佣金 = 联盟预估佣金 × (1 − 平台预留%)」
   - 返利 App PRD v2.1 §11.3：「净佣金 = 结算佣金 × (1 − 平台技术服务费率)（由我方自行乘费率）」
-- 来源：规划/01_需求规划.md §3 分账口径；规划/04_数据模型与契约.md §1 术语表；规划/06_待补信息清单.md Q-B1；PRD修订_后端功能规划 §2.6
+- 来源：docs/changes/20261001-平台预留比例.md；规划/01_需求规划.md §3 分账口径；规划/04_数据模型与契约.md §1 术语表；规划/06_待补信息清单.md Q-B1；PRD修订_后端功能规划 §2.6
 - 需同步修改的规划文档：3 处（计数仅作记录，落点见 README §0.6）
 
 | 阶段 | N_base 取值 |
@@ -79,10 +80,22 @@
 | settle_commission_fen 非空 | 联盟结算收入 `settle_commission_fen`（扣除补贴类佣金后）；预估字段再变只存档 |
 
 - 结算值本身再变（如结算后维权），按 BR-CALC-15 或 BR-FUND-08（R8，对应 04 O9）处理。
-- 例：联盟返回推广者预估收入 14.52 元、无补贴、非淘礼金 → N_base=1452 → B=1452。
-- 平台留存靠 BR-CALC-07 的 8000 上限保证（平台至少留 20%），不再单设 reserve_bp。后端功能规划的 reserve 初始值（淘宝 15%、京拼 10%）如财务仍需要，应折算进各平台的 r_own / r_direct 取值，而不是改公式。
+```
+N_pos       = max(0, N_base)
+after_rsv   = floor(N_pos × (10000 − reserve_bp) / 10000)   // mulDivFloor
+reserve_fen = N_pos − after_rsv                               // 归平台，含取整尾差
+B           = max(0, after_rsv − tlj_deduct_fen)
+```
+
+- 例：联盟返回推广者预估收入 14.52 元、无补贴、非淘礼金，reserve_bp=0 → N_base=1452 → B=1452。
+- 例：N_base=1000、淘宝 reserve_bp=1500 → after_rsv=850、reserve_fen=150 → B=850；分账见 BR-CALC-04 例 4。
+- 例（尾差）：N_base=1452、reserve_bp=1500 → floor(1452×8500/10000)=floor(1234.2)=1234 → reserve_fen=218，B=1234。
+- 例（改预留）：v5 淘宝 reserve_bp=1300，v6 改为 1500、effective_from=2026-10-02T00:00:00+08:00 → paid_at 10-01T23:59:59 的订单按 1300，paid_at 10-02T00:00:00 起按 1500；v5 期间已生成的快照不重算。
+- 维度：每个规则版本对 commission.platforms 中每个平台一个 reserve_bp（缺失拒绝发布，BR-CALC-06）；不按等级、订单类型、个人设置。改预留 = 发布新规则版本（BR-CALC-22），按 paid_at 选版本（BR-CALC-11），不回溯。
+- 快照生成后，入账（BR-CALC-14）、部分退款与结算调整（BR-CALC-09、BR-CALC-15、BR-CALC-23）按新 N_base 重算 B 时，一律用快照中的 reserve_bp，不取新版本的值。
+- 平台最低留存：用户份额合计仍以 B 为基数受 BR-CALC-07 的 8000 上限约束，预留在此之外另归平台。
 - 异常：联盟 N 为负（冲正）→ raw_n_fen 记原值，B=0，各受益人新应得为 0；已入账部分按 BR-CALC-09 求差扣回（流水类型 CLAWBACK / SETTLE_ADJUST 见 BR-FUND-08、BR-FUND-09；B 由 >0 变 0 时入账前走 R6 → VOID、入账后走 R8 → CLAWED_BACK，对应 04 O4 / O9）。负值差额只进 R1 对账，不进分账。
-- 后端功能规划与花卷云底稿要求的「四段金额」（含平台预留）按本条的 B 定义改写，见 BR-CALC-27。
+- 后端功能规划与花卷云底稿要求的「四段金额」中的平台预留计入 BR-CALC-27 的基数前扣除（pre_base_deduct_fen）。后端功能规划的预留初始值（淘宝 15%、京拼 10% 等）与 ≤ 10000 约束不沿用，取值以后台设置为准，上限以 BR-CALC-07 为准。
 - 按 C-01 默认处理（状态名与迁移编号改用 BR-FUND-01），待负责人确认。
 
 #### BR-CALC-03 细则 · 各平台 N 的取数字段
@@ -116,14 +129,14 @@
 - 依赖平台能力：无
 - 取代：
   - PRD修订_后端功能规划 §2.6：「platform = N − buyer − parent_l1 − parent_l2（含预留）；算例 N=1452 → B=1235 → platform=712」
-- 来源：docs/changes/20261001-间推二级奖励.md；规划/01_需求规划.md §3 分账口径；规划/02_系统架构.md §8.3 典型分录；规划/04_数据模型与契约.md §2.2、§2.4；规划/06_待补信息清单.md Q-B1；PRD修订_后端功能规划 §2.6 账户映射
+- 来源：docs/changes/20261001-间推二级奖励.md；docs/changes/20261001-平台预留比例.md；规划/01_需求规划.md §3 分账口径；规划/02_系统架构.md §8.3 典型分录；规划/04_数据模型与契约.md §2.2、§2.4；规划/06_待补信息清单.md Q-B1；PRD修订_后端功能规划 §2.6 账户映射
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
 ```
 own      = floor(B × r_own_bp    / 10000)   // 受益人 = 订单归属用户
 direct   = floor(B × r_direct_bp / 10000)   // 受益人 = 归属用户 paid_at 时的上级
 indirect = enabled ? floor(B × r_indirect_bp / 10000) : 0   // 受益人 = 直推上级 paid_at 时的上级（BR-CALC-05）
-platform = B − own − direct − indirect      // ≥ 0 由 BR-CALC-07 保证
+platform = reserve_fen + (B − own − direct − indirect)   // reserve_fen 见 BR-CALC-02；括号内记 platform_retain_fen，≥ 0 由 BR-CALC-07 保证
 ```
 
 | 例 | B | 类型 | 比例 | 本人 | 直推 | 平台 |
@@ -131,8 +144,10 @@ platform = B − own − direct − indirect      // ≥ 0 由 BR-CALC-07 保证
 | 1 | 1234 | self | 5000/1000 | 617 → SELF | 123 → PROMO | 494 |
 | 2 | 1234 | self，无上级 | 5000/— | 617 | 0 | 617 |
 | 3 | 1 | self | 5000/1000 | 0 | 0 | 1 |
+| 4 | N_base=1000，reserve 1500 → B=850 | self | 5000/1000 | 425 → SELF | 85 → PROMO | 340 + 预留 150 = 490 |
 
-- 上表为间推关闭（indirect_enabled=false）的算例；开启时的算例见 BR-CALC-05。
+- 例 1–3 的 reserve_bp=0（B = N_base）。例 4 中上级为 L2、其 (taobao, L2, self).r_direct_bp=1000，本人 L1 r_own=5000；若本人为 L3 且 r_own=6500 → 本人 floor(850×6500/10000)=552、直推 85、平台 213 + 150 = 363。
+- 上表为间推关闭（indirect_enabled=false）的算例；开启时的算例见 BR-CALC-05（例 4 开启 r_indirect=500 → 间推 floor(42.5)=42，平台 298 + 150 = 448）。
 - 分享单算例见 BR-CALC-24。
 - 角色枚举：`self`、`share`、`direct`、`indirect`；`indirect` 只在所选版本 indirect_enabled=true 时写入（见 BR-CALC-05）。
 - 流水类型：self → REBATE_CREDIT；share → SHARE_CREDIT；direct → REFERRAL_CREDIT（sub_type=DIRECT）；indirect → REFERRAL_CREDIT（sub_type=INDIRECT）（见 BR-FUND）。所得类型与税目见 BR-FUND。
@@ -168,7 +183,7 @@ platform = B − own − direct − indirect      // ≥ 0 由 BR-CALC-07 保证
 - 依赖平台能力：无
 - 取代：
   - PRD修订_后端功能规划 §2.10：「r_buyer 按等级、平台配置，r_l1 不分平台与订单类型」
-- 来源：规划/01_需求规划.md §3、§8.3；规划/06_待补信息清单.md Q-B1；docs/changes/20261001-间推二级奖励.md；返利 App PRD v2.1 §19.1 D5、§19.2 G1；PRD修订_后端功能规划 §12.1 B11
+- 来源：规划/01_需求规划.md §3、§8.3；规划/06_待补信息清单.md Q-B1；docs/changes/20261001-间推二级奖励.md；docs/changes/20261001-平台预留比例.md；返利 App PRD v2.1 §19.1 D5、§19.2 G1；PRD修订_后端功能规划 §12.1 B11
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
 默认种子数据（W1 财务签字前按此开发与测试），commission.platforms = [taobao, jd, pdd]：
@@ -179,10 +194,11 @@ platform = B − own − direct − indirect      // ≥ 0 由 BR-CALC-07 保证
 | taobao / jd / pdd | L1、L2、L3 | share | 5000 | 1000 | 0 |
 
 - 种子版本 indirect_enabled=false，r_indirect_bp 全为 0；开启时的占位比例 500 见 BR-CALC-05。
+- 种子版本 commission_rule_reserves：taobao / jd / pdd 各一行，reserve_bp 均为 0；上线前由负责人在后台按平台填写新版本（BR-CALC-02）。
 
-- 同一版本内 3 平台 × 3 等级 × 2 类型 = 18 行必须齐全。
+- 同一版本内 3 平台 × 3 等级 × 2 类型 = 18 行比例 + 3 行预留必须齐全。
 - 例：(pdd, L2, self) 订单，归属用户 L2 → r_own 取 (pdd, L2, self).r_own_bp=5000；上级 L1 → r_direct 取 (pdd, L1, self).r_direct_bp=1000。
-- 美团（P1，D15）接入前先把 meituan 加入 commission.platforms，并补齐 6 行，否则新版本发布被拒。
+- 美团（P1，D15）接入前先把 meituan 加入 commission.platforms，并补齐 6 行比例与 1 行预留，否则新版本发布被拒。
 
 #### BR-CALC-07 细则 · 比例合计上限校验
 
@@ -246,7 +262,7 @@ platform = B − own − direct − indirect      // ≥ 0 由 BR-CALC-07 保证
   - 规划/04_数据模型与契约.md §3.2：「commission_splits 首次入库时生成，不可修改（未含 account_type、状态、平台留存）」
   - 规划/04_数据模型与契约.md §4.1 O2：「PLATFORM_PAID → PAID，副作用：生成分佣快照（无'已归因'条件）」
   - PRD修订_后端功能规划 §2.5 第 6 步：「订单首次入库且已归因时写快照并落四段金额（N、预留、B、平台利润）」
-- 来源：规划/01_需求规划.md §3；规划/02_系统架构.md §5.2；规划/04_数据模型与契约.md §3.2、§4.1 O1/O2/O11；PRD修订_后端功能规划 §2.5、§3.1
+- 来源：规划/01_需求规划.md §3；规划/02_系统架构.md §5.2；规划/04_数据模型与契约.md §3.2、§4.1 O1/O2/O11；docs/changes/20261001-平台预留比例.md；PRD修订_后端功能规划 §2.5、§3.1
 - 需同步修改的规划文档：5 处（计数仅作记录，落点见 README §0.6）
 
 | 场景（platform_status / rebate_status） | 快照时点 |
@@ -259,7 +275,7 @@ platform = B − own − direct − indirect      // ≥ 0 由 BR-CALC-07 保证
 | 首次入库即失效（platform_status=INVALID） | 不生成 |
 
 存储：
-- `commission_splits`（唯一 order_id = orders.id，只写一次）：rule_version_id、order_type、activity_type、rebate_mode（none/normal，非淘礼金为 null）、paid_at、paid_at_source、raw_n_fen、subsidy_commission_fen、tlj_deduct_fen、base_fen、platform_retain_fen（生成时值）、beneficiaries[user_id, role, account_type, ratio_bp, level, initial_status, forfeit_reason]、created_at。
+- `commission_splits`（唯一 order_id = orders.id，只写一次）：rule_version_id、order_type、activity_type、rebate_mode（none/normal，非淘礼金为 null）、paid_at、paid_at_source、raw_n_fen、subsidy_commission_fen、reserve_bp（所选版本该平台的预留比例，不可改）、reserve_fen（生成时值）、tlj_deduct_fen、base_fen、platform_retain_fen（生成时值）、beneficiaries[user_id, role, account_type, ratio_bp, level, initial_status, forfeit_reason]、created_at。
 - `commission_split_amounts(order_id, commission_version, user_id, role, base_fen, amount_fen, created_at)`：唯一 (order_id, commission_version, user_id, role)，只追加不更新；快照生成时写 commission_version=1 的行；当前应得额取最大 commission_version 的行；该版本平台留存 = base_fen − Σamount_fen。
 - `commission_split_beneficiary_events(order_id, user_id, role, status ∈ {active, held, forfeited}, reason, created_at)`：只追加；当前状态取最后一条。
 - 重放同一订单事件不得重建快照（唯一约束 order_id）。
@@ -426,7 +442,7 @@ platform = B − own − direct − indirect      // ≥ 0 由 BR-CALC-07 保证
 - 需同步修改的规划文档：4 处（计数仅作记录，落点见 README §0.6）
 
 - 默认例：N=500、红包 300 → 本人 0、直推 0、平台 500（红包 300 已从预算付出，净 200）。
-- normal 例（tlj_n_net_of_redpacket=false）：N=500、红包 300 → B=200 → 本人 100、直推 20、平台 80。
+- normal 例（tlj_n_net_of_redpacket=false，reserve_bp=0）：N=500、红包 300 → B=200 → 本人 100、直推 20、平台 80。淘宝 reserve_bp=1500 时 → floor(500×8500/10000)=425 → B=125 → 本人 62、直推 12、平台 51 + 预留 75。
 - normal 例（tlj_n_net_of_redpacket=true）：N=200（联盟已扣）→ tlj_deduct_fen=0 → B=200。
 - rebate_mode 与 tlj_deduct_fen 随快照冻结（BR-CALC-10）；商品池改配置不影响已生成快照。
 
@@ -437,21 +453,21 @@ platform = B − own − direct − indirect      // ≥ 0 由 BR-CALC-07 保证
 - 决策人：负责人
 - 依赖平台能力：各平台技术服务费率 tech_fee_bp[platform]（待核实）；三家商品接口佣金率字段是否已扣技术服务费、是否含补贴类佣金；淘宝 promotion_type=1/2、京东 PLUS、拼多多自购的报价口径差异（CAP-TB-04、CAP-JD-04、CAP-PDD-04）
 - 取代：无
-- 来源：PRD修订_后端功能规划 §2.6 一个函数三处用；参考_花卷云功能查漏底稿 §2 游客佣金展示；规划/04_数据模型与契约.md §5 rebate_quote；规划/09_平台能力验证/2_TB_淘宝.md CAP-TB-04、3_JD_京东.md CAP-JD-04、4_PDD_拼多多.md CAP-PDD-04
+- 来源：docs/changes/20261001-平台预留比例.md；PRD修订_后端功能规划 §2.6 一个函数三处用；参考_花卷云功能查漏底稿 §2 游客佣金展示；规划/04_数据模型与契约.md §5 rebate_quote；规划/09_平台能力验证/2_TB_淘宝.md CAP-TB-04、3_JD_京东.md CAP-JD-04、4_PDD_拼多多.md CAP-PDD-04
 
 **公式**（规划/01 §3 分账口径；D8 见规划/00 §3.2）：
 ```
 gross   = floor(final_price_fen × rate_bp / 10000)
 fee     = floor(gross × tech_fee_bp[platform] / 10000)
 N_quote = gross − fee
-B_quote = N_quote                              // 是否扣 reserve_bp 以 BR-CALC-02 为准（当前不扣）
+B_quote = floor(N_quote × (10000 − reserve_bp[platform]) / 10000)   // BR-CALC-02；reserve_bp 取报价时刻生效版本
 本人份额 = floor(B_quote × r_own_bp / 10000)   // r_own_bp 取 commission_rules[platform][level][order_type]（BR-CALC-06；别名 r_self_bp，C-29）
 ```
 - tech_fee_bp[platform] 为配置项，取值待核实；若 CAP-TB-04 / CAP-JD-04 / CAP-PDD-04 实测佣金率字段已扣技术服务费，该平台 tech_fee_bp 配 0，不得重复扣。
-- **例**（参数只作示意；淘宝技术服务费率待核实）：final_price_fen=2990，rate 2000bp，tech_fee_bp 1000 → gross=598 → fee=floor(598×1000/10000)=59 → N_quote=539 → B_quote=539 → r_own_bp 5000 → floor(539×5000/10000)=269。
-- **备选口径（仅供 BR-CALC-02 决策对比，不实现）**：B = N − floor(N × 1500/10000) = 539 − 80 = 459 → floor(459×5000/10000)=229。两种口径同输入差 40 分。
-- 例：游客看 N_quote=1000 的淘宝商品 → 按 L1 self 5000 → 本人份额 500；登录 L2 用户同商品若 r_own=5500 → 550。
-- 例：报价时 v2（5000），用户在 v3（4500）生效后付款 → 快照按 v3，订单预估 450；报价 500 不持久化、不参与订单侧任何计算。
+- **例**（参数只作示意；淘宝技术服务费率待核实）：final_price_fen=2990，rate 2000bp，tech_fee_bp 1000 → gross=598 → fee=floor(598×1000/10000)=59 → N_quote=539 → reserve_bp 0（种子）→ B_quote=539 → r_own_bp 5000 → floor(539×5000/10000)=269。
+- **例**（淘宝 reserve_bp=1500）：同上 N_quote=539 → B_quote=floor(539×8500/10000)=458 → floor(458×5000/10000)=229；订单按同一版本、同一 N 入账时本人份额同为 229。
+- 例：游客看 N_quote=1000 的淘宝商品（reserve_bp=0）→ 按 L1 self 5000 → 本人份额 500；登录 L2 用户同商品若 r_own=5500 → 550。
+- 例：报价时 v2（5000），用户在 v3（4500）生效后付款 → 快照按 v3，订单预估 450；报价 500 不持久化、不参与订单侧任何计算。预留比例变化同理：报价按报价时刻版本的 reserve_bp，订单按 paid_at 版本。
 - 例：B 很小导致本人份额 0，或淘礼金默认模式（BR-CALC-19）→ 本条输出 0；展示按 BR-PRICE-08。
 - 金额展示格式、零值、比价区间与口径说明文案只按 BR-PRICE-06 / 07 / 08 / 17（金额格式 BR-TEXT-10）；比价订单的订单侧计算见 BR-CALC-16；三平台自购 / 分享口径见 BR-CALC-17。
 - 价格口径、取价时间见 BR-PRICE；AI 金额必须来自该函数输出，见 BR-AI。
@@ -467,6 +483,7 @@ B_quote = N_quote                              // 是否扣 reserve_bp 以 BR-CA
 
 csv 至少覆盖：B=1234 自购（617/123/494）、B=2000 分享（1000/200/800）、B=1、B=0、N 为负、无上级、上级注销（forfeited）、入账时本人 banned、入账时本人 frozen（held）、淘礼金默认、淘礼金 normal、部分退款（按件 / 按金额）、结算下调、结算上调、比价订单、预售、跨版本边界（paid_at = effective_from）、跨等级边界、拼多多自购报价。
 - 间推（BR-CALC-05）另加属性：indirect_enabled=false 时无 indirect 受益人；Σ用户份额 ≤ B（含 indirect）；受益人深度 ≤ 2。csv 补间推开启、间推缺层、间推受益人失效三例。
+- 平台预留（BR-CALC-02）另加属性：reserve_fen ≥ 0；B 未被截为 0 时 Σ用户份额 + platform_retain_fen + reserve_fen + tlj_deduct_fen = max(0, N_base)；reserve_bp=0 时 B 与不扣预留的结果相同。csv 补 reserve_bp 非 0（含 N_base=1000、1500 → B=850）与报价 = 入账同值两例。
 - 同一 (order_id, 受益人, 角色) 首次入账最多 1 次（BR-FUND-19 不变量 ③）。
 - csv 另需覆盖 BR-CALC-27 四段金额算例（普通、补贴、淘礼金 none / normal、负 N）。
 - 「冻结该订单全部受益人的提现」的记录方式按 C-09 默认处理：写 withdraw_holds（reason=ledger_mismatch，BR-WDR-05、BR-FUND-19），提现申请按其错误码返回，待财务确认。reason 取值按 C-20 统一（后台显示名 LEDGER_MISMATCH；withdraw_holds 定义只在 BR-WDR-05）。
@@ -478,12 +495,14 @@ csv 至少覆盖：B=1234 自购（617/123/494）、B=2000 分享（1000/200/800
 - 决策人：财务
 - 依赖平台能力：无
 - 取代：无
-- 来源：规划/04_数据模型与契约.md §11；PRD修订_后端功能规划 §1.6 资金配置、§2.10、§10.1 AC-MONEY-014
+- 来源：规划/04_数据模型与契约.md §11；docs/changes/20261001-平台预留比例.md；PRD修订_后端功能规划 §1.6 资金配置、§2.10、§10.1 AC-MONEY-014
 - 需同步修改的规划文档：1 处（计数仅作记录，落点见 README §0.6）
 
-- 试算样本 = paid_at ∈ [发布申请时刻 − 7 天, 发布申请时刻) 且已生成快照的订单；报告对比现行版本与草稿的本人份额、直推份额、间推份额、平台留存合计。
+- 试算样本 = paid_at ∈ [发布申请时刻 − 7 天, 发布申请时刻) 且已生成快照的订单；报告对比现行版本与草稿的各平台 reserve_bp、预留金额、本人份额、直推份额、间推份额、平台留存合计。
 - 草稿 indirect_enabled=true 时，发布前另需一名非起草人的 finance 审批（第二人审批），见 BR-CALC-05。
 - 例：财务把 taobao/L1/self 从 5000 改为 4500，试算报告显示近 7 天 1,000 单本人份额合计下降约 10%，附在审批单；另一名 super 发布，发布时刻 2026-10-30T10:00+08:00，effective_from=2026-11-01T00:00:00+08:00（满足 ≥ +24 小时）。
+- 例：负责人把淘宝 reserve_bp 从 1300 改为 1500（其他不变），属于降低用户所得 → effective_from ≥ 发布时刻 + 24 小时；改之前付款的订单仍按 1300（BR-CALC-11）。下调 reserve_bp 不受 24 小时限制，只需 effective_from ≥ 发布时刻。
+- 草稿缺任一平台 reserve_bp、或 reserve_bp 不在 0–10000 → 校验失败，不生成试算、不允许发布。
 - effective_from 早于发布时刻 → 拒绝（禁止回溯）。
 - 试算报告生成失败 → 不允许发布。
 
@@ -560,23 +579,24 @@ csv 至少覆盖：B=1234 自购（617/123/494）、B=2000 分享（1000/200/800
 #### BR-CALC-27 细则 · 每单四段金额与平台预估利润
 
 - 状态：待决策
-- 默认值：四段 = 联盟佣金总额、基数前扣除（不设平台预留比例）、B、平台预估利润；利润扣除我方淘礼金红包面额（理由：沿用后端功能规划与花卷云底稿「每单落四段金额」的需求，但按本主题 B 的定义（BR-CALC-02 不扣预留）改写；利润扣红包面额使淘礼金 none / normal 两种模式口径一致，与 BR-CALC-19「净 200」算例一致；利润口径属金额口径，需财务确认）
+- 默认值：四段 = 联盟佣金总额、基数前扣除（含平台预留金额）、B、平台预估利润；利润扣除我方淘礼金红包面额（理由：沿用后端功能规划与花卷云底稿「每单落四段金额」的需求，按本主题 B 的定义（BR-CALC-02 先扣预留）改写；利润扣红包面额使淘礼金 none / normal 两种模式口径一致，与 BR-CALC-19「净 200」算例一致；利润口径属金额口径，需财务确认）
 - 决策人：财务
 - 依赖平台能力：无（n_base_fen、subsidy_commission_fen 的取数依赖见 BR-CALC-03、BR-CALC-18；tlj_n_net_of_redpacket 依赖见 BR-CALC-19）
 - 取代：
   - 参考_花卷云功能查漏底稿 §2 分佣基数、§16 #1：「每单落库四个金额：预估佣金、平台预留、实际计算佣金、平台预估利润；实际计算佣金 = 联盟预估佣金 × (1 − 平台预留%)」
   - PRD修订_后端功能规划 §2.5 第 6 步：「订单首次入库且已归因时落四个金额：联盟预估佣金 N、平台预留、可分配基数 B、平台预估利润」
-- 来源：参考_花卷云功能查漏底稿 §2、§16 #1；PRD修订_后端功能规划 §2.5 第 6 步、§13.2 易漏项 #1、经营看板（平台预估利润）
+- 来源：docs/changes/20261001-平台预留比例.md；参考_花卷云功能查漏底稿 §2、§16 #1；PRD修订_后端功能规划 §2.5 第 6 步、§13.2 易漏项 #1、经营看板（平台预估利润）
 
 | 字段（整数分） | 定义 | 时点 |
 |---|---|---|
 | n_total_fen | n_base_fen + subsidy_commission_fen（已扣技术服务费，可为负） | 快照生成时与每个新 commission_version |
-| pre_base_deduct_fen | n_total_fen − base_fen | 同上 |
+| pre_base_deduct_fen | n_total_fen − base_fen（含该版本 reserve_fen，按快照 reserve_bp 计算） | 同上 |
 | base_fen | B（BR-CALC-02） | 同上 |
 | platform_est_profit_fen | n_total_fen − Σ该版本用户份额 − tlj_redpacket_fen；可为负 | 同上 |
 
 - 存储：`commission_split_totals(order_id, commission_version, n_total_fen, pre_base_deduct_fen, base_fen, user_share_total_fen, tlj_redpacket_fen, platform_est_profit_fen, created_at)`，唯一 (order_id, commission_version)，只追加；orders 冗余当前版本值供报表查询。
-- 例（普通单）：n_base 1234、补贴 0、5000/1000 → ① 1234 ② 0 ③ 1234，用户 617+123=740，④ 494。
+- 例（普通单）：n_base 1234、补贴 0、reserve_bp 0、5000/1000 → ① 1234 ② 0 ③ 1234，用户 617+123=740，④ 494。
+- 例（平台预留）：n_base 1000、补贴 0、reserve_bp 1500、5000/1000 → ① 1000 ② 150 ③ 850，用户 425+85=510，④ 490。
 - 例（补贴，BR-CALC-18）：n_base 800、补贴 200 → ① 1000 ② 200 ③ 800，用户 400+80，④ 520。
 - 例（我方淘礼金 none，BR-CALC-19）：N=500、红包 300 → ① 500 ② 0 ③ 500，用户 0，④ 500−0−300=200。
 - 例（我方淘礼金 normal，tlj_n_net_of_redpacket=false）：N=500、红包 300 → ① 500 ② 300 ③ 200，用户 100+20，④ 500−120−300=80。

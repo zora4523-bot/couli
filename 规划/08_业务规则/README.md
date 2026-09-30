@@ -122,6 +122,7 @@
 | 其余引用 09 的条目 | 规划/09 各 CAP 行的通过标准、未知项与降级列 | 未核对：按本节第 2 条的核对方法逐条检查 09 平台文件，发现不一致在此登记 |
 | BR-AI-07 | 规划/04 §8.5 补 list_my_orders / explain_order 入参出参（按 BR-AI-07 细则「订单类工具契约」）；BR-TEXT-05、BR-TEXT-02 映射表各加 summary 列；BR-TEXT 字典补 order_list.empty、agent.order.lookup_limited | 部分落实：04 §8.5 已补 list_my_orders / explain_order 入参出参（2026-10-01）；12_TEXT 未出现 summary 列与上述两个字典键 |
 | BR-CALC-05、BR-CALC-04/06/07/12/13/24、BR-INV-12/13/14/20、BR-FUND-15、BR-TEXT-19（D8 2026-10-01 变更，`docs/changes/20261001-间推二级奖励.md`） | 规划/00 §3.2 D8、§4、§6；规划/04 commission_rules / commission_rule_versions、beneficiaries.role、ledger sub_type、后台规则发布接口；规划/01 §3、F-INV、F-ADM；规划/05 B2、F1 任务与 §9；规划/06 Q-B1、Q-F5；规划/10 S2 间推用例 | 已落实（2026-10-01） |
+| BR-CALC-02/04/06/10/19/20/21/22/27、BR-PRICE-06、BR-FUND-05（平台预留比例 2026-10-01 变更，`docs/changes/20261001-平台预留比例.md`） | 规划/04 §1 术语表、commission_rule_reserves、commission_splits.reserve_bp / reserve_fen、后台规则发布接口；规划/01 §3、F-ADM 分佣规则页；规划/02、07 预留相关行；规划/05 B2、F1 任务与 §9；规划/06 Q-B1、B10；规划/10 S2 预留用例；规划/00 修订行 | 已落实（2026-10-01） |
 | BR-ATTR-26 | 无单列清单（原写「随第 16 节统一补登」） | 已落实：01 F-ORD-12、02 §7.3 归因流水线、04 §2.3 BLACKLIST 行均已引用 |
 
 ---
@@ -160,8 +161,9 @@
 | 外跳路径 | 点击购买后从 App 跳到平台下单的首选与降级路径（按平台 × 端 × 是否已安装平台 App），验证前为条件项 | BR-ATTR-27、BR-TEXT-14 |
 | 四个时间窗口 | 点击有效期 W_click、链接 URL 有效期 W_link、来源回填窗口 W_backfill、找回窗口 W_claim，互不混用 | BR-ATTR-13 |
 | 预估佣金 / N | 联盟口径推广者收入（已扣技术服务费、不含补贴类佣金），付款后可能变化 | BR-CALC-02、BR-CALC-03 |
-| 基数 B | 分佣基数 = max(0, N_base − 淘礼金扣除)；**不扣平台预留**（后端功能规划的 B 扣预留，含义不同） | BR-CALC-02 |
-| 平台留存 | B − Σ 用户份额，承接全部舍入尾差 | BR-CALC-04、BR-CALC-08 |
+| 基数 B | 分佣基数 = max(0, 扣除平台预留后的 N_base − 淘礼金扣除)；预留比例按平台在规则版本中设置（2026-10-01 起） | BR-CALC-02 |
+| 平台预留比例 | reserve_bp，每个规则版本对每个平台一个值（0–10000），先从 N_base 扣除归平台；按 paid_at 选版本、不回溯 | BR-CALC-02、BR-CALC-06 |
+| 平台留存 | B − Σ 用户份额（platform_retain_fen），承接全部舍入尾差；平台合计另加预留金额 reserve_fen | BR-CALC-04、BR-CALC-08 |
 | 分佣快照 | 订单首次归属到用户时冻结的比例、受益人与规则版本；此后只追加金额版本与受益人状态 | BR-CALC-10（生成时点另见 §14.3 C-06） |
 | 入账 | 返利进入用户可用余额的记账动作（确认收货满等待期、无维权、无 hold） | BR-FUND-04、BR-FUND-05 |
 | 扣回 | 入账后逆向事件导致的负向记账，允许余额为负 | BR-FUND-08 |
