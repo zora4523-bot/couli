@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 仓库性质
 
-这是返利 App「凑狸」（iOS / Android / 鸿蒙三端原生壳 + 共用 H5 + Agent 找货）的**规划与设计仓库**，目前没有代码，也没有构建、lint、测试命令。工作内容是维护中文 Markdown 规划文档和 `design/` 下的品牌素材。
+这是返利 App「凑狸」（iOS / Android / 鸿蒙三端原生壳 + 共用 H5 + Agent 找货）的**规划与设计仓库**，尚无正式 App / 后端工程。当前包含中文 Markdown 规划、`design/` 品牌素材与静态交互预览，以及 `scripts/sync-brand.py` 品牌生成 / 校验工具；命令和入口见根目录 `README.md`。
 
 - 仓库是**公开**的（GitHub `zora4523-bot/couli`）。不要放未公开方案、商标申请材料、合同、密钥或真实个人信息。
 - `.gitignore` 排除了花卷云原始资料（`01_开发文档与前端能力 (1).md`、`02_服务端接口明细 (1).md`、`后台功能明细.zip`），它们只留在本地，不要提交。
-- `.git/config` 设置了 `core.hooksPath=.githooks`，但目录目前不存在，所以没有提交钩子在运行。
+- `.git/config` 设置了 `core.hooksPath=.githooks`；已恢复的 `.githooks/pre-commit` 会用 gitleaks 检查暂存区，提交时不得绕过。
 - 提交信息沿用 `docs: ...` 风格（约定式前缀 + 英文摘要）。
 - 与负责人沟通（回复、总结、提问）一律用中文。
 - 改变已确认决定或资金口径的变更记录放在 `docs/changes/<YYYYMMDD>-<主题>.md`（00 §8），写明内容、涉及的 BR、受影响的页面与接口、验收与恢复方式，再同步到各规划文档。
@@ -59,3 +59,5 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## design/
 
 品牌素材交付目录，清单与截止日期在 `design/README.md`，每个子目录的 README 写明格式和尺寸。文件名用英文小写加短横线；多版本加日期后缀，旧版移入 `_archive/`。任何素材不得包含淘宝、天猫、京东、拼多多、美团等平台商标或近似元素（平台来源小图标只放 `icons/platform/`）。设计令牌（`tokens/`）和线框（`wireframes/`）由 Claude 根据 `colors/colors.md` 与 `references/` 生成。
+
+根目录 `brand.config.json` 统一登记资源路径与颜色角色；数值唯一源为 `design/tokens/design-tokens.json`。`design/tokens/foundations.css` 维护基础控件样式，`scripts/sync-brand.py` 生成 `design/tokens/variables.css` 与 `design/brand/brand-config.js`，不要手改这两份生成物。修改后运行 `python3 scripts/sync-brand.py` 和 `python3 scripts/sync-brand.py --check`，并验证受影响的预览界面。三端与 H5 后续接入见 `docs/brand-integration.md`，不能把预览已接入写成原生工程已完成。

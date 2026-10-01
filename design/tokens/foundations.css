@@ -1,0 +1,93 @@
+/* Optional foundations: opt in with these classes; no global element reset. */
+.couli-touch-target {
+  min-inline-size: var(--interaction-target-minimum);
+  min-block-size: var(--interaction-target-minimum);
+}
+
+.couli-button-primary {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--component-button-gap);
+  min-inline-size: var(--interaction-target-minimum);
+  min-block-size: var(--component-button-min-height);
+  padding: var(--component-button-padding-block) var(--component-button-padding-inline);
+  border: 0;
+  border-radius: var(--radius-button);
+  background: var(--color-button-primary-default-background);
+  color: var(--color-button-primary-default-text);
+  font-family: var(--font-family-system);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--font-line-height-body);
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.couli-button-primary:active:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--color-button-primary-pressed-background);
+  color: var(--color-button-primary-pressed-text);
+}
+
+.couli-button-primary:disabled,
+.couli-button-primary[aria-disabled="true"] {
+  background: var(--color-button-primary-disabled-background);
+  color: var(--color-button-primary-disabled-text);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.couli-control {
+  box-sizing: border-box;
+  min-inline-size: var(--interaction-target-minimum);
+  min-block-size: var(--component-control-min-height);
+  border: var(--component-control-border-width) solid var(--color-border-control);
+  border-radius: var(--radius-button);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-background-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-system);
+  font-size: var(--font-size-body);
+  line-height: var(--font-line-height-body);
+}
+
+.couli-control::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 1;
+}
+
+.couli-button-primary:focus-visible,
+.couli-control:focus-visible,
+.couli-touch-target:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+@media (forced-colors: active) {
+  .couli-button-primary {
+    border: var(--component-control-border-width) solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+  .couli-control {
+    border-color: ButtonText;
+    background: Field;
+    color: FieldText;
+  }
+  .couli-control::placeholder {
+    color: GrayText;
+  }
+  .couli-button-primary:disabled,
+  .couli-button-primary[aria-disabled="true"] {
+    border-color: GrayText;
+    color: GrayText;
+  }
+  .couli-button-primary:focus-visible,
+  .couli-control:focus-visible,
+  .couli-touch-target:focus-visible {
+    outline-color: Highlight;
+  }
+}

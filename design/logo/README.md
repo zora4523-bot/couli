@@ -1,6 +1,6 @@
 # 凑狸 Logo · 环尾
 
-2026-10-01 第二版设计提案（按 Claude Code 评审修订）。品牌中文名沿用已确认的「凑狸」。
+2026-10-01 第二版设计（按 Claude Code 评审修订），已按本轮要求作为当前项目的品牌基线采用。品牌中文名沿用已确认的「凑狸」；资源统一入口见根目录 [brand.config.json](../../brand.config.json)，页面与跨端接入见 [接入指南](../../docs/brand-integration.md)。
 
 ![品牌概览](../brand/brand-overview.png)
 

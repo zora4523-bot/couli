@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "couli.brand.v1",
+  "identity": {
+    "name": "凑狸",
+    "projectId": "couli",
+    "englishName": null,
+    "tagline": null
+  },
+  "assets": {
+    "logoMark": "design/logo/source/logo-mark.svg",
+    "logoHorizontal": "design/logo/source/logo-horizontal.svg",
+    "logoVertical": "design/logo/source/logo-vertical.svg",
+    "logoMono": "design/logo/source/logo-mark-mono.svg",
+    "logoInverse": "design/logo/source/logo-mark-inverse.svg",
+    "logoHorizontalInverse": "design/logo/source/logo-horizontal-inverse.svg",
+    "logoVerticalInverse": "design/logo/source/logo-vertical-inverse.svg",
+    "iconDefault": "design/app-icon/icon-default.svg",
+    "iconDark": "design/app-icon/icon-dark.svg",
+    "iconTinted": "design/app-icon/icon-tinted.svg",
+    "iconPng": "design/app-icon/icon-1024.png",
+    "iconForeground": "design/app-icon/icon-foreground.png",
+    "iconBackground": "design/app-icon/icon-background.png",
+    "iconMonochrome": "design/app-icon/icon-monochrome.png"
+  },
+  "tokens": {
+    "source": "design/tokens/design-tokens.json",
+    "css": "design/tokens/variables.css",
+    "foundations": "design/tokens/foundations.css"
+  },
+  "semantics": {
+    "brandPrimary": "color.brand.primary",
+    "brandEmphasis": "color.brand.emphasis",
+    "canvas": "color.background.canvas",
+    "surface": "color.background.surface",
+    "textPrimary": "color.text.primary",
+    "textSecondary": "color.text.secondary",
+    "link": "color.text.link",
+    "price": "color.price.text",
+    "pendingText": "color.status.pending.text",
+    "pendingBackground": "color.status.pending.background",
+    "successText": "color.status.success.text",
+    "successBackground": "color.status.success.background",
+    "warningText": "color.status.warning.text",
+    "warningBackground": "color.status.warning.background",
+    "errorText": "color.status.error.text",
+    "errorBackground": "color.status.error.background",
+    "primaryAction": "color.button.primary.default.background",
+    "primaryActionText": "color.button.primary.default.text",
+    "controlBorder": "color.border.control",
+    "focusRing": "color.focus.ring"
+  },
+  "preview": {
+    "entry": "design/brand/index.html",
+    "browserConfig": "design/brand/brand-config.js"
+  },
+  "documentation": {
+    "logo": "design/logo/README.md",
+    "colors": "design/colors/colors.md",
+    "tokens": "design/tokens/README.md",
+    "appIcon": "design/app-icon/README.md",
+    "integration": "docs/brand-integration.md"
+  }
+}

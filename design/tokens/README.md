@@ -1,14 +1,23 @@
 # 凑狸设计令牌
 
-版本：2026-10-01 / revised proposal v0.2.0，供品牌与交互评审及后续实现使用，尚未最终品牌验收。语义依据见 [品牌色](../colors/colors.md)；覆盖规划/03 §10.1 的颜色、六级字号、间距、圆角与阴影，并补充焦点、主按钮状态及触控命中区。
+版本：2026-10-01 / project baseline v0.2.0。现有设计值作为项目当前采用基线；这次接入整理不改变数值，也不代表原生或真机验收完成。根配置入口见 [brand.config.json](../../brand.config.json)，完整维护与接入流程见 [品牌接入](../../docs/brand-integration.md)。语义说明见 [品牌色](../colors/colors.md)；覆盖规划/03 §10.1 的颜色、六级字号、间距、圆角与阴影，并补充焦点、主按钮状态及触控命中区。
 
 ## 文件与主题
 
 - `design-tokens.json`：机器可读的唯一数值源，采用本仓库明确记录的 `couli.tokens.v1` 结构。
-- `variables.css`：同一组值的 H5 消费文件；颜色、间距等映射为 CSS 自定义属性，包含可选的 `.couli-button-primary`、`.couli-control`、`.couli-touch-target` 基础样式。
+- `variables.css`：自动生成的 H5 消费文件；颜色、间距等映射为 CSS 自定义属性，并追加 `foundations.css` 的基础样式。消费端只需加载这一份 CSS，禁止手改。
+- `foundations.css`：手写基础样式源，提供可选的 `.couli-button-primary`、`.couli-control`、`.couli-touch-target`；修改样式后重新生成消费 CSS，不复制品牌色值。
+- `../brand/brand-config.js`：由根配置和令牌源生成的浏览器消费配置；与生成 CSS 一起供品牌展示页使用，禁止手改。
 - 当前只交付浅色 UI，`metadata.theme = "light"`、`color-scheme: only light`；深色 UI 为 P1。图标的深色外观版本不代表 App 内已支持深色主题。
 
-代码仓库建立后把 JSON 复制至 `contracts/design-tokens.json`，由三端与 H5 生成各自的资源；本规划仓库没有自动生成器或运行时主题包。调整配色时先修改 JSON，再同步 CSS 与 `colors/colors.md` 的计算记录，不能只改单端值。
+本仓库已有 `scripts/sync-brand.py`，从根配置定位源文件，生成 CSS 与浏览器配置；它使用 Python 标准库，不是运行时主题服务，也不生成三端原生资源。调整数值先修改 JSON，并同步版本、语义说明及 `colors/colors.md` 中受影响的对比度记录，再在仓库根目录运行：
+
+```sh
+python3 scripts/sync-brand.py
+python3 scripts/sync-brand.py --check
+```
+
+`--check` 只读检查生成物漂移。未来代码仓库的 `contracts/design-tokens.json` 接收固定版本快照，并保留令牌版本与 `SPEC_REF` 的来源关系；各端通过契约版本生成资源，不手工维护第二套数值。具体规划路径、`contract.lock` 与当前已接入范围见 [品牌接入 §4](../../docs/brand-integration.md#4-后续代码工程的接入位置)。
 
 ## JSON 结构与转换约定
 

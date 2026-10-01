@@ -4,11 +4,11 @@
     "name": "凑狸",
     "version": "0.2.0",
     "date": "2026-10-01",
-    "status": "revised proposal",
+    "status": "project baseline",
     "theme": "light",
     "darkThemePhase": "P1",
     "colorSpace": "sRGB",
-    "description": "根据独立评审修订的品牌与界面提案，尚未最终品牌验收；App 图标外观变体独立于 UI 主题。",
+    "description": "当前项目使用的品牌与界面基线；已应用于根目录品牌配置、交付素材与品牌预览，不代表原生接入、Icon Composer 或真机验收完成。App 图标外观变体独立于 UI 主题。",
     "cssFontBase": 16,
     "sources": [
       "https://developer.apple.com/design/human-interface-guidelines/color",
