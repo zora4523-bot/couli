@@ -1,0 +1,25 @@
+# gitleaks 配置：在默认规则之上，补中文文档里常见的密钥写法
+# （中文冒号、Markdown 表格、「密钥 / 私钥 / 密码」等关键词）。
+[extend]
+useDefault = true
+
+[[rules]]
+id = "cn-doc-secret"
+description = "中文文档中的密钥值（关键词后紧跟长随机串）"
+regex = '''(?i)(secret|app_?key|token|password|passwd|密钥|私钥|秘钥|密码|口令)[^\n]{0,20}?[\s:：=|"'`]+([A-Za-z0-9+/_\-]{16,})'''
+secretGroup = 2
+entropy = 3.5
+keywords = ["secret", "appkey", "app_key", "token", "password", "passwd", "密钥", "私钥", "秘钥", "密码", "口令"]
+
+[[rules.allowlists]]
+description = "占位符"
+regexTarget = "match"
+regexes = ['''<[A-Z_]+>''']
+
+[[rules.allowlists]]
+description = "不含数字的串、全小写的路径 / 字段名 / 配置键（真实密钥通常大小写与数字混排）"
+regexes = [
+  '''^[^0-9]+$''',
+  '''^[a-z0-9_.\-/]+$''',
+  '''^(evidence|fixtures|specs|contracts|tools|docs|packages|apps|acceptance)/''',
+]

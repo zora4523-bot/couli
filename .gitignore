@@ -7,3 +7,21 @@
 
 # 本地浏览器验收会话与截图日志
 .playwright-cli/
+
+# 密钥与签名文件：真实值放密钥管理服务，不进仓库
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*.jks
+*.mobileprovision
+*.p7b
+*.cer
+*.csr
+
+# 旧 App 的隐私政策原稿（含真实主体信息，待法务按规划重写，06 Q-F1），只留本地
+隐私政策.md
