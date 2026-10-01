@@ -1,0 +1,47 @@
+# 凑狸 · 品牌与设计素材
+
+品牌设计待办（规划/06 §E Q-E1–Q-E6）的素材位置。项目统一入口是根目录 [brand.config.json](../brand.config.json)，使用与修改流程见 [品牌接入](../docs/brand-integration.md)。素材继续在本目录维护，不在根目录复制第二套 Logo 或配色。
+
+2026-10-01：第二版 Logo、语义配色和设计令牌已作为项目当前采用基线，视觉方案沿用已有修订。先看 [品牌概览](brand/brand-overview.png) 与 [可点击展示页](brand/index.html)，再看 [Logo 使用规范](logo/README.md)、[配色](colors/colors.md)及[五个 App 参考](references/README.md)。当前展示页通过根配置生成的 CSS / JS 消费品牌；三端工程尚未创建，素材和展示页接入不代替系统图标制作、平台资源接入或真机验收。
+
+令牌数值唯一维护于 [design-tokens.json](tokens/design-tokens.json)；[variables.css](tokens/variables.css) 与 [brand-config.js](brand/brand-config.js) 由根目录 `python3 scripts/sync-brand.py` 生成，`python3 scripts/sync-brand.py --check` 只读检查生成物漂移。H5 基础控件样式源为 [foundations.css](tokens/foundations.css)，同步时追加进生成 CSS。不要手改生成文件。
+
+展示页可直接在浏览器打开；需要本地 HTTP 预览时，在仓库根目录运行 `python3 -m http.server 8765 --bind 127.0.0.1 --directory design`，访问 `http://127.0.0.1:8765/brand/index.html`。页面无外部脚本或字体依赖，示例数据不会调用商品、AI、支付服务；官方参考链接由点击打开。
+
+**所有素材都不得包含淘宝、天猫、京东、拼多多、美团等平台的商标或近似元素**（规划/01 F-PRIV-08）；平台来源小图标只能放在 `icons/platform/`，并按联盟商标使用规范使用（06 Q-F8）。
+
+本仓库公开，放进来的文件任何人都能看到。未公开的方案、商标申请材料、合同等不要放这里。单个文件不超过 100 MB（GitHub 限制）。
+
+## 清单
+
+| # | 事项 | 放哪里 | 截止 | 状态 |
+| --- | --- | --- | --- | --- |
+| 1 | 英文名、Slogan | `brand/name.md` | 尽快 | 中文名已定「凑狸」；英文名、Slogan 待填 |
+| 2 | 商标查询与注册 | 不放仓库（只在 `brand/name.md` 记录注册号与类别） | 建议现在 | 待办 |
+| 3 | Logo 源文件 | `logo/source/` | W1（10-11） | 第二版作为当前基线：图形、横版、竖版、单色、反白 SVG；对应 PNG 在 `logo/export/`，根配置统一引用 |
+| 4 | App 图标 | `app-icon/` | W1（10-11） | 1024 SVG/PNG 与分层源已交付；`.icon`、三端工程资源与真机验收待后续 |
+| 5 | 启动页 | `splash/` | W1（10-11） | 待办 |
+| 6 | 品牌主色、辅色、功能色 | `colors/colors.md` | **10-06** | 第二版作为当前基线；数值唯一源在 `tokens/design-tokens.json`，此文档维护语义与对比度记录 |
+| 7 | 参考 App UI/UX 3–5 个 | `references/` | **10-06** | 已交付 5 个官方参考及实看画面记录；包含一淘、返利网，详见参考证据索引 |
+| 8 | 设计令牌 | `tokens/` | 10-07 | 当前基线 JSON 已接入本仓库展示页；CSS / 浏览器配置可生成与查漂移，三端工程接入按[品牌接入](../docs/brand-integration.md)后续执行 |
+| 9 | 7 个关键页确认 | `wireframes/`（代理出线框，你确认） | W2（10-18） | 颜色与参考已准备；展示页仅为方向示意，7 页线框与逐页确认待办 |
+| 10 | Tab 与金刚区图标 | `icons/tab/`、`icons/grid/` | 随第 9 项 | 待办 |
+| 11 | 平台来源小图标 | `icons/platform/` | W1 | 等法务 Q-F8 |
+| 12 | 空态、错误态插画 | `illustrations/` | W3（10-25） | 待办 |
+| 13 | 分享海报、邀请海报 | `posters/` | W3（10-25） | 待办 |
+| 14 | 商店上架素材 | `store/` | W7 提审前（11-22） | 待办 |
+
+完成一项后，把「状态」改为「已交付」，或者直接告诉 Claude。
+
+## 本次交付验证
+
+项目接入检查（2026-10-01）：根配置校验通过 80 个令牌、14 个资产、20 个颜色角色，两份生成文件与源一致；70 项生成器正反例检查通过。展示页的 33 组浏览器检查及 14 组补充检查覆盖 HTTP / 直接打开 HTML、资源绑定、色值复制、图标切换、按钮实际按下与状态语义、键盘焦点、重复绑定无资源重载，以及 390px / 320px 和 200% 字号布局，控制台无错误。上述是品牌预览与生成工具检查，正式三端工程和真机验收仍按清单推进。
+
+完整检查脚本、结果与截图按项目协作约定保存在本机同级运行目录 `../couli-runs/brand-apply-20261001/`，未加入公开仓库；此处只记录本次检查结论。任一检出环境可执行 `python3 scripts/sync-brand.py --check` 重核当前源与生成物，浏览器效果需按 [接入指南](../docs/brand-integration.md) 另行验证。
+
+第一版历史记录见 [初版交付](brand/delivery-20261001.md)，当前修订与复评见 [第二版交付](brand/delivery-v2-20261001.md)。品牌 Logo 的中文字标已转曲；默认 App 图标的 1024 PNG 背景全不透明、未裁圆角，分层前景保留透明。英文名、正式 Slogan、启动页及完整关键页验收保持原待办状态。
+
+## 命名
+
+- 文件名用英文小写和短横线，如 `logo-horizontal.svg`、`icon-1024.png`；不用中文、空格。
+- 同一素材有多个版本时加日期后缀，如 `logo-v20261005.svg`；最终版去掉后缀或放在该文件夹根目录，旧版移到 `_archive/`。

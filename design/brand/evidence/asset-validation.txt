@@ -1,0 +1,183 @@
+凑狸 v2 素材与令牌验证
+日期：2026-10-01T21:12:06+08:00
+范围：当前 design/logo/source SVG、design/logo/export PNG、design/app-icon（排除 _archive）SVG/PNG、80个设计令牌及文档对比度；未进入UI。
+方法：ElementTree XML解析、librsvg重渲染、Pillow/NumPy逐像素检查、按sRGB公式实算。
+PASS XML design/logo/source/logo-horizontal-inverse.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/logo/source/logo-horizontal-inverse.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/logo/source/logo-horizontal-inverse.svg: 3 path elements
+PASS XML design/logo/source/logo-horizontal.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/logo/source/logo-horizontal.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/logo/source/logo-horizontal.svg: 3 path elements
+PASS XML design/logo/source/logo-mark-inverse.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/logo/source/logo-mark-inverse.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/logo/source/logo-mark-inverse.svg: 1 path elements
+PASS XML design/logo/source/logo-mark-mono.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/logo/source/logo-mark-mono.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/logo/source/logo-mark-mono.svg: 1 path elements
+PASS XML design/logo/source/logo-mark.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/logo/source/logo-mark.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/logo/source/logo-mark.svg: 1 path elements
+PASS XML design/logo/source/logo-vertical-inverse.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/logo/source/logo-vertical-inverse.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/logo/source/logo-vertical-inverse.svg: 3 path elements
+PASS XML design/logo/source/logo-vertical.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/logo/source/logo-vertical.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/logo/source/logo-vertical.svg: 3 path elements
+PASS XML design/app-icon/icon-dark.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/app-icon/icon-dark.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/app-icon/icon-dark.svg: 1 path elements
+PASS 1024方形源画布 design/app-icon/icon-dark.svg
+PASS 满画布无圆角背景 design/app-icon/icon-dark.svg
+PASS XML design/app-icon/icon-default.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/app-icon/icon-default.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/app-icon/icon-default.svg: 1 path elements
+PASS 1024方形源画布 design/app-icon/icon-default.svg
+PASS 满画布无圆角背景 design/app-icon/icon-default.svg
+PASS XML design/app-icon/icon-tinted.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/app-icon/icon-tinted.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/app-icon/icon-tinted.svg: 1 path elements
+PASS 1024方形源画布 design/app-icon/icon-tinted.svg
+PASS 满画布无圆角背景 design/app-icon/icon-tinted.svg
+PASS XML design/app-icon/layers/adaptive-foreground.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/app-icon/layers/adaptive-foreground.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/app-icon/layers/adaptive-foreground.svg: 1 path elements
+PASS 1024方形源画布 design/app-icon/layers/adaptive-foreground.svg
+PASS 前景无背景矩形 design/app-icon/layers/adaptive-foreground.svg
+PASS XML design/app-icon/layers/background.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/app-icon/layers/background.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/app-icon/layers/background.svg: 0 path elements
+PASS 1024方形源画布 design/app-icon/layers/background.svg
+PASS 满画布无圆角背景 design/app-icon/layers/background.svg
+PASS XML design/app-icon/layers/foreground-body.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/app-icon/layers/foreground-body.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/app-icon/layers/foreground-body.svg: 1 path elements
+PASS 1024方形源画布 design/app-icon/layers/foreground-body.svg
+PASS 前景无背景矩形 design/app-icon/layers/foreground-body.svg
+PASS XML design/app-icon/layers/foreground-tail.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/app-icon/layers/foreground-tail.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/app-icon/layers/foreground-tail.svg: 1 path elements
+PASS 1024方形源画布 design/app-icon/layers/foreground-tail.svg
+PASS 前景无背景矩形 design/app-icon/layers/foreground-tail.svg
+PASS XML design/app-icon/layers/foreground.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/app-icon/layers/foreground.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/app-icon/layers/foreground.svg: 1 path elements
+PASS 1024方形源画布 design/app-icon/layers/foreground.svg
+PASS 前景无背景矩形 design/app-icon/layers/foreground.svg
+PASS XML design/app-icon/layers/monochrome.svg
+PASS 路径转曲/无字体位图外链脚本效果 design/app-icon/layers/monochrome.svg: {'forbiddenElements': [], 'links': []}
+PASS 闭合路径 design/app-icon/layers/monochrome.svg: 1 path elements
+PASS 1024方形源画布 design/app-icon/layers/monochrome.svg
+PASS 前景无背景矩形 design/app-icon/layers/monochrome.svg
+SVG数量：16
+PASS Logo PNG透明RGBA/2048宽 design/logo/export/logo-horizontal-inverse.png: (2048, 904), alpha=0..255, bbox=(115, 123, 1789, 800)
+PASS Logo导出与SVG重渲染一致 logo-horizontal-inverse.png
+PASS Logo PNG透明RGBA/2048宽 design/logo/export/logo-horizontal.png: (2048, 904), alpha=0..255, bbox=(115, 123, 1789, 800)
+PASS Logo导出与SVG重渲染一致 logo-horizontal.png
+PASS Logo PNG透明RGBA/2048宽 design/logo/export/logo-mark-inverse.png: (2048, 2048), alpha=0..255, bbox=(261, 279, 1690, 1812)
+PASS Logo导出与SVG重渲染一致 logo-mark-inverse.png
+PASS Logo PNG透明RGBA/2048宽 design/logo/export/logo-mark-mono.png: (2048, 2048), alpha=0..255, bbox=(261, 279, 1690, 1812)
+PASS Logo导出与SVG重渲染一致 logo-mark-mono.png
+PASS Logo PNG透明RGBA/2048宽 design/logo/export/logo-mark.png: (2048, 2048), alpha=0..255, bbox=(261, 279, 1690, 1812)
+PASS Logo导出与SVG重渲染一致 logo-mark.png
+PASS Logo PNG透明RGBA/2048宽 design/logo/export/logo-vertical-inverse.png: (2048, 2560), alpha=0..255, bbox=(414, 223, 1619, 2337)
+PASS Logo导出与SVG重渲染一致 logo-vertical-inverse.png
+PASS Logo PNG透明RGBA/2048宽 design/logo/export/logo-vertical.png: (2048, 2560), alpha=0..255, bbox=(414, 223, 1619, 2337)
+PASS Logo导出与SVG重渲染一致 logo-vertical.png
+PASS App PNG格式尺寸 icon-1024.png: RGB (1024, 1024)
+PASS App背景不透明/前景透明 icon-1024.png: alpha=255..255, bbox=(0, 0, 1024, 1024)
+PASS 默认背景四角满幅狸橙 icon-1024.png
+PASS App PNG与SVG重渲染一致 icon-1024.png
+PASS App PNG格式尺寸 icon-background.png: RGB (1024, 1024)
+PASS App背景不透明/前景透明 icon-background.png: alpha=255..255, bbox=(0, 0, 1024, 1024)
+PASS 默认背景四角满幅狸橙 icon-background.png
+PASS App PNG与SVG重渲染一致 icon-background.png
+PASS App PNG格式尺寸 icon-foreground.png: RGBA (1024, 1024)
+PASS App背景不透明/前景透明 icon-foreground.png: alpha=0..255, bbox=(221, 228, 766, 813)
+PASS App PNG与SVG重渲染一致 icon-foreground.png
+PASS App PNG格式尺寸 icon-monochrome.png: RGBA (1024, 1024)
+PASS App背景不透明/前景透明 icon-monochrome.png: alpha=0..255, bbox=(221, 228, 766, 813)
+PASS App PNG与SVG重渲染一致 icon-monochrome.png
+PASS foreground-body + foreground-tail 与合成foreground的矢量几何/填色/变换完全一致
+PASS foreground与默认图标前景路径/填色/变换完全一致
+PASS background与默认图标背景几何/填色完全一致
+INFO body+tail栅格合成与合并SVG单次栅格化并非字节相等：差异像素=90/1048576，RGBA逐通道最大差=[255, 255, 255, 14]。
+PASS 分拆层与合并层完全不透明内部一致: 完全不透明内部差异像素=0；差异集中抗锯齿边界。透明像素的RGB不参与显示；矢量几何一致见上项。
+INFO background+foreground栅格合成与合并SVG单次栅格化并非字节相等：差异像素=50/1048576，RGBA逐通道最大差=[1, 0, 1, 0]。
+PASS 背景前景栅格合成仅通道舍入差: 最大差=1/255
+PASS SVG前景真实透明 foreground: alpha=0..255, bbox=(168, 177, 812, 867)
+PASS SVG前景真实透明 foreground-body: alpha=0..255, bbox=(168, 177, 782, 867)
+PASS SVG前景真实透明 foreground-tail: alpha=0..255, bbox=(692, 539, 812, 678)
+PASS SVG前景真实透明 adaptive-foreground: alpha=0..255, bbox=(221, 228, 766, 813)
+PASS SVG前景真实透明 monochrome: alpha=0..255, bbox=(221, 228, 766, 813)
+PASS adaptive保守安全圆 adaptive-foreground: 标准直径=66/108×1024=625.777778px，不是66%；半径=312.888889px；最大有色像素中心半径=309.471323px，角点半径=310.177369px；越界像素=0；bbox=(221, 228, 766, 813)
+PASS adaptive保守安全圆 monochrome: 标准直径=66/108×1024=625.777778px，不是66%；半径=312.888889px；最大有色像素中心半径=309.471323px，角点半径=310.177369px；越界像素=0；bbox=(221, 228, 766, 813)
+PASS adaptive与monochrome轮廓alpha一致
+Adaptive规范来源：https://developer.android.com/develop/ui/compose/system/icon_design_adaptive （2026-10-01读取；108dp图层/中央66dp安全范围，采用内接圆保守检查）
+PASS JSON/CSS均为80个令牌: JSON=80 CSS=80
+PASS 全部JSON/CSS数值按类型一致
+PASS 对比度 白字/主按钮: #FFFFFF/#C44820 4.89:1 >= 4.5:1
+PASS 对比度 白字/按下: #FFFFFF/#A83B1F 6.34:1 >= 4.5:1
+PASS 对比度 主文/白: #28251F/#FFFFFF 15.28:1 >= 4.5:1
+PASS 对比度 主文/米白: #28251F/#F6F3ED 13.79:1 >= 4.5:1
+PASS 对比度 次文/白: #655E57/#FFFFFF 6.38:1 >= 4.5:1
+PASS 对比度 次文/米白: #655E57/#F6F3ED 5.76:1 >= 4.5:1
+PASS 对比度 强调/品牌浅底: #A83B1F/#FBEFE8 5.62:1 >= 4.5:1
+PASS 对比度 价格/白: #28251F/#FFFFFF 15.28:1 >= 4.5:1
+PASS 对比度 pending: #655E57/#EFEAE2 5.33:1 >= 4.5:1
+PASS 对比度 success: #26735B/#EAF4EE 5.07:1 >= 4.5:1
+PASS 对比度 warning: #846020/#FBF2DC 5.13:1 >= 4.5:1
+PASS 对比度 error: #B42345/#FDECF0 5.64:1 >= 4.5:1
+PASS 对比度 禁用文字: #655E57/#E9E2D9 4.97:1 >= 4.5:1
+PASS 对比度 焦点/白: #26735B/#FFFFFF 5.70:1 >= 3:1
+PASS 对比度 焦点/米白: #26735B/#F6F3ED 5.14:1 >= 3:1
+PASS 对比度 控件边界/白: #8A8177/#FFFFFF 3.83:1 >= 3:1
+PASS 对比度 控件边界/米白: #8A8177/#F6F3ED 3.46:1 >= 3:1
+PASS 文档比值 #FFFFFF/#C44820: 4.89:1
+PASS 文档比值 #FFFFFF/#A83B1F: 6.34:1
+PASS 文档比值 #28251F/#F6F3ED: 13.79:1
+PASS 文档比值 #28251F/#FFFFFF: 15.28:1
+PASS 文档比值 #655E57/#F6F3ED: 5.76:1
+PASS 文档比值 #655E57/#FFFFFF: 6.38:1
+PASS 文档比值 #A83B1F/#FFFFFF: 6.34:1
+PASS 文档比值 #A83B1F/#F6F3ED: 5.73:1
+PASS 文档比值 #A83B1F/#FBEFE8: 5.62:1
+PASS 文档比值 #28251F/#FFFFFF: 15.28:1
+PASS 文档比值 #655E57/#EFEAE2: 5.33:1
+PASS 文档比值 #26735B/#EAF4EE: 5.07:1
+PASS 文档比值 #846020/#FBF2DC: 5.13:1
+PASS 文档比值 #B42345/#FDECF0: 5.64:1
+PASS 文档比值 #655E57/#E9E2D9: 4.97:1
+PASS 文档比值 #C44820/#F6F3ED: 4.41:1
+颜色说明中 16 个单前景/单背景表格行已逐一复算。主色/米白=4.41:1的限制已明确，不能用于普通小字。
+限制：这些是素材与数值检查，不是 Icon Composer、Android/Harmony 工程或真机验收；未证明动物物种辨识或商标独创性。未进入 UI。
+结论：PASS，未发现剩余素材/令牌硬错误。
+文件SHA256：
+4c94f966980f75af13c8d2832dac680ac99fa983fd02bd9b38490e2659bc7ea7 design/logo/source/logo-horizontal-inverse.svg
+9fb5c41f8647478299e4c97cbf3cb797d886dc4ff80eb30e90c1de0b230b3895 design/logo/source/logo-horizontal.svg
+7d0ad1ece8ccc207512d45cb0a3820373af44a4751f4e7dc01f83cc6348b5e3d design/logo/source/logo-mark-inverse.svg
+47e4480a2b24bf9229735e76933a313db54a9a043defc4bdbc1273ee2005ae80 design/logo/source/logo-mark-mono.svg
+f06526c9a6bd4c28a56c9e6ac8da74d0215bf5cd319b84b3ce60d456d037adf2 design/logo/source/logo-mark.svg
+951a87877bba1396691ffd1abdf4d68e14975bf5431cdc19e557c12440273fb5 design/logo/source/logo-vertical-inverse.svg
+5e78fed897b900cd28513332be99b4f0b809a2033045d1abc948ba0a09b1f88f design/logo/source/logo-vertical.svg
+ba049d7c8ad0b9749131d4fb81fcac79f0ecde296790d44f02ea263c21054a5d design/app-icon/icon-dark.svg
+5fef44dec927798428bc35de45809f65f952dcf82f07d10f8c7241143de4c6e7 design/app-icon/icon-default.svg
+1e8ef6818e72bb7a0c3ee0c98d65d092be321c4e855f2dcd1a44ad89c2abf865 design/app-icon/icon-tinted.svg
+f7ef115f94f4491447dd8a47b04460d7508fe6d012d4c1b144143124cebd68ca design/app-icon/layers/adaptive-foreground.svg
+0a940aea86d6f84cf587f97e7875060a75df5616fd156f24742119f7b4b009b6 design/app-icon/layers/background.svg
+7a0c3e88f833409a5657d26e5cfa87648444ddbde71036e532fdea0748f8c38d design/app-icon/layers/foreground-body.svg
+0b2503d223250d33a2ee0eebc982c6b1bbdfc9419eeef4fe68bd9dd73e084a36 design/app-icon/layers/foreground-tail.svg
+b8f9e9a8785d0769e7ae997d8b54ffe1fc91a77d4265db60ab9a80d92a4f23df design/app-icon/layers/foreground.svg
+3f7fca8ed2775557e8a62a1ce8aa46a67819d5e92d884d62aa29a1d23b5de605 design/app-icon/layers/monochrome.svg
+97b483f419669b6dac1c0c4d567675e87e25ec95017d80bfeaedaa12619df301 design/logo/export/logo-horizontal-inverse.png
+b738e39aa557c0500c467c8e17530eb92c6b837b3aec095488e655446afade05 design/logo/export/logo-horizontal.png
+9847480a6d85498626b08b74ac574e7fefa8ea3137d10fbcbfb1b69e773fd841 design/logo/export/logo-mark-inverse.png
+141269d5f2c34746bf47764cc15d4a3dbb4c91738a3e6fa9f83194f6277bd7dc design/logo/export/logo-mark-mono.png
+4c2369eddadb075b679fd711abb61e6d634edf18eb66881980db28539c448825 design/logo/export/logo-mark.png
+45211df10cd172a6cacbfea1e72b5e33a41f88d0968cbcee186e35be4054b3bd design/logo/export/logo-vertical-inverse.png
+a30f88bf6f554285307fddb16395ebc55b2b18e490998b1e02f07be72c597911 design/logo/export/logo-vertical.png
+cc13fbc3a8879660063682a1a67d6f3f47a7d4ef204367e62593f1c2d1fc5409 design/app-icon/icon-1024.png
+141e01abc08636d1f4ffdbb0f7b2738d6d422cc697e56b347d50df5f606dc60c design/app-icon/icon-background.png
+64efaa550ffb9f28cbe4e91df1e3ffc970d7a9bef231dff2b3e26ee218c74792 design/app-icon/icon-foreground.png
+bb1e46d3783e1e08abb05d960ad445f98b433fd00d7f8a8c6709000103b7e353 design/app-icon/icon-monochrome.png
+7e7b05773ecb87f487a7c491a69a501c7f8c6ff278e0d7da395520db8ff6c6f2 design/tokens/design-tokens.json
+63a6c839cfac41c396c2dcb9ce9dfd04dd84d61e451a172875fefc61d4859333 design/tokens/variables.css

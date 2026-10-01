@@ -1,0 +1,26 @@
+凑狸第四轮待审补修验证（2026-10-01，Asia/Shanghai）
+文件范围：design/brand/preview.js、preview.css；index.html本轮未改。
+
+修改：
+- state.withdrawReturn记录钱包或订单详情来源；提现预览顶部和页末的返回按钮均使用该来源，文案同时为「返回钱包」或「返回订单详情」。从订单进入时提现预览保留订单Tab选中，返回仍是原已结算订单；钱包路径保留我的Tab。
+- 订单列表固定演示日期说明为2026-10-01，列表时间格式改为「今天 09:00」「08-28」，时间线仍保留完整日期与分钟。
+- 单独的navigationSection()归纳导航：AI可用时搜索页及从搜索进入的商品/外跳页归首页；AI不可用时归第二个搜索Tab。底部始终仅有一个Tab选中。
+- AI关闭时左侧流程02变「搜商品／关键词、平台筛选与商品结果」，重新开启恢复「说需求／短回答、商品卡与异常反馈」。
+- 品牌页导航Logo宽从108px调为112px，符合既有README最小宽。
+
+实际验证（Playwright CLI，v4-check.js）：
+- 订单→提现：顶部返回、页末返回分别测试，都回同一个已结算订单详情，订单Tab保持选中。
+- 钱包→提现：顶部返回、页末返回分别测试，都回钱包，不沿用上一次的订单来源，我的Tab保持选中。
+- AI开：搜索→商品→返回全程首页选中；AI关：搜索→商品→返回全程第二个搜索Tab选中；重新开启后选中首页；每次断言底部只有1个aria-pressed=true。
+- 订单列表时间格式与演示日期说明均断言通过；流程02两种文案断言通过。
+- 390px常规、1440px桌面，以及320px 200%根字号的首页/AI/订单/我的/两种提现来源，共8项布局检查通过，无文档或可见App元素横向溢出；所有场景Logo实测宽112px。
+- node --check通过；浏览器Errors:0、Warnings:0。
+- 已目视检查本轮从订单进入提现页和AI可用搜索页，标签与高亮正确。
+
+新渲染截图：
+/tmp/couli-ui-review/withdraw-from-order-v4.png
+/tmp/couli-ui-review/orders-v4.png
+/tmp/couli-ui-review/search-ai-on-v4.png
+/tmp/couli-ui-review/home-v4.png
+
+限制与前轮相同：浏览器200%根字号模拟，不代表真机Dynamic Type或VoiceOver实测；演示不连接真实服务。
