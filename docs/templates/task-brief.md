@@ -60,7 +60,7 @@
 <pnpm verify:fast 或更小范围的命令>
 ```
 
-必须变绿的规则测试：<测试 ID 列表>。完整验证由编排者在沙箱外跑，你不用跑集成测试。
+必须变绿的规则测试：<测试 ID 列表>。完整验证由编排者在沙箱外跑。沙箱里没有网络，连不上数据库和 Docker，也不能监听端口：不要跑集成测试、迁移和类型生成，需要时写进 `outside_needed`。
 
 ## 7. 上一轮失败输出（第 2 次起才有）
 
@@ -79,7 +79,8 @@
 | `commands` | 跑过的命令与退出码 |
 | `tests_passed` | 验收命令是否通过 |
 | `deps_needed` | 需要新装的依赖：名称、版本、理由；没有填空数组 |
+| `outside_needed` | 需要编排者在沙箱外跑的命令（迁移、类型生成等）：命令、理由；没有填空数组 |
 | `blocked_reason` | 没做完或发现规格冲突时写原因；没有填空串 |
 | `notes` | 需要评审方注意的地方，三句以内 |
 
-Do not commit. Do not install dependencies. Do not modify any file under `ops/` or `docs/`. 不要运行需要网络或 Docker 的命令。
+Do not commit. Do not install dependencies. Do not modify any file under `ops/` or `docs/`. 不要运行需要网络、Docker、数据库或监听端口的命令。

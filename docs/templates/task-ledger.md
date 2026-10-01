@@ -14,7 +14,7 @@
 | `id` | 是 | 05 的任务编号，可带后缀 | 文件名与它一致 |
 | `repo` | 是 | `rebate-platform` / `ios` / `android` / `harmony` | 任务落在哪个仓库 |
 | `title` | 是 | 一行 | 与 05 对应行含义一致 |
-| `type` | 是 | `impl` / `contract` / `migration` / `deps` / `test-change` / `guard-change` / `sync` | `contract`、`migration`、`deps` 各自全局串行 |
+| `type` | 是 | `impl` / `contract` / `migration` / `deps` / `test-change` / `guard-change` / `sync` | `contract`、`migration`、`deps` 各自全局串行；`migration` 分两段做：实现者只写 SQL，编排者在沙箱外执行并生成类型（规划/11 §2.3） |
 | `refs` | 是 | BR / AC 编号列表 | 任务书按它抽规则原文 |
 | `refs_hash` | 是 | 编号 → 条目正文哈希 | 由入账脚本从规格索引填；正文变了任务标 `stale` |
 | `deps` | 是 | 任务编号列表，可空 | 全部 `done` 才就绪 |
