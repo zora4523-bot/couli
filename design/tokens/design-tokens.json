@@ -2,13 +2,13 @@
   "schemaVersion": "couli.tokens.v1",
   "metadata": {
     "name": "凑狸",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "date": "2026-10-01",
-    "status": "first proposal",
+    "status": "revised proposal",
     "theme": "light",
     "darkThemePhase": "P1",
     "colorSpace": "sRGB",
-    "description": "本轮授权创建的首版品牌与界面提案，尚未最终品牌验收；App 图标外观变体独立于 UI 主题。",
+    "description": "根据独立评审修订的品牌与界面提案，尚未最终品牌验收；App 图标外观变体独立于 UI 主题。",
     "cssFontBase": 16,
     "sources": [
       "https://developer.apple.com/design/human-interface-guidelines/color",
@@ -31,7 +31,7 @@
         "secondary": {
           "type": "color",
           "value": "#26735B",
-          "description": "松叶绿；次要强调"
+          "description": "松叶绿；保留品牌辅助色，业务状态仅已结算或已完成使用"
         },
         "subtle": {
           "type": "color",
@@ -81,21 +81,33 @@
       "price": {
         "text": {
           "type": "color",
-          "value": "#B4472C",
-          "description": "价格数值；不可替代预估与已结算语义"
+          "value": "#28251F",
+          "description": "墨棕价格数值，靠字号和字重突出；不代表返利状态，预估金额沿用中性文字与明确标签"
         }
       },
       "status": {
+        "pending": {
+          "text": {
+            "type": "color",
+            "value": "#655E57",
+            "description": "预估或等待结算的中性文字和图标，须配明确状态词及钟表等进行中图形"
+          },
+          "background": {
+            "type": "color",
+            "value": "#EFEAE2",
+            "description": "预估或等待结算的中性浅底；不能配完成对勾"
+          }
+        },
         "success": {
           "text": {
             "type": "color",
             "value": "#26735B",
-            "description": "成功状态文字和图标"
+            "description": "仅用于已结算或已完成的状态文字和图标，须配明确状态词及完成对勾"
           },
           "background": {
             "type": "color",
             "value": "#EAF4EE",
-            "description": "成功状态浅底"
+            "description": "已结算或已完成状态浅底；不用于预估返利或等待结算"
           }
         },
         "warning": {
@@ -113,12 +125,12 @@
         "error": {
           "text": {
             "type": "color",
-            "value": "#B04238",
-            "description": "错误状态文字和图标"
+            "value": "#B42345",
+            "description": "莓红错误文字和警示图标，须配原因与恢复操作；不用来强调价格"
           },
           "background": {
             "type": "color",
-            "value": "#FBEDE9",
+            "value": "#FDECF0",
             "description": "错误状态浅底"
           }
         }

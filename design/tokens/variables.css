@@ -1,4 +1,4 @@
-/* 凑狸 2026-10-01 / first proposal. Source: design-tokens.json. */
+/* 凑狸 2026-10-01 / revised proposal v0.2.0. Source: design-tokens.json. */
 :root {
   color-scheme: only light;
   --color-brand-primary: #C44820;
@@ -12,13 +12,15 @@
   --color-text-secondary: #655E57;
   --color-text-inverse: #FFFFFF;
   --color-text-link: #A83B1F;
-  --color-price-text: #B4472C;
+  --color-price-text: #28251F;
+  --color-status-pending-text: #655E57;
+  --color-status-pending-background: #EFEAE2;
   --color-status-success-text: #26735B;
   --color-status-success-background: #EAF4EE;
   --color-status-warning-text: #846020;
   --color-status-warning-background: #FBF2DC;
-  --color-status-error-text: #B04238;
-  --color-status-error-background: #FBEDE9;
+  --color-status-error-text: #B42345;
+  --color-status-error-background: #FDECF0;
   --color-border-subtle: #E4DED5;
   --color-border-control: #8A8177;
   --color-focus-ring: #26735B;
@@ -152,6 +154,16 @@
 @media (forced-colors: active) {
   .couli-button-primary {
     border: var(--component-control-border-width) solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+  .couli-control {
+    border-color: ButtonText;
+    background: Field;
+    color: FieldText;
+  }
+  .couli-control::placeholder {
+    color: GrayText;
   }
   .couli-button-primary:disabled,
   .couli-button-primary[aria-disabled="true"] {

@@ -1,0 +1,29 @@
+凑狸第三轮待审补修验证（2026-10-01，Asia/Shanghai）
+范围：仅 design/brand/index.html、preview.css、preview.js；依据 Claude review-v2 第1–4项及指定焦点环/Apple文案补修。
+
+已修：
+1. 拼多多卡片与详情统一为「拼单券后」「拼单券前」；币种数字与短「券 ¥5」组合不拆行，宽度不足时整组换行。
+2. 订单列表补商品图，并使用「已收货，等待联盟结算」完整状态。详情按 BR-TEXT-02 细则时间线显示付款、收货、预计月份（无预计月份的已结算例显示联盟结算）、已结算四节点；未发生节点置灰并写「尚未发生」，发生节点有示例时刻。已结算按钮「去提现」直接打开提现演示。
+3. 所有预估/成功/错误状态的 Unicode ◷/✓/! 替换为 aria-hidden="true" 装饰 SVG，文字含义保留；包含品牌页语义色样、AI加载/错误、找回格式错误。
+4. render() 的 aria-pressed 更新仅作用于 .tabbar/.flow 内的导航控件，问AI/查看钱包/去提现等动作按钮不再误带 pressed。图标外观、订单子Tab、平台筛选本身属于切换控件，保留各自正确的状态语义。AI不可用时第二Tab的文字与SVG同步切换为搜索，再开启恢复对话图标。
+5. 焦点环直接用令牌 --focus-width/--focus-offset；键盘Tab实测计算值2px/2px。「MADE WITH APPLE GUIDANCE」改为「参照 Apple HIG」。
+
+实际验证：
+- node --check preview.js通过；浏览器console Errors:0、Warnings:0。
+- /tmp/couli-ui-review/v3-check.js通过20项布局/动作语义检查，390px新首页/拼多多详情/订单列表/待结算详情/直接提现/AI不可用均检查。
+- 拼多多卡片和详情均断言两个拼单前缀；订单列表断言2张商品SVG；两个详情各4节点；待结算2个future节点且无绿色settled样式；已结算CTA直接进入提现预览。
+- AI错误图标是aria-hidden SVG；关闭时搜索图标有circle，再开启恢复对话图标。检查过的页面动作按钮 aria-pressed 数量均为0。
+- 320px/390px 200%根字号：首页、AI、订单、钱包和拼多多详情均无文档或可见内容内部横向溢出；320px常规首页/订单通过；1440px桌面通过。
+- forced-colors订单页无溢出，装饰状态SVG保留并使用currentColor。
+- 200%为浏览器rem根字号模拟，未宣称原生Dynamic Type或VoiceOver验证。
+
+本轮均重新渲染的新截图（供Claude第三轮使用）：
+/tmp/couli-ui-review/home-v3.png
+/tmp/couli-ui-review/orders-v3.png
+/tmp/couli-ui-review/order-pending-v3.png
+/tmp/couli-ui-review/order-settled-v3.png
+/tmp/couli-ui-review/ai-disabled-v3.png
+/tmp/couli-ui-review/home-200pct-v3.png
+另有：pdd-detail-v3.png、ai-error-v3.png、orders-forced-colors-v3.png、interaction-desktop-v3.png。
+
+本轮新图已目视检查订单列表与待结算详情，文字和图标正常。无真实交易或网络服务变更。

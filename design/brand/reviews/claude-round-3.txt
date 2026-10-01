@@ -1,0 +1,68 @@
+# 凑狸第三轮独立复评
+
+## 结论
+
+上一轮 6 组问题全部关闭，没有发现阻断性问题，也没有发现本轮修改破坏了价格、状态用色或 AI 降级逻辑。另有 3 个低严重度问题需要修：1 个由本轮「去提现」改动带出，2 个是之前就存在、我上一轮漏看的。结论只覆盖方向稿范围内已检查的文件和截图。
+
+## 六组问题逐条
+
+| # | 结论 | 依据 |
+| --- | --- | --- |
+| 1 拼单前缀 | 已关闭 | `preview.js:18`、`:33` 按平台加前缀；`home-v3`、`pdd-detail-v3`、`ai-disabled-v3` 均显示「拼单券后 ¥19.9 / 拼单券前 ¥22.9 · 券 ¥3」，与 BR-PRICE-04 的例子一致 |
+| 2 订单文案 | 已关闭 | 列表有商品图、实付、件数、脱敏订单号，按付款时间倒序（01 §4.2）。状态文字为「已收货，等待联盟结算」。时间线四个节点与 BR-TEXT-02 一致，未发生节点置灰。已结算例第三节点写「联盟结算」、不显示月份，符合 BR-TEXT-04。「去提现」进入提现预览，去向正确 |
+| 3 状态图形 | 已关闭 | 三个文件里已搜不到 `◷ ✓ ✔ ⚠`；状态图标全部是 `aria-hidden` 的内联 SVG，文字保留。强制配色截图中图标仍可见 |
+| 4 aria-pressed 与 AI 降级 | 已关闭 | `preview.js:44` 选择器限定为 `.tabbar`、`.flow`；其余 `aria-pressed` 只在图标外观、订单子 Tab、平台筛选上。`:74` 同步切换文字和图标，`ai-disabled-v3` 中第二个 Tab 为放大镜加「搜索」 |
+| 5 自述同步 | 已关闭 | 概览 PNG 与 SVG 标「SETTLED / SUCCESS」；焦点环直接用令牌，`variables.css:71-72` 为 2px/2px；Logo README 写明 24 指完整画布，标题用 30px 画布 |
+| 6 仓库卫生 | 已关闭 | `.gitignore:9` 排除 `.playwright-cli/`；会话开始时的 git 状态里它不在未跟踪列表。本地仍有 43 个文件，我只看了文件名 |
+
+**Apple 那一句**：成立。抓取到的 Important 原文是「If you want your existing icon to appear in previous releases, continue to use asset catalogs to represent your app icon.」，前文还说明 `.icon` 会替换已有资产目录、Xcode 会自动为旧版本生成相近图标。`app-icon/README.md:40` 的表述与此一致，我撤回上一轮的保留。
+
+**参考区**：五个名称、「官方界面图片 / 官方网页示意」的措辞和未实测声明，与 `references/README.md` 相符。标题已改为「参照 Apple HIG」，全目录已搜不到旧标题。
+
+## 仍需修正
+
+1. **低 · 「去提现」后返回落点不对（本轮改动带出）**
+   - 位置：`preview.js:41` 的返回目标写死为钱包。
+   - 现象：从订单详情点「去提现」再点「← 返回」，会落到没访问过的钱包页，Tab 高亮也从「订单」跳到「我的」。
+   - 改法：仿照 `productReturn` 记一个来源页。
+
+2. **低 · 订单列表日期格式与 BR-TEXT-11 不符（旧问题）**
+   - 位置：`preview.js:36`，`orders-v3` 显示「2026-10-01」「2026-08-28」。
+   - 规则：列表用「今天 HH:mm」或同年「MM-DD」，完整格式只用于时间线。
+   - 改法：改成「今天 09:00」「08-28」。BR-TEXT-11 是代理可自定的默认假设，但按约定应改引用处。
+
+3. **低 · AI 可用时搜索页没有任何 Tab 选中（旧问题）**
+   - 位置：`preview.js:44`。搜索页没有对应的 Tab，只有 AI 关闭时才归到第二个 Tab。
+   - 依据：这是读代码得出的，没有对应截图。
+   - 改法：AI 可用时把搜索页归到「首页」。
+
+## 主观可选与未验证
+
+**可选（不算缺陷）**
+- 200% 字号下来源行「示例商 / 品」仍被拆行。
+- Logo 的 30px 和 Tab、搜索图标的 22px 是固定像素，不随字号放大；`home-200pct-v3` 里标志明显小于标题字。
+- 「← 返回」「查看详情 →」的箭头仍是文字字符，不承载状态含义，但读屏可能念出来。
+- Tab 的当前页用 `aria-current="page"` 比 `aria-pressed` 更贴切。
+- AI 关闭后，左侧「02 说需求」的文案没有跟着变。
+- `app-icon/README.md:40` 句末缺句号。
+
+**需真实条件、仍未验证**（与上一轮相同，不能靠文档消除）
+- Icon Composer 材质、`.icon` 文件、系统 clear/tinted 渲染和真机效果。
+- VoiceOver、原生 Dynamic Type、三端真机。
+- 物种识别的用户测试、商标可注册性、色觉障碍模拟。
+- 竞品真实流程。
+
+## 证据与限制
+
+**实际读取**
+- 源文件：`claude-round-2.txt`、`index.html`、`preview.js`、`preview.css`、两份 README、`.gitignore`、`validation-v3.txt`、`references/README.md`，以及 `variables.css` 和 `colors.md` 的相关行。
+- 图片：指定的 6 张 v3 截图，加 `pdd-detail-v3`、`ai-error-v3`、`orders-forced-colors-v3`、`interaction-desktop-v3`、`brand-overview.png`、`logo-comparison.png`。
+- 规划：08 的 BR-TEXT-02、04、11 和 BR-PRICE-04 细则，01 §4.1、§4.2。
+- Apple 官方 JSON。
+
+**限制**
+- 没有运行浏览器和 git。焦点环 2px 只是从 CSS 和令牌确认，不是键盘实测；没读 `v3-check.js`。
+- 截图是既有文件，文案与当前源码吻合，但不能证明是最新渲染。
+- Apple 原文经抓取工具转引，不是我直接读的原始 JSON。
+- 本轮没有重看竞品截图，也没有复算对比度。
+- `design/brand/evidence/` 里的同名副本没有逐一打开。

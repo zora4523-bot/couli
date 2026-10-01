@@ -1,0 +1,39 @@
+凑狸品牌交互页修订检查（2026-10-01，Asia/Shanghai）
+页面：http://127.0.0.1:8765/brand/index.html
+修改范围：design/brand/index.html、preview.css、preview.js。未改动业务规划、未连接真实服务。
+
+验证方法：Playwright CLI 独立会话 couli-ui-revision；使用浏览器用户可见按钮、表单交互。检查脚本 check.js、layout-check.js、final-check.js 在本目录，仅为本次临时验收脚本，不是产品测试套件。
+
+通过的交互：
+- 首页搜索「毛巾」只返回毛巾；切淘宝出现空结果；重置后恢复3个平台示例。
+- 粘贴示例填入保温杯并明确未读取剪贴板；商品详情→下单须知→外跳占位→返回保留搜索来源，浏览器未访问商家，未创建订单。
+- AI四个精确预置问句分别展示商品/订单/空/错；发送「哪一天返利呀」仍留在AI页，不生成无关商品；错误后可重试保温杯预置示例。
+- 关闭AI后首页问AI按钮隐藏，底部第二Tab改「搜索」并可用；再开启恢复AI。
+- 订单自购/分享切换；列表→独立待结算详情→返回列表；已结算详情显示实返。待结算详情不存在绿色settled样式。
+- 找回订单：空输入报格式错误；填DEMO-1001预览明确未提交、未保存；不会写订单或发送数据。
+- 我的→钱包→提现预览→钱包；钱包明细→关联已结算订单均可到达。
+- 筛选、订单子Tab、预置AI问题重渲染保留相应键盘焦点；页面切换将焦点放在新标题。
+
+布局与可达性：
+- 1440px常规桌面、390px常规移动，已对搜索、商品、外跳、AI出卡、订单、订单详情、找回表单、钱包、提现检查。
+- 320px常规字号和320px 200%根字号：首页/AI/订单/钱包均通过。
+- 390px、768px、1440px的200%根字号：首页/AI/订单/我的均通过；390px商品详情另通过。
+- 上述检查 document.documentElement.scrollWidth == innerWidth，无横向溢出；排除刻意隐藏的sr-only标签后，所检App内容均无元素内部横向裁切。
+- 所有可见按钮、链接、文本输入、select的点击框宽高均>=44px。AI开关原生checkbox为20px宽，包裹label的完整区域可点击且高>=44px。
+- 手机内容采用自然高度随内容增长，不用固定高度裁掉放大文字。200%为浏览器rem根字号模拟，不代表原生Dynamic Type真机验证。
+- 首页App计算字号集合为12/14/17/22/28px，钱包另有34px，均对应6级rem令牌。未发现11px或硬编码font-size像素值。
+- forced-colors: active下首页/订单无横向溢出，当前图标外观/订单子Tab/底部导航选中按钮有2px solid边框；待结算与已结算状态均有1px边框并保留明确文字和符号。
+- 最后浏览器console Errors:0，Warnings:0；node --check preview.js通过。
+
+界面截图：
+brand-desktop.png：完整品牌展示页
+interaction-desktop.png：桌面交互区
+home-mobile.png、ai-mobile.png、ai-error-mobile.png、detail-mobile.png
+orders-mobile.png、order-pending-mobile.png、order-settled-mobile.png
+find-mobile.png、wallet-mobile.png
+home-200pct.png、ai-200pct.png、orders-200pct.png、me-200pct.png
+home-forced-colors.png、orders-forced-colors.png
+
+参考区已同步5个实际看过官方图片的产品：Apple Store / Perplexity / Rakuten / 一淘 / 返利网。界面文案区分iPhone图片、Android图片和网页示意；未宣称竞品设备实测。
+
+限制：本页为静态交互示例，不覆盖真实登录、平台授权、AI、交易、订单同步、提现服务；不替代原生App无障碍/真机验收。功能演示通过不代表对应后端已存在。
