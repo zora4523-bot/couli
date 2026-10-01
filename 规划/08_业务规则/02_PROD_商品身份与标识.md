@@ -4,7 +4,7 @@
 
 ## 2. 商品身份与标识（BR-PROD）
 
-本节规定：“同一商品”的判定、product_key 格式/派生/不可变、raw_item_id 与 item_ref 取用、缓存与去重口径。共 11 条（已确认 4、默认假设 1、待决策 3、待验证 3）。
+本节规定：“同一商品”的判定、product_key 格式/派生/不可变、raw_item_id 与 item_ref 取用、缓存与去重口径。共 11 条（已确认 6、默认假设 1、待决策 1、待验证 3）。
 
 ### 2.1 规则一览
 
@@ -13,12 +13,12 @@
 | BR-PROD-01 | **同一商品的判定**<br>两条商品记录是“同一商品”，当且仅当同时满足：`app_id` 相等；`platform` 相等；两条的 `product_key` 均非 null，且经 `resolveProductKey`（BR-PROD-02）解析后逐字节相等（区分大小写）。不同 app_id 的 product_key 不得相互比较，也不得共用 product_refs、商品缓存、商品池或价格快照。依据有两条：淘宝商品 ID 后半段据公开资料只对单个联盟账号稳定（规划/09 CAP-TB-01，可信度中，待 S0 实测；本条按保守口径先行限制）；规划/04 规定业务唯一键以 app_id 开头。不同平台的商品永远不是同一商品，即使标题、品牌、规格完全相同（跨平台同款见 BR-PROD-09）。购买件数（订单 `quantity`）永远不进入商品身份；规格/SKU 是否进入身份按 BR-PROD-04 执行。天猫商品 platform=`taobao`（BR-PROD-10）。去重、缓存、商品池、link_log、订单关联、Agent 卡片、订阅监控对象中，凡需判断“同一商品”，一律只调用本条的 `isSameProduct`，不得用 `raw_item_id`、标题或图片判断。 | 已确认 | packages/domain isSameProduct；orders.product_key；link_logs.product_key；product_refs 主键 (app_id, product_key)；pool_items 唯一 (app_id, pool_id, product_key)；缓存键 app_id 前缀（BR-PROD-07）；Agent 卡片去重；tracked_item（P1）；客服话术：同一商品；验收 V-PK-1（细则「验收依赖」） |
 | BR-PROD-02 | **product_key 格式、校验、别名与不可变**<br>`product_key` = `<key_prefix>:<stable_id>`。key_prefix 取 `platforms` 表的 `key_prefix` 列，现值为：taobao=`tb`、jd=`jd`、pdd=`pdd`、meituan=`mt`、vip=`vip`、douyin=`dy`、kuaishou=`ks`、suning=`sn`；eleme 没有商品形态，key_prefix 为空，不生成 product_key。代码中不写死平台前缀枚举。`stable_id` 由 BR-PROD-03 派生，原样保留大小写，长度 1–124，字符集为可打印 ASCII（0x21–0x7E）去掉 `#`、`/`、`?`；整串长度 ≤128。非 null 的 product_key 一旦写入任何表就不可修改；null 视为未写入，可以回填一次。product_key 不得包含 user_id、推广位、relation_id 等用户或归因信息。客户端、H5、Agent 只能把它当不透明字符串透传，不得解析、拼接，也不得从中推算 raw_item_id；放进 URL 路径时必须 `encodeURIComponent`。所有入口（API 入参、isSameProduct、去重、缓存键、pool_items/tracked_item 写入）都先调用 `resolveProductKey`。`product_key_aliases` 只用于一对一的派生规则变更；粒度变化（如京东从 item 级改为 sku 级）不得用别名映射。 | 已确认 | platforms 字典表 key_prefix 字段；packages/domain validateProductKey / resolveProductKey；所有含 product_key 的表（links、link_logs、orders、pool_items、product_refs、tracked_item、price_snapshot）；GET /v1/products/{product_key}；POST /v1/links/convert；JSBridge trade.openProduct / trade.convertAndOpen；Agent product_card.product_key；product_key_aliases（新增）；错误码 20001、30131 |
 | BR-PROD-03 | **各平台 stable_id 派生、稳定性验证与订单派生**<br>`stable_id` 只能由 `packages/domain` 中唯一的纯函数 `deriveProductKey(platform, unionPayload)` 派生；搜索、详情、口令/链接解析、商品池入库、订单同步五个入口调用同一个函数。MVP 只有 taobao、jd、pdd 生成 product_key；其他平台在本条补充派生规则之前，一律抛 `PRODUCT_KEY_UNDERIVABLE`。默认派生规则：淘宝取联盟返回的 item_id 原串按 `-` 分隔后的最后一段（没有 `-` 时取整串）。京东按全平台配置 `product_key.jd.mode` 取值，不按单条响应切换：`sku` 取 skuId；`item` 取 itemId 按 `_` 分隔的第 2 段，加 `i_` 前缀，即 `jd:i_<B段>`。拼多多取 `goods_id`，goods_sign 只作 raw_item_id，不进 key。派生结果为空串，或不满足 BR-PROD-02 的字符集或长度，一律按 `PRODUCT_KEY_UNDERIVABLE` 处理，不截断、不转义。platforms 表为每个平台记录 `key_stability`（unverified / stable_24h / stable_7d / unstable），按本条的验证标准判定；未达到 stable_7d 的平台不得上线订阅提醒和价格历史。验证不通过时，由负责人决定是否启用 BR-PROD-06 兜底键（写 ADR）；批准前该平台继续按默认规则派生。订单入口是否派生由平台级配置 `product_key.order_derivable.<platform>` 决定，默认 false。product_key 为 null 的订单不能使用“同商品”证据；证据等级只由 BR-ATTR 规定，本条不新增证据类型；禁止把“同平台”作为 link_log 回填或订单找回自动匹配的依据。 | 待验证 | packages/domain deriveProductKey；platforms.key_stability（新增）；配置 product_key.jd.mode；配置 product_key.order_derivable.&lt;platform>；catalog 搜索与详情；POST /v1/inputs/parse（规划/04 原写 /v1/clipboard/parse，C-14）；POST /v1/links/convert（传 url）；商品池入库；order-sync 订单入库 orders.product_key；links.product_key / raw_item_id 可空（活动类、PDD 直链降级）；错误码 30131、30132、30143；规划/09 平台能力验证表；fixture：每平台 ≥30 条；验收 V-PK-1、V-PK-2（BR-PROD-01 细则「验收依赖」） |
-| BR-PROD-04 | **规格/SKU 与数量粒度**<br>`product_key` 的粒度等于联盟接口可报价、可转链的最小单位：淘宝、拼多多为商品（listing）级；京东在 `product_key.jd.mode=sku` 时为 skuId 级，`item` 模式下的粒度待 S0 确认 itemId 与 skuId 是否一一对应。规格（颜色、尺码、容量、件装）不单独进入 product_key：同一个淘宝或拼多多商品下的不同 SKU 共用一个 product_key，价格采用联盟返回的商品级价格（口径见 BR-PRICE）。商品级价格对应的规格无法确定时，卡片和详情页的价格旁必须显示“规格以下单页为准”；联盟返回价格区间，或确知该价为最低规格价时，显示“¥x 起”。页面、卡片、Agent 都不得声称“某规格的价格”。用户在 spec 或价格条件中指定了规格时，Agent 不得回复“该规格 ¥x”或“满足 50 元以内”，只能说“该商品最低券后 ¥x，你要的规格价格以下单页为准”。规格文本 `spec_text` 只作为检索条件和展示附加信息，不参与去重、商品维度缓存键和归因；作为搜索请求参数时，它进入搜索缓存键（BR-PROD-07）。不同 product_key 之间（包括京东同一商品的不同 sku、同一店铺分别上架的 12 盒装和 24 盒装）不得合并为同一商品，也不得合并比价；MVP 不做任何 SKU 间比价。 | 待决策 | product_key 粒度；search_products.spec 参数；Agent 卡片去重与折叠；Agent 价格话术；商品卡与详情页价格文案（规格以下单页为准 / ¥x 起）；降价提醒（P1）监控对象与文案；客服话术：价格与所选规格不一致；规划/09 能力验证行 |
+| BR-PROD-04 | **规格/SKU 与数量粒度**<br>`product_key` 的粒度等于联盟接口可报价、可转链的最小单位：淘宝、拼多多为商品（listing）级；京东在 `product_key.jd.mode=sku` 时为 skuId 级，`item` 模式下的粒度待 S0 确认 itemId 与 skuId 是否一一对应。规格（颜色、尺码、容量、件装）不单独进入 product_key：同一个淘宝或拼多多商品下的不同 SKU 共用一个 product_key，价格采用联盟返回的商品级价格（口径见 BR-PRICE）。商品级价格对应的规格无法确定时，卡片和详情页的价格旁必须显示“规格以下单页为准”；联盟返回价格区间，或确知该价为最低规格价时，显示“¥x 起”。页面、卡片、Agent 都不得声称“某规格的价格”。用户在 spec 或价格条件中指定了规格时，Agent 文字不得出现任何金额（BR-AI-06），也不得说“该规格 ¥x”或“满足 50 元以内”，只能说“你要的规格价格以下单页为准”；金额只在卡片上显示，并带本条的规格限定语（拍板第二批 AI-24 统一）。Agent 卡的逐张核对标记（符合 / 已放宽 / 规格待确认）由服务端代码判定（拍板第二批 AI-04，判定规则见 BR-AI-24），对用户只用“标题显示为 X”“规格待确认”这类说法，不写“符合你的要求”（拍板第二批 JEV-02）；标记不改变本条的价格限定语。规格文本 `spec_text` 只作为检索条件和展示附加信息，不参与去重、商品维度缓存键和归因；作为搜索请求参数时，它进入搜索缓存键（BR-PROD-07）。不同 product_key 之间（包括京东同一商品的不同 sku、同一店铺分别上架的 12 盒装和 24 盒装）不得合并为同一商品，也不得合并比价；MVP 不做任何 SKU 间比价。 | 已确认 | product_key 粒度；search_products.spec 参数；Agent 卡片去重与折叠；Agent 价格话术（文字不出金额）；Agent 卡逐张核对标记（BR-AI-24）；商品卡与详情页价格文案（规格以下单页为准 / ¥x 起）；降价提醒（P1）监控对象与文案；客服话术：价格与所选规格不一致；规划/09 能力验证行 |
 | BR-PROD-05 | **raw_item_id 保存、取用与重新解析**<br>`raw_item_id` 等于联盟返回的商品 ID 原串：淘宝为 item_id 原串；京东 sku 模式为 skuId，item 模式为 itemId 全串；拼多多为 goods_sign。按 text 原样保存，不得拼接、截断、推算或跨平台复用。`links`、`link_logs`、`orders` 必须同时保存 product_key 与 raw_item_id（活动类转链两者都为 null，见 BR-PROD-03）。转链、详情、刷新时按以下顺序取原串：① 本次请求携带的卡片 `item_ref`（BR-PROD-11）中的原串，或 `links.raw_item_id`，要求取得时刻距今 ≤1800 秒；② `product_refs` 中 (app_id, product_key) 的原串，要求 `refreshed_at` 距今 ≤1800 秒（已启用兜底键的平台跳过这一步，见 BR-PROD-06）；③ 重新解析。product_refs 只接受 search、detail、parse、pool 四个来源写入；订单同步只写 orders.raw_item_id，不写 product_refs。`refreshed_at` 等于本次联盟响应的接收时刻；写入使用条件更新，较旧的响应不得覆盖较新的记录。重新解析的结果按细则「结果分类」表的三类（下架 / 引用失效 / 暂时失败）处理；任何情况下都不得用过期原串转链。订单的 product_key 派生失败或未开启派生时，product_key=null、raw_item_id 照存，不得丢单。 | 待验证 | product_refs（新增表）；links.raw_item_id；link_logs.raw_item_id；orders.raw_item_id / product_key 可空；POST /v1/links/convert；POST /v1/links/{link_id}/open；product_card.availability（新增 ref_expired）；错误码 30141、30143（新增，只表示商品信息已失效；link_id 无效为 30144，属 BR-AI-11）、50303（open 复核失败且无缓存，BR-PRICE-13）、50401；商品池刷新任务 |
 | BR-PROD-06 | **ID 不稳定时的兜底键**<br>默认不启用。只有某平台按 BR-PROD-03 判定为 unstable（或拼多多响应不含 goods_id），且负责人批准并写 ADR 后才启用。兜底键格式为 `<key_prefix>:fp_<hex32>`：对 UTF-8 编码的 `platform\|shop_id\|norm(title)` 计算 SHA-256，取小写十六进制结果的前 32 个字符（128 bit）。`norm` 按顺序执行：① NFKC；② 删除 `【…】` 及其中内容（非贪婪匹配，可以出现多处）；③ 转小写；④ 删除所有属于 Unicode 类别 \\p{P}、\\p{S}、\\p{Z}、\\p{C} 的字符（包括空白、emoji、×、\*、+）。兜底键只在同一个 shop_id 内合并；shop_id 缺失时兜底键为 null，按 BR-PROD-03 的派生失败处理（搜索结果丢弃并计数，订单以 null 入库）。兜底键只用于缓存、会话内去重、商品池和 links/link_logs 记录。它不得作为归因的“同商品”强证据；在归因和订单找回中，最多按“同店铺”证据处理（见 BR-ATTR）。兜底期间，该平台不得上线订阅提醒和价格历史，BR-WATCH 不得另设降级上线路径。兜底期间，转链、详情、刷新只使用卡片 item_ref 或 links.raw_item_id 中的原串（BR-PROD-05 第①步），不得按 product_key 查 product_refs 取原串。原串过期时重新解析；如果同一店铺内有多个 norm 标题相同的候选，则不转链，返回 30143“商品信息已失效，请重新搜索”（与 BR-PROD-05 同码同文案）。启用或停用都须负责人批准并写 ADR；切换时新旧键不做别名映射，旧键保留为只读历史键（BR-PROD-02）。 | 待决策 | deriveProductKey 兜底分支；product_key_aliases（兜底切换不使用）；转链取原串顺序（BR-PROD-05、BR-PROD-11）；价格快照与订阅提醒（P1）；归因证据等级（BR-ATTR）；错误码 30143；ADR |
-| BR-PROD-07 | **商品缓存口径**<br>搜索结果和商品详情缓存在服务端，命中条件为 `now − fetched_at ≤ 300 秒`。fetched_at 是收到联盟响应的时刻，存在条目内，毫秒精度，以服务端时钟为准。Redis 物理 TTL 为 3600 秒，只用于清理，不作命中判断。凡是影响联盟返回结果的请求参数，都必须进入搜索缓存键；不影响结果的参数（user_id、device_id、我方游标、会话 ID）不得进入。缓存键不得含推广位、relation_id 或任何归因参数；商品维度只用 product_key，不用 raw_item_id；所有键以 app_id 开头。搜索和详情调用联盟时，统一使用固定的查询专用推广位（新增 pid_scene=`query`，不下发给用户、不用于转链），不带 relation_id。写入缓存前，必须剔除联盟返回的全部链接和口令字段（如 coupon_share_url、click_url、url、\*_tpwd）。缓存只存联盟公共数据（标题、图、店铺、价格、券、佣金比例、fetched_at）；预估返利在读缓存后按当前用户等级实时计算，不得写入缓存。转链结果按 (app_id, user_id, platform, product_key, pid_scene) 隔离缓存，≤900 秒，禁止跨用户复用；只复用联盟返回的推广链接或口令本体，每次 convert/open（包括缓存命中）都新建 links 与 link_logs 行。联盟熔断打开期间，可以返回 age ≤ `search.cache.stale_max_age_s`（默认 300 秒）的条目，并标 `stale=true`；没有符合条件的条目时返回 50301，首页信息流改读商品池。价格与券以转链或打开时的实时查询为准（BR-PRICE）。跨用户共享搜索、详情缓存的前提是验证通过“结果不随 relation_id 或推广位变化”（规划/09 CAP-TB-03、CAP-TB-13 及京东、拼多多对应项）；验证不成立时，缓存键加入推广位维度，或改为按用户查询。 | 待验证 | Redis 缓存键规范；products_cache（Redis）；GET /v1/products/search 响应 stale、quoted_at；GET /v1/products/{product_key}；POST /v1/links/convert；links.cache_hit、links.expire_at；pid_scene 新增 query；配置 search.cache.stale_max_age_s；配置 search.filter_cfg_version；熔断降级（规划/02 故障表）；错误码 50301；验收 V-PK-1（命中缓存；BR-PROD-01 细则「验收依赖」） |
-| BR-PROD-08 | **去重与唯一键口径**<br>所有商品去重的键为 (app_id, platform, resolveProductKey(product_key))。product_key 为 null 的条目不参与去重，也不进入以下集合。① Agent 多平台并发检索合并后，同一个键只保留排序最靠前的 1 条；跨平台不去重。② 单平台搜索分页时，同一查询会话内已下发过的 product_key 在后续页中剔除。查询会话的定义：同一请求者（已登录用 user_id，未登录用 device_id），在 BR-PROD-07 搜索缓存参数（不含 page_no）完全相同时的连续翻页。请求第 1 页时新建 search_session_id 并写入游标；30 分钟没有请求即过期；筛选或排序一变就开新会话。已下发集合存在 Redis，上限 500 个，超出后不再去重。去重只在读缓存之后、下发之前执行，缓存里保存的是联盟原始页。③ 商品池唯一键为 (app_id, pool_id, product_key)。重复入库时，用本次提交的 sort、start_at、end_at 覆盖原记录，created_at 和创建人不变，并立即触发一次联盟复核：通过则 status=online；不通过则保持或置为 offline，并向运营显示原因。④ P1 订阅监控：tracked_item 唯一 (app_id, platform, product_key)；price_snapshot 以 (app_id, product_key) 为键；query_seen_item 唯一 (query_id, product_key)。⑤ 同一条消息解析出多个链接（≤3 个；第 4 个起不处理，上限由 BR-AI-01 细则 parse_input 行维护）时，同一个键只出 1 张卡。 | 已确认 | catalog 多平台检索合并；搜索游标（search_session_id + page_no）；Redis 会话已下发集合；pool_items 唯一约束与复核；tracked_item / price_snapshot / query_seen_item（P1）；parse_input 多链接出卡；Agent product_list 卡片 |
-| BR-PROD-09 | **跨平台同款判定（P1）**<br>MVP 不实现。P1 实现时，跨平台同款只能作为独立关系 `same_item_links(app_id, product_key_a, product_key_b, match_level, basis, created_at)` 保存，不得合并 product_key，也不得共享缓存或价格快照。判定为“同款”必须同时满足四条：品牌归一后相同；核心品名或型号相同；规格归一后单件净含量与每件数量都相等（如 250ml×24 与 24×250ml 相等）；标题不含“同款/平替/适用于/兼容”。只满足品牌与品名、规格不同的，只能标“规格不同”并展示折合单价，不得称“同款”，也不得参与“哪家更便宜”的结论。只有模型打分、没有通过规则的，只能标“相似商品”。 | 待决策 | find_same_item 工具（P1）；same_item_links 表（P1）；Agent 比价话术；截图找同款（P1）；规划/02 模型路由 Plus 档同款打分 |
+| BR-PROD-07 | **商品缓存口径**<br>搜索结果和商品详情缓存在服务端，命中条件为 `now − fetched_at ≤ 300 秒`。fetched_at 是收到联盟响应的时刻，存在条目内，毫秒精度，以服务端时钟为准。Redis 物理 TTL 为 3600 秒，只用于清理，不作命中判断。凡是影响联盟返回结果的请求参数，都必须进入搜索缓存键；不影响结果的参数（user_id、device_id、我方游标、会话 ID）不得进入。缓存键不得含推广位、relation_id 或任何归因参数；商品维度只用 product_key，不用 raw_item_id；所有键以 app_id 开头。搜索和详情调用联盟时，统一使用固定的查询专用推广位（新增 pid_scene=`query`，不下发给用户、不用于转链），不带 relation_id。写入缓存前，必须剔除联盟返回的全部链接和口令字段（如 coupon_share_url、click_url、url、\*_tpwd）。缓存只存联盟公共数据（标题、图、店铺、价格、券、佣金比例、fetched_at）；预估返利在读缓存后按当前用户等级实时计算，不得写入缓存。转链结果按 (app_id, user_id, platform, product_key, pid_scene) 隔离缓存，≤900 秒，禁止跨用户复用；只复用联盟返回的推广链接或口令本体，每次 convert/open（包括缓存命中）都新建 links 与 link_logs 行。联盟熔断打开期间，可以返回 age ≤ `search.cache.stale_max_age_s`（默认 300 秒）的条目，并标 `stale=true`；没有符合条件的条目时，搜索返回 50304（新增：&lt;平台>搜索暂不可用；码值以规划/04 §7 为准），不拿商品池冒充搜索结果；详情按 BR-PRICE-11 改读商品池价格并标 stale；首页信息流改读商品池（拍板第二批 TRADE-12）。50301 只表示转链开关关闭（BR-PROD-10）。价格与券以转链或打开时的实时查询为准（BR-PRICE）。跨用户共享搜索、详情缓存的前提是验证通过“结果不随 relation_id 或推广位变化”（规划/09 CAP-TB-03、CAP-TB-13 及京东、拼多多对应项）；验证不成立时，缓存键加入推广位维度，或改为按用户查询。 | 待验证 | Redis 缓存键规范；products_cache（Redis）；GET /v1/products/search 响应 stale、quoted_at；GET /v1/products/{product_key}；POST /v1/links/convert；links.cache_hit、links.expire_at；pid_scene 新增 query；配置 search.cache.stale_max_age_s；配置 search.filter_cfg_version；熔断降级（规划/02 故障表）；错误码 50304（新增，搜索无缓存）；验收 V-PK-1（命中缓存；BR-PROD-01 细则「验收依赖」） |
+| BR-PROD-08 | **去重与唯一键口径**<br>所有商品去重的键为 (app_id, platform, resolveProductKey(product_key))。product_key 为 null 的条目不参与去重，也不进入以下集合。① Agent 多平台并发检索合并后，同一个键只保留 1 条；跨平台不去重。同一个键有多条时（如拼多多同一商品的多个券佣计划 goods_sign），保留 final_price_fen 最低的一条，相同取 rebate_max_fen 高的，再相同取排序靠前的；转链用保留那条的 goods_sign（拍板第二批 TRADE-14）。单平台搜索同一页内出现同键多条时按同一规则保留。② 单平台搜索分页时，同一查询会话内已下发过的 product_key 在后续页中剔除。查询会话的定义：同一请求者（已登录用 user_id，未登录用 device_id），在 BR-PROD-07 搜索缓存参数（不含 page_no）完全相同时的连续翻页。请求第 1 页时新建 search_session_id 并写入游标；30 分钟没有请求即过期；筛选或排序一变就开新会话。已下发集合存在 Redis，上限 500 个，超出后不再去重。去重只在读缓存之后、下发之前执行，缓存里保存的是联盟原始页。③ 商品池唯一键为 (app_id, pool_id, product_key)。重复入库时，用本次提交的 sort、start_at、end_at 覆盖原记录，created_at 和创建人不变，并立即触发一次联盟复核：通过则 status=online；不通过则保持或置为 offline，并向运营显示原因。④ P1 订阅监控：tracked_item 唯一 (app_id, platform, product_key)；price_snapshot 以 (app_id, product_key) 为键；query_seen_item 唯一 (query_id, product_key)。⑤ 同一条消息解析出多个链接（≤3 个；第 4 个起不处理，上限由 BR-AI-01 细则 parse_input 行维护）时，同一个键只出 1 张卡。 | 已确认 | catalog 多平台检索合并；搜索游标（search_session_id + page_no）；Redis 会话已下发集合；pool_items 唯一约束与复核；tracked_item / price_snapshot / query_seen_item（P1）；parse_input 多链接出卡；Agent product_list 卡片 |
+| BR-PROD-09 | **跨平台同款判定（P1）**<br>MVP 不实现。P1 实现时，跨平台同款只能作为独立关系 `same_item_links(app_id, product_key_a, product_key_b, match_level, basis, created_at)` 保存，不得合并 product_key，也不得共享缓存或价格快照。判定为“同款”必须同时满足四条：品牌归一后相同；核心品名或型号相同；规格归一后单件净含量与每件数量都相等（如 250ml×24 与 24×250ml 相等）；标题不含“同款/平替/适用于/兼容”。只满足品牌与品名、规格不同的，只能标“规格不同”并展示折合单价，不得称“同款”，也不得参与“哪家更便宜”的结论。只有模型打分、没有通过规则的，只能标“相似商品”。 | 已确认 | find_same_item 工具（P1）；same_item_links 表（P1）；Agent 比价话术；截图找同款（P1）；规划/02 模型路由 Plus 档同款打分 |
 | BR-PROD-10 | **平台编码、天猫归属与平台开关**<br>商品身份中的 `platform` 取 规划/04 §2.1 的字符串编码（taobao、jd、pdd、meituan、vip、douyin、eleme、kuaishou、suning），不得使用数字编码。天猫商品 platform=`taobao`，用 `shop_type=tmall` 区分，product_key 前缀为 `tb:`；shop_type 的取数为待验证子项（见细则「依赖平台能力」）：商品侧取联盟 user_type（1=天猫），订单侧天猫标识字段待 规划/09 CAP-TB-07（U-43）实测，验证前 orders.shop_type 可空，由商品侧回填；`detail.tmall.com` 等天猫链接的解析结果 platform=taobao。是否生成 product_key，只取决于该平台在 platforms 表中有 key_prefix，且 BR-PROD-03 已给出派生规则，与转链开关无关。能识别域名，但该平台不在 platforms 表中，或其解析与搜索能力都未开启的，解析、详情、搜索返回 30131“暂不支持该平台”，不写 product_refs。`convert.enabled.<platform>=false` 只控制转链：仍生成 product_key，正常展示卡片；`POST /v1/links/convert` 与 `/open` 返回 50301，卡片按钮和文案按 规划/09 中该平台的降级写法处理（如 CAP-TB-06 的“稍后再试”、CAP-TB-07 的“淘宝返利即将开放”）。 | 已确认 | platforms 字典表；orders.shop_type；product_card.shop_type；parse_input 输出；错误码 30131、50301；配置 convert.enabled.&lt;platform>；卡片按钮降级文案 |
 | BR-PROD-11 | **商品引用令牌 item_ref**<br>服务端在每个下发的商品条目中附带 `item_ref`，包括搜索结果、详情、解析结果、商品池条目和 Agent product_card。item_ref 是服务端加密并签名的不透明串，内容为 app_id、platform、product_key、raw_item_id、fetched_at（联盟响应的接收时刻），不含 user_id。客户端、H5、Agent 只能原样透传，不得解析或自行构造。`POST /v1/links/convert`（按 product_key 调用时）必须携带用户所点卡片的 item_ref。服务端校验签名，且 app_id、product_key 与请求一致后，将其作为 BR-PROD-05 第①步的原串来源。item_ref 缺失、签名无效、无法解密或 app_id 不符时，忽略令牌，按 BR-PROD-05 第②③步继续，不报错；签名有效但 product_key 与请求不一致时返回 20001。`POST /v1/links/{link_id}/open` 以 links.raw_item_id 与 links.raw_fetched_at 作为第①步来源。item_ref 不得用于归因，也不得以明文写入日志。 | 默认假设 | product_card.item_ref（新增）；GET /v1/products/search 与 GET /v1/products/{product_key} 响应条目；POST /v1/inputs/parse 响应（规划/04 原写 /v1/clipboard/parse，C-14）；POST /v1/links/convert 入参 item_ref；links.raw_fetched_at（新增）；JSBridge trade.openProduct / trade.convertAndOpen 参数；Agent product_card；商品池下发接口 |
 
@@ -125,7 +125,7 @@ V-PK-1、V-PK-2 在各平台能否通过，取决于 BR-PROD-03 的 S0 验证结
   - 规划/04 §1；PRD修订_后端功能规划_2026-09-29.md 2.3：「拼多多 product_key = pdd: + goods_sign（改为 goods_id，依据 规划/09 CAP-PDD-01：同一商品有多个 goods_sign）」
   - 规划/09 CAP-TB-01 通过标准：「同一样本 3 次调用 item_id 后半段一致率 100%（改为引用本条验证标准）」
   - 规划/09 CAP-JD-01 通过标准③：「itemId B 段 24 小时内一致（改为引用本条验证标准）」
-- 来源：PRD修订_后端功能规划_2026-09-29.md 2.3 product_key 行；开发任务拆解_v1_2026-09-29.md 12.1 H-23；返利 App PRD（三端原生 + H5 + Agent）.md §10.20 第 4 条、G19；规划/09_平台能力验证/2_TB_淘宝.md CAP-TB-01、3_JD_京东.md CAP-JD-01、4_PDD_拼多多.md CAP-PDD-01；规划/02_系统架构.md §7 link_log 回填；规划/04_数据模型与契约.md 订单找回 auto_matched、§7 错误码；规划/05_里程碑与任务拆分.md §3.2 B1-07
+- 来源：PRD修订_后端功能规划_2026-09-29.md 2.3 product_key 行；开发任务拆解_v1_2026-09-29.md 12.1 H-23；返利 App PRD（三端原生 + H5 + Agent）.md §10.20 第 4 条、G19；规划/09_平台能力验证/2_TB_淘宝.md CAP-TB-01、3_JD_京东.md CAP-JD-01、4_PDD_拼多多.md CAP-PDD-01；规划/02_系统架构.md §7 link_log 回填；规划/04_数据模型与契约.md 订单找回 auto_matched、§7 错误码；规划/05_里程碑与任务拆分.md §3.2 B1-07；docs/changes/20261001-拍板第二批.md（TRADE-07、TRADE-08）
 - 需同步修改的规划文档：5 处（计数仅作记录，落点见 README §0.6）
 
 **派生表**
@@ -156,8 +156,8 @@ V-PK-1、V-PK-2 在各平台能否通过，取决于 BR-PROD-03 的 S0 验证结
 | 入口 | 处理 |
 | --- | --- |
 | 搜索 | 丢弃该条，计数并告警 |
-| 解析（`POST /v1/inputs/parse`；规划/04 §6.3 原写 `/v1/clipboard/parse`，读作同一接口，C-14） | 联盟已识别出商品但派生失败 → 30131，文案“暂时无法识别这个商品，试试用商品名搜索”，搜索框预填 title_hint；不写 product_refs。口令本身无法识别时仍按 09 返回 30132 |
-| `POST /v1/links/convert` 传 url | 与解析相同：返回 30131，不转链，不以 product_key=null 生成 links。唯一例外是 09 CAP-PDD-01 的 zs.unit.url.gen 直链降级（由开关控制，links.product_key=null，不参与去重、缓存和“同商品”证据） |
+| 解析（`POST /v1/inputs/parse`；规划/04 §6.3 原写 `/v1/clipboard/parse`，读作同一接口，C-14） | 联盟已识别出商品但派生失败 → 30131，文案“暂时无法识别这个商品，试试用商品名搜索”，搜索框预填 title_hint；不写 product_refs。口令本身无法识别时仍按 09 返回 30132。三平台识别不到具体商品时一律报错并给“用商品名搜索”按钮，不自动出候选卡（拍板第二批 TRADE-07）。例外：拼多多合法链接拿不到商品信息、且 pdd.direct_convert.enabled 打开时，出 amount_unknown 卡（BR-PRICE-08，拍板第二批 TRADE-08） |
+| `POST /v1/links/convert` 传 url | 与解析相同：返回 30131，不转链，不以 product_key=null 生成 links。唯一例外是 09 CAP-PDD-01 的 zs.unit.url.gen 直链降级（开关 pdd.direct_convert.enabled，默认关；links.product_key=null，不参与去重、缓存和“同商品”证据；卡片按 BR-PRICE-08 显示 amount_unknown，点击经 open 带用户参数转链，拍板第二批 TRADE-08） |
 | 详情 `GET /v1/products/{product_key}` | 响应的派生结果（解析别名后）不等于请求键，或无法派生 → 按 BR-PROD-05 结果分类②处理（ref_expired，30143） |
 | 商品池 | 拒绝入库，并向运营显示原因（BR-PROD-08） |
 | 订单 | product_key=null 入库，不丢单 |
@@ -170,13 +170,13 @@ V-PK-1、V-PK-2 在各平台能否通过，取决于 BR-PROD-03 的 S0 验证结
 
 #### BR-PROD-04 细则 · 规格/SKU 与数量粒度
 
-- 状态：待决策
+- 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §2）
 - 默认值：淘宝、拼多多按商品级；京东 sku 模式按 sku 级；规格只作检索与展示；价格无法对应规格时标“规格以下单页为准”或“¥x 起”；MVP 不合并不同 SKU 比价。理由：联盟接口按商品报价与转链，SKU 级价格未经验证；把规格写进 key 会产生无法从接口复现的键；不标规格限定语有价格表述误导风险
 - 决策人：负责人
 - 依赖平台能力：淘宝、拼多多联盟接口是否返回 SKU ID 与 SKU 级券后价（拼多多 need_sku_info 为特殊渠道权限，09 CAP-PDD-01）；京东新 App 媒体是否有 skuId 权限；京东 itemId 与 skuId 是否一一对应
 - 取代：
   - PRD修订_后端功能规划_2026-09-29.md 2.3：「京东 = jd: + itemId 的 B 段（有 skuId 权限时用 skuId），未说明粒度差异（本条明确：京东 sku 模式为 sku 级，淘宝、拼多多为商品级）」
-- 来源：规划/01_需求规划.md J3、F-PROD-06；规划/04_数据模型与契约.md §1；规划/09_平台能力验证/2_TB_淘宝.md CAP-TB-01、3_JD_京东.md CAP-JD-01、4_PDD_拼多多.md CAP-PDD-01 降级文案；PRD修订_后端功能规划_2026-09-29.md 2.3；返利 App PRD（三端原生 + H5 + Agent）.md §10.3、§10.11 AF-05
+- 来源：规划/01_需求规划.md J3、F-PROD-06；规划/04_数据模型与契约.md §1；规划/09_平台能力验证/2_TB_淘宝.md CAP-TB-01、3_JD_京东.md CAP-JD-01、4_PDD_拼多多.md CAP-PDD-01 降级文案；PRD修订_后端功能规划_2026-09-29.md 2.3；返利 App PRD（三端原生 + H5 + Agent）.md §10.3、§10.11 AF-05；docs/changes/20261001-拍板第二批.md（AI-04、AI-24、JEV-02）
 - 需同步修改的规划文档：3 处（计数仅作记录，落点见 README §0.6）
 
 **例子**
@@ -185,7 +185,7 @@ V-PK-1、V-PK-2 在各平台能否通过，取决于 BR-PROD-03 的 S0 验证结
 | 淘宝某牛奶商品，SKU 有 12 盒、24 盒 | 同一个 `tb:K1` | 是。价格按商品级，价格旁显示“规格以下单页为准”；确知为最低规格价时显示“¥45 起”；不写“24 盒 ¥49” |
 | 同店铺把 12 盒、24 盒分别上架为两个商品 | `tb:K1`、`tb:K2` | 否 |
 | 京东同款红色、蓝色，skuId 不同（sku 模式） | `jd:1001`、`jd:1002` | 否。Agent 列表中，如果接口同时返回 itemId/spuid，同组只出相关性最高的 1 张卡（折叠实现由代理自定，不改变去重键） |
-| 用户说“伊利 250ml\*24 50 以内”，命中商品的商品级最低券后价为 ¥45（可能是 12 盒规格） | `tb:K1` | spec 只进 `search_products.spec`，无结果时按 BR-AI-08 无结果放宽（先去规格；放宽顺序、次数、放宽说明 notice 与两次放宽后仍无结果的 notice/suggestions 均以 BR-AI-08 为准，本条不另定义；G-19）。Agent 回复“该商品最低券后 ¥45，你要的 24 盒规格价格以下单页为准”，不得说“24 盒 45 元”或“满足 50 元以内” |
+| 用户说“伊利 250ml\*24 50 以内”，命中商品的商品级最低券后价为 ¥45（可能是 12 盒规格） | `tb:K1` | spec 只进 `search_products.spec`，无结果时按 BR-AI-08 无结果放宽（先去规格；放宽顺序、次数、放宽说明 notice 与两次放宽后仍无结果的 notice/suggestions 均以 BR-AI-08 为准，本条不另定义；G-19）。卡片显示“券后 ¥45”并带“规格以下单页为准”，核对标记为“规格待确认”；Agent 文字只说“你要的 24 盒规格价格以下单页为准”，不出现金额（BR-AI-06），不得说“24 盒 45 元”或“满足 50 元以内” |
 
 **文案**：文案 key 由 BR-PRICE 统一维护，但不得删除本条要求的规格限定语。与 规划/09 CAP-TB-01、CAP-PDD-01 的降级文案保持一致。
 
@@ -222,7 +222,7 @@ INSERT … ON CONFLICT (app_id, product_key) DO UPDATE SET …
 | --- | --- | --- | --- | --- | --- |
 | ① 下架 | 联盟明确返回下架 | 30141 | off_shelf | 商品已下架 | 删除 `product:{app_id}:{product_key}` 缓存；商品池中该 (app_id, product_key) 的全部 pool_items 置 status=offline，并向运营显示原因“联盟返回下架”（规划/01 F-ADM-10 自动失效下架；再次上架走 BR-PROD-08 ③ 复核） |
 | ② 引用失效 | 检索不到同键商品，或派生出不同的键 | 30143（新增） | ref_expired（新增） | 商品信息已失效，请重新搜索 | 不删缓存，不触发商品池下架 |
-| ③ 暂时失败 | 超时、限流或熔断 | open：按 BR-PRICE-13，有该用户 ≤900 秒转链缓存则用缓存外跳并返回 requote_failed=true，无缓存则返回 50303；convert、详情：50401。均可重试；不使用 50301（只表示 convert.enabled.&lt;platform> 关闭，BR-PROD-10） | 不变 | open 按 BR-PRICE-13（requote_failed：「暂时无法确认最新价格，以下单页为准」；50303：主按钮「稍后再试」，次按钮「仍去购买（无返利）」）；convert、详情：网络繁忙，请稍后再试 | 无 |
+| ③ 暂时失败 | 超时、限流或熔断 | open：按 BR-PRICE-13，有该用户 ≤900 秒转链缓存则用缓存外跳并返回 requote_failed=true，无缓存则返回 50303；convert、详情：50401。均可重试；不使用 50301（只表示 convert.enabled.&lt;platform> 关闭，BR-PROD-10），也不使用 50304（只表示搜索无缓存，BR-PROD-07） | 不变 | open 按 BR-PRICE-13（requote_failed：「暂时无法确认最新价格，以下单页为准」；50303：主按钮「稍后再试」，次按钮「仍去购买（无返利）」）；convert、详情：网络繁忙，请稍后再试 | 无 |
 
 **例子**
 - 10:00 搜索得到 raw=`X-K1`（tb:K1），10:20 点击转链；卡片 item_ref 取得时刻为 10:00，间隔 1200 秒 ≤1800，用 `X-K1`。
@@ -267,7 +267,8 @@ INSERT … ON CONFLICT (app_id, product_key) DO UPDATE SET …
 - 取代：
   - 返利 App PRD（三端原生 + H5 + Agent）.md §6：「搜索、详情服务端缓存 5 分钟；只缓存搜索结果（不含归因）（保留，并补全键组成、命中判断与剔除链接字段）」
   - 规划/02_系统架构.md 故障降级表 搜索行：「返回 5 分钟内缓存并标 stale（改为按 stale_max_age_s 判断，默认 300 秒，并写明无缓存时返回 50301）」
-- 来源：规划/01_需求规划.md F-PROD-07；规划/02_系统架构.md §9 转链时机、故障降级表；规划/04_数据模型与契约.md §2.2 pid_scene、§3.2 links、§5 接口表；规划/09_平台能力验证/2_TB_淘宝.md CAP-TB-03、CAP-TB-13；PRD修订_后端功能规划_2026-09-29.md 2.3 F-88；返利 App PRD（三端原生 + H5 + Agent）.md §6、§10.15
+  - 本条原写（2026-09-30）：「没有符合条件的条目时返回 50301」→ 搜索返回新码 50304，不读商品池冒充；50301 只表示转链开关关闭（拍板第二批 TRADE-12）
+- 来源：规划/01_需求规划.md F-PROD-07；规划/02_系统架构.md §9 转链时机、故障降级表；规划/04_数据模型与契约.md §2.2 pid_scene、§3.2 links、§5 接口表；规划/09_平台能力验证/2_TB_淘宝.md CAP-TB-03、CAP-TB-13；PRD修订_后端功能规划_2026-09-29.md 2.3 F-88；返利 App PRD（三端原生 + H5 + Agent）.md §6、§10.15；docs/changes/20261001-拍板第二批.md（TRADE-12）
 - 需同步修改的规划文档：6 处（计数仅作记录，落点见 README §0.6）
 
 **缓存键**
@@ -288,7 +289,7 @@ INSERT … ON CONFLICT (app_id, product_key) DO UPDATE SET …
 | 情形 | 返回 | App 表现 |
 | --- | --- | --- |
 | 熔断打开，有 age ≤ stale_max_age_s 的条目 | 结果 + stale=true + quoted_at=fetched_at | 结果顶部显示“价格可能已变化，下单前以平台为准” |
-| 熔断打开，没有符合条件的条目 | 50301 | 按 09 CAP-TB-03 等行显示“&lt;平台>搜索暂时不可用”；Agent 改查其他平台；首页改读商品池 |
+| 熔断打开，没有符合条件的条目 | 搜索：50304（新增）；详情：商品池价格 + stale=true（BR-PRICE-11） | 搜索显示“&lt;平台>搜索暂不可用”（措辞以 BR-TEXT-14 为准），不展示商品池商品冒充搜索结果；Agent 改查其他平台；首页信息流改读商品池（拍板第二批 TRADE-12） |
 `stale_max_age_s` 默认 300，负责人可以上调，上限 3600（不得超过物理 TTL）。
 
 **转链缓存**：命中时只复用推广链接或口令本体。新建的 links 行记录本次的 scene、spm、agent_session_id，以及 cache_hit=true；links.expire_at 取缓存条目的原始过期时间，不重新计时。归因细节见 BR-ATTR。
@@ -298,18 +299,19 @@ INSERT … ON CONFLICT (app_id, product_key) DO UPDATE SET …
 #### BR-PROD-08 细则 · 去重与唯一键口径
 
 - 状态：已确认
-- 默认值：按 (app_id, platform, product_key) 去重，null 不参与；会话 30 分钟过期、集合上限 500；读缓存之后再去重
+- 默认值：按 (app_id, platform, product_key) 去重，null 不参与；同键多条取券后价最低、同价取预估返高的（拍板第二批 TRADE-14）；会话 30 分钟过期、集合上限 500；读缓存之后再去重
 - 决策人：代理可自定
 - 依赖平台能力：无
 - 取代：
   - PRD修订_后端功能规划_2026-09-29.md 2.3：「多平台并发检索合并后去重（原文未写去重口径）」
   - 修订① 3.7；PRD v2.1 §10.7：「同一平台同一 item_id 只出一张卡」
   - PRD v2.1 §10.20：「(platform, item_key)、(query_id, item_key) 唯一」
-- 来源：规划/01_需求规划.md J3 第 2 步、F-PROD-06；规划/04_数据模型与契约.md §5 GET /v1/products/search（登录要求 none）；PRD修订_后端功能规划_2026-09-29.md 2.3、第 4 章 pools；PRD修订_双品牌与Agent找货_2026-09-29.md 3.7；返利 App PRD（三端原生 + H5 + Agent）.md §10.2、§10.20
+- 来源：规划/01_需求规划.md J3 第 2 步、F-PROD-06；规划/04_数据模型与契约.md §5 GET /v1/products/search（登录要求 none）；PRD修订_后端功能规划_2026-09-29.md 2.3、第 4 章 pools；PRD修订_双品牌与Agent找货_2026-09-29.md 3.7；返利 App PRD（三端原生 + H5 + Agent）.md §10.2、§10.20；docs/changes/20261001-拍板第二批.md（TRADE-14）
 - 需同步修改的规划文档：4 处（计数仅作记录，落点见 README §0.6）
 
 **例子**
 - Agent 搜“伊利纯牛奶”，并发查 jd、pdd：jd 返回 [jd:1, jd:2, jd:1]（第 3 条重复），pdd 返回 [pdd:a]。合并后出 3 张卡：jd:1、jd:2、pdd:a。
+- 拼多多同一商品 pdd:a 返回两个计划：计划 S1 券后 ¥19.9、预估返 ¥0.8；计划 S2 券后 ¥18.9、预估返 ¥0.5 → 保留 S2（券后价低），卡片与转链都用 S2 的 goods_sign。两计划券后价相同时保留预估返高的。
 - 淘宝搜索第 1 页含 tb:K1…K20，第 2 页联盟又返回了 tb:K20：第 2 页剔除 tb:K20。本页条数不足时不补拉（是否补拉由代理自定）。缓存中的第 2 页仍保留 tb:K20。
 - 用户粘贴 3 个链接，其中两个都解析为 tb:K1：出 2 张卡。
 - 运营把 tb:K1 两次加入池 P：第二次覆盖 sort 和有效期，并触发复核；池内仍只有 1 条。
@@ -322,7 +324,7 @@ INSERT … ON CONFLICT (app_id, product_key) DO UPDATE SET …
 
 #### BR-PROD-09 细则 · 跨平台同款判定（P1）
 
-- 状态：待决策
+- 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §2）
 - 默认值：规则优先，模型结果只能降级为“相似商品”；规格或件数不同不称同款。理由：错误的“同款更便宜”结论直接损害信任，并可能构成误导宣传
 - 决策人：负责人
 - 依赖平台能力：三家联盟接口是否返回品牌、条码或型号等结构化字段
@@ -401,7 +403,7 @@ INSERT … ON CONFLICT (app_id, product_key) DO UPDATE SET …
 
 1. 京东粒度：product_key.jd.mode 默认为 item，S0 后由负责人锁定。如果 itemId 与 skuId 一一对应，后续切换为 sku 可以走别名迁移；否则须写 ADR 并定订阅与价格历史的迁移方案（负责人，依赖 CAP-JD-01 的 sceneId=2 权限结果）
 2. 淘宝、拼多多能否拿到 SKU 级价格：拿不到时，降价提醒（P1）能否只按商品级价格上线，需与 BR-PRICE / BR-WATCH 负责人一并拍板
-3. 拼多多：搜索、详情、解析响应是否返回 goods_id（决定 pdd 能否生成稳定 product_key）；同一商品有多个 goods_sign 时，product_refs 与转链应使用哪个券佣计划的 goods_sign（影响佣金，归 BR-PRICE 券佣计划与报价）
+3. 拼多多：搜索、详情、解析响应是否返回 goods_id（决定 pdd 能否生成稳定 product_key）；【已定】同一商品有多个 goods_sign 时取券后价最低的计划，同价取预估返高的，展示与转链用同一条（拍板第二批 TRADE-14，BR-PROD-08）
 4. 订单派生门槛设为 stable_7d，而归因窗口为付款前 15 天。7 天稳定是否足以支撑“同商品”证据，由 BR-ATTR 决定
 5. 联盟加密商品 ID 的实际有效期是否确为 30 分钟量级（BR-PROD-05 的 1800 秒是默认值，待 S0 实测）
 6. 查询专用推广位取得的 raw_item_id 用于用户 relation_id 转链后，订单能否正确归属（CAP-TB-06 新增实验）；搜索、详情结果是否随 relation_id 或推广位变化（CAP-TB-03 / CAP-TB-13），决定 BR-PROD-07 能否跨用户共享缓存
