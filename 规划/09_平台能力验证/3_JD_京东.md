@@ -6,6 +6,8 @@
 
 ### 3.1 主表
 
+2026-10-02 官方文档镜像尝试：`union.jd.com/openplatform/api` 未登录即跳转登录页，页面数据接口带防爬签名，本轮未取到原文（私有库 `docs-mirror/jd/INDEX.md` 记 needs-login）；本节事实来源与可信度不变。
+
 官方文档（union.jd.com/openplatform）为单页应用，本轮通过该站文档接口 `unionOpenMngApiDetail` 取回官方 JSON（2026-09-29），来源记为 `JD-API(<接口名>)`，可信度高。接口目录共 38 个（`JD-DIR`）。**留存不完整**（2026-09-30 核对）：目录文件 `apilist.json` 为 0 字节；`doc_*.json` 只有 33 个，其中 10 个为空文件（含 goods.detail.query、order.row.supply.query、statistics.promotion.query、coupon.query、goods.seckill.query 等），正文未取到。凡依赖 JD-DIR 的"目录里没有 X"结论一律为"中（目录未完整留存）"；V-06 重新抓取目录（unionOpenMngDocStructure）与空文件接口的官方 JSON 存 `evidence/sources/jd/` 后再定。
 
 | 编号 | 能力 | 用于 | 链路 | 需要的接口与权限 | 权限状态 | 状态 | 已知事实（来源） | 限额与限制 | 验证实验与通过标准 | 不支持时怎么办 | 负责人 | 截止 |
