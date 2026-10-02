@@ -190,3 +190,23 @@ TB-05 失败时走待决策项"新 App 申请独立联盟账号"（代价：高�
 本次只读核对，不创建应用、生成邀请链接、下载渠道名单或执行带密钥的探测；主表实验状态不变。
 
 2026-10-02 补充资料整理（CAP-TB-05、07、08，文档结论）：已有私有原始 JSON 中的[渠道管理说明](https://aff-open.taobao.com/alimamaProxy/gateway.unionopen/documentRead.json?documentId=34)和[会员运营管理说明](https://aff-open.taobao.com/alimamaProxy/gateway.unionopen/documentRead.json?documentId=35)已整理为 `docs-mirror/taobao/alimama-open/doc-34.md`、`doc-35.md`。这是复用此前获取的本地原文，非本次重新请求；图示未 OCR。旧说明仍引用旧物料和退款接口，不能直接覆盖升级版 API 文档或作为当前应用权限证明；归因入参、返回字段及双品牌隔离仍需测试。
+
+### 2.5 2026-10-03 淘宝客 API 权限获取路径与门槛（文档已确认 + 已实测）
+
+原文存私有库 `docs-mirror/taobao/aff-open-docs/`（淘宝联盟开放平台文档中心）与 `console-audit/2026-10-02/baichuan-console.md`。
+
+**已实测（高）**：百川应用（凑狸、凑狸app）同时是 TOP 应用，但证书页只有系统工具、百川基础能力、百川网关基础权限包；用凑狸app 凭据调用 `taobao.time.get` 成功，调用 `taobao.tbk.item.info.get`、`dg.material.optional.upgrade`、`order.details.get` 均返回 `code 11 Insufficient isv permissions / isv.permission-api-package-limit`。百川应用类型拿不到淘宝客 API 权限。
+
+**获取路径（文档已确认，高；《新手指南》2023-02-01）**：淘宝联盟后台媒体备案（App）审核通过 → 淘宝联盟开放平台「新建应用」选该备案生成 appkey（备案 id 与 appkey 一一对应）→ 在功能中心 / 能力地图对 appkey 申请权限包；「默认开通的可自助申请，高级权限为邀约制」。负责人已提交凑狸 iOS 媒体备案（2026-10-03 审核中）。
+
+**门槛（文档已确认，高；《淘宝客API推广管理规范》2020-06-12，2016 生效）**：
+- 基础 API（商品搜索、详情、店铺、推荐、选品库）：阿里妈妈激活会员 + 绑定支付宝；违规累计扣分 < 18；网站或 App 备案通过；关联账号无违规。凑狸可申请。
+- **链接 API（链接转换）与三方 API：邀请制**。链接 API 要求月日均点击 ≥5 万且月日均成交 ≥10 万元；或 App 下载量 ≥100 万或 DAU ≥30 万；网站不得为返利渠道。新 App 首版拿不到。
+- 清退：连续 30 天无调用或无成交即收回；高级权限媒体日均点击 < 5 万或日均成交 < 10 万即收回；权限只能用于申请时的媒体。
+- 流量：联盟合作 APP 标签上线后默认 10 万次 / 天；测试中 5000 次 / 天；60 天无调用的 appkey 会被清理（《常见问题》2020-07-09）。
+
+**对设计的影响（实现方案，待 CAP 实测）**：
+- 搜索 → 下单主链路不依赖链接 API：基础 API 搜索结果自带推广链接；App 内用百川 `openByCode/openByUrl` 传 `pid`（百川 5.x 已取消 adzoneId+appkey 方式）由 SDK 完成淘客分佣转链（alibcad 组件）；渠道归因传 `relationId`。
+- 「粘贴他人淘宝链接 / 口令」：不走万能转链按链接转换（`material_list` 属邀约）；改为先解析出商品 ID（候选 `taobao.tbk.item.click.extract`「公用-链接解析出商品id」，权限包待查），再用基础 API 查详情，App 内按商品 ID 由百川打开。百川不得对 s.click / uland 二次转链（见 [5 §5.5](5_X_跨平台与系统.md)）。
+- 订单查询 `taobao.tbk.order.details.get` 所在权限包是否属自助申请，联盟应用建好后第一个核对（返利结算的前提）。
+- 百川应用与联盟应用分属两个淘宝账号；百川 SDK 分佣按 `pid` 归属联盟账号，跨账号是否影响跟单待真机核对。
