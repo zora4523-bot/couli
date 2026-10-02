@@ -135,3 +135,17 @@
 - 风险：同一 unionId 下的订单可能被两边都拉到；花卷云可能把新 App 订单入库；两边共用推广位上限（后台 500、私域 5000）；同一买家在两个 App 之间的末次点击竞争。JD-05 的 A–D 四笔真实订单覆盖以上风险，同时验证"按 appKey 还是按 unionId 返回订单"。
 
 ---
+
+### 3.4 2026-10-02 文档与控制台核对
+
+已重新留存[新版本 API 目录](https://union.jd.com/openplatform/api)：页面列出 38 项，私有快照 `docs-mirror/console-audit/2026-10-02/jd-api-directory.json`。初轮保存了下表三份核心文档的完整可见 DOM（同名 `.json`、`.md`）；随后已在私有库 `docs-mirror/jd/api/` 补齐该目录全部 38 个 API 正文，并保存签名、公共参数和错误码接入指南（`docs-mirror/jd/guides/108188.md`）。正文已归档不等于全部权限或历史事实均已核对。下表仅覆盖本次核对项，未覆盖的旧事实仍按原可信度与待核对说明处理。
+
+| 对应能力 | 证据类型 | 文档结论（高，原文已私有留存） | 仍需测试 |
+| --- | --- | --- | --- |
+| CAP-JD-01、03 | 文档已确认 | [goods.query](https://union.jd.com/openplatform/api/v2?apiName=jd.union.open.goods.query) 的单页上限为 30，默认 20；`sceneId` 必填，取 1 或 2，其中 2 需申请。按主站商品 ID / 商品链接检索及 `skuIds` 入参属于场景 2；优惠券原始链接传给转链接口前应保持原串 | 当前应用的场景 2 权限、商品标识稳定性与价格口径；不能因关键词接口出现在控制台就推定场景 2 已开通 |
+| CAP-JD-05、06 | 文档已确认 | [promotion.common.get](https://union.jd.com/openplatform/api/v2?apiName=jd.union.open.promotion.common.get) 要求 `siteId`，不可使用导购媒体 ID；链接实际投放的网站 / App 应与备案一致。`subUnionId` 最多 80 字符，`ext1` 最多 40 字符，两者均需申请；场景 2 也需申请 | 为凑狸选定正确的 APP / 网站媒体，确认字段白名单、场景权限、订单归因和链接有效期 |
+| CAP-JD-05、07 | 文档已确认 | [order.row.query](https://union.jd.com/openplatform/api/v2?apiName=jd.union.open.order.row.query) 单页上限 200；起止时间跨度不超过 1 小时；`type` 区分下单、完成与更新时间。返回 `subUnionId`、`ext1` 需要运营白名单。转链和订单文档的 `subUnionId` 字符范围仍存在差异，继续按 BR-ATTR-06 的交集处理 | 字段真实回带、订单可查延迟、预售 / 退款序列、分页漏单和双品牌隔离 |
+
+[基础权限接口](https://union.jd.com/openplatform/console/apiList)显示普通转链与订单行查询已开通；[我的接口](https://union.jd.com/openplatform/console/openMngApi)列出关键词查询、订单行查询等并显示日额度。证据类型为「控制台可见」，原文与账号当前额度仅存私有库 `jd-basic-permissions.json`、`jd-interface-quotas.json`、`jd-application-scope.json`。单个 AppKey 的授权映射、应用证书与接口额度是否共用、字段白名单和实际调用均需测试；本次不做压测，不保存 AppKey / secret，不改变主表实验状态。
+
+[SDK 页面](https://union.jd.com/openplatform/console/sdk)提供 Java、PHP、Python3、Python 候选文件，未下载。页面未给出大小，记录在私有库 `jd-sdk-candidates.json`；取得大小并向负责人确认文件名、来源与大小后才可下载。
