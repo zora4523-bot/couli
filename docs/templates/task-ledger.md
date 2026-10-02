@@ -17,6 +17,7 @@
 | `type` | 是 | `impl` / `contract` / `migration` / `deps` / `test-change` / `guard-change` / `sync` | `contract`、`migration`、`deps` 各自全局串行；`migration` 分两段做：实现者只写 SQL，编排者在沙箱外执行并生成类型（规划/11 §2.3） |
 | `refs` | 是 | BR / AC 编号列表 | 任务书按它抽规则原文 |
 | `refs_hash` | 是 | 编号 → 条目正文哈希 | 由入账脚本从规格索引填；正文变了任务标 `stale` |
+| `contract_sections` | 否 | 04 的节号列表，如 `['2', '7']`、`['6.1', '8.4']` | 只用于 `type: contract`：任务书逐字带这些节，BR 只列编号与标题（规划/11 §5.3） |
 | `deps` | 是 | 任务编号列表，可空 | 全部 `done` 才就绪 |
 | `paths` | 是 | glob 列表 | 允许改动的路径；与在途任务相交则不派发 |
 | `impl` | 是 | `codex` / `claude` | 主实现 |

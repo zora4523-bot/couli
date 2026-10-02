@@ -40,6 +40,8 @@
 
 列名、错误码、枚举值以 `contracts/` 与 `db/schema.sql` 为准；技术实现以 ADR-0001 为准。规则原文与它们冲突时不要自行取舍，在输出的 `blocked_reason` 里写明。
 
+契约任务（`type: contract`）的第 2 节改为「契约依据（04 相关节原文；BR 只列编号与标题，版本同 SPEC_REF）」：先列 `refs` 的编号与标题，再逐字内嵌台账 `contract_sections` 点名的 04 各节，不带 BR 原文与一跳引用（规划/11 §5.3）。
+
 ## 3. 可以改的路径
 
 <任务 paths 列表>
