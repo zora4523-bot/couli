@@ -188,3 +188,5 @@ TB-05 失败时走待决策项"新 App 申请独立联盟账号"（代价：高�
 | CAP-TB-03、06、07、12 | 待核对；需测试 | 私有库已有淘宝官方文档镜像，本次未访问淘宝开放平台应用控制台 | `open.taobao.com` 受浏览器安全策略限制；需要应用权限的脱敏材料后继续核对，不能把已有镜像当作本次账号授权证据 |
 
 本次只读核对，不创建应用、生成邀请链接、下载渠道名单或执行带密钥的探测；主表实验状态不变。
+
+2026-10-02 补充资料整理（CAP-TB-05、07、08，文档结论）：已有私有原始 JSON 中的[渠道管理说明](https://aff-open.taobao.com/alimamaProxy/gateway.unionopen/documentRead.json?documentId=34)和[会员运营管理说明](https://aff-open.taobao.com/alimamaProxy/gateway.unionopen/documentRead.json?documentId=35)已整理为 `docs-mirror/taobao/alimama-open/doc-34.md`、`doc-35.md`。这是复用此前获取的本地原文，非本次重新请求；图示未 OCR。旧说明仍引用旧物料和退款接口，不能直接覆盖升级版 API 文档或作为当前应用权限证明；归因入参、返回字段及双品牌隔离仍需测试。

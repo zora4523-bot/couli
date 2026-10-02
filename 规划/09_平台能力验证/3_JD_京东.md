@@ -149,3 +149,5 @@
 [基础权限接口](https://union.jd.com/openplatform/console/apiList)显示普通转链与订单行查询已开通；[我的接口](https://union.jd.com/openplatform/console/openMngApi)列出关键词查询、订单行查询等并显示日额度。证据类型为「控制台可见」，原文与账号当前额度仅存私有库 `jd-basic-permissions.json`、`jd-interface-quotas.json`、`jd-application-scope.json`。单个 AppKey 的授权映射、应用证书与接口额度是否共用、字段白名单和实际调用均需测试；本次不做压测，不保存 AppKey / secret，不改变主表实验状态。
 
 [SDK 页面](https://union.jd.com/openplatform/console/sdk)提供 Java、PHP、Python3、Python 候选文件，未下载。页面未给出大小，记录在私有库 `jd-sdk-candidates.json`；取得大小并向负责人确认文件名、来源与大小后才可下载。
+
+文档差异待整合：CAP-JD-01 / 02 的旧说明把 `goods.bigfield.query` 写作「基础权限」，本次[官方接入指南](https://union.jd.com/searchResultDetail?articleId=108188)在商品查询表中将其标为申请权限。当前账号接口页可见额度，不能据此推定所有新应用默认可调用；统一结论由编排者结合应用权限证据回写主表。另，指南时钟容差存在 10 / 6 分钟两种描述，订单行公共 method 示例引用旧方法名，均已登记在[开发资料准备](开发资料准备.md)中，需按当前应用实际返回核对。
