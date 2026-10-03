@@ -271,6 +271,7 @@
 | U-85 | 前端与系统技术能力：iOS NavigationStack / Observation 版本要求；LSApplicationQueriesSchemes 只声明 ≤20 条、不检测直接 open；WKScriptMessageHandlerWithReply、addWebMessageListener、javaScriptProxy 白名单；ArkTS 须自写 OpenAPI 模板；鸿蒙 requestInStream 收 SSE；微信鸿蒙 SDK 与 Account Kit 登录；IDFV / OAID / ODID 与 Keychain / Keystore / HUKS；API 24 = HarmonyOS 6.1.1；Sentry、Maestro 不支持鸿蒙；花卷云桥能力已覆盖 | 00 D4、D5、D6、§6；03 §2、§3.3、§4.5、§5.2、§5.6；PRD v2.1 §4.2、§5、§7；后端规划 2.1 | 不在本表（前端技术验证，03 与 05 M 线跟踪） | 未验证 | — |
 | U-86 | 后端容量（api 单实例 300–500 QPS、stream 数百并发）；SLB 空闲超时 ≥60 秒（02 写 ≥90 秒）；税务 2025 年第 16 号公告；生成式 AI 登记与白名单上架；分销两层计酬 | 02 §15.1；后端规划 1.10、2.9；00 D8、D16；06 Q-F5、Q-C7、Q-G9；PRD v2.1 §15 | 不在本表（02 / 06 跟踪；AI 登记与审核关系见 X-12） | 未验证 | 按 D16：登记号填好前 Agent 只对内部测试名单开放，填好即全开放（拍板第二批 AI-06） |
 | U-87 | Apple 2.3.1 禁止审核专用模式与审核期间隐藏功能（后端规划只引条款号） | 后端规划 2.13 | X-12 | 2.3.1 原文已核（高） | — |
+| U-88 | 移动广告 SDK（P1）：激励视频的发奖能走广告平台的服务端回调（带签名与平台交易号，可按交易号幂等）；SDK 自带隐私清单、支持 SKAdNetwork；可在同意隐私政策之后才初始化（2026-10-03，功能对照 G-74、G-90、G-92） | 07 §2「14–16 附加变现」移动广告行 | 不在本表（P1 立项时新增 X 条目） | 未验证；SDK 未选型 | 不宣传看广告得奖励；没接服务端回调的广告位不挂奖励 |
 
 ---
 
