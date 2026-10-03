@@ -613,7 +613,7 @@ agent 写集成代码和日志输出；后台登记、签名配置、真机点�
 | --- | --- | --- |
 | 会员 | `dhcc.oauth.user.list` / `user.cursor` | 每页 200；cursor 接口按登录时间筛选，单次范围 ≤ 31 天，需按时间窗滚动 |
 | 关系链 | 会员字段 `pid1` | 只取上 1 级，迁入后重建闭包表 |
-| 密码 | `password` + `salt`，md5(md5(密码) + salt) | 首次登录用旧哈希校验，通过后重算为新哈希 |
+| 密码 | —（不迁移） | 新 App 的登录方式不含密码，不迁入任何旧系统的密码相关字段；老用户用手机号验证码登录后按手机号认领 |
 | 联盟备案 | `relation_id`、`relation_id_order`、`alimama_id`、`pdd_pid`、`jd_pid`、拼多多自定义参数 | 原样迁入 |
 | 余额 | `credit`、`proxy_credit`；`user.balance.list` 增量明细 | 迁入一笔期初流水；`credit` 进自购返利账户、`proxy_credit` 进推广收益账户；历史流水只读归档 |
 | 积分 | `score.user.score`、`score.all.list` | 期初积分一笔 |
