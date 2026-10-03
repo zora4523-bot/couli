@@ -724,6 +724,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 比价无返利弹窗 no_rebate.price_compare.confirm | 这件商品这次被判为比价，没有返利 | 只在 open 响应 no_rebate_cause=price_compare 时出现，代替「该商品当前暂无返利，继续购买？」；按钮【看看相似商品】（no_rebate.price_compare.similar）【仍去购买（无返利）】，可关闭；不显示任何返利金额，不写「过几小时再买」之类的建议（BR-PRICE-08 细则「无返利原因」，2026-10-03 功能对照 G-09；开关默认关） |
 | 比价无返利卡片原因行 no_rebate.price_compare | 这次被判为比价，没有返利 | 卡片按 open 响应换成无返利态后显示在返利位置，旁边保留文字入口【看看相似商品】；其他无返利情形仍显示「暂无返利」 |
 | 相似商品入口 no_rebate.price_compare.similar | 看看相似商品 | 进入搜索页，平台同原商品，搜索词取卡片标题，去掉原商品（BR-PRICE-08 细则） |
+| 订单列表查询范围提示 order_list.history_hint | 只显示 {date} 之后的订单，更早的订单请联系客服 | 包内默认：更早的订单请联系客服。只在服务端返回 earliest_visible_date 时显示在列表底部；{date} 按 BR-TEXT-11 的纯日期格式；默认配置不限制范围，此时不显示（BR-ID-30 细则「订单类记录」，2026-10-03 功能对照 G-14） |
 
 例：京东转链开关关闭（原因 maintenance）→ 接口返回 50301、data.reason=maintenance → Toast「京东维护中，请稍后再试」，卡片按钮变灰显示「稍后再试」。拼多多因备案互斥或权限未批保持关闭（原因 not_launched）→ 50301、data.reason=not_launched → 不弹 Toast，卡片按钮置灰显示「拼多多返利即将开放」。trace_id 以 …c3d4e5 结尾 → 显示「（c3d4e5）」；trace_id=abc → 显示「（abc）」。30416 且 data.amount_fen=500 →「账户有待扣回金额 ¥5，抵扣回正后才能注销」。30303 reason=below_min、rules 返回最低 100 分 →「单笔最低提现 ¥1」；rules 未返回该值 →「提现金额低于单笔最低金额」。
 
