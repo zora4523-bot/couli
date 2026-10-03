@@ -114,7 +114,7 @@
 | earnings.period.today / .yesterday / .this_month / .last_month | 今日 / 昨日 / 本月 / 上月 | 期间；邀请栏只有本月、上月 |
 | earnings.metric.paid_count.name / .hint | 付款笔数 / 按付款时间统计，不含已失效和已扣回的订单 | 自购、分享两栏 |
 | earnings.metric.est.name_self / .name_promo / .hint | 预估返 / 预估推广收益 / 结算前的估计值，以联盟结算金额为准 | 自购栏用 name_self，分享与邀请栏用 name_promo |
-| earnings.metric.credited.name / .hint | 已结算 / 按入账日期统计，之后的扣回与调整见余额流水 | 三栏 |
+| earnings.metric.credited.name / .hint | 已结算 / 按入账日期统计；订单归属被更正时在更正当天冲减，之后的扣回与调整见余额流水 | 三栏；金额可为负数，按 BR-TEXT-10 带符号显示（BR-FUND-25 细则「已结算怎样聚合」） |
 | earnings.referral.note | 邀请推广收益只显示本月与上月的合计 | 邀请栏下方说明 |
 | earnings.referral.platform_note | 不分平台 | 带平台筛选时显示在邀请栏 |
 
