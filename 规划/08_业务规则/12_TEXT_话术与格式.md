@@ -14,6 +14,8 @@
 
 2026-10-03 功能对照补缺第 1 批（docs/changes/20261003-功能对照补缺.md；「功能对照 G-xx」是该批缺口清单的编号，与 规划/10 §6.1 的 G-xx 不是同一套）：BR-TEXT-14 表 A 新增 20004、50305 两行，表 B 新增 20004.identity_mismatch、30104.credential_invalid，表 C 新增第三方页容器、App 内链接落地页、分享页打开方式与邀请码提醒的文案键。BR-TEXT-14 状态不变。
 
+2026-10-03 功能对照补缺第 2 批（同一变更记录的「第 2 批」，功能对照 G-09～G-21）：逐条改动在各条细则里注「2026-10-03，功能对照 G-xx」，各条状态不变。本批不新增 BR-TEXT 条目。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -136,7 +138,7 @@
 | CREDITING | WAITING，该平台 credit.enabled=off 或 credit_overdue=true（BR-FUND-17 第 10、12 行，BR-FUND-04 ⑪；原按 expected_credit_date 早于今天） | 入账核对中 | 预估返 ¥x | 如有疑问请联系客服（BR-TEXT-03） | — |
 | RIGHTS_PENDING | ESTIMATED 或 WAITING，rights_pending=true | 售后处理中，入账暂停 | 预估返 ¥x | 售后结束后随联盟结算入账（BR-TEXT-03） | — |
 | REVIEWING | ESTIMATED 或 WAITING，hold=true | 入账核对中 | 预估返 ¥x | 如有疑问请联系客服；不显示 hold 原因与预计结算月份（BR-TEXT-03） | — |
-| NO_REBATE | ESTIMATED / WAITING 且 B_est=0，或 CREDITED 且无入账凭证（B_credit=0） | 本单无返利 | 不显示金额 | — | — |
+| NO_REBATE | ESTIMATED / WAITING 且 B_est=0，或 CREDITED 且无入账凭证（B_credit=0） | 本单无返利 | 不显示金额 | —（被平台判为比价订单时显示比价说明，BR-TEXT-03「比价无返利」，2026-10-03） | — |
 | CREDITED | (RECEIVED 或 SETTLED, CREDITED)，无 CLAWBACK | 已结算 | 实返 ¥y（含结算补差） | 差额行（BR-TEXT-03） | 去提现 |
 | CREDITED_PART_CLAWED | CREDITED 且存在 CLAWBACK（部分扣回，含入账后部分退款） | 已结算（部分扣回 {z}） | 实返 ¥y | 差额行（BR-TEXT-03） | 去提现 |
 | INVALID | (任意, VOID) | 已失效 | 返利 ¥0 | 原因标题 + 说明（BR-TEXT-05，仅 void 类） | —（按钮只来自 reason.action，如 BLACKLIST→去申诉，PUNISH/OTHER→联系客服） |
@@ -181,12 +183,15 @@
 | hold | display_status=REVIEWING（hold=true，BR-FUND-06） | 状态文案「入账核对中」+ hint「如有疑问请联系客服」，不显示 hold 原因与预计入账周期 |
 | 入账延迟 | display_status=CREDITING（WAITING 且 credit_overdue=true，BR-FUND-04 ⑪；派生条件见 BR-FUND-17） | 状态文案「入账核对中」+ hint「如有疑问请联系客服」 |
 | 比价风险 | display_status=PAID 且 rebate_basis=price_compare_risk | 金额显示区间 ¥a–¥b，hint「如被判定为比价订单，返利按较低金额计算」 |
+| 比价无返利（2026-10-03，功能对照 G-09） | display_status=NO_REBATE 且 orders.is_price_compare=true | 状态文案仍为「本单无返利」，hint 用 order.price_compare.hint「这笔订单被平台判为比价订单，没有返利」 |
 
 **优先级**：
 1. hold、维权中、入账延迟是互斥的 display_status，按 BR-FUND-17 派生顺序只取一个（hold → 维权中 → 入账延迟）；hold 与维权同时存在时显示「入账核对中」。
 2. 入账后部分退款与实返 ≠ 首次预估不分两行，只显示差额行，原因 PART_REFUND。
 3. 比价风险只在 display_status=PAID，可与部分退款（入账前）同时显示，部分退款行在上。
 4. diff 由多次调整叠加时只显示净差额与最近一个原因；diff = 0 不显示。
+
+**比价说明入口**（2026-10-03，功能对照 G-09）：下列三处在行尾加文字入口「查看说明」，打开 /v1/config.help_links.price_compare 配置的帮助文章（规划/04 §10.1）；没有配置时不显示入口，不影响其余文案。① 差额行的原因为 PRICE_COMPARE；② 比价风险 hint；③ 比价无返利 hint。「查看说明」不占详情页的按钮位（BR-TEXT-02 的「最多 2 个按钮」不变）。is_price_compare 的判定字段按 BR-CALC-16（淘宝待 CAP-TB-04，拼多多待 CAP-PDD-04）；字段没有验证通过的平台该值为空，③ 不出现。帮助文章只解释「什么是比价订单、为什么返利会变少或没有」，不写等待时长之类的规避办法，不出现 BR-TEXT-13 的其他禁用词。
 
 例 1：首次预估 520 分，入账时联盟按比价规则给出 310 分 → diff = -210 → 详情「实返 ¥3.1｜比预估少 ¥2.1：比价订单」。
 例 2：PAID 区间 320–450 分（initial_est_fen=450），最终入账 320 分 → 「实返 ¥3.2｜比预估少 ¥1.3：比价订单」。
@@ -520,7 +525,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 - 禁用词表 specs/banned-words.yaml：每个词列出 scope（user_visible）与 allow_keys（dict key 通配），CI 与后台按 key 判定。
 - 一处维护：BR-PRICE-18 只列价格与返利类用词及改写方式，资金术语含义只在 BR-TEXT-01 维护（BR-FUND-17 不再列词）；各处提到的禁用词以本条清单为准，新增词只改本条与 specs/banned-words.yaml。「结算补差」「结算金额调整」等字典文案不含上述资金类词（子串不命中），无需白名单。
-- 「比价」allow_keys：order_reason.PRICE_COMPARE.title|desc、rebate_basis=price_compare_risk 的订单状态 hint（order_status.PAID.hint 的比价变体），以及渲染了上述字段的推送 / 站内信（ORDER_INVALID、CLAWBACK）；卖点、广告位、分享标题、应用商店描述命中。卖点统一表述为「找货 + 返利透明 + 丢单兜底」。
+- 「比价」allow_keys：order_reason.PRICE_COMPARE.title|desc、rebate_basis=price_compare_risk 的订单状态 hint（order_status.PAID.hint 的比价变体），以及渲染了上述字段的推送 / 站内信（ORDER_INVALID、CLAWBACK）；2026-10-03 增补（功能对照 G-09）：下单前的比价无返利文案 no_rebate.price_compare、no_rebate.price_compare.confirm（BR-TEXT-14 表 C），订单比价说明 order.price_compare.hint（BR-TEXT-03），以及 /v1/config.help_links.price_compare 指向的那一篇帮助文章的标题与正文（按文章 ID 放行，只这一篇）。卖点、广告位、分享标题、应用商店描述命中。卖点统一表述为「找货 + 返利透明 + 丢单兜底」。
 - 归一化例：「全 网 最 低！」→ 命中「全网最低」。
 - **降价表述（待法务确认）**：规划/01 §1 已写明「最低价」有《广告法》与《互联网平台价格行为规则》风险。法务确认前价格历史组件只用「自 {start_date} 以来我们记录到的价格：当前 {current}，曾为 {low}」，不出现「最低」二字，无白名单；法务同意后才启用白名单模板，正则（原文匹配）`^自 ?\d{4}-\d{2}-\d{2} ?以来我们观察到的最低价`，start_date 固定 YYYY-MM-DD 完整格式，不适用 BR-TEXT-11 相对格式。组件本身归 BR-PRICE / Watch。
 - 虚拟数据：虚拟原价、虚拟剩余名额、佣金头条播报、手填浏览数一律不做；淘礼金剩余份数必须来自接口实时值。
@@ -700,6 +705,9 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 第三方新号绑手机引导 invite.bind_phone_guide.title / .body | 绑定手机号｜绑定手机号后，可在期限内填写邀请码。已用手机号注册过的，绑定同一个手机号、符合条件时可把当前登录方式并入原账号 | 按钮【去绑定】【暂不】；出现条件按 BR-INV-03 细则（2026-10-03 功能对照 G-05）；并号条件只按 BR-ID-06，文案不写天数（BR-TEXT-13） |
 | 第三方新号绑手机引导·购买前版本 invite.bind_phone_guide.body_before_buy | 绑定手机号后，可在期限内填写邀请码。已用手机号注册过的，绑定同一个手机号、符合条件时可把当前登录方式并入原账号。下单后将不能再填写邀请码，也不能并入原账号 | 登录由点击购买触发时用这一版，按钮同上；【暂不】后继续本次购买（BR-INV-03 细则） |
 | 首次购买前邀请码提示 invite.before_buy_tip | 下单后将不能再填写邀请码。有邀请码可以先填写 | 按钮【先填邀请码】【继续购买】；每个账号一次，服务端记已读（BR-INV-03 细则） |
+| 比价无返利弹窗 no_rebate.price_compare.confirm | 这件商品这次被判为比价，没有返利 | 只在 open 响应 no_rebate_cause=price_compare 时出现，代替「该商品当前暂无返利，继续购买？」；按钮【看看相似商品】（no_rebate.price_compare.similar）【仍去购买（无返利）】，可关闭；不显示任何返利金额，不写「过几小时再买」之类的建议（BR-PRICE-08 细则「无返利原因」，2026-10-03 功能对照 G-09；开关默认关） |
+| 比价无返利卡片原因行 no_rebate.price_compare | 这次被判为比价，没有返利 | 卡片按 open 响应换成无返利态后显示在返利位置，旁边保留文字入口【看看相似商品】；其他无返利情形仍显示「暂无返利」 |
+| 相似商品入口 no_rebate.price_compare.similar | 看看相似商品 | 进入搜索页，平台同原商品，搜索词取卡片标题，去掉原商品（BR-PRICE-08 细则） |
 
 例：京东转链开关关闭（原因 maintenance）→ 接口返回 50301、data.reason=maintenance → Toast「京东维护中，请稍后再试」，卡片按钮变灰显示「稍后再试」。拼多多因备案互斥或权限未批保持关闭（原因 not_launched）→ 50301、data.reason=not_launched → 不弹 Toast，卡片按钮置灰显示「拼多多返利即将开放」。trace_id 以 …c3d4e5 结尾 → 显示「（c3d4e5）」；trace_id=abc → 显示「（abc）」。30416 且 data.amount_fen=500 →「账户有待扣回金额 ¥5，抵扣回正后才能注销」。30303 reason=below_min、rules 返回最低 100 分 →「单笔最低提现 ¥1」；rules 未返回该值 →「提现金额低于单笔最低金额」。
 
