@@ -14,6 +14,8 @@
 
 2026-10-03 功能对照补缺第 1 批（docs/changes/20261003-功能对照补缺.md；「功能对照 G-xx」是该批缺口清单的编号，与 规划/10 §6.1 的 G-xx 不是同一套）：BR-TEXT-14 表 A 新增 20004、50305 两行，表 B 新增 20004.identity_mismatch、30104.credential_invalid，表 C 新增第三方页容器、App 内链接落地页、分享页打开方式与邀请码提醒的文案键。BR-TEXT-14 状态不变。
 
+2026-10-03 功能对照补缺第 2 批（同一变更记录的「第 2 批」，功能对照 G-09～G-21）：逐条改动在各条细则里注「2026-10-03，功能对照 G-xx」，各条状态不变。本批不新增 BR-TEXT 条目。同日按评审补文案键 external_page.download_unsupported，改 10004、claim.guide.window、earnings.metric.credited.hint 等行的说明（变更记录 §2.8）；第 2 轮评审后补 pending_confirm.\* 各键，改表 A 的 10001、10004、10005、30304 行；第 3 轮评审后表 A 加 20903，表 C 加放弃上一笔的各键（pending_confirm.withdraw.abandon、pending_confirm.abandon、pending_confirm.abandon.confirm、pending_confirm.abandoned、pending_confirm.abandon_busy、pending_confirm.already_done）与 pending_confirm.cannot_confirm，删去随本机有效期取消的 pending_confirm.expired（变更记录 §2.8 第 3 轮第 1、2 条）。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -103,6 +105,21 @@
 
 例：用户 A 有 3 笔自购订单：(PAID, ESTIMATED) 预估 ¥2.5、(RECEIVED, WAITING) 预估 ¥4（淘宝订单 10 月确认收货，联盟尚未返回结算时间，expected_credit_period=2026-11）、(RECEIVED, CREDITED) ¥6；无提现。接口返回 withdrawable_fen=600、estimated_total_fen=650、pending_credit_fen=400、estimated_fen=250、next_credit_period=2026-11、withdrawn_fen=0 → 钱包显示「可提现余额 ¥6｜预估收益 ¥6.5（其中已收货 ¥4，预计 11 月结算）｜已提现 ¥0」。用户问「返利到账了吗」，客服回答：「¥6 已结算，可提现；另有预估收益 ¥6.5，其中已收货的 ¥4 预计 11 月结算，¥2.5 待确认收货」。
 
+**收益看板文案**（2026-10-03，功能对照 G-11；统计口径只在 BR-FUND-25 维护，待决策、按功能对照 Q-10 默认，本条只定文案键，经字典下发，可改措辞、不可改含义）：
+
+| 键 | 默认文案 | 用处 |
+| --- | --- | --- |
+| earnings.title | 收益看板 | 页面标题与入口文字 |
+| earnings.section.self / .share / .referral | 自购返利 / 分享推广收益 / 邀请推广收益 | 三栏标题；不出现「团队」「下线」「二级」等词（BR-INV-20） |
+| earnings.period.today / .yesterday / .this_month / .last_month | 今日 / 昨日 / 本月 / 上月 | 期间；邀请栏只有本月、上月 |
+| earnings.metric.paid_count.name / .hint | 付款笔数 / 按付款时间统计，不含已失效和已扣回的订单 | 自购、分享两栏 |
+| earnings.metric.est.name_self / .name_promo / .hint | 预估返 / 预估推广收益 / 结算前的估计值，以联盟结算金额为准 | 自购栏用 name_self，分享与邀请栏用 name_promo |
+| earnings.metric.credited.name / .hint | 已结算 / 按入账日期统计；订单归属被更正时在更正当天冲减，之后的扣回与调整见余额流水 | 三栏；金额可为负数，按 BR-TEXT-10 带符号显示（BR-FUND-25 细则「已结算怎样聚合」） |
+| earnings.referral.note | 邀请推广收益只显示本月与上月的合计 | 邀请栏下方说明 |
+| earnings.referral.platform_note | 不分平台 | 带平台筛选时显示在邀请栏 |
+
+金额按 BR-TEXT-10 格式化；笔数为 0、金额为 0 时照常显示 0 与「¥0」，不隐藏栏目。看板不显示任何好友的昵称、订单或笔数（BR-INV-16、BR-INV-17）。
+
 **后台 / 报表专用词**：「联盟结算佣金」（联盟月结付给平台的钱）只在后台与报表出现，BR-TEXT-13 按字段范围校验；「预估收益」用户侧与报表均可用，报表中须带口径编码（BR-TEXT-21）。
 
 **负责人决定（C-02，变更记录 §3）**：用预估，结算后才用确定的表达，参考花卷云字段。原待决策的方案 A（订单侧「入账」、提现侧「到账」）与方案 B（订单侧「已到账」、提现改「提现成功」）均不再作为候选；本条按上述新口径取代方案 A，文案经 /v1/dict 下发。
@@ -136,7 +153,7 @@
 | CREDITING | WAITING，该平台 credit.enabled=off 或 credit_overdue=true（BR-FUND-17 第 10、12 行，BR-FUND-04 ⑪；原按 expected_credit_date 早于今天） | 入账核对中 | 预估返 ¥x | 如有疑问请联系客服（BR-TEXT-03） | — |
 | RIGHTS_PENDING | ESTIMATED 或 WAITING，rights_pending=true | 售后处理中，入账暂停 | 预估返 ¥x | 售后结束后随联盟结算入账（BR-TEXT-03） | — |
 | REVIEWING | ESTIMATED 或 WAITING，hold=true | 入账核对中 | 预估返 ¥x | 如有疑问请联系客服；不显示 hold 原因与预计结算月份（BR-TEXT-03） | — |
-| NO_REBATE | ESTIMATED / WAITING 且 B_est=0，或 CREDITED 且无入账凭证（B_credit=0） | 本单无返利 | 不显示金额 | — | — |
+| NO_REBATE | ESTIMATED / WAITING 且 B_est=0，或 CREDITED 且无入账凭证（B_credit=0） | 本单无返利 | 不显示金额 | —（被平台判为比价订单时显示比价说明，BR-TEXT-03「比价无返利」，2026-10-03） | — |
 | CREDITED | (RECEIVED 或 SETTLED, CREDITED)，无 CLAWBACK | 已结算 | 实返 ¥y（含结算补差） | 差额行（BR-TEXT-03） | 去提现 |
 | CREDITED_PART_CLAWED | CREDITED 且存在 CLAWBACK（部分扣回，含入账后部分退款） | 已结算（部分扣回 {z}） | 实返 ¥y | 差额行（BR-TEXT-03） | 去提现 |
 | INVALID | (任意, VOID) | 已失效 | 返利 ¥0 | 原因标题 + 说明（BR-TEXT-05，仅 void 类） | —（按钮只来自 reason.action，如 BLACKLIST→去申诉，PUNISH/OTHER→联系客服） |
@@ -181,12 +198,15 @@
 | hold | display_status=REVIEWING（hold=true，BR-FUND-06） | 状态文案「入账核对中」+ hint「如有疑问请联系客服」，不显示 hold 原因与预计入账周期 |
 | 入账延迟 | display_status=CREDITING（WAITING 且 credit_overdue=true，BR-FUND-04 ⑪；派生条件见 BR-FUND-17） | 状态文案「入账核对中」+ hint「如有疑问请联系客服」 |
 | 比价风险 | display_status=PAID 且 rebate_basis=price_compare_risk | 金额显示区间 ¥a–¥b，hint「如被判定为比价订单，返利按较低金额计算」 |
+| 比价无返利（2026-10-03，功能对照 G-09） | display_status=NO_REBATE 且 orders.is_price_compare=true | 状态文案仍为「本单无返利」，hint 用 order.price_compare.hint「这笔订单被平台判为比价订单，没有返利」 |
 
 **优先级**：
 1. hold、维权中、入账延迟是互斥的 display_status，按 BR-FUND-17 派生顺序只取一个（hold → 维权中 → 入账延迟）；hold 与维权同时存在时显示「入账核对中」。
 2. 入账后部分退款与实返 ≠ 首次预估不分两行，只显示差额行，原因 PART_REFUND。
 3. 比价风险只在 display_status=PAID，可与部分退款（入账前）同时显示，部分退款行在上。
 4. diff 由多次调整叠加时只显示净差额与最近一个原因；diff = 0 不显示。
+
+**比价说明入口**（2026-10-03，功能对照 G-09）：下列三处在行尾加文字入口「查看说明」，打开 /v1/config.help_links.price_compare 配置的帮助文章（规划/04 §10.1）；没有配置时不显示入口，不影响其余文案。① 差额行的原因为 PRICE_COMPARE；② 比价风险 hint；③ 比价无返利 hint。「查看说明」不占详情页的按钮位（BR-TEXT-02 的「最多 2 个按钮」不变）。is_price_compare 的判定字段按 BR-CALC-16（淘宝待 CAP-TB-04，拼多多待 CAP-PDD-04）；字段没有验证通过的平台该值为空，③ 不出现。帮助文章只解释「什么是比价订单、为什么返利会变少或没有」，不写等待时长之类的规避办法，不出现 BR-TEXT-13 的其他禁用词。
 
 例 1：首次预估 520 分，入账时联盟按比价规则给出 310 分 → diff = -210 → 详情「实返 ¥3.1｜比预估少 ¥2.1：比价订单」。
 例 2：PAID 区间 320–450 分（initial_est_fen=450），最终入账 320 分 → 「实返 ¥3.2｜比预估少 ¥1.3：比价订单」。
@@ -377,6 +397,8 @@
 - 来源：规划/01 §5 J1 第 5–6 步、J7 第 5 条、F-MSG-02、F-MSG-04；规划/04 §4.1 O2；PRD修订_后端功能规划 2.14；PRD v2.1 §6、§9.3；docs/changes/20260930-拍板第一批.md §3（C-25 行；D8、BR-INV-12、BR-CALC-05 行；C-02 行；D11 行）；docs/changes/20260930-拍板第一批.md §10（负责人 2026-09-30 补充）；docs/changes/20261001-间推二级奖励.md；docs/changes/20261001-拍板第二批.md（OPS-02、OPS-16）；docs/changes/20261001-拍板第二批.md §8 ADD-06
 - 需同步修改的规划文档：1 处（计数仅作记录，落点见 README §0.6）
 
+- 被邀请人知情（2026-10-03，功能对照 G-16）：发给直推、间推上级的通知在订单同步后很快发出（合并窗口见正文），上级能据此大致知道好友的下单时间；通知时效与推送对象不因此改变（拍板第三批 §1：不做日汇总）。对被邀请人的告知内容与位置见 BR-INV-16 细则「对被邀请人的告知」，告知句 invite.notice_inviter 见 BR-TEXT-14 表 C。
+
 | code | 渠道 | 模板 |
 | --- | --- | --- |
 | ORDER_TRACKED 自购 1 笔 | 推送 + 站内 | 跟单成功：{title_short}，预估返 {rebate} |
@@ -520,7 +542,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 - 禁用词表 specs/banned-words.yaml：每个词列出 scope（user_visible）与 allow_keys（dict key 通配），CI 与后台按 key 判定。
 - 一处维护：BR-PRICE-18 只列价格与返利类用词及改写方式，资金术语含义只在 BR-TEXT-01 维护（BR-FUND-17 不再列词）；各处提到的禁用词以本条清单为准，新增词只改本条与 specs/banned-words.yaml。「结算补差」「结算金额调整」等字典文案不含上述资金类词（子串不命中），无需白名单。
-- 「比价」allow_keys：order_reason.PRICE_COMPARE.title|desc、rebate_basis=price_compare_risk 的订单状态 hint（order_status.PAID.hint 的比价变体），以及渲染了上述字段的推送 / 站内信（ORDER_INVALID、CLAWBACK）；卖点、广告位、分享标题、应用商店描述命中。卖点统一表述为「找货 + 返利透明 + 丢单兜底」。
+- 「比价」allow_keys：order_reason.PRICE_COMPARE.title|desc、rebate_basis=price_compare_risk 的订单状态 hint（order_status.PAID.hint 的比价变体），以及渲染了上述字段的推送 / 站内信（ORDER_INVALID、CLAWBACK）；2026-10-03 增补（功能对照 G-09）：下单前的比价无返利文案 no_rebate.price_compare、no_rebate.price_compare.confirm（BR-TEXT-14 表 C），订单比价说明 order.price_compare.hint（BR-TEXT-03），以及 /v1/config.help_links.price_compare 指向的那一篇帮助文章的标题与正文（按文章 ID 放行，只这一篇）。卖点、广告位、分享标题、应用商店描述命中。卖点统一表述为「找货 + 返利透明 + 丢单兜底」。
 - 归一化例：「全 网 最 低！」→ 命中「全网最低」。
 - **降价表述（待法务确认）**：规划/01 §1 已写明「最低价」有《广告法》与《互联网平台价格行为规则》风险。法务确认前价格历史组件只用「自 {start_date} 以来我们记录到的价格：当前 {current}，曾为 {low}」，不出现「最低」二字，无白名单；法务同意后才启用白名单模板，正则（原文匹配）`^自 ?\d{4}-\d{2}-\d{2} ?以来我们观察到的最低价`，start_date 固定 YYYY-MM-DD 完整格式，不适用 BR-TEXT-11 相对格式。组件本身归 BR-PRICE / Watch。
 - 虚拟数据：虚拟原价、虚拟剩余名额、佣金头条播报、手填浏览数一律不做；淘礼金剩余份数必须来自接口实时值。
@@ -547,11 +569,11 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 | 码 | 文案（字典默认） | 包内默认（变量缺失时） | 动作 |
 | --- | --- | --- | --- |
-| 10001 | 请先登录 | 同左 | 跳 Login，成功后恢复 pending_action |
+| 10001 | 请先登录 | 同左 | 跳 Login，成功后恢复 pending_action；提现等四个需要二次验证的操作不自动恢复，登录后回到发起页，该次提交结果未知时进入待确认状态（表 C pending_confirm.\*，BR-ID-10 细则） |
 | 10002 | — | — | 单飞刷新后重放；刷新失败按 10404 |
 | 10003 | 为保障资金安全，请先完成短信验证 | 同左 | 弹短信验证，拿到 step_up_token 后重放 |
-| 10004 | 请先阅读并同意相关授权 | 同左 | 按 data.consent_type 弹对应同意组件（组件内文案见 BR-ID-11、BR-ID-12、BR-ID-14）；labor_agreement 弹劳务协议签署页（BR-WDR-31） |
-| 10005 | 请先绑定手机号 | 同左 | 跳 BindPhone，完成后恢复 pending_action |
+| 10004 | 请先阅读并同意相关授权 | 同左 | 按 data.consent_type 弹对应同意组件（组件内文案见 BR-ID-11、BR-ID-12、BR-ID-14；labor_agreement 弹劳务协议签署页，BR-WDR-31）。原请求是提现申请等需要二次验证的操作时（BR-ID-10 细则「不适用的动作」），不论哪种同意类型，同意或签署后回到发起页（提现回到 Withdraw、保留已输入金额），由用户重新点【提交】，不自动重放（BR-WDR-07 细则，2026-10-03 功能对照 G-12）；该次提交结果未知时回到发起页进入待确认状态（表 C pending_confirm.\*，BR-ID-10 细则） |
+| 10005 | 请先绑定手机号 | 同左 | 跳 BindPhone，完成后恢复 pending_action；提现等四个需要二次验证的操作同 10001 |
 | 10006 | 账号已被限制使用 | 同左 | 封禁说明页（原因类别 + 申诉入口，文案见 BR-TEXT-23） |
 | 10007 | 账号注销处理中 | 同左 | data.stage=冷静期时跳注销进度页（可撤回），不弹本提示 |
 | 10401 | 请求已失效，请重试 | 同左 | 不自动重放，上报埋点 |
@@ -564,6 +586,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 20004（新增，2026-10-03 功能对照 G-04；13 §13.11 登记） | 授权未完成，请重新授权 | 同左 | 第三方登录或第三方重新授权的凭证或授权尝试无效、已过期或已使用（BR-ID-04、BR-ID-08），对外不区分具体原因；回到登录页或二次验证面板，由用户重新发起第三方授权，不自动重放；data.reason=identity_mismatch 取表 B 子键 |
 | 20901 | 请求内容有变化，请重新提交 | 同左 | 生成新幂等键，由用户重新提交 |
 | 20902 | 状态已变化，请刷新后重试 | 同左 | 刷新详情 |
+| 20903（新增，2026-10-03 第 2 批第 3 轮评审后；13 §13.11 登记） | 上一次提交已放弃，没有被处理 | 同左 | 结束该键的待确认状态，恢复提交入口，由用户重新提交（新幂等键）；不重放（BR-ID-10 细则「敏感操作的幂等键」） |
 | 30101 | 购买前需完成淘宝授权，用于识别你的订单 | 同左 | AuthSheet |
 | 30102 | 淘宝授权已失效，请重新授权 | 同左 | AuthSheet |
 | 30103 | 当前淘宝账号暂不能获得返利，请联系客服 | 同左 | 【仍去购买（无返利）】【联系客服】 |
@@ -586,8 +609,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 30301 | 可提现余额不足 | 同左 | — |
 | 30302 | 账户有待抵扣金额，抵扣完成前暂不能提现 | 同左 | 展示负余额说明（「待抵扣」口径见 BR-TEXT-01） |
 | 30303 | 暂不满足提现条件 | 同左 | 按 data.reason 取表 B 子键 |
-| 30304 | 请先完成实名认证 | 同左 | 跳 RealName |
-| 30305 | 请先绑定收款账号 | 同左 | 跳 PayoutAccount（支付宝或银行卡，BR-WDR-02、拍板第二批 FUND-03） |
+| 30304 | 请先完成实名认证 | 同左 | 跳 RealName；实名完成后回到发起页（从提现发起的回 Withdraw，从收款账号页发起的回收款账号页），由用户重新提交，不自动提交（BR-ID-10 细则「不适用的动作」、BR-WDR-07 细则） |
+| 30305 | 请先绑定收款账号 | 同左 | 跳 PayoutAccount（支付宝或银行卡，BR-WDR-02、拍板第二批 FUND-03）；完成后回到 Withdraw，由用户重新提交（BR-WDR-07 细则） |
 | 30306 | 提现功能暂时关闭，请稍后再试 | 同左 | 提现按钮置灰 |
 | 30307 | 收款账号姓名与实名姓名不一致，请修改收款账号 | 同左 | 跳 PayoutAccount |
 | 30308 | 该收款账号已被其他实名用户绑定，请更换账号 | 同左 | 跳 PayoutAccount；不透露对方信息 |
@@ -645,6 +668,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 码.reason | 文案（字典默认） | 包内默认（变量缺失时） | 动作 / 变量来源 |
 | --- | --- | --- | --- |
 | 20001.nickname_sensitive | 昵称含不允许使用的内容，请修改 | 同左 | BR-ID-39 |
+| 20001.phone_invalid | 请输入 11 位中国大陆手机号 | 同左 | 手机号规范化不通过（BR-ID-05 细则「手机号规范化」，2026-10-03 功能对照 G-19）；手机号输入框旁提示，不发短信 |
 | 20004.identity_mismatch | 请使用本账号已绑定的{provider_name}验证 | 请使用本账号已绑定的登录方式验证 | 二次验证时重新授权得到的第三方账号不是本账号绑定的那一个（BR-ID-08）；provider_name 取 微信 / Apple / 华为账号 |
 | 30101.auth_unavailable | 淘宝暂时无法下单，请稍后再试 | 同左 | 站长授权过期或失效期间、淘宝绑定非 active 的用户（BR-ID-24，拍板第二批 §8 ADD-02、ADD-08）；不拉起 AuthSheet、不外跳，只给【知道了】，不提供【仍去购买（无返利）】 |
 | 30102.auth_unavailable | 淘宝暂时无法下单，请稍后再试 | 同左 | 同上 |
@@ -664,6 +688,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 30303.payee_daily_users | 该收款账号今日暂不能再收款，请明天再试 | 同左 | 不透露其他会员信息 |
 | 30303.self_purchase_required | 需有近期已确认收货的自购订单才能提现 | 同左 | BR-WDR-04（天数与门槛不写入文案，BR-TEXT-13） |
 | 30303.payout_account_change_limit | 本月收款账号变更次数已用完，下月可再变更 | 同左 | BR-WDR-02 |
+| 30303.payout_account_verify_limit | 今日收款账号核验次数已用完，请明天再试 | 同左 | BR-WDR-02 细则「核验次数上限」（2026-10-03 功能对照 G-13）；不透露核验结果，不说明次数 |
 | 30411.mergeable | 该手机号已注册。可将当前{provider_name}登录并入该手机号账号，并入后当前账号停用 | 该手机号已注册，可将当前登录方式并入该手机号账号 | 按钮【并入】【取消】；【并入】凭 data.merge_ticket 调并号接口（BR-ID-06，拍板第二批 OPS-04）；provider_name 取 微信 / Apple / 华为账号 |
 | 50301.maintenance | {platform_name}维护中，请稍后再试 | 该平台维护中，请稍后再试 | 购买按钮置灰「稍后再试」；Toast 显示文案 |
 | 50301.not_launched | {platform_name}返利即将开放 | 该平台返利即将开放 | 卡片购买按钮置灰并显示该文案（即 platform_coming_soon），不弹 Toast |
@@ -694,6 +719,21 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | H5 加载失败 h5.load_failed | 页面加载失败，请重试 | 重试按钮（TECH-20，代理起草） |
 | 第三方页容器里的平台商品无法识别 external_page.product_unresolved | 该商品暂无法查返利 | 留在当前页，不在容器里继续打开这个商品页（BR-ATTR-29，2026-10-03 功能对照 G-02） |
 | 第三方页容器里拦下的平台页面 external_page.union_host_blocked | 这个页面暂不支持在这里打开，可以在 App 内搜索商品 | 按钮只有【去搜索】；不提供「继续访问」，也不提供交给浏览器或平台 App 打开的入口；原页面保持不动；内嵌框架被拦下时同一页面只提示一次（BR-ATTR-29 ②（b），2026-10-03） |
+| 第三方页容器不处理下载 external_page.download_blocked | 这里不能下载，请在浏览器中打开后下载 | 容器取消下载请求后提示一次；只在当前页有系统浏览器出口时用，配合标题栏【在浏览器打开】（规划/03 §5.1，2026-10-03 功能对照 G-21） |
+| 第三方页容器不处理下载（无浏览器出口）external_page.download_unsupported | 这里不支持下载 | 当前页没有系统浏览器出口时（平台页面、推广链接，BR-ATTR-29 细则）用这一句，不提浏览器（2026-10-03 评审补） |
+| 第三方页容器标题栏 external_page.open_in_browser | 在浏览器打开 | 用系统浏览器打开当前页面地址，只在用户点击时触发；当前页命中平台链接形态表任一类别时不显示（BR-ATTR-29 细则「容器内的非 https 跳转、下载与系统浏览器出口」，规划/03 §5.1） |
+| 上一次提交待确认·标题 pending_confirm.title | 上一次提交的结果还没有确认 | 提现申请、收款账号变更、换手机号、申请注销四个操作的发起页进入待确认状态时显示；此时新的提交入口置灰（BR-ID-10 细则「敏感操作的幂等键」，2026-10-03 第 2 轮评审补） |
+| 待确认·提现 pending_confirm.withdraw.desc / .action | 上一笔提现 {amount} 还没有收到结果，收款账号 {payout_account}，请先确认 / 确认上一笔提现 | {amount} 取本机未决记录，按 BR-TEXT-10 格式化；{payout_account} 取服务端当前绑定的收款账号（脱敏，BR-TEXT-06）；包内默认：上一笔提现还没有收到结果，请先确认。点击后用原幂等键重发（BR-WDR-07 细则「前置步骤的回流」） |
+| 待确认·收款账号 pending_confirm.payout_account.desc / .action | 上一次提交的收款账号 {payout_account} 还没有收到结果，请先确认 / 确认上一次提交 | {payout_account} 取本机未决记录的脱敏摘要；包内默认：上一次提交还没有收到结果，请先确认 |
+| 待确认·换手机号 pending_confirm.phone_change.desc / .action | 上一次提交的新手机号 {phone} 还没有收到结果，请先确认 / 确认上一次提交 | {phone} 为脱敏后的新手机号；包内默认同上 |
+| 待确认·注销 pending_confirm.deletion.desc / .action | 上一次提交的注销申请还没有收到结果，请先确认 / 确认上一次提交 | — |
+| 待确认·暂时确认不了 pending_confirm.retry_later | 暂时无法确认，请稍后再试 | 确认或放弃时得到 42901、5xxxx 或没有响应，确认时得到 40901，保持待确认状态（第 3 轮评审后补放弃） |
+| 待确认·按原内容确认不了 pending_confirm.cannot_confirm | 按上一次的内容暂时确认不了，可以稍后再试，或放弃后重新提交 | 确认时得到 20903 以外的 2xxxx（例如收款方式已关闭的 20001、换手机号验证码已失效的 20003），键不结束，保持待确认状态，不在表单字段旁标红（BR-ID-10 细则「敏感操作的幂等键」，2026-10-03 第 3 轮评审补） |
+| 待确认·放弃按钮 pending_confirm.withdraw.abandon / pending_confirm.abandon | 放弃上一笔提现 / 放弃上一次提交 | 前者用于 Withdraw，后者用于收款账号、换手机号、注销三个发起页；与确认按钮并列，都由用户点击（第 3 轮评审补） |
+| 待确认·放弃二次确认 pending_confirm.abandon.confirm / .ok / .cancel | 放弃后，上一次提交如果还没有被处理，以后也不会再被处理；如果已经处理完，会显示处理结果 / 确定放弃 / 再想想 | 点放弃按钮后弹出；点【确定放弃】才调作废接口（第 3 轮评审补） |
+| 待确认·已放弃 pending_confirm.abandoned | 上一次提交已放弃，可以重新提交 | 作废接口返回已作废后显示，同时删除未决记录、恢复提交入口；确认得到 20903 时用表 A 的 error.20903（第 3 轮评审补） |
+| 待确认·放弃时正在处理 pending_confirm.abandon_busy | 上一次提交正在处理，暂时不能放弃，请稍后再试 | 作废接口返回 40901 时显示，保持待确认状态（第 3 轮评审补） |
+| 待确认·放弃时已处理完 pending_confirm.already_done | 上一次提交已经处理完成 | 作废接口返回原结果（outcome=completed）时显示，随后按原结果展示（提现单、换绑结果或原结果的错误文案），删除未决记录、恢复提交入口（第 3 轮评审补） |
 | App 内链接落地页·分享者本人提示 link_landing.owner_hint | 这是你分享的商品，自己购买按自购返利计算 | 只在 `GET /v1/links/{link_id}` 返回 viewer_is_sharer=true 时显示；不显示金额（BR-ATTR-11，2026-10-03 功能对照 G-03） |
 | App 内链接落地页·链接失效 link_landing.invalid | 链接已失效 | 30144 时显示空态与按钮【去搜索】，不自动重试（BR-ATTR-05 细则） |
 | 分享中间页按钮 share_page.open_in_app | 在 App 中打开 | App 外浏览器里显示；微信内不显示；`open_in_app_url` 为 null 时不显示；文案不得带返利、红包等利益表述（BR-ATTR-05 细则，规划/09 CAP-X-03） |
@@ -703,6 +743,17 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 第三方新号绑手机引导 invite.bind_phone_guide.title / .body | 绑定手机号｜绑定手机号后，可在期限内填写邀请码。已用手机号注册过的，绑定同一个手机号、符合条件时可把当前登录方式并入原账号 | 按钮【去绑定】【暂不】；出现条件按 BR-INV-03 细则（2026-10-03 功能对照 G-05）；并号条件只按 BR-ID-06，文案不写天数（BR-TEXT-13） |
 | 第三方新号绑手机引导·购买前版本 invite.bind_phone_guide.body_before_buy | 绑定手机号后，可在期限内填写邀请码。已用手机号注册过的，绑定同一个手机号、符合条件时可把当前登录方式并入原账号。下单后将不能再填写邀请码，也不能并入原账号 | 登录由点击购买触发时用这一版，按钮同上；【暂不】后继续本次购买（BR-INV-03 细则） |
 | 首次购买前邀请码提示 invite.before_buy_tip | 下单后将不能再填写邀请码。有邀请码可以先填写 | 按钮【先填邀请码】【继续购买】；每个账号一次，服务端记已读（BR-INV-03 细则） |
+| 对被邀请人的告知 invite.notice_inviter | 绑定后，你订单带来的收益金额和状态会通知邀请你的人，不含商品信息 | 邀请落地页（协议勾选框上方）、App 内注册页邀请码输入框下方、补填页、剪贴板邀请口令的绑定确认页；只作告知，不加勾选框（BR-INV-16 细则「对被邀请人的告知」、BR-INV-18，2026-10-03 功能对照 G-16） |
+| 登录页求助入口 login.help_entry | 登录遇到问题 | 登录页文字入口，打开 help_links.login_help 的帮助文章，未配置时打开帮助中心首页；无需登录（BR-ID-02 细则「未登录时的隐私入口」，2026-10-03 功能对照 G-18） |
+| 比价无返利弹窗 no_rebate.price_compare.confirm | 这件商品这次被判为比价，没有返利 | 只在 open 响应 no_rebate_cause=price_compare 时出现，代替「该商品当前暂无返利，继续购买？」；按钮【看看相似商品】（no_rebate.price_compare.similar）【仍去购买（无返利）】，可关闭；不显示任何返利金额，不写「过几小时再买」之类的建议（BR-PRICE-08 细则「无返利原因」，2026-10-03 功能对照 G-09；开关默认关） |
+| 比价无返利卡片原因行 no_rebate.price_compare | 这次被判为比价，没有返利 | 卡片按 open 响应换成无返利态后显示在返利位置，旁边保留文字入口【看看相似商品】；其他无返利情形仍显示「暂无返利」 |
+| 相似商品入口 no_rebate.price_compare.similar | 看看相似商品 | 进入搜索页，平台同原商品，搜索词取卡片标题，去掉原商品（BR-PRICE-08 细则） |
+| 订单列表查询范围提示 order_list.history_hint | 只显示 {date} 之后的订单，更早的订单请联系客服 | 包内默认：更早的订单请联系客服。只在服务端返回 earliest_visible_date 时显示在列表底部；{date} 按 BR-TEXT-11 的纯日期格式；默认配置不限制范围，此时不显示（BR-ID-30 细则「订单类记录」，2026-10-03 功能对照 G-14） |
+| 找回指引入口 claim.guide.entry | 订单号在哪里找？ | 找回表单订单号输入框下方；打开 help_links.claim_guide.&lt;platform> 的帮助文章，未配置时不显示（BR-ATTR-17 细则「找回页的填写指引」，2026-10-03 功能对照 G-15） |
+| 找回指引·订单号 claim.guide.order_no | 请填写{platform_name}订单详情页显示的订单编号，整串填写；主订单号、子订单号都可以 | 包内默认：请填写订单详情页显示的订单编号，整串填写。选定平台后显示 |
+| 找回指引·付款日期 claim.guide.paid_date | 请填写付款成功的日期；预售订单填付定金的日期 | 付款日期输入框下方 |
+| 找回指引·期限 claim.guide.window | 付款后 {claim_window_days} 天内可以申请找回 | {claim_window_days} 取 `/v1/config` 的 `claim.window_days`（服务端由 claim.window_hours 向下取整到天派生，BR-ATTR-17 细则「找回页的填写指引」）；为 null 时整句不显示（BR-TEXT-12），不写死天数（BR-TEXT-13）；帮助文章里不写期限数字 |
+| 找回指引·核对提示 claim.guide.caution | 填错会占用今天的找回次数，请核对后再提交 | 提交按钮上方；不写具体次数 |
 
 例：京东转链开关关闭（原因 maintenance）→ 接口返回 50301、data.reason=maintenance → Toast「京东维护中，请稍后再试」，卡片按钮变灰显示「稍后再试」。拼多多因备案互斥或权限未批保持关闭（原因 not_launched）→ 50301、data.reason=not_launched → 不弹 Toast，卡片按钮置灰显示「拼多多返利即将开放」。trace_id 以 …c3d4e5 结尾 → 显示「（c3d4e5）」；trace_id=abc → 显示「（abc）」。30416 且 data.amount_fen=500 →「账户有待扣回金额 ¥5，抵扣回正后才能注销」。30303 reason=below_min、rules 返回最低 100 分 →「单笔最低提现 ¥1」；rules 未返回该值 →「提现金额低于单笔最低金额」。
 
