@@ -797,6 +797,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | perm.photos.system_purpose | 写进系统权限声明的用途说明（iOS 的相册写入用途说明） | 用于把你选择保存的海报图片存入相册 | 构建时由生成器从 contracts/texts.default.json 写入工程，不随配置下发；与权限清单 specs/system-permissions.yaml 的条目一一对应（规划/03 §4.9，功能对照 G-28）。SDK 带进来、需要补用途说明的权限按同样方式加键，写这个 SDK 的真实用途 |
 | perm.photos.denied_forever | 相册权限已被永久拒绝时的引导 | 没有相册权限，无法保存图片。可以在系统设置中开启 | 配【去设置】 |
 | perm.go_settings | 权限引导里的按钮 | 去设置 | 跳到系统里本 App 的设置页 |
+| privacy.system_permissions.title / .hint | 隐私中心「系统权限」一节的标题与说明 | 系统权限｜以下是本 App 会用到的系统权限，你可以随时在系统设置中修改 | 条目只列本端实际会申请的权限，来自权限清单（BR-ID-13 细则「隐私中心的系统权限一节」，2026-10-03 功能对照 G-86，下同） |
+| privacy.system_permissions.status.granted / .denied / .not_asked | 每条权限的当前状态 | 已允许｜未允许｜未申请 | 只查状态，不触发申请；点条目跳系统设置（用 perm.go_settings 的同一个跳转） |
 
 - 包内默认必须齐全：首启弹窗在同意之前显示，那时不能依赖网络。
 - 改这些键的文案按协议类内容管理：后台归 `content.agreement` 权限点（规划/04 §11.2），保存时填法务确认人并写审计；只有普通配置权限的账号改不了。这一归属是代理补全的默认假设，待负责人确认（规划/06「功能对照待确认」）。
