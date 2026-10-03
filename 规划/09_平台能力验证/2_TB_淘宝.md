@@ -137,7 +137,7 @@
 
 **CAP-TB-10 物料推荐**
 
-未知项：dg.material.recommend 官方参数与分页上限；可用 material_id 清单与各库更新频率；device_value 加密方式与合规要求（是否可用 OAID / IDFA / 华为 OAID）。
+未知项：dg.material.recommend 官方参数与分页上限；可用 material_id 清单与各库更新频率；device_value 加密方式与合规要求（是否可用 OAID / IDFA / 华为 OAID）。iOS 上 MVP 不读取 IDFA、不调用 ATT（08 BR-ID-09 细则，2026-10-03 功能对照 G-92），所以 iOS 端不会有 IDFA 可传；Android 端 MVP 也不采集 OAID（功能对照 Q-23 默认）。实验时一并确认不传设备标识时接口照常返回非个性化物料。
 
 未知项（2026-10-03 增补，功能对照 G-34；BR-TEXT-17 细则「联盟物料频道」）：各物料库（material_id）的排序依据——是按销量、热度、个性化推荐，还是按佣金、收益排序或带佣金权重；官方文档有没有写明。
 
