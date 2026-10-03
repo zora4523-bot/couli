@@ -51,7 +51,7 @@
 
 **CAP-PDD-03**
 
-未知项：range_id 各取值含义；分页上限（最大 page、total_count 封顶值）；游客或未备案用户调用是否报 60001，use_customized=false 能否绕开；结果是否随 custom_parameters 个性化（决定搜索缓存能否跨用户共享）；QPS 与日上限；能否过滤"无佣金"商品。官方入参 `risk_params`（4 附 §6）填什么、不填时搜索结果的条数、排序与佣金字段有没有变化（与 CAP-PDD-12 步骤 3 合并做，2026-10-03 功能对照 G-10）。
+未知项：range_id 各取值含义；分页上限（最大 page、total_count 封顶值）；游客或未备案用户调用是否报 60001，use_customized=false 能否绕开；结果是否随 custom_parameters 个性化（决定搜索缓存能否跨用户共享）；QPS 与日上限；能否过滤"无佣金"商品；「百亿补贴」「包邮」一类的筛选参数是否可用、结果是否准确（2026-10-03，功能对照 G-56，P1 候选筛选的前提；参数映射写进 `specs/union/pdd.md`）。官方入参 `risk_params`（4 附 §6）填什么、不填时搜索结果的条数、排序与佣金字段有没有变化（与 CAP-PDD-12 步骤 3 合并做，2026-10-03 功能对照 G-10）。
 
 步骤：代理写 `tools/probe/pdd/pdd03_search.ts`，人运行：固定 10 个关键词 ×（sort_type 0 / 6 / 9）×（with_coupon true / false）× range_list 各候选 range_id（0–10，区间 1000–5000 分），逐页翻到空页或报错；另对 benefits 候选参数（with_coupon、activity_tags 7 / 10851、sort_type 13/14）各跑 3 个关键词填映射表；再用三种身份各跑一遍（已备案 uid、未备案 uid、不带 custom_parameters），比较前 20 条结果是否相同。响应脱敏存 `fixtures/union-recordings/pdd/cap-pdd-03/<kw>-<variant>.json`。
 

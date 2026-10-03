@@ -50,7 +50,7 @@
 
 **CAP-JD-03**
 
-未知项：202 分页上限在第几页触发；QPS / 日调用上限（文档只有 429）；权限审批条件与周期；无 sceneId=2 时返回的 skuId 是否为 0 或缺省。
+未知项：202 分页上限在第几页触发；QPS / 日调用上限（文档只有 429）；权限审批条件与周期；无 sceneId=2 时返回的 skuId 是否为 0 或缺省；有没有「京东自营」「包邮」一类的筛选参数、结果是否准确（2026-10-03，功能对照 G-56，P1 候选筛选的前提；参数映射写进 `specs/union/jd.md`）。
 
 步骤：人确认 goods.query 权限已开通（截图）。代理写 `tools/probe/jd/jd03_search.ts`（另对 benefits 候选参数 isCoupon、eliteType 22、jingfen 13355、material.query eliteId 3、sortName=commissionShare 各跑 3 个关键词，填"权益 × 平台"映射表）：20 个关键词（含品牌 + 规格，如"伊利纯牛奶 24盒"）× 4 种排序（默认 / price asc / inOrderCount30Days desc / commission desc）× isCoupon 0/1 × 一个价格区间；逐页翻到 202，记录总页数、totalCount、单次耗时、commission=0 占比；录制存 `fixtures/union-recordings/jd/cap-jd-03/`。
 
