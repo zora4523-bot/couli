@@ -172,7 +172,7 @@
 - 实返 y = actual_fen = credited_fen + Σ 该子订单本账户 SETTLE_ADJUST 流水金额（带符号）− Σ 该子订单本账户 CLAWBACK 流水金额绝对值（display_status ∈ {CREDITED, CREDITED_PART_CLAWED} 时展示）。
 - 扣回 z = clawback_fen = Σ 该子订单本账户 CLAWBACK 流水金额绝对值（含 sub_type=PART_REFUND 的部分扣回，BR-FUND-08）。
 
-**share 单（分享者视角）**：状态文案同上；金额行「预估推广收益 ¥x」/「推广收益 ¥y」；不展示买家信息。子订单 product_key 与分享时 link_id 登记的商品不一致时，标题显示「好友购买的其他商品」，不展示标题、图片、SKU（平台是否存在跨商品归因见 规划/09，待实测）。
+**share 单（分享者视角）**：状态文案同上；金额行「预估推广收益 ¥x」/「推广收益 ¥y」；不展示买家信息。子订单 product_key 与分享时 link_id 登记的商品不一致时，标题显示「好友购买的其他商品」，不展示标题、图片、SKU（服务端不下发这些字段，见下文「订单的检索范围与分享单的投影」；平台是否存在跨商品归因见 规划/09，待实测）。
 
 **时间线**（详情页）：付款 {paid_at} → 收货 {received_at} → 预计 {credit_period} 结算（BR-TEXT-04，credit_period 为预计结算月份；expected_credit_period 为 null 时该节点只显示「联盟结算」）→ 已结算 {credited_at}；display_status 为 INVALID / CLAWED_BACK 时追加「失效 / 扣回 {time}」节点，CREDITED_PART_CLAWED 追加「部分扣回 {time}」节点；未发生的节点置灰；时间格式见 BR-TEXT-11。预售单（2026-10-03，功能对照 G-63）在最前面加「付定金 {deposit_paid_at}」节点，原「付款」节点改称「付尾款 {paid_at}」，其余不变；deposit_paid_at 取平台返回的定金支付时间（与 BR-ATTR-25 预售单 attr_at 同一来源），平台不返回时该节点只显示「付定金」、不带时间。非预售单没有这个节点。返利金额仍按上表 DEPOSIT_PAID 行不显示。
 
@@ -196,8 +196,17 @@
 - 分组名不用「待结算」「结算中」（BR-TEXT-13），「已结算」与 BR-TEXT-01 同义；「无返利」指这笔订单没有或不再有返利（含结算前失效与结算后扣回，各单的状态文案仍按上表映射）。未知编码只出现在「全部」。
 - 平台筛选：单选一个平台，只作用于当前子 Tab。
 - 按月份：按付款时间（+08:00）的年月筛选；只能选可查范围以内的月份（BR-ID-30 细则「订单类记录」的 earliest_visible_date）。
-- 搜索：自购单里，输入内容与某笔订单的父单号或子单号完全相同时按单号精确命中，否则按标题包含匹配；分享单只按标题匹配，不按单号匹配（分享单只给脱敏号，BR-ATTR-10），标题已隐去的「好友购买的其他商品」（is_other_product=true）不参与标题匹配。搜索只在本人的订单里进行，不返回其他用户的订单。
+- 搜索：自购单里，输入内容与某笔订单的父单号或子单号完全相同时按单号精确命中，否则按标题包含匹配；分享单只按标题匹配，不按单号匹配。检索范围、单号与标题怎样匹配、分享单返回哪些字段，按下一段「订单的检索范围与分享单的投影」，AI 助手查订单用同一套。
 - 筛选条件可以叠加；切换子 Tab 时分组回到「全部」，其余条件清空。
+
+**订单的检索范围与分享单的投影**（2026-10-03 第 4 批第 1 轮评审后补，按编排会话裁定；原来只写在订单列表的搜索里，AI 助手的订单类工具仍能按单号命中分享单、按真实标题匹配好友买的其他商品，等于绕过了上一段。本段是唯一维护处：订单列表的搜索与筛选、订单详情、AI 助手的 `list_my_orders` 与 `explain_order`（BR-AI-07），以及以后新增的任何订单检索入口，都按本段；BR-ATTR-10、BR-AI-07 只引用）：
+- 范围：只在当前账号名下的订单里查，即 `GET /v1/orders` 的 scope=self（本人自购）与 scope=share（本人分享）可见的子订单；不含未归因池、直推与间推分佣订单和其他用户的订单；可查范围按 BR-ID-30 细则「订单类记录」。
+- 按单号：只匹配本人自购单，输入与父单号或子单号完全相同才算命中。分享单不参与任何按单号的匹配：完整单号、脱敏号、单号片段都不命中。
+- 按标题：自购单按商品标题做不区分大小写的包含匹配；分享单只按分享者看得到的标题匹配，实购商品与分享商品不一致的子订单（is_other_product=true）不参与标题匹配。
+- 返回的投影：分享单在任何出口（列表、详情、AI 助手的 order_status 卡片与工具返回给模型的内容）都只给分享者可见的字段。订单号只有 masked_order_no（格式见上文「订单号的显示」），不出现完整单号；is_other_product=true 的子订单不下发标题、商品图、SKU 与 product_key（title、image_url 为 null，客户端显示「好友购买的其他商品」，键 `order_list.other_product`）；不下发购买者的任何信息。这些字段在服务端裁掉，不靠客户端隐藏。
+- 查不到与不存在不区分：按上面的规则匹配不到的单号或关键词（包括它其实属于本人的分享单），与不存在的单号得到完全相同的结果：订单列表返回空结果；`explain_order` 返回 NOT_TRACKED 与找回入口（BR-AI-07 细则判定规则第 3 条）；`list_my_orders` 不返回该笔。
+- 不在本段范围：找回（`POST /v1/orders/claims`）是用户自己提交单号与付款日期的申请，不是检索，校验与结论只按 BR-ATTR-17。
+- 例：U1 分享商品 X，好友经分享链接买了 X（分享单 O1，单号 3712345678901234567）和另一件商品 Y（分享单 O2，is_other_product=true，Y 的标题含「牙刷」）。U1 在分享子 Tab 搜 `3712345678901234567` → 空结果；搜「牙刷」→ 空结果；搜 X 的标题词 → 命中 O1，单号显示 `3712****67`。U1 问 AI「帮我查订单 3712345678901234567」→ `explain_order` 返回 NOT_TRACKED 与找回入口，和随便编一个格式正确的单号得到的响应相同；问「上周有没有买牙刷」→ `list_my_orders(keyword=牙刷)` 不返回 O2；问「上周的订单」→ 返回 O1、O2 两张卡，O2 的 title 为 null（卡片显示「好友购买的其他商品」），两张卡与工具返回的内容里都没有完整单号。
 
 **详情页的「查看商品」**（2026-10-03，功能对照 G-62）：订单详情的商品信息区可以点击（入口文字 `order_detail.view_product`「查看商品」），打开该商品的原生详情页（ProductDetail），之后与其他入口进入详情页相同：显示当前价格与预估返利，用户点购买才经 open 转链，是一次新的点击与新的归因（BR-ATTR-05、BR-ATTR-08），不沿用这笔订单的任何链接或归因。
 - 显示条件：订单接口返回的 product_key 不为空；本人自购单，或商品与分享时一致的分享单（is_other_product=false）。分享单的实购商品与分享商品不一致（is_other_product=true）时不显示，避免露出好友买了什么；直推、间推分佣的订单本来就不出现在订单列表（上文）。
@@ -800,6 +809,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 订单列表查询范围提示 order_list.history_hint | 只显示 {date} 之后的订单，更早的订单请联系客服 | 包内默认：更早的订单请联系客服。只在服务端返回 earliest_visible_date 时显示在列表底部；{date} 按 BR-TEXT-11 的纯日期格式；默认配置不限制范围，此时不显示（BR-ID-30 细则「订单类记录」，2026-10-03 功能对照 G-14） |
 | 订单列表状态分组 order_status_group.all / .estimating / .credited / .no_rebate | 全部｜预估中｜已结算｜无返利 | 订单列表自购、分享子 Tab 下的分组 Tab，成员只按 BR-TEXT-02 细则「订单列表的状态分组与查找」；不得改成「待结算」「结算中」（BR-TEXT-13）（2026-10-03 功能对照 G-60） |
 | 订单列表筛选与搜索 order_list.filter.platform / .filter.month / .search.placeholder | 平台｜月份｜搜订单号或商品名 | 分享子 Tab 的搜索框提示改用 order_list.search.placeholder_share「搜商品名」（分享单不按单号搜）（2026-10-03 功能对照 G-60） |
+| 分享单里好友买的其他商品 order_list.other_product | 好友购买的其他商品 | 分享单 is_other_product=true 时代替标题显示（服务端不下发标题与商品图），订单列表、订单详情与 AI 助手的订单卡片共用（BR-TEXT-02 细则「订单的检索范围与分享单的投影」，2026-10-03 第 4 批第 1 轮评审后补） |
 | 预售单定金金额 order_list.deposit_amount | 已付定金 {amount} | display_status=DEPOSIT_PAID 且 pay_amount_fen 不为 null 时代替实付金额显示；{amount} 按 BR-TEXT-10（BR-TEXT-02 细则「预售单的付款金额」，2026-10-03 功能对照 G-63） |
 | 预售单时间线 order_timeline.deposit_paid / order_timeline.final_paid | 付定金 {time}｜付尾款 {time} | 只用于预售单；没有定金时间时 order_timeline.deposit_paid 只显示「付定金」（BR-TEXT-02 细则「时间线」） |
 | 订单详情查看商品 order_detail.view_product | 查看商品 | 订单详情商品信息区的入口，显示条件见 BR-TEXT-02 细则「详情页的「查看商品」」（2026-10-03 功能对照 G-62） |
