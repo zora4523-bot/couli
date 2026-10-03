@@ -105,7 +105,9 @@
 
 未知项：物料接口是否需单独申请、QPS 多少；material.query 返回的 clickURL 与 common.get 转出的链接归因是否一致。
 
-步骤：代理写 `tools/probe/jd/jd10_feed.ts`，不传 subUnionId 与设备 ID，拉 5 个频道各 3 页，记录条数、字段完整度、耗时；对其中 3 个商品在点击时再走 common.get 转链并比较链接；录制存 `fixtures/union-recordings/jd/cap-jd-10/`。
+未知项（2026-10-03 增补，功能对照 G-34；BR-TEXT-17 细则「联盟物料频道」）：material.query、jingfen.query 各频道与 rank.query 各 sortType 的排序依据，是否含佣金权重。主表已记：jingfen.query 有「高收益榜」「高佣榜单」频道，并支持按佣金排序；rank.query 的 sortType 有「高佣」一项——这几项按规则不进首页可选白名单；其余频道（猜你喜欢、实时热销等）的排序依据官方有没有写明，待核对。
+
+步骤：代理写 `tools/probe/jd/jd10_feed.ts`，不传 subUnionId 与设备 ID，拉 5 个频道各 3 页，记录条数、字段完整度、耗时；对其中 3 个商品在点击时再走 common.get 转链并比较链接；录制存 `fixtures/union-recordings/jd/cap-jd-10/`。另（2026-10-03）：逐个频道与排序参数记下官方说明的排序依据与「是否含佣金权重」（是 / 否 / 说不清），写入 `specs/material-channels.yaml`；调用物料接口时不传按佣金排序的参数。
 
 **CAP-JD-11（对应 05 HM-04）**
 
