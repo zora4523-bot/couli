@@ -105,6 +105,21 @@
 
 例：用户 A 有 3 笔自购订单：(PAID, ESTIMATED) 预估 ¥2.5、(RECEIVED, WAITING) 预估 ¥4（淘宝订单 10 月确认收货，联盟尚未返回结算时间，expected_credit_period=2026-11）、(RECEIVED, CREDITED) ¥6；无提现。接口返回 withdrawable_fen=600、estimated_total_fen=650、pending_credit_fen=400、estimated_fen=250、next_credit_period=2026-11、withdrawn_fen=0 → 钱包显示「可提现余额 ¥6｜预估收益 ¥6.5（其中已收货 ¥4，预计 11 月结算）｜已提现 ¥0」。用户问「返利到账了吗」，客服回答：「¥6 已结算，可提现；另有预估收益 ¥6.5，其中已收货的 ¥4 预计 11 月结算，¥2.5 待确认收货」。
 
+**收益看板文案**（2026-10-03，功能对照 G-11；统计口径只在 BR-FUND-25 维护，待决策、按功能对照 Q-10 默认，本条只定文案键，经字典下发，可改措辞、不可改含义）：
+
+| 键 | 默认文案 | 用处 |
+| --- | --- | --- |
+| earnings.title | 收益看板 | 页面标题与入口文字 |
+| earnings.section.self / .share / .referral | 自购返利 / 分享推广收益 / 邀请推广收益 | 三栏标题；不出现「团队」「下线」「二级」等词（BR-INV-20） |
+| earnings.period.today / .yesterday / .this_month / .last_month | 今日 / 昨日 / 本月 / 上月 | 期间；邀请栏只有本月、上月 |
+| earnings.metric.paid_count.name / .hint | 付款笔数 / 按付款时间统计，不含已失效和已扣回的订单 | 自购、分享两栏 |
+| earnings.metric.est.name_self / .name_promo / .hint | 预估返 / 预估推广收益 / 结算前的估计值，以联盟结算金额为准 | 自购栏用 name_self，分享与邀请栏用 name_promo |
+| earnings.metric.credited.name / .hint | 已结算 / 按入账日期统计，之后的扣回与调整见余额流水 | 三栏 |
+| earnings.referral.note | 邀请推广收益只显示本月与上月的合计 | 邀请栏下方说明 |
+| earnings.referral.platform_note | 不分平台 | 带平台筛选时显示在邀请栏 |
+
+金额按 BR-TEXT-10 格式化；笔数为 0、金额为 0 时照常显示 0 与「¥0」，不隐藏栏目。看板不显示任何好友的昵称、订单或笔数（BR-INV-16、BR-INV-17）。
+
 **后台 / 报表专用词**：「联盟结算佣金」（联盟月结付给平台的钱）只在后台与报表出现，BR-TEXT-13 按字段范围校验；「预估收益」用户侧与报表均可用，报表中须带口径编码（BR-TEXT-21）。
 
 **负责人决定（C-02，变更记录 §3）**：用预估，结算后才用确定的表达，参考花卷云字段。原待决策的方案 A（订单侧「入账」、提现侧「到账」）与方案 B（订单侧「已到账」、提现改「提现成功」）均不再作为候选；本条按上述新口径取代方案 A，文案经 /v1/dict 下发。

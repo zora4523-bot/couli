@@ -4,7 +4,9 @@
 
 ## 6. 资金状态与账务（BR-FUND）
 
-本节规定：返利状态流转、入账时点与凭证、扣回与补差、负余额、单一余额、流水类型、不变量、月末核对与垫资。共 24 条（已确认 14、默认假设 6、待决策 2、待验证 2）。
+本节规定：返利状态流转、入账时点与凭证、扣回与补差、负余额、单一余额、流水类型、不变量、月末核对与垫资、收益看板口径。共 25 条（已确认 14、默认假设 6、待决策 3、待验证 2）。
+
+2026-10-03 功能对照补缺第 2 批（docs/changes/20261003-功能对照补缺.md「第 2 批」；「功能对照 G-xx / Q-xx」是该批缺口清单与待确认题的编号，与 规划/10 §6.1 的 G-xx、规划/06 的 Q-xx 不是同一套）：新增 BR-FUND-25「收益看板口径」（待决策，按功能对照 Q-10 默认 A 写，功能对照 G-11）。看板只做展示，不改任何入账、扣回与余额规则；其余条目不变。
 
 本节按 §14.3 的建议（默认处理）改写了 C-01、C-02、C-03、C-06、C-07、C-08、C-09 涉及的条目，C-16、C-17 的默认处理与本节原写法一致；各条细则末尾注明所按的分歧编号与决策人，裁决前按默认处理实现。
 
@@ -44,6 +46,7 @@
 | BR-FUND-22 | **作废或扣回订单的平台恢复**<br>rebate_status 为 VOID 或 CLAWED_BACK 的子订单不得因平台数据自动复活。仅当其 reason_code ∈ {REFUND, RIGHTS, COMMISSION_ZERO} 或进入原因为 PLATFORM_INVALID / INVALID_AFTER_SETTLE，且平台此后回传非失效状态或佣金恢复为 >0 时，才告警并生成差错单（类型「已作废订单被平台恢复」）；因 PUNISH、BLACKLIST_HIT 作废的订单，platform_status 照常更新，不告警、不生成差错单。差错单只能经 ADMIN_RESTORE 处理：超管或被勾选该权限的账号 step-up 后处理，一人可完成，写审计（拍板第二批 §8 ADD-05）。R12：VOID → 按当前 platform_status 回到 ESTIMATED 或 WAITING（WAITING 时 settle_period 按 received_at 取；该周期批次已执行的，进入补充批次或下一周期批次，BR-FUND-04），不写分录。R13：CLAWED_BACK → CREDITED，按当前联盟佣金与分佣快照重算各受益人与平台应得，与当前净额的差额写 ADMIN_ADJUST（sub_type=RESTORE，借 UNION_RECEIVABLE / 贷 USER_BALANCE.available 或 COMMISSION_REVENUE），uniq_key 受益人 `{order_key}:{user_id}:{role}:RESTORE:{差错单 id}`、平台 `{order_key}:PLATFORM:RESTORE:{差错单 id}`，同事务 booked_base_fen=新基数。处理人也可决定不恢复，关闭差错单并记原因。<br>**申诉恢复**（拍板第二批 FUND-14）：申诉结案为撤销时（BR-ID-36；订单申诉只标记该订单申诉中、不改账户 risk_state，OPS-07），系统自动生成差错单「申诉恢复」，按上述方式处理：订单申诉 → ① 该订单 reason_code=BLACKLIST 的 VOID 按 R12 恢复，② 经 BLACKLIST_CONFIRMED 扣回的 CLAWED_BACK 按 R13 恢复；账户（封禁）申诉 → ③ 该用户在封禁期间因 banned 被 forfeited（BR-CALC-13）、已计入平台留存的份额，按 booked_base_fen 与快照重算该受益人应得，与其已入账净额之差写 ADMIN_ADJUST（sub_type=RESTORE，借 COMMISSION_REVENUE / 贷 USER_BALANCE.available），uniq_key 同上。PUNISH（联盟处罚）作废的订单不在申诉恢复范围。 | 已确认 | 迁移表 R12、R13（SM-REB-R12/R13）；差错单类型「已作废订单被平台恢复」「申诉恢复」（申诉结案撤销时系统生成，BR-ID-36）；ADMIN_ADJUST sub_type RESTORE；后台差错单处理页（step-up 处理）；告警规则 |
 | BR-FUND-23 | **月末三项核对**<br>每月 1 日 01:30:00 +08:00（名义时刻，读注入的 Clock；须在当日 01:00 的 BR-FUND-19 日终校验完成后开始，最晚等到 03:00，超时告警并照常运行）对上月 M（M 月 1 日 00:00 至 M+1 月 1 日 00:00，+08:00）运行内部对账 R3 的月度核对，按 app_id 计算三个数（单位分）：X1 用户累计入账净额 = 截至 M 月末（accounting_date ≤ M 月末日）用户 available 子户上 REBATE_CREDIT、SHARE_CREDIT、REFERRAL_CREDIT、REWARD、CLAWBACK、SETTLE_ADJUST、ADMIN_ADJUST、BAD_DEBT_WRITEOFF 分录对用户余额的影响合计（贷记为正）；X2 用户期末余额 = M 月末日 asset_snapshots 的 total_available_positive_fen − total_negative_fen + total_frozen_fen；X3 用户累计已提现 = 截至 M 月末迁移到 PAID_API/PAID_MANUAL 的提现单 amount_fen 合计（取提现单表，以迁移事务的 Clock 时刻判断归属月份）。必须满足 X1 = X2 + X3，差额 ≠0 分即 P1 告警并生成差错单（类型「月末三项不平」），不自动冻结提现、不改开关（账户级定位与冻结由 BR-FUND-19 负责）。同一报表另列按平台的「上月联盟预估佣金」（paid_at 在 M 内且已归因子订单的 est_commission_fen 当前值合计）、「上月入账基数」（M 内 rebate_status→CREDITED 的子订单 booked_base_fen 合计）、UNION_RECEIVABLE:{platform} 期末余额，只供财务查看，不参与等式。重跑同一月份结果相同，差错单按 (app_id, 月份) 去重。 | 默认假设 | 任务 recon.monthly（依赖 BR-FUND-19 当日完成、BR-FUND-18 月末日快照）；/admin/v1/recon R3 月度报表与导出；差错单类型「月末三项不平」；告警规则；验收用例：构造入账、扣回、提现、核销后三项相等；篡改一笔提现单金额后生成差错单 |
 | BR-FUND-24 | **人工调账**<br>人工调整用户余额只能经后台调账单写 ADMIN_ADJUST 凭证（sub_type = 原因码），不得直接改 account_balances 或分录；本条是 ADMIN_ADJUST 原因码与流程的唯一维护处（代理起草，负责人 2026-10-01 授权按推荐）。① 流程：超管或被勾选人工调账权限的账号发起（用户、方向、金额（分，&gt;0）、原因码、关联单据、内部说明），step-up 后批准执行，一人可完成（拍板第二批 §8 ADD-05）；批准时在同一事务内重读余额并写凭证；调账单状态 PENDING → APPROVED / REJECTED / CANCELLED（发起后可先保存待批，可撤回，驳回须填原因）；全程写 audit_logs。RESTORE 只由 BR-FUND-22 差错单生成，按 BR-FUND-22 处理。<br>② 原因码：RESTORE（订单恢复与申诉恢复，BR-FUND-22）、RECON_FIX（对账差错更正，关联 R1/R2/R3 差错单）、PAYOUT_RECOVERY（重复打款或迟到成功的追回，关联提现单与差错单，BR-WDR-15、BR-WDR-23）、ACCOUNT_CLOSED（注销放弃余额转平台收入，关联注销单）、OTHER（须关联客服工单或差错单并写说明）。<br>③ 每张调账单至少关联 1 张单据（差错单、提现单、子订单 order_key、注销单或客服工单）。<br>④ 金额不设单笔上限（负责人 2026-10-01）；批准页展示调账前后 available。<br>⑤ 调减可使 available &lt; 0（BR-FUND-10），之后按 BR-FUND-10、11、12 处理；不得写 frozen（BR-FUND-14 ①）。<br>⑥ 分录：调增 借 平台科目 / 贷 USER_BALANCE.available，调减反之；对方科目默认 RESTORE 按 BR-FUND-22，PAYOUT_RECOVERY 为 CASH_ALIPAY（银行卡通道为对应银行科目），ACCOUNT_CLOSED 为 COMMISSION_REVENUE，RECON_FIX、OTHER 由发起人按差错单与 specs/ledger-rules.md 选定；科目表以 specs/ledger-rules.md 为准。uniq_key=`ADJ:{adjust_id}`；已执行的调账只能另发调账单写红冲凭证 `ADJ:{adjust_id}:REVERSE` 更正（BR-FUND-16）。<br>⑦ 用户可见：余额流水显示 1 条 ADMIN_ADJUST，名称与说明按原因码取字典（BR-TEXT-19），不显示内部说明与操作人；调减另发站内信，含金额与原因类别。<br>⑧ 注销：用户进入注销 processing（BR-ID-28）时，available &gt; 0 的，系统预填 ACCOUNT_CLOSED 调减单（金额在批准时按当时 available 取），按 ① 执行，须在注销 done 前完成，未完成告警；余额为负的用户不能申请注销（BR-ID-27，30416，拍板第二批 §8 ADD-07），不再生成核销候选单；注销用户不发站内信（拍板第二批 FUND-09）。 | 已确认 | 调账单表（adjust_id、user_id、direction、amount_fen、reason_code、ref_type、ref_id、note、status、created_by、reviewed_by、时间；删除 account_type）；ledger_type ADMIN_ADJUST 的 sub_type 枚举（RESTORE、RECON_FIX、PAYOUT_RECOVERY、ACCOUNT_CLOSED、OTHER）；后台调账页（权限点、step-up）；audit_logs；注销处理任务（ACCOUNT_CLOSED 预填）；字典 ledger_type.ADMIN_ADJUST 按原因码的说明（BR-TEXT-19）；站内信模板（余额调减）；specs/ledger-rules.md 科目；验收用例：一人 step-up 完成、未勾选权限的账号被拒、调减至负、红冲、注销放弃余额 |
+| BR-FUND-25 | **收益看板口径**<br>GET /v1/earnings/summary（收益看板，M-公开）只返回本人的收益概览，口径只在本条维护；看板只做展示，不参与任何资金计算。期间：今日、昨日、本月、上月，一律按 +08:00 的自然日与自然月。分三栏：① 自购：本人为归属用户且 buy_type=self 的子订单；② 分享：本人为归属用户且 buy_type=share 的子订单；③ 邀请：本人作为直推或间推受益人的邀请分佣。①② 各给四个期间的付款笔数、预估、已结算；③ 只给本月、上月两个期间的预估合计与已结算合计，不给笔数，不给今日、昨日，不按天、按平台或按好友拆分，避免上级借看板推出好友哪天下的单（BR-INV-16、BR-INV-17）。归期：付款笔数与预估按订单 paid_at 归期间；已结算按入账流水的会计日 accounting_date 归期间。计入付款笔数的订单用状态事实列举：已归因到本人、platform_status 到过 PAID 或之后、查询时 rebate_status ∈ {ESTIMATED, WAITING, CREDITED}；只付定金（DEPOSIT_PAID）、未归因、已失效（VOID）、已全额扣回（CLAWED_BACK）的不计；不使用「有效订单」「有效用户」这类会员口径（BR-INV-23）。预估 = 这些订单里 rebate_status ∈ {ESTIMATED, WAITING} 的本人份额合计，份额算法同 BR-FUND-18；已结算 = 期间内写入本人余额的入账流水合计（① REBATE_CREDIT，② SHARE_CREDIT，③ REFERRAL_CREDIT 含间推），不含 SETTLE_ADJUST、CLAWBACK、ADMIN_ADJUST。可选筛选 platform 只作用于 ①②；③ 始终是全部平台合计。开关 earnings.dashboard.enabled（默认 on）关闭后入口隐藏、接口返回 30701；earnings.dashboard.referral_visible（默认 on）关闭后不返回 ③。文案只取 BR-TEXT-01 细则「收益看板文案」。 | 待决策 | GET /v1/earnings/summary 响应 schema 与 platform 参数；页面 Earnings（收益看板，规划/01 §4.2）；配置 earnings.dashboard.enabled、earnings.dashboard.referral_visible；字典 earnings.\*（BR-TEXT-01）；钱包页与「我的」页入口；Agent 与客服口径（不得据看板向上级提供下级订单信息，BR-INV-16）；验收 AC-S2-61 |
 
 ### 6.2 细则
 
@@ -788,6 +791,41 @@ C-02 已由负责人决定（拍板第二批 OPS-01：用户侧不再单列「�
 
 **用户侧**：流水名称、按原因码的说明与站内信措辞只在 BR-TEXT-19 与通知模板维护；原因码中文名示意：RESTORE「订单恢复」、RECON_FIX「对账更正」、PAYOUT_RECOVERY「重复到账追回」、OTHER「余额调整」（ACCOUNT_CLOSED 只用于已注销用户，不对外展示）。
 
+#### BR-FUND-25 细则 · 收益看板口径
+
+- 状态：待决策（默认）。2026-10-03 新增（功能对照 G-11）；按功能对照 Q-10 的默认 A 写，负责人尚未回答，登记在 规划/06「功能对照待确认」。
+- 默认值：进 M-公开；自购与分享两栏给今日、昨日、本月、上月的付款笔数、预估、已结算；邀请栏只给本月、上月的金额合计，不给笔数、不按天拆；付款笔数与预估按付款日归期，已结算按入账日归期；已结算只计入账流水、不扣减之后的扣回与调整。理由：规划/04 早已登记该接口为 M-公开，但没有口径，开发只能猜；邀请分佣若按天给笔数，上级能反推出好友的下单日期，与 BR-INV-17「日期只到日、不可跳转」的初衷不符。
+- 决策人：负责人（是否进 M-公开、邀请栏展示范围）；财务（已结算是否改为扣除扣回后的净额）
+- 依赖平台能力：无
+- 取代：
+  - 规划/04 §6.4 原写：「收益看板：今日 / 昨日 / 本月 / 上月的付款笔数、预估、已结算，自购与推广分开；金额口径同 BR-FUND-18」（「推广」未区分本人分享单与邀请分佣，按天给笔数；口径改由本条定义）
+  - 08 13 §13.9 `GET /v1/earnings/summary` 行的同一句描述
+- 来源：规划/04 §6.4；08 13 §13.9；PRD修订_后端功能规划（GET /v1/earnings/summary）；BR-FUND-18；BR-INV-16、BR-INV-17、BR-INV-20、BR-INV-23；BR-TEXT-01；docs/research/20261003-功能对照缺口清单.md G-11、docs/research/20261003-功能对照待确认问题.md Q-10
+- 需同步修改的规划文档：规划/00 §4 资金行；规划/01 §4.2（Earnings）、F-WDR-14；规划/04 §6.4、§10.1；规划/05 B2-13、F1-12；规划/10 AC-S2-61；08 13 §13.9；BR-TEXT-01 细则（已同步 2026-10-03）
+
+**期间**（+08:00）：今日 = [当日 00:00, 次日 00:00)；昨日 = 前一个自然日；本月 = [本月 1 日 00:00, 下月 1 日 00:00)；上月同理。服务端用注入时钟计算，响应带 as_of（统计截至时刻），客户端不自行换算期间。
+
+**三栏与字段**（形状见 规划/04 §6.4）：
+
+| 栏 | 范围 | 期间 | 付款笔数 | 预估 | 已结算 |
+| --- | --- | --- | --- | --- | --- |
+| ① 自购 | 本人为归属用户、buy_type=self 的子订单 | 今日、昨日、本月、上月 | 有 | 本人份额（role=self） | REBATE_CREDIT |
+| ② 分享 | 本人为归属用户、buy_type=share 的子订单（本人的分享单） | 今日、昨日、本月、上月 | 有 | 本人份额（role=share） | SHARE_CREDIT |
+| ③ 邀请 | 本人为 direct 或 indirect 受益人的邀请分佣（间推只在规则版本开启时存在，BR-CALC-05） | 只有本月、上月 | 不返回 | 两种角色的份额合计 | REFERRAL_CREDIT（DIRECT + INDIRECT）合计 |
+
+- 付款笔数按子订单计（一个子订单一笔，BR-ATTR-22）；含「本单无返利」的订单（它们也在订单列表里）。
+- 看板是查询时刻的事实，不是历史快照：订单后来失效，它所在期间的笔数与预估随之减少；找回通过的订单按其 paid_at 归到原付款期间；后台改归属后按新归属用户统计。
+- 已结算只增不减：扣回、结算补差与人工调账不改已结算数，只在余额流水逐笔显示（BR-TEXT-19）；页面在已结算旁按字典给一句说明。是否改为净额由财务定，见本主题未决问题第 22 项。
+- 预估取 BR-FUND-18 的份额算法，四个期间之和不等于钱包的「预估收益」（钱包不限付款期间），页面不把两者并排比较。
+- ③ 不分直推与间推，不显示层级（BR-INV-20）；间推开关关闭时 ③ 只有直推。③ 的两个数都是合计，不提供展开、明细或跳转；逐笔的已结算分佣仍只在余额流水按 BR-TEXT-19 显示（日期到日）。
+- platform 筛选：只过滤 ①②；带筛选时 ③ 原样返回全部平台合计，页面在该栏标注「不分平台」（文案见 BR-TEXT-01）。
+- 缓存：≤60 秒，按 user_id 隔离（同 BR-FUND-18 预估类）。
+- 不得出现的内容：其他用户的昵称、手机号、订单与笔数；排行、与他人比较；「团队」「下线」等用语（BR-INV-20）；「佣金」「返现」等禁用词（BR-TEXT-13）。
+
+**例**：现在是 2026-11-12 10:00。用户 A 本月自购 3 笔：11-02 付款的一笔已确认收货、等待月结（WAITING），份额 269；11-10 付款的一笔还没收货（ESTIMATED），份额 135；11-11 付款的一笔在 11-12 09:00 退款失效。A 邀请的好友本月付款 2 笔，A 的直推份额合计 54。→ ① 本月：付款笔数 2、预估 404、已结算 0；① 昨日：付款笔数 0（11-11 那笔已失效，不计）；③ 本月：预估 54、已结算 0，没有笔数。11-24 的月结批次把 A 在 10 月付款的两笔入账，共 520 → ① 本月已结算 520（按入账日归本月），这两笔的付款笔数仍算在上月。
+
+**负责人改选时**：选 B（推到 P1）→ earnings.dashboard.enabled 置 off，规划/00 §4 该行改 P1，页面入口隐藏；想让邀请栏显示更多（笔数、按天）→ 属放宽上级可见范围，须先改 BR-INV-16、BR-INV-17 并写影响评估（规划/00 §8）。
+
 ### 6.3 本主题未决问题
 
 1. 【已由负责人确认 2026-09-30，变更记录 §2】BR-FUND-01：是否采用 platform_status + rebate_status 双状态模型取代 规划/04 单一 order_status（默认采用），需负责人拍板。
@@ -811,5 +849,6 @@ C-02 已由负责人决定（拍板第二批 OPS-01：用户侧不再单列「�
 19. BR-FUND-04 ⑪ 预计结算月份取「联盟返回的结算时间所在月」，依赖该字段的语义（2026-09-30 负责人补充）：若某平台接口的「结算时间」实为确认收货时间或联盟内部记账时间（与向推广者出账结算的月份不同），或联盟结算时间晚于当月月结账单日，展示月份会早于我方实际结算月份，并可能提前触发 credit_overdue「入账核对中」。需 CAP-TB-08、CAP-JD-08、CAP-PDD-08、CAP-MT-08 实测字段语义；候选处理（待负责人确认，未采用）：预计结算月份取 max(联盟结算时间所在月, 确认收货月 + settle.period_offset_months)，或联盟结算时间晚于当月账单日时顺延一个月。
 20. 月结账单状态：负责人补充中列出 出账中 → 已出账 → 结算中 → 已结算 四个状态，花卷云另有「待结算」；本条按五个状态（含定时结算未到时刻的「待结算」）由批次状态派生（BR-FUND-04 细则），是否保留「待结算」需负责人确认；这些是后台账单状态用词，不出现在用户侧；BR-TEXT-13 禁用「待结算」「结算中」只约束用户可见文案，二者不冲突。
 21. 代理按拍板第二批补全、负责人 2026-10-01 授权按推荐的写法，财务确认 specs/ledger-rules.md 时一并核对：BR-FUND-24 的原因码集合与各原因码对方科目（ACCOUNT_CLOSED 记 COMMISSION_REVENUE、PAYOUT_RECOVERY 记 CASH_ALIPAY）；BR-FUND-08 注销后扣回借 BAD_DEBT 的分录（FUND-09）；BR-FUND-22 ③ 封禁申诉撤销后补发 forfeited 份额（FUND-14）。原列「BR-FUND-12 注销时负余额当即生成核销候选单」已由 §8 ADD-07 取消（余额为负不能注销）。
+22. BR-FUND-25 收益看板（2026-10-03，功能对照 G-11）：是否进 M-公开、邀请栏只给本月与上月合计，按功能对照 Q-10 默认 A 写，待负责人确认；「已结算」按入账流水合计、不扣减之后的扣回与调整是代理起草的默认，是否改为净额需财务确认（改净额时须同时定扣回归入哪个期间）。
 
 ---
