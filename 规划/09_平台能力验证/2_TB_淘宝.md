@@ -139,7 +139,9 @@
 
 未知项：dg.material.recommend 官方参数与分页上限；可用 material_id 清单与各库更新频率；device_value 加密方式与合规要求（是否可用 OAID / IDFA / 华为 OAID）。
 
-步骤：代理写 `tools/probe/taobao/tb10_feed.ts`，调 optimus.tou.material.ids.get 取 material_id 列表，再对每个库调 dg.material.recommend 翻页，记录条数、字段、与物料搜索字段是否一致；脱敏存 `fixtures/union-recordings/taobao/cap-tb-10/`。
+未知项（2026-10-03 增补，功能对照 G-34；BR-TEXT-17 细则「联盟物料频道」）：各物料库（material_id）的排序依据——是按销量、热度、个性化推荐，还是按佣金、收益排序或带佣金权重；官方文档有没有写明。
+
+步骤：代理写 `tools/probe/taobao/tb10_feed.ts`，调 optimus.tou.material.ids.get 取 material_id 列表，再对每个库调 dg.material.recommend 翻页，记录条数、字段、与物料搜索字段是否一致；脱敏存 `fixtures/union-recordings/taobao/cap-tb-10/`。另（2026-10-03）：逐个物料库记下官方说明的排序依据与「是否含佣金权重」（是 / 否 / 说不清），写入 `specs/material-channels.yaml` 的对应行；记为「是」或「说不清」的不进首页可选白名单。
 
 **CAP-TB-11 唤起与归因保持（对应 05 HM-04）**
 

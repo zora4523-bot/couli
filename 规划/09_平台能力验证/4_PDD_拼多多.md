@@ -122,7 +122,9 @@
 
 未知项：各 channel_type 翻页上限；个性化是否依赖已备案 custom_parameters；同一商品 recommend 与 detail 的券、佣金差异；QPS；相似商品推荐频道（channel_type=3）能否作为「看看相似商品」入口的数据源：返回条数、是否包含原商品、返回的商品是否同样受比价预判影响（BR-PRICE-08 细则「无返利原因」；实测前该入口用搜索，2026-10-03）。
 
-步骤：代理写 `tools/probe/pdd/pdd10_feed.ts`，人运行：每个 channel_type 翻页到空，记录条数与重复率；取 20 个商品，比较 recommend 返回的 goods_sign / 券 / 佣金与用该商品 goods_id 走 search → detail 的结果。录制存 `fixtures/union-recordings/pdd/cap-pdd-10/`。
+未知项（2026-10-03 增补，功能对照 G-34；BR-TEXT-17 细则「联盟物料频道」）：各 channel_type 的排序依据，是否含佣金权重。主表已记 channel_type 6 是「实时收益榜」，按规则不进首页可选白名单；今日销量榜、猜你喜欢、实时热销榜的排序里有没有佣金权重，官方有没有写明，待核对。
+
+步骤：代理写 `tools/probe/pdd/pdd10_feed.ts`，人运行：每个 channel_type 翻页到空，记录条数与重复率；取 20 个商品，比较 recommend 返回的 goods_sign / 券 / 佣金与用该商品 goods_id 走 search → detail 的结果。录制存 `fixtures/union-recordings/pdd/cap-pdd-10/`。另（2026-10-03）：逐个 channel_type 记下官方说明的排序依据与「是否含佣金权重」（是 / 否 / 说不清），写入 `specs/material-channels.yaml`。
 
 **CAP-PDD-11（对应 05 HM-04）**
 

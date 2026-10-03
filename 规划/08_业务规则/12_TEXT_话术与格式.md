@@ -16,6 +16,8 @@
 
 2026-10-03 功能对照补缺第 2 批（同一变更记录的「第 2 批」，功能对照 G-09～G-21）：逐条改动在各条细则里注「2026-10-03，功能对照 G-xx」，各条状态不变。本批不新增 BR-TEXT 条目。同日按评审补文案键 external_page.download_unsupported，改 10004、claim.guide.window、earnings.metric.credited.hint 等行的说明（变更记录 §2.8）；第 2 轮评审后补 pending_confirm.\* 各键，改表 A 的 10001、10004、10005、30304 行；第 3 轮评审后表 A 加 20903，表 C 加放弃上一笔的各键（pending_confirm.withdraw.abandon、pending_confirm.abandon、pending_confirm.abandon.confirm、pending_confirm.abandoned、pending_confirm.abandon_busy、pending_confirm.already_done）与 pending_confirm.cannot_confirm，删去随本机有效期取消的 pending_confirm.expired（变更记录 §2.8 第 3 轮第 1、2 条）。
 
+2026-10-03 功能对照补缺第 3 批（同一变更记录的「第 3 批」，功能对照 G-22～G-34；同日按评审与编排会话裁定：表 D 加 perm.btn.continue、写明用途键按权限类型映射、权限点标为代理补全的默认假设，BR-TEXT-13 细则补真实数据播报默认不做，变更记录 3.9）：BR-TEXT-13 新增榜单类词「高佣」「收益榜」（G-34，按功能对照 Q-27 默认 A）并补首页公告条不做收益播报的说明（G-33）；BR-TEXT-14 表 A 新增 10405（G-24），表 C 新增未安装微信时的三个键与两个按钮键（G-31）、更新提示的两个按钮键（G-24），新增表 D「隐私与权限文案」（G-25、G-26、G-28，文案由法务定稿）；BR-TEXT-17 细则新增「联盟物料频道」（G-34）。各条状态不变，本批不新增 BR-TEXT 条目。第 2 轮评审后（变更记录 3.10）：表 A 的 10405 行补强更页的次要入口与受限会话，表 C 加强更页的三个次要入口键。第 3 轮评审后（变更记录 3.11）：表 B 加 10403.h5_read_only、10405.no_account；表 A 的 10405 行补 data.min_supported_version 为 null 时的分支。
+
 2026-10-03 功能对照补缺第 4 批（docs/changes/20261003-功能对照补缺.md「第 4 批」，功能对照 G-35～G-65）：逐条改动在各条细则里注「2026-10-03，功能对照 G-xx」，各条状态不变，不新增 BR-TEXT 条目。BR-TEXT-01 细则（不显示累计收益）、BR-TEXT-02 正文影响面与细则（订单分组与查找、订单号显示、查看商品、预售节点与金额）、BR-TEXT-10 细则（金额隐藏）、BR-TEXT-18 细则（累计收益的答复、三个常见问题）、BR-TEXT-20 细则（分享文案不带邀请码）；BR-TEXT-14 表 A 30153 与 50304 两行、表 B 新增 50304.search_disabled、表 C 新增购买加载、百川不可用、授权管理、订单分组与筛选、预售、查看商品、金额隐藏各键；BR-TEXT-22 新增 agent.notice.search_disabled。
 
 ### 12.1 规则一览
@@ -34,11 +36,11 @@
 | BR-TEXT-10 | **金额格式化**<br>接口金额一律为整数分（_fen），前端用整数运算格式化，不得用浮点：展示为可选负号 + 「¥」 + 元，最多两位小数并去掉末尾 0 与多余小数点；不加千分位；负数用 ASCII「-」置于「¥」前；流水正数加「+」；返利区间在 min &lt; max 时用「–」（U+2013，前后无空格）连接两端，min = max 时显示单值，min = max = 0 时显示「暂无返利」（列表隐藏返利标签）；返利、价格金额由服务端计算，客户端不得自行乘佣金率；服务端渲染推送、短信时使用同一格式化函数，模板变量为格式化后的字符串。 | 已确认 | specs/client-behavior.md 测试向量；PriceTag、RebateTag 组件（iOS / Android / 鸿蒙 / H5）；推送、短信模板渲染（服务端同一格式化函数）；后台金额列 |
 | BR-TEXT-11 | **时间与日期格式化**<br>服务端时间字段一律 ISO 8601 带 +08:00，纯日期字段（如价格历史 start_date；订单预计入账为年月字段 expected_credit_period，格式见 BR-TEXT-04）用 YYYY-MM-DD 字符串；客户端展示一律按 Asia/Shanghai 时区换算，不随设备时区变化，使用 24 小时制；列表中的过去时间：与当前日期（+08:00，以服务端校准后的时钟为准）同一天「今天 HH:mm」，前一天「昨天 HH:mm」，同一年「MM-DD」，其他「YYYY-MM-DD」；未来时间：同年「MM-DD HH:mm」，跨年「YYYY-MM-DD HH:mm」，不用「明天」等相对词；纯日期字段：与今天同年显示「MM-DD」，否则「YYYY-MM-DD」，不使用「今天 / 明天」；订单时间线与提现记录详情精确到分钟「YYYY-MM-DD HH:mm」。 | 默认假设 | specs/client-behavior.md 测试向量；三端与 H5 时间格式化工具；OrderList、OrderDetail、WithdrawRecord、消息列表 |
 | BR-TEXT-12 | **文案来源与字典机制**<br>业务文案取值顺序必须为：/v1/config.texts[key] → /v1/dict[enum][code] → 包内默认（由同一份 contracts/texts.default.json 生成）；接口枚举字段只返回编码；客户端业务页面不得硬编码中文业务文案（lint 规则拦截）；文案变量用 {name} 占位，变量值为 null、未提供或空字符串视为缺失（0 不算缺失），缺失时回落到该 key 的包内默认，包内默认仍含该缺失变量时整条文案不渲染（元素隐藏）并上报埋点 text_var_missing（key、变量名），不得显示「{」原文；字典带版本号，客户端按版本缓存，启动时及 config 中 dict_version 变化时刷新；服务端生成的推送、短信、Agent 话术必须读同一字典。 | 已确认 | GET /v1/dict、GET /v1/config（texts、dict_version、jump_tip、jump_tip.&lt;platform>.claims_enabled）；dict_items、config_items；contracts/texts.default.json（新增）；三端与 H5 文案加载模块、lint 规则、埋点 text_var_missing；JumpTip 已读记录按 BR-ATTR-21（服务端按 user_id + platform）；后台字典 / 文案编辑页 |
-| BR-TEXT-13 | **禁用词与合规表述**<br>以下词不得出现在任何用户可见文案（字典、config.texts、推送、短信、分享模板、SDUI 页面、规则文章、商品池自定义标题、Agent 固定话术、应用商店描述）：全网最低、历史最低、最低价、最便宜、最高返利、稳赚、必返、返利最高、最高返、原价（价格与返利类，BR-PRICE-18 只列词、清单在本条维护）；返利到账、佣金、待结算、结算中、返现、充值、备付金（资金类，含 BR-FUND-17 用户侧禁用词；「预估收益」「已结算」按 C-02 负责人决定为用户侧术语，不再禁用，含义见 BR-TEXT-01）；「比价」只允许出现在 allow_keys 所列字段；规则类文案中的数值（入账天数、提现门槛、次数）必须由配置变量渲染；不得展示任何虚拟数据。本条是禁用词清单与匹配规则的唯一维护处，其他条目只引用。匹配顺序：先按字段位置判断白名单（白名单用原文匹配并整体剔除命中片段），再对剩余文本做 NFKC 归一、去空白与标点、英文转小写后的子串匹配。校验在 CI（扫描仓库文案与模板）和后台保存时同时执行，命中即失败；后台、报表字段不校验资金类词（佣金、待结算、结算中、返现、充值、备付金），仍校验价格与返利类词。「佣金」另有一处用户侧例外：Agent 佣金披露文案 agent.disclaimer.commission（BR-AI-10，拍板第二批 AI-17）。后台保存时另做语义预检，只标黄提示、不拦截（JEV-05，见细则）。 | 已确认 | CI 文案扫描脚本（specs/banned-words.yaml，含 scope 与 allow_keys）；后台保存校验（dict_items、config_items、notify-templates、share 模板、pages、articles、pool-items）与语义预检提示（Jev，BR-AI-14）；价格历史组件（BR-PRICE / Watch）；Agent 固定话术；应用商店描述 |
-| BR-TEXT-14 | **错误与降级话术**<br>客户端对错误码与降级场景的提示必须使用细则表文案（经字典 error.&lt;code> 下发，带 data.reason 的码另有子键 error.&lt;code>.&lt;reason>，可改措辞不可改动作）；13 §13.11 已分配的每个码（废弃码与 9xxxx 除外）在本条都有 error.&lt;code> 行，reason 子键未命中时回落到 error.&lt;code>；44001 显示字典 risk_msg.&lt;code> 文案，服务端只下发风控提示编码不下发自由文本，未命中时显示「操作未通过安全校验」；服务端 msg 只作后备，内容必须与该码包内默认一致，只在字典与包内默认都没有该键时显示（如旧版本客户端遇到新码），msg 也为空时显示「操作未完成，请稍后再试」；其他 5xxxx 通用错误态必须附 trace_id 后 6 位（不足 6 位显示全部）；50301 按 data.reason 区分「维护中」与「即将开放」；42901 按 Retry-After 禁用按钮，无 Retry-After 时禁用 5 秒；转链熔断时按钮必须置为禁用态「稍后再试」；已废弃的错误码（如 30142，BR-PRICE-14）不得保留话术行，码号以 08 §13.11 为准（04 §7 与之逐行一致）；外跳与未安装降级路径以 BR-ATTR-27 为准，本条只维护按钮与提示文案（含待跟单卡、平台能力降级、剪贴板提示条文案；剪贴板读取时机与方式只按 BR-ID-16）。 | 默认假设 | contracts/error-codes.yaml（新增 text_key、reason 枚举）；dict_items.error（含 error.&lt;code>.&lt;reason> 子键）、dict_items.risk_msg；50301 data.reason（新增，maintenance / not_launched）；ErrorActionMapper（三端与 H5）；BuyButton、Agent 对话页；客服话术（trace id 查询） |
+| BR-TEXT-13 | **禁用词与合规表述**<br>以下词不得出现在任何用户可见文案（字典、config.texts、推送、短信、分享模板、SDUI 页面、规则文章、商品池自定义标题、Agent 固定话术、应用商店描述）：全网最低、历史最低、最低价、最便宜、最高返利、稳赚、必返、返利最高、最高返、原价（价格与返利类，BR-PRICE-18 只列词、清单在本条维护）；高佣、收益榜（榜单类，2026-10-03 新补，见细则「榜单类词」）；返利到账、佣金、待结算、结算中、返现、充值、备付金（资金类，含 BR-FUND-17 用户侧禁用词；「预估收益」「已结算」按 C-02 负责人决定为用户侧术语，不再禁用，含义见 BR-TEXT-01）；「比价」只允许出现在 allow_keys 所列字段；规则类文案中的数值（入账天数、提现门槛、次数）必须由配置变量渲染；不得展示任何虚拟数据。本条是禁用词清单与匹配规则的唯一维护处，其他条目只引用。匹配顺序：先按字段位置判断白名单（白名单用原文匹配并整体剔除命中片段），再对剩余文本做 NFKC 归一、去空白与标点、英文转小写后的子串匹配。校验在 CI（扫描仓库文案与模板）和后台保存时同时执行，命中即失败；后台、报表字段不校验资金类词（佣金、待结算、结算中、返现、充值、备付金）与榜单类词（高佣、收益榜），仍校验价格与返利类词。「佣金」另有一处用户侧例外：Agent 佣金披露文案 agent.disclaimer.commission（BR-AI-10，拍板第二批 AI-17）。后台保存时另做语义预检，只标黄提示、不拦截（JEV-05，见细则）。 | 已确认 | CI 文案扫描脚本（specs/banned-words.yaml，含 scope 与 allow_keys）；后台保存校验（dict_items、config_items、notify-templates、share 模板、pages、articles、pool-items）与语义预检提示（Jev，BR-AI-14）；价格历史组件（BR-PRICE / Watch）；Agent 固定话术；应用商店描述 |
+| BR-TEXT-14 | **错误与降级话术**<br>客户端对错误码与降级场景的提示必须使用细则表文案（经字典 error.&lt;code> 下发，带 data.reason 的码另有子键 error.&lt;code>.&lt;reason>，可改措辞不可改动作）；13 §13.11 已分配的每个码（废弃码与 9xxxx 除外）在本条都有 error.&lt;code> 行，reason 子键未命中时回落到 error.&lt;code>；44001 显示字典 risk_msg.&lt;code> 文案，服务端只下发风控提示编码不下发自由文本，未命中时显示「操作未通过安全校验」；服务端 msg 只作后备，内容必须与该码包内默认一致，只在字典与包内默认都没有该键时显示（如旧版本客户端遇到新码），msg 也为空时显示「操作未完成，请稍后再试」；其他 5xxxx 通用错误态必须附 trace_id 后 6 位（不足 6 位显示全部）；50301 按 data.reason 区分「维护中」与「即将开放」；42901 按 Retry-After 禁用按钮，无 Retry-After 时禁用 5 秒；转链熔断时按钮必须置为禁用态「稍后再试」；已废弃的错误码（如 30142，BR-PRICE-14）不得保留话术行，码号以 08 §13.11 为准（04 §7 与之逐行一致）；外跳与未安装降级路径以 BR-ATTR-27 为准，本条只维护按钮与提示文案（含待跟单卡、平台能力降级、剪贴板提示条文案；剪贴板读取时机与方式只按 BR-ID-16）。隐私首启、基本模式、撤回同意与系统权限用途的文案键见细则表 D（2026-10-03 新补，包内默认文案由法务定稿）。 | 默认假设 | contracts/error-codes.yaml（新增 text_key、reason 枚举）；dict_items.error（含 error.&lt;code>.&lt;reason> 子键）、dict_items.risk_msg；50301 data.reason（新增，maintenance / not_launched）；ErrorActionMapper（三端与 H5）；BuyButton、Agent 对话页；客服话术（trace id 查询） |
 | BR-TEXT-15 | **淘礼金卡片如实话术**<br>首版按 D7 仅使用 unknown 和关闭分支；其余分支后续接入且验证后启用（拍板第二批 AI-01：首版不接入淘礼金，只提示「暂无淘礼金活动」，保留扩展位置）。淘礼金相关卡片必须按判定结果使用下表文案，结论只能是表中 6 种判定之一；素材淘礼金 A/B/C 判定能力在 规划/09 淘宝项验证通过（有接口样例）前，所有素材淘礼金一律按 unknown 处理，B 类能否同时享受我方返利未证实前也按 unknown 展示；tlj_kind=third_party 或 unknown 的卡片不得出现「淘礼金」标签或按钮，不得暗中替换口令；剩余份数必须取接口实时值，查询失败时不显示「剩余 N 份」、按钮保持可点、领取结果以淘宝页面为准，remain=0 按「已领完」处理；{amount} 按 BR-TEXT-10 面额格式（550 → 5.5 元）；池内无匹配或 tlj.enabled=off 时只出 notice agent.notice.tlj_none「暂无淘礼金活动」，不出淘礼金卡，也不出替代的有券商品卡（BR-AI-17；C-24 默认处理，已由负责人确认 2026-09-30）；素材淘礼金（含 tlj_kind=third_party）一律转链，不提供「复制原口令」（D20）。 | 待验证 | Agent rebate_quote / product_card（tlj、cta.text_key）；dict / texts：tlj.\*；商品卡、淘礼金页；config：tlj.kind_detection.enabled（默认 off）（原 tlj.copy_original_tpwd.enabled 按 D20 不再建立）；客服话术 |
 | BR-TEXT-16 | **AI 生成内容标识**<br>Agent 对话页必须在每轮 AI 回复区显示统一标识，文案唯一取 texts.ai_label，默认「内容由 AI 生成，仅供参考」；SSE meta.ai_label 必须与该值相同（服务端从同一配置读取），客户端以 meta.ai_label 为准、缺失时用包内默认；tool.status 的 display_text 只描述动作（如「正在搜索淘宝」），不得包含用户输入原文或工具参数；金额、链接、口令只能出现在卡片中，text.delta 出站过滤与 trace 记录按 BR-AI-06；Agent 页顶部与「关于」页公示模型名称与登记编号，公示文案唯一取 config.agent.filing_text（含登记编号；agent.filing_no 只作后台保存校验用，不直接展示，BR-AI-12），未取得时为空且 Agent 入口只对内部测试名单开放（D16、BR-AI-12），不得显示占位或虚构编号。助手对用户的名称唯一取 texts.agent.name，默认「凑狸 AI 助手」（拍板第二批 AI-22），口吻要求见 BR-TEXT-22。BR-AI-06 的 meta.ai_label 按本条取值，不另定（AI-24）。本条是 AI 标识文案、助手名称与配置键的唯一维护处，合规义务见 BR-ID-15。 | 已确认 | SSE meta.ai_label；config.texts.ai_label、config.texts.agent.name、config.agent.filing_text、config.agent.model_label；AiLabel 组件、Agent 页顶部与关于页；Agent tool.status display_text 模板；OutputGuard（BR-AI-06） |
-| BR-TEXT-17 | **广告推广标识**<br>product_card.ad_label 字段必须保留，客户端遇到非 null 值必须在卡片角标原样展示，不在客户端判断业务条件；法务定性前按保守默认：首页商品池卡片（运营手选、商家付费或置顶的商品位）、首页活动 Banner 与分享海报返回 ad_label=「推广」（Banner 用 SDUI 卡片的同名字段）；联盟物料信息流、金刚区等其他首页模块、搜索自然结果与 Agent 按相关性排序的卡片返回 null（拍板第二批 OPS-24）；法务定性后按结论改服务端下发规则并写入本条。 | 已确认 | product_card.ad_label；ProductCard 组件；SDUI 首页运营位；分享海报；config：ad_label 场景规则 |
+| BR-TEXT-17 | **广告推广标识**<br>product_card.ad_label 字段必须保留，客户端遇到非 null 值必须在卡片角标原样展示，不在客户端判断业务条件；法务定性前按保守默认：首页商品池卡片（运营手选、商家付费或置顶的商品位）、首页活动 Banner 与分享海报返回 ad_label=「推广」（Banner 用 SDUI 卡片的同名字段）；联盟物料信息流、金刚区等其他首页模块、搜索自然结果与 Agent 按相关性排序的卡片返回 null（拍板第二批 OPS-24）；联盟物料信息流返回 null，以该数据源只用不按佣金排序的频道为前提（见细则「联盟物料频道」，2026-10-03 新补）；法务定性后按结论改服务端下发规则并写入本条。 | 已确认 | product_card.ad_label；ProductCard 组件；SDUI 首页运营位；分享海报；config：ad_label 场景规则 |
 | BR-TEXT-18 | **客服话术一致性**<br>客服话术库、FAQ、帮助中心、Agent 规则答疑（search_rules）与 explain_order 输出中涉及订单、返利、推广收益、提现状态和原因的表述，必须使用 BR-TEXT-01 术语并引用字典 key 渲染，不得另写同义说法；后台订单与提现详情必须同时显示「内部编码 + 用户看到的文案」；客服不得承诺字典与服务端 expected_credit_period（BR-TEXT-04）以外的入账或到账时间，不得使用 BR-TEXT-13 禁用词，不得向邀请人透露下级的订单信息（J7）；字典或原因码文案变更时，话术库对应条目必须在同一次发布内更新（发布检查项）。 | 默认假设 | 客服话术库（后台 articles 或独立表）；帮助中心 H5；Agent search_rules 规则库、explain_order；后台订单详情、提现详情页；发布检查清单 |
 | BR-TEXT-19 | **余额流水用户文案**<br>余额流水的类型名称必须按下表由 ledger_type 映射（字典 ledger_type.&lt;CODE>.name；CLAWBACK 的 sub_type=PART_REFUND 用 ledger_type.CLAWBACK.name_part_refund）；金额按 BR-TEXT-10 带符号显示，符号表示对可用余额的影响；列表范围按 BR-FUND-15：只展示 available 子户分录与每张打款成功提现单的 1 条 WITHDRAW_PAID 汇总条目；WITHDRAW_FEE、TAX_WITHHOLD 不单独成行，只作汇总条目明细（「代扣个税 {tax}」「手续费 {fee}」）；跳转：自购与 share 单的 REBATE_CREDIT / SHARE_CREDIT / CLAWBACK / SETTLE_ADJUST 跳转关联子订单，WITHDRAW_\* 跳转提现单；REFERRAL_CREDIT（sub_type=DIRECT 与 INDIRECT）以及受益角色为 referrer（direct / indirect）的 CLAWBACK / SETTLE_ADJUST 只显示「邀请好友订单」与金额、日期精确到日，不可跳转，不展示下级昵称、层级与任何订单信息（J7）；sub_type=INDIRECT 的名称用 ledger_type.REFERRAL_CREDIT.name_indirect（BR-CALC-05、BR-INV-20，「间推」只作内部术语）；ADMIN_ADJUST 的名称与说明按 sub_type（原因码，BR-FUND-24 ②）取 ledger_type.ADMIN_ADJUST.name_&lt;sub_type>、hint_&lt;sub_type>，调减另发站内信 BALANCE_ADJUSTED（模板见细则；注销用户不发，BR-FUND-24 ⑦⑧）；ADMIN_ADJUST、BAD_DEBT_WRITEOFF 无关联单据时不显示跳转，显示 hint 说明。邀请分佣流水（REFERRAL_CREDIT 直推与间推，及 referrer 角色的 CLAWBACK / SETTLE_ADJUST）的名称、说明与日期精度只在本条维护，BR-INV-17 只引用（拍板第二批 OPS-18）。 | 默认假设 | dict_items.ledger_type（name、hint；ADMIN_ADJUST 按 sub_type 的 name_&lt;sub_type>、hint_&lt;sub_type>）；GET /v1/wallet/ledger（link_type、link_id、masked 标记）；notify-templates BALANCE_ADJUSTED（新增，站内信，category=service）；余额流水 H5；客服话术 |
 | BR-TEXT-20 | **推送短信分享渠道约束**<br>推送、短信、分享的标题与首句不得以平台名称开头（正则 ^[【\\[]?(淘宝\|天猫\|京东\|拼多多\|美团\|阿里\|支付宝) 命中即拒），标题任何位置不得出现「官方」；校验在模板保存时与渲染后各做一次：商品标题变量（#标题#、title_short）渲染前去掉开头匹配 ^[【\\[]?(淘宝\|天猫\|京东\|拼多多\|美团\|阿里\|支付宝)[】\\]]? 的前缀并删除「官方」二字，模板不得以 #标题# 开头作为推送标题，渲染后仍命中则不发送并记录 template_render_blocked；App 图标、名称、启动页不得含平台商标；分享文案模板只允许变量 #标题# #券后价# #口令# #链接#，后台可配且过 BR-TEXT-13 校验；微信好友 / 群默认「文案 + 短链」，朋友圈默认海报；短信签名与模板长度、敏感词以短信服务商审核规则为准。 | 待验证 | notify-templates、短信模板；share 模板配置（F-SHARE-02/03）；推送标题与商品标题变量清洗函数；应用商店物料与启动页；后台模板保存校验、埋点 template_render_blocked；站长告警短信模板 UNION_AUTH_EXPIRING / UNION_AUTH_EXPIRED（BR-ID-24，拍板第二批 §8 ADD-08） |
@@ -548,7 +550,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 来源：规划/03 §4.5、§10.3；规划/04 §5、§10.1；规划/01 F-CFG-02、F-CFG-06；PRD修订_后端功能规划 2.13；PRD v2.1 §6
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
-- key 命名：`order_status.<display_status>.label|hint`（CODE 为 BR-FUND-17 派生的 display_status）、`order_reason.<CODE>.title|desc|action`、`order_reason_sub.<SUB>.desc`、`claim_reject_reason.<CODE>.title`、`withdrawal_status.<CODE>.label|hint`、`withdraw_reject_reason.<CODE>`、`withdraw_fail_reason.<CODE>`、`ledger_type.<CODE>.name|hint`、`error.<code>`、`risk_msg.<code>`、`tlj.*`、`btn.buy.coupon`（领券购买）、`btn.buy`（去购买）、`btn.buy.no_rebate`（去购买（无返利））、`tag.rebate`（预估返）、`tag.presale`（预售）、`presale.price_note`、`auth_tips.<platform>`、`jump_tip`、`ai_label`、`pending_track_card.title|desc`（BR-TEXT-14，G-05）、`clipboard.prompt`（BR-TEXT-14，G-20）、`clipboard.invite_prompt`（BR-TEXT-14，OPS-06）、`agent.*` 与 `*.summary`（BR-TEXT-22）、`risk_reason.<category>` 与账号类站内信模板（BR-TEXT-23）。
+- key 命名：`order_status.<display_status>.label|hint`（CODE 为 BR-FUND-17 派生的 display_status）、`order_reason.<CODE>.title|desc|action`、`order_reason_sub.<SUB>.desc`、`claim_reject_reason.<CODE>.title`、`withdrawal_status.<CODE>.label|hint`、`withdraw_reject_reason.<CODE>`、`withdraw_fail_reason.<CODE>`、`ledger_type.<CODE>.name|hint`、`error.<code>`、`risk_msg.<code>`、`tlj.*`、`btn.buy.coupon`（领券购买）、`btn.buy`（去购买）、`btn.buy.no_rebate`（去购买（无返利））、`tag.rebate`（预估返）、`tag.presale`（预售）、`presale.price_note`、`auth_tips.<platform>`、`jump_tip`、`ai_label`、`pending_track_card.title|desc`（BR-TEXT-14，G-05）、`clipboard.prompt`（BR-TEXT-14，G-20）、`clipboard.invite_prompt`（BR-TEXT-14，OPS-06）、`agent.*` 与 `*.summary`（BR-TEXT-22）、`risk_reason.<category>` 与账号类站内信模板（BR-TEXT-23）、`privacy.*` 与 `perm.<type>.*`（BR-TEXT-14 表 D，2026-10-03）、`app_update.*` 与 `cs.*`（BR-TEXT-14 表 C，2026-10-03）。
 - 购买按钮（拍板第二批 TRADE-21）：服务端在卡片 cta.text_key 下发，客户端不判断：有券（coupon_fen > 0）→ `btn.buy.coupon`「领券购买」；无券 → `btn.buy`「去购买」；用户选择或只能无返利购买时 → `btn.buy.no_rebate`「去购买（无返利）」。错误弹窗里的次按钮仍为「仍去购买（无返利）」（BR-TEXT-14）。淘礼金卡按钮按 BR-TEXT-15。
 - 预售（拍板第二批 TRADE-10）：预售商品卡与详情显示标签 `tag.presale`「预售」，价格按定金 + 尾款总价显示（口径见 BR-PRICE），价格旁附 `presale.price_note`「定金与尾款以下单页为准」。
 - 未知编码：显示 `<enum>.UNKNOWN`（订单「状态更新中」、提现「处理中」）。
@@ -577,7 +579,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 「比价」allow_keys：order_reason.PRICE_COMPARE.title|desc、rebate_basis=price_compare_risk 的订单状态 hint（order_status.PAID.hint 的比价变体），以及渲染了上述字段的推送 / 站内信（ORDER_INVALID、CLAWBACK）；2026-10-03 增补（功能对照 G-09）：下单前的比价无返利文案 no_rebate.price_compare、no_rebate.price_compare.confirm（BR-TEXT-14 表 C），订单比价说明 order.price_compare.hint（BR-TEXT-03），以及 /v1/config.help_links.price_compare 指向的那一篇帮助文章的标题与正文（按文章 ID 放行，只这一篇）。卖点、广告位、分享标题、应用商店描述命中。卖点统一表述为「找货 + 返利透明 + 丢单兜底」。
 - 归一化例：「全 网 最 低！」→ 命中「全网最低」。
 - **降价表述（待法务确认）**：规划/01 §1 已写明「最低价」有《广告法》与《互联网平台价格行为规则》风险。法务确认前价格历史组件只用「自 {start_date} 以来我们记录到的价格：当前 {current}，曾为 {low}」，不出现「最低」二字，无白名单；法务同意后才启用白名单模板，正则（原文匹配）`^自 ?\d{4}-\d{2}-\d{2} ?以来我们观察到的最低价`，start_date 固定 YYYY-MM-DD 完整格式，不适用 BR-TEXT-11 相对格式。组件本身归 BR-PRICE / Watch。
-- 虚拟数据：虚拟原价、虚拟剩余名额、佣金头条播报、手填浏览数一律不做；淘礼金剩余份数必须来自接口实时值。
+- 虚拟数据：虚拟原价、虚拟剩余名额、佣金头条播报、手填浏览数一律不做；淘礼金剩余份数必须来自接口实时值。首页公告条只展示公告 CMS 的内容，收益播报、成交播报、商品弹幕、写死的成团数同样不做（规划/07 §2、§5，规划/03 §6.3；2026-10-03 功能对照 G-33，07 原写「头条播报 P1」已按本条更正）。用真实数据做同类播报不属于虚拟数据，但同样默认不做；要做须负责人决定并先过隐私评估（2026-10-03 按编排会话裁定，待负责人确认，规划/06「功能对照待确认」）。
+- 榜单类词（2026-10-03，功能对照 G-34；按功能对照 Q-27 默认 A 写，待负责人确认，规划/06「功能对照待确认」）：「高佣」「收益榜」在用户侧禁用。这两个词说的是按平台能拿多少佣金排序，出现在用户界面等于告诉用户这个榜不是按商品卖得好不好排的。「热销」「热推」「销量榜」不禁。后台与报表字段不校验这两个词（BR-WDR-29 的风险标签名里有「高佣」）。首页物料流与榜单可以选用哪些联盟频道，见 BR-TEXT-17 细则「联盟物料频道」。
 - 后台命中返回 20001（data.fields 指出字段与命中词）。Agent 生成内容的禁用词处理见 BR-AI。
 - 「佣金」例外（AI-17）：allow_keys 含 agent.disclaimer.commission（「推荐商品含推广链接，购买后本平台可能获得佣金」，BR-AI-10），只按原文整体匹配剔除；其他用户可见位置出现「佣金」仍命中。
 - 语义预检（JEV-05，W4 随后台配置中心上线）：运营在后台保存文案（dict、texts、notify-templates、share 模板、pages、articles、商品池自定义标题）时，在禁用词校验之外调用 Jev 判断是否有变相说法（如「史低」「躺着也能返」暗示全网最低或稳赚、团队与层级说法、冒充平台官方）；命中只标黄提示，不拦截保存、不返回错误码；Jev 关闭、超时或不可用时静默跳过。只发送运营文案，不含用户个人信息（BR-AI-14）。禁用词硬拦截仍只按本条词表。
@@ -612,6 +615,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 10402 | — | — | 重新注册设备后重放 1 次；仍失败按「其他 5xxxx」 |
 | 10403 | 请在 App 内操作 | 同左 | 不跳登录 |
 | 10404 | 登录已过期，请重新登录 | 同左 | 清会话，跳 Login |
+| 10405（新增，2026-10-03 功能对照 G-24；13 §13.11 登记） | 当前版本过低，请更新后继续使用 | 同左 | 进入 ForceUpdate 全屏拦截页（规划/03 §4.1）：标题与说明优先用版本检查接口返回的 update_title、update_notes，本文案作兜底；按钮（app_update.go_store）跳应用商店，另有「隐私政策」与「注销账号」（冷静期内为「撤销注销」）两个次要入口（表 C）；本机版本不低于 data.min_supported_version（或它为 null）而会话是受限作用域时，不进入强更页、不显示本文案（版本并不低），先刷新令牌，由用户重新操作（BR-ID-01 细则「受限会话」，第 2 轮评审后补；null 只出现在最低版本配置删除之前签发的受限令牌上，这一分支为第 3 轮评审后补）；不重放原请求；结果未知的那几类提交升级后仍是待确认，由用户确认或放弃上一笔（BR-ID-01 细则「最低支持版本的接口层拦截」、BR-ID-10 细则） |
 | 20001 | 填写内容有误，请检查 | 同左 | data.fields 所列字段旁标红 |
 | 20002 | 验证码错误，请重新输入 | 同左 | — |
 | 20003 | 验证码已失效，请重新获取 | 同左 | — |
@@ -699,6 +703,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 | 码.reason | 文案（字典默认） | 包内默认（变量缺失时） | 动作 / 变量来源 |
 | --- | --- | --- | --- |
+| 10403.h5_read_only（2026-10-03 第 3 批第 3 轮评审后） | 暂时无法操作，请稍后再试 | 同左 | 强更检查结果未知时 H5 拿到的只读令牌调用了写接口（BR-ID-32 细则「只读作用域」）；不拉起登录，H5 SDK 丢弃内存里的令牌，这次请求不自动重发（规划/03 §5.4） |
+| 10405.no_account（2026-10-03 第 3 批第 3 轮评审后） | 这个账号还没有注册，请先更新 App 再注册 | 同左 | 客户端版本过低时登录，手机号或第三方账号没有对应的已有账号（受限登录只登录已有账号，BR-ID-01 细则「受限会话」）；没有建号；提示后回到 ForceUpdate，由用户去更新 |
 | 20001.nickname_sensitive | 昵称含不允许使用的内容，请修改 | 同左 | BR-ID-39 |
 | 20001.phone_invalid | 请输入 11 位中国大陆手机号 | 同左 | 手机号规范化不通过（BR-ID-05 细则「手机号规范化」，2026-10-03 功能对照 G-19）；手机号输入框旁提示，不发短信 |
 | 20004.identity_mismatch | 请使用本账号已绑定的{provider_name}验证 | 请使用本账号已绑定的登录方式验证 | 二次验证时重新授权得到的第三方账号不是本账号绑定的那一个（BR-ID-08）；provider_name 取 微信 / Apple / 华为账号 |
@@ -782,6 +788,12 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 授权管理页 auth_manage.title / .status.authorized / .status.unauthorized / .action.authorize | 授权管理｜已授权｜未授权｜去授权 | 只有这两种状态文案，不显示账号名、昵称、头像与授权时间；blocked 时不给【去授权】，改显示 error.30153 与【联系客服】（BR-ID-17 细则「授权管理页」，2026-10-03 功能对照 G-58） |
 | 授权管理页说明 auth_manage.rebind_note | 暂不支持自助更换授权的淘宝账号，需要时请联系客服 | 页面底部固定显示（BR-ID-19） |
 | 登录页求助入口 login.help_entry | 登录遇到问题 | 登录页文字入口，打开 help_links.login_help 的帮助文章，未配置时打开帮助中心首页；无需登录（BR-ID-02 细则「未登录时的隐私入口」，2026-10-03 功能对照 G-18） |
+| 微信登录拉不起 login.wechat_unavailable | 未安装微信，请使用其他方式登录 | 检测为未安装时不显示微信登录按钮；本提示只在检测结果未知、点击后拉不起微信时出现，登录页保留其他登录方式（BR-ID-04 细则「未安装微信时」，2026-10-03 功能对照 G-31） |
+| 微信分享不可用 share.wechat_unavailable | 未安装微信，可以复制后分享 | 未安装时分享面板不列微信渠道，保留复制、保存海报与系统分享；H5 指定微信渠道而本机没有微信时提示一次（BR-ID-04 细则） |
+| 客服入口·未安装微信 cs.wechat_unavailable | 未安装微信，无法直接打开客服。可以复制客服链接，在装有微信的设备上打开 | 按钮【复制客服链接】【去帮助中心】；不直接打开客服链接（BR-ID-04 细则） |
+| 客服入口·未安装微信的按钮 cs.copy_link / cs.go_help | 复制客服链接｜去帮助中心 | 只在上一行的提示里出现；复制的是 /v1/config kf 里的客服链接 |
+| 更新提示的按钮 app_update.go_store / app_update.later | 去更新｜暂不更新 | 【去更新】跳应用商店，是强更页（ForceUpdate）唯一的按钮，强更页另有下一行的次要入口（第 2 轮评审后改）；【暂不更新】只出现在可关闭的更新提示里，记录方式见 规划/03 §4.1（2026-10-03 功能对照 G-24）。标题与说明取版本检查接口的 update_title、update_notes，没有时用 error.10405 |
+| 强更页的次要入口 app_update.privacy_policy / app_update.delete_account / app_update.cancel_deletion | 隐私政策｜注销账号｜撤销注销 | 只在强更页出现，样式弱于【去更新】。「隐私政策」打开隐私中心（强更状态下只显示协议、两份清单与【撤回同意】）；「注销账号」进入注销流程，账号在冷静期内时这一项显示「撤销注销」，未登录时先显示「注销账号」、登录后按注销进度进入申请或撤销；完成或取消后回到强更页（规划/03 §4.1，BR-ID-01 细则「受限会话」；2026-10-03 第 3 批第 2 轮评审后补） |
 | 比价无返利弹窗 no_rebate.price_compare.confirm | 这件商品这次被判为比价，没有返利 | 只在 open 响应 no_rebate_cause=price_compare 时出现，代替「该商品当前暂无返利，继续购买？」；按钮【看看相似商品】（no_rebate.price_compare.similar）【仍去购买（无返利）】，可关闭；不显示任何返利金额，不写「过几小时再买」之类的建议（BR-PRICE-08 细则「无返利原因」，2026-10-03 功能对照 G-09；开关默认关） |
 | 比价无返利卡片原因行 no_rebate.price_compare | 这次被判为比价，没有返利 | 卡片按 open 响应换成无返利态后显示在返利位置，旁边保留文字入口【看看相似商品】；其他无返利情形仍显示「暂无返利」 |
 | 相似商品入口 no_rebate.price_compare.similar | 看看相似商品 | 进入搜索页，平台同原商品，搜索词取卡片标题，去掉原商品（BR-PRICE-08 细则） |
@@ -797,6 +809,28 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 找回指引·付款日期 claim.guide.paid_date | 请填写付款成功的日期；预售订单填付定金的日期 | 付款日期输入框下方 |
 | 找回指引·期限 claim.guide.window | 付款后 {claim_window_days} 天内可以申请找回 | {claim_window_days} 取 `/v1/config` 的 `claim.window_days`（服务端由 claim.window_hours 向下取整到天派生，BR-ATTR-17 细则「找回页的填写指引」）；为 null 时整句不显示（BR-TEXT-12），不写死天数（BR-TEXT-13）；帮助文章里不写期限数字 |
 | 找回指引·核对提示 claim.guide.caution | 填错会占用今天的找回次数，请核对后再提交 | 提交按钮上方；不写具体次数 |
+
+**表 D · 隐私与权限文案**（2026-10-03，功能对照 G-25、G-26、G-28；键名与用途由本表定，包内默认文案由法务定稿，规划/06 Q-F14。「要点或占位措辞」一列里的成句文字是代理起草的占位措辞，供开发与内测包使用，法务定稿后替换；占位稿不得用于提审与公开版本）
+
+| 键 | 用在哪里 | 要点或占位措辞 | 说明 |
+| --- | --- | --- | --- |
+| privacy.first_launch.title / .summary | 首启隐私弹窗的标题与摘要 | 要点：收集哪些个人信息、各自的用途；接入了哪些第三方 SDK；用户可以查阅、撤回同意、注销；《隐私政策》《用户协议》链接。全文由法务提供 | 按钮固定为【同意】【不同意】（BR-ID-11；键见下文 privacy.btn.\*）；同意前显示，只能取包内默认或已缓存的配置 |
+| privacy.second_notice.body | 点【不同意】后的二次说明 | 要点：不同意时只能用基本模式浏览，不能登录、不能获得返利；之后可以随时开启完整功能。全文由法务提供 | 按钮【同意】【仍不同意】；Android、鸿蒙可另给【退出 App】，iOS 不提供（BR-ID-11；键见 privacy.btn.\*） |
+| privacy.btn.agree / .disagree / .still_disagree / .exit_app | 首启弹窗与二次说明的按钮 | 同意｜不同意｜仍不同意｜退出 App | 按钮的含义与出现位置按 BR-ID-11，不因文案调整而改变；.exit_app 只在 Android、鸿蒙出现 |
+| privacy.basic_mode.notice / .enable | 基本模式页的说明与按钮 | 当前为基本模式，只能浏览。开启完整功能后可以登录、查返利｜开启完整功能 | 点按钮重新展示首启弹窗（BR-ID-02、BR-ID-11） |
+| privacy.withdraw.confirm.title / .body | 隐私中心【撤回同意】的确认框 | 撤回同意｜撤回后本机会退出登录并进入基本模式，只能浏览。账号和数据不会删除；要删除请使用账号注销 | 按钮【确认撤回】【取消】（键 privacy.withdraw.confirm.ok / .cancel）；规则见 BR-ID-13 |
+| perm.push.card_hint / perm.push.cta | 待跟单卡里的通知说明行与按钮 | 开启通知，跟单成功、返利结算和提现到账时会及时提醒你｜开启通知 | 出现条件与时机见 BR-ID-13 细则「通知权限的申请时机」（功能对照 G-25；按功能对照 Q-21 默认 A，待负责人确认）；不写「开启后才有返利」之类的话，不承诺通知的具体时限。card_hint 同时是通知权限的用途说明键：权限申请组件申请 push 时（含经桥方法申请）取这一句，不另设 perm.push.purpose（规划/03 §4.9 的映射） |
+| perm.push.guide_bar | 「我的」页的通知引导条 | 通知没有开启，跟单和提现到账的消息可能收不到。去开启 | 可关闭；点击跳到系统里本 App 的通知设置（BR-ID-13 细则） |
+| perm.push.denied_forever | 通知权限已被拒绝、系统不再询问时的引导 | 通知权限已关闭，可以在系统设置中开启 | 配【去设置】 |
+| perm.photos.purpose | 保存图片前的用途说明 | 用于把商品海报、邀请海报保存到你的相册 | photos 类型的用途说明键（规划/03 §4.9 的映射）；只申请写入相册，不读取相册里的内容（BR-ID-13） |
+| perm.btn.continue | iOS、鸿蒙权限说明页上的按钮 | 继续 | 点后立刻弹系统授权框；不写「允许」「同意」这类冒充系统选项的字样；Android 用顶部浮层，不需要这个按钮（规划/03 §4.9；2026-10-03 评审后补） |
+| perm.photos.system_purpose | 写进系统权限声明的用途说明（iOS 的相册写入用途说明） | 用于把你选择保存的海报图片存入相册 | 构建时由生成器从 contracts/texts.default.json 写入工程，不随配置下发；与权限清单 specs/system-permissions.yaml 的条目一一对应（规划/03 §4.9，功能对照 G-28）。SDK 带进来、需要补用途说明的权限按同样方式加键，写这个 SDK 的真实用途 |
+| perm.photos.denied_forever | 相册权限已被永久拒绝时的引导 | 没有相册权限，无法保存图片。可以在系统设置中开启 | 配【去设置】 |
+| perm.go_settings | 权限引导里的按钮 | 去设置 | 跳到系统里本 App 的设置页 |
+
+- 包内默认必须齐全：首启弹窗在同意之前显示，那时不能依赖网络。
+- 改这些键的文案按协议类内容管理：后台归 `content.agreement` 权限点（规划/04 §11.2），保存时填法务确认人并写审计；只有普通配置权限的账号改不了。这一归属是代理补全的默认假设，待负责人确认（规划/06「功能对照待确认」）。
+- 文案同样过 BR-TEXT-13 校验；系统权限怎样申请、被拒后怎样处理见 BR-ID-13 与 规划/03 §4.9，本表只管文案。
 
 例：京东转链开关关闭（原因 maintenance）→ 接口返回 50301、data.reason=maintenance → Toast「京东维护中，请稍后再试」，卡片按钮变灰显示「稍后再试」。拼多多因备案互斥或权限未批保持关闭（原因 not_launched）→ 50301、data.reason=not_launched → 不弹 Toast，卡片按钮置灰显示「拼多多返利即将开放」。trace_id 以 …c3d4e5 结尾 → 显示「（c3d4e5）」；trace_id=abc → 显示「（abc）」。30416 且 data.amount_fen=500 →「账户有待扣回金额 ¥5，抵扣回正后才能注销」。30303 reason=below_min、rules 返回最低 100 分 →「单笔最低提现 ¥1」；rules 未返回该值 →「提现金额低于单笔最低金额」。
 
@@ -818,6 +852,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 剪贴板提示条（G-20）：读取时机与方式（iOS detectPatterns + UIPasteControl、Android 开关、鸿蒙 PasteButton、上传条件）只按 BR-ID-16；本表只维护 clipboard.prompt 文案。
 
 2026-10-03 功能对照补缺第 1 批新增（代理按 13 §13.11 的分配规则取号，已同步 13 §13.11 与 规划/04 §7）：20004「第三方授权凭证无效」、50305「第三方登录服务暂不可用」，子键 20004.identity_mismatch、30104.credential_invalid；表 C 新增的文案为代理起草的默认措辞，可在字典中改，不改用途。
+
+2026-10-03 功能对照补缺第 3 批新增（docs/changes/20261003-功能对照补缺.md「第 3 批」；代理按 13 §13.11 的分配规则取号，已同步 13 §13.11 与 规划/04 §7）：10405「客户端版本低于最低支持版本」（功能对照 G-24）。表 C 新增未安装微信时登录、分享、客服的三个文案键与客服提示里的两个按钮键（功能对照 G-31）、更新提示的两个按钮键（功能对照 G-24），为代理起草的默认措辞，可在字典中改，不改用途。新增表 D「隐私与权限文案」（功能对照 G-26），键名与用途已定，文案由法务定稿（规划/06 Q-F14）。第 2 轮评审后表 C 加强更页的三个次要入口键（app_update.privacy_policy、app_update.delete_account、app_update.cancel_deletion），为代理起草的默认措辞，可在字典中改，不改用途。第 3 轮评审后表 B 加子键 10403.h5_read_only、10405.no_account（没有新增码，已同步 13 §13.11 与 规划/04 §7），同样是代理起草的默认措辞。
 
 按 C-03 默认处理，待负责人确认。新增码 30415、50304 与 20001.nickname_sensitive、30411.mergeable 子键（2026-10-01 拍板第二批 OPS-13、TRADE-12、OPS-04），以及 30416（§8 ADD-07）与 30101 / 30102 的 auth_unavailable 子键（§8 ADD-02；文案与按钮按 §8 ADD-08 改为「淘宝暂时无法下单，请稍后再试」、只给【知道了】）需同步 13 §13.11 与 规划/04 §7；码号与枚举改名（admin_unbind → admin_disable 等）由代理自定，负责人 2026-10-01 接受。
 
@@ -881,15 +917,25 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §2；范围按拍板第二批 OPS-24 细化）
 - 默认值：法务定性前：首页商品池卡、活动 Banner 与分享海报显示「推广」，联盟信息流、搜索自然结果与 Agent 相关性卡片不显示；客户端实现「非 null 即展示」。理由：《互联网广告管理办法》要求付费推广内容可识别，定性前应保守；字段已在 规划/04 §8.3 预留，开关在服务端。
 - 决策人：法务
-- 依赖平台能力：无
+- 依赖平台能力：规则主体不依赖平台；细则「联盟物料频道」的白名单要等 规划/09 CAP-TB-10、CAP-JD-10、CAP-PDD-10 逐个记录各频道的排序依据后才能填全（2026-10-03）
 - 取代：本条原范围「首页运营位（运营手选、商家付费或置顶）与分享海报」（信息流、Banner 未写；拍板第二批 OPS-24 定为商品池卡与活动 Banner 标推广、联盟信息流不标）
-- 来源：规划/04 §8.3；规划/00 D3；PRD v2.1 §10.13、§15；规划/03 §7（首页卡片注册表）；docs/changes/20261001-拍板第二批.md（OPS-24）
+- 来源：规划/04 §8.3；规划/00 D3；PRD v2.1 §10.13、§15；规划/03 §7（首页卡片注册表）；docs/changes/20261001-拍板第二批.md（OPS-24）；docs/changes/20261003-功能对照补缺.md「第 3 批」（功能对照 G-34）
 - 需同步修改的规划文档：1 处（计数仅作记录，落点见 README §0.6）
 
 - 待定内容：标识措辞（「广告」/「推广」）、范围（首页运营位、搜索结果、Agent 卡片、分享海报）、是否按付费置顶与自然结果区分。
 - ad_label 下发规则只在本条维护；Agent 卡片的佣金披露文案与“付费位不得参与 Agent 排序”见 BR-AI-10。
 - 法务结论是 W8 公开上架（规划/00 D3）前的阻塞项，需在 W5 白名单内测前给出。
 - 例：默认阶段，服务端对首页商品池卡片与活动 Banner 返回 ad_label=「推广」，首页联盟物料信息流与搜索结果返回 null；法务若定为首页运营位用「广告」→ 只改服务端配置，不发版。
+- **联盟物料频道**（2026-10-03，功能对照 G-34；按功能对照 Q-27 默认 A 写，待负责人确认，规划/06「功能对照待确认」；docs/changes/20261003-功能对照补缺.md「第 3 批」）：联盟物料信息流不标「推广」，前提是它的排序与平台能拿多少佣金无关。
+  - 适用范围：首页 `feed_infinite`、`product_scroll`、`product_grid` 的 `union_material` 数据源；P1 的榜单页、品牌页立项时同样适用。
+  - 可选频道：只用按销量、热度或「猜你喜欢」这类方式排序的频道。可选频道登记在频道白名单 `specs/material-channels.yaml`（平台、频道标识、排序依据、是否可选）；后台的数据源选项只列白名单内可选的频道，服务端保存首页配置时再校验一次，不在白名单的返回 20001。
+  - 取数时再查一次：服务端每次为数据源取物料之前都核对白名单，频道不在白名单或已标为不可选的，不取这个数据源，对应区块按没有数据处理（首页的空态与兜底规则不变）并告警。白名单变更时，后台列出仍引用被移出频道的已发布配置，由运营改配置；保存时的校验管不到之后的白名单变更，所以取数时这一道不能省。
+  - 不进白名单：平台文档写明按佣金或收益排序、或带佣金权重的频道与排序参数（各平台的高佣榜、收益榜一类）。排序依据说不清的频道，在 规划/09 CAP-TB-10、CAP-JD-10、CAP-PDD-10 逐个记下「是否含佣金权重」之前也不进白名单。
+  - 本系统在物料的合并与混排层不加佣金或返利权重（Agent 的同类要求见 BR-AI-09）。
+  - 确实要用按佣金排序的频道时：须负责人决定（功能对照 Q-27 改选 B，或逐个频道放行）；放行的数据源，其卡片一律下发 ad_label=「推广」，并在模块标题处说明排序依据，说明文案由法务定稿后写入本条。在此之前白名单里没有这类频道，后台选不到。
+  - 用户侧文案不出现「高佣」「收益榜」（BR-TEXT-13 细则「榜单类词」）。
+  - 例：运营想在首页加一个按收益排序的榜单模块 → 后台频道下拉里没有这个频道，直接调后台接口保存也被拒（20001）；改选「实时热销」一类的频道 → 可以保存，卡片 ad_label=null。
+  - 需同步修改的规划文档（2026-10-03）：规划/01 F-HOME-03；规划/03 §6.3；规划/04 §6.6；规划/07 §3 榜单页行；规划/09 CAP-TB-10、CAP-JD-10、CAP-PDD-10；规划/10 AC-S1-90（已同步 2026-10-03）。
 
 #### BR-TEXT-18 细则 · 客服话术一致性
 
