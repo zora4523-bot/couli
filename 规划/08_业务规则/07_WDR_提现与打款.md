@@ -123,7 +123,7 @@
 
 - max_withdrawable_fen = can_withdraw ? floor_to_step(min(available_fen, withdraw.max_amount_fen, 未成年本月剩余额度)) : 0。floor_to_step 按 amount_step_fen 向下取整。结果 &lt; min_amount_fen 时，返回 can_withdraw=false、block_code=30303、block_reason=below_min、max_withdrawable_fen=0。次数用尽、被冻结或存在负余额时，can_withdraw=false，max 为 0。
 - 鉴权放在开关之前：签名未通过的请求不应得到业务状态信息，这样也与全局中间件的执行顺序一致。
-- `data.reason` 为枚举，客户端从 `/v1/dict` 取文案。取值：`account_frozen`、`below_min`、`not_multiple`、`above_max`、`net_too_small`、`daily_count`、`monthly_count`、`payee_daily_count`、`payee_daily_users`、`self_purchase_required`、`payout_account_change_limit`。
+- `data.reason` 为枚举，客户端从 `/v1/dict` 取文案。取值：`account_frozen`、`below_min`、`not_multiple`、`above_max`、`net_too_small`、`daily_count`、`monthly_count`、`payee_daily_count`、`payee_daily_users`、`self_purchase_required`、`payout_account_change_limit`、`payout_account_verify_limit`（收款账号接口专用，BR-WDR-02 细则「核验次数上限」，2026-10-03）。
 - ⑦⑧⑩⑪⑫ 在 BR-WDR-07 的锁内再执行一次。先查询、后加锁的做法不够。
 - ③a 与 BR-ID-31 对齐：黑名单命中在申请时直接拒绝（44001，提示语可配），不再只作为审核标签；申请之后才登记的黑名单，已有单据由审核人按 BR-WDR-29 的 blacklist_hit 标签处理。
 - 30306 只表示开关关闭；账务差异冻结（BR-FUND-19）不再返回 30306，统一记为 withdraw_holds（reason=ledger_mismatch），在 ⑦ 返回 30303 reason=account_frozen，因此自然先于 ⑧ 的 30302。
