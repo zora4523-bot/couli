@@ -10,6 +10,8 @@
 
 2026-10-01 晚负责人确认 规划/11 §7.3 第 8 项：BR-CALC-21 的算例表来源改为两家模型盲算 + 08 原文对照、负责人确认 5 条代表例，取代「由财务给出」；分账公式、属性与每日校验不变。
 
+2026-10-03 资金规则对齐（docs/changes/20261003-资金规则对齐.md，负责人批准）：BR-CALC-02 写明取值阶段适用于所有按基数判断的规则、联盟给的任何金额先换算再用；BR-CALC-09 补未成年受益人、净额口径与封禁 / 注销受益人取较小值；BR-CALC-13 补没收份额的 FORFEIT 凭证与锁内判定；BR-CALC-15、23 随 R9b 只存档（决-01 A）与整单分路改写；BR-CALC-10 随决-07 A 改写。条目状态不变；旧写法登记在各条细则「取代」。
+
 **订单状态写法**：本主题按 BR-FUND-01 的双状态（`platform_status` + `rebate_status`）与迁移编号（P1–P10、R1–R14）书写（按 C-01 默认处理，已由负责人确认 2026-09-30）。与 规划/04 单一 order_status 的对应：O1→P1；O2→P2 / R2；O3→P3 + R4；O4→P6 + R6（入账前整单失效，rebate_status=VOID）；O5→R7；O6→R5（SETTLE_BATCH_CREDIT）；O7→P4 且 rebate_status 不变（只写 order_settlements）；O8→P4 + 结算补差（BR-CALC-23）；O9→R8（rebate_status=CLAWED_BACK）；O10→R9（部分退款、部分维权）/ R9b（价保等佣金变化）；O11→R3。单一状态 SETTLED = (platform_status=SETTLED, rebate_status=CREDITED 且补差已处理完)。负责人不采纳双状态时，按 BR-FUND-01 的映射表回退到上列 O 编号。
 
 ### 5.1 规则一览

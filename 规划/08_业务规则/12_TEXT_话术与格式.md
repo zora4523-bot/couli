@@ -16,6 +16,8 @@
 
 2026-10-03 功能对照补缺第 2 批（同一变更记录的「第 2 批」，功能对照 G-09～G-21）：逐条改动在各条细则里注「2026-10-03，功能对照 G-xx」，各条状态不变。本批不新增 BR-TEXT 条目。同日按评审补文案键 external_page.download_unsupported，改 10004、claim.guide.window、earnings.metric.credited.hint 等行的说明（变更记录 §2.8）；第 2 轮评审后补 pending_confirm.\* 各键，改表 A 的 10001、10004、10005、30304 行；第 3 轮评审后表 A 加 20903，表 C 加放弃上一笔的各键（pending_confirm.withdraw.abandon、pending_confirm.abandon、pending_confirm.abandon.confirm、pending_confirm.abandoned、pending_confirm.abandon_busy、pending_confirm.already_done）与 pending_confirm.cannot_confirm，删去随本机有效期取消的 pending_confirm.expired（变更记录 §2.8 第 3 轮第 1、2 条）。
 
+2026-10-03 资金规则对齐（docs/changes/20261003-资金规则对齐.md，负责人批准）：BR-TEXT-02 映射表的阅读列随 BR-FUND-17 第 3 行与「查看者本人份额暂缓」同步；BR-TEXT-02、BR-TEXT-19 的 C-16 改为已确认（决-04）。文案与条目状态不变。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
