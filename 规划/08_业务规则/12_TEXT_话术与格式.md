@@ -176,7 +176,7 @@
 
 **边界**：部分退款不改变 rebate_status（BR-FUND-01 R7 / R9），入账前只改金额与差额行，入账后写 CLAWBACK（sub_type=PART_REFUND）使 display_status 变为 CREDITED_PART_CLAWED；hold、维权中不是 rebate_status，而是 display_status 的派生条件（REVIEWING、RIGHTS_PENDING），提示文案按 BR-TEXT-03。
 
-按 C-01 默认处理，已由负责人确认 2026-09-30；入账后部分退款按 C-16 默认处理，待财务确认。
+按 C-01 默认处理，已由负责人确认 2026-09-30；入账后部分退款按 C-16，已由负责人 2026-10-03 确认默认（资金规则对齐决-04）。
 
 需同步修改的规划文档（2026-09-30 C-02 / D11 改写，未同步）：规划/01 §5 J4「已收货，等待入账（附预计入账日）→ 已入账」改为「已收货，等待联盟结算（附预计入账周期）→ 已结算」；规划/04 §2.3 `display_status` 行说明「订单侧一律「入账」口径，BR-TEXT-01 方案 A」改为按 BR-TEXT-01 C-02 口径；/v1/dict 字典键 order_status.PAID（hint）、.WAITING、.CREDITED、.CREDITED_PART_CLAWED、.RIGHTS_PENDING（hint）文案（契约建立时写入 contracts/texts.default.json）；规划/04 §6.4 `GET /v1/orders/{order_id}` 与 §8.3 `order_status` 卡片的 `expected_credit_date` 字段（改为 expected_credit_period、credit_overdue，BR-FUND-04 ⑪）；规划/03 §7.4 order_status 卡片「预计入账日（expected_credit_date）」；规划/10 §3.4 状态覆盖表 WAITING、CREDITED 行对应用例与 AC-S2-01-TB / -JD、AC-S2-09、AC-S2-12-TB 中的文案断言。。2026-09-30 补充（变更记录 §10，预计结算月份）：/v1/dict order_status.WAITING hint 与时间线节点文案改为「预计 {credit_period} 结算」；规划/01 §5 J4「附预计入账日」改为「附预计结算月份」；规划/10 AC-S2-01-TB / -JD、AC-S2-12-TB 中 WAITING 文案断言改为「预计 11 月结算」一类（已 grep 核对上述位置仍为旧写法）
 
@@ -916,7 +916,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 上级视角的名称、说明与日期粒度只在本条维护（拍板第二批 OPS-18：「邀请分佣入账」+ 说明「邀请好友订单」、日期只到日，更难反推好友下单时间）；BR-INV-17 原写「邀请好友购物分佣」、时间到分钟，已改为引用本条。
 
-入账后部分退款写 CLAWBACK（sub_type=PART_REFUND），不写负向 SETTLE_ADJUST；按 C-16 默认处理，待财务确认。名称「部分退款扣回」的字典 key 为 ledger_type.CLAWBACK.name_part_refund。
+入账后部分退款写 CLAWBACK（sub_type=PART_REFUND），不写负向 SETTLE_ADJUST；C-16 已由负责人 2026-10-03 确认默认（资金规则对齐决-04）。名称「部分退款扣回」的字典 key 为 ledger_type.CLAWBACK.name_part_refund。
 
 列表范围按 BR-FUND-15：用户余额流水只展示 available 子户分录，外加每张打款成功提现单 1 条 WITHDRAW_PAID 汇总条目（名称「提现到账」，含实际到账、代扣个税、手续费明细，不改可提现余额、不带 balance_after）；WITHDRAW_FEE、TAX_WITHHOLD 不单独成行，名称键保留供汇总条目明细使用；本条只维护名称与明细文案。按 C-26 默认处理，待财务确认。
 

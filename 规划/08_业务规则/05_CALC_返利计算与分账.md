@@ -25,7 +25,7 @@
 | BR-CALC-07 | **比例合计上限校验**<br>规则发布时必须对每个 (平台, 订单类型) 校验：max_等级(r_own_bp) + max_等级(r_direct_bp) + max_等级(r_indirect_bp) + 活动加成_bp ≤ 8000（indirect_enabled=false 的版本 r_indirect_bp 为 0）；任一单项 &lt; 0 或 > 8000 也拒绝发布。校验不通过返回错误并不生成新版本。 | 已确认 | commission_rules 发布接口；后台分佣规则页校验提示；DB CHECK（单项 0–8000）；验收用例 AC-SET-待编号（参考文档编号 AC-MONEY-014，规划/ 未定义） |
 | BR-CALC-08 | **舍入与尾差归属**<br>每个用户份额必须单独按 floor 取整到分（对非负数向下取整）；平台留存 = B − Σ用户份额，承接全部尾差；禁止先按比例算平台份额再倒推用户份额，禁止四舍五入。 | 已确认 | packages/money floor/ceil；packages/domain splitCommission()；specs/ledger-rules.md；属性测试 |
 | BR-CALC-09 | **调整按新基数全额重算**<br>任何基数变化（部分退款、价保、结算差额）后，必须用快照比例对新基数 B_new 全额重算每个受益人的应得额，再以'差额 = 新应得 − 已入账（已入账净额，口径同 BR-FUND-08；或原预估）'生成调整；禁止对基数差额 ΔB 直接乘比例取整。受益人状态规则：status=forfeited 的受益人新应得恒为 0，不生成任何调整（经申诉恢复的除外，BR-CALC-13）；受益人 risk_state=banned 时，负向差额照常扣回，正向差额归平台（记 COMMISSION_REVENUE 并写 forfeit_reason）；受益人已注销（deletion_status ∈ {processing, done}）时，正向差额同样归平台，负向差额不写该用户扣回分录，改记平台坏账（BR-ID-28，记账见 BR-FUND-08）；受益人处于 frozen / appealing 时，负向差额照常扣回，正向差额与 BR-CALC-13 的 hold 一样延后，状态解除后再按当时状态处理；已识别未满 18 周岁的受益人：推广份额（share、direct、indirect）的正向差额归平台（forfeit_reason=minor，BR-ID-26 (b)），负向差额照常扣回，自购份额不受影响。归平台的正向差额并入平台凭证，不计入该受益人的净额；改记平台坏账的负向差额沿用该受益人的 uniq_key，计入其净额。封禁或已注销的受益人，新应得取「按新基数重拆的份额」与「其已有净额」中较小的一个。 | 已确认 | settlement 补差任务；CLAWBACK / SETTLE_ADJUST 金额计算；commission_split_amounts；specs/ledger-rules.md；属性测试（多次调整后等于一次性计算） |
-| BR-CALC-10 | **分佣快照生成时点与不可变范围**<br>分佣快照必须在子订单首次同时满足'platform_status ∈ {PAID, RECEIVED, SETTLED}'且'已归因到用户'时生成，与触发它的迁移在同一事务写入 commission_splits：入库时已满足 → 入库事务（BR-FUND-01 R2）；已归因但 platform_status=DEPOSIT_PAID → 不生成快照、不计预估（rebate_status=ESTIMATED，预估为 0），在 platform_status 迁到 PAID（P2）的事务内生成；未归因（rebate_status=UNATTRIBUTED）→ 在找回通过或后台改归属（R3）的事务内生成，此时 platform_status 仍为 DEPOSIT_PAID 的，推迟到 P2。未归因订单已为 rebate_status=VOID（对应单一 order_status 的 INVALID；未归因订单不会进入 CLAWED_BACK）时找回通过或改派，按 BR-FUND-01 R3b 只写 user_id、user_basis（BR-ATTR-09）、locked=true，不生成快照、无分录，rebate_status 不变。快照一经生成，rule_version_id、order_type、activity_type、rebate_mode、reserve_bp、各受益人的 user_id / role / ratio_bp / level 不可修改（单一余额后受益人不带 account_type，拍板第二批 §8 ADD-06）；受益人状态变化与各版本金额只能追加记录，不得覆盖快照行。 | 默认假设 | commission_splits / commission_split_amounts / commission_split_beneficiary_events 表结构与唯一约束；order-sync 入库流水线；BR-FUND-01 迁移 R2 / R3 / P2（含入库即 RECEIVED 时 R2 同事务进 WAITING）；订单详情页（定金阶段文案、失效找回文案）；SM-REB-R2、SM-REB-R3、SM-PLT-P2 测试 |
+| BR-CALC-10 | **分佣快照生成时点与不可变范围**<br>分佣快照必须在子订单首次同时满足'platform_status ∈ {PAID, RECEIVED, SETTLED}'且'已归因到用户'时生成，与触发它的迁移在同一事务写入 commission_splits：入库时已满足 → 入库事务（BR-FUND-01 R2）；已归因但 platform_status=DEPOSIT_PAID → 不生成快照、不计预估（rebate_status=ESTIMATED，预估为 0），在 platform_status 迁到 PAID（P2）的事务内生成；未归因（rebate_status=UNATTRIBUTED）→ 在找回通过或后台改归属（R3）的事务内生成，此时 platform_status 仍为 DEPOSIT_PAID 的，推迟到 P2。未归因订单已为 rebate_status=VOID（对应单一 order_status 的 INVALID；未归因订单不会进入 CLAWED_BACK）时后台改派，按 BR-FUND-01 R3b 只写 user_id、user_basis=admin（BR-ATTR-09）、locked=true；同步重跑用户归属成功的只写 user_id、user_basis=param，不置 locked；都不生成快照、无分录，rebate_status 不变；用户找回不受理 VOID 订单（BR-ATTR-17 ④c，负责人 2026-10-03 资金规则对齐决-07 选 A）。快照一经生成，rule_version_id、order_type、activity_type、rebate_mode、reserve_bp、各受益人的 user_id / role / ratio_bp / level 不可修改（单一余额后受益人不带 account_type，拍板第二批 §8 ADD-06）；受益人状态变化与各版本金额只能追加记录，不得覆盖快照行。 | 默认假设 | commission_splits / commission_split_amounts / commission_split_beneficiary_events 表结构与唯一约束；order-sync 入库流水线；BR-FUND-01 迁移 R2 / R3 / P2（含入库即 RECEIVED 时 R2 同事务进 WAITING）；订单详情页（定金阶段文案、失效找回文案）；SM-REB-R2、SM-REB-R3、SM-PLT-P2 测试 |
 | BR-CALC-11 | **规则版本生效时点**<br>每个规则版本必须带 effective_from（ISO 8601 +08:00，须 ≥ 发布时刻，可等于发布时刻即立即生效，BR-CALC-22），且必须严格大于所有已发布且未撤销版本的 effective_from，否则拒绝发布。快照选用'effective_from ≤ paid_at 的已发布、未撤销版本中 effective_from 最大的一个'（边界含等号，比较精度到秒）。未到 effective_from 的已发布版本可以撤销（status=revoked，须 step-up 并写审计，不改内容）；已生效版本不可撤销、不可修改、不可删除，回滚 = 发布一个新版本。规则变更不回溯已生成的快照。联盟返回的无时区时间一律按 +08:00 解析，存 timestamptz。paid_at 为平台付款时间，预售单取尾款付清时间；平台不提供尾款时间时按本条细则的降级顺序取值。找回、改派订单同样按 paid_at 选版本，不按批准时刻，并在订单与快照记 paid_at_source。 | 默认假设 | commission_rules 版本表：effective_from、status（published / revoked）；快照版本选择查询；orders.paid_at / paid_at_source；后台规则发布页（生效时间必填、撤销未生效版本）；近 7 天试算报告 |
 | BR-CALC-12 | **等级与上级的取值时点**<br>快照中本人等级与上级等级都取 paid_at 时刻的有效等级：取 level_change_logs 中 effective_at ≤ paid_at 的最后一条（等号取新等级，BR-INV-14）；等级日志缺失时取注册默认等级 L1 并告警，人工核实后如需补差走 ADMIN_ADJUST。直推受益人取 paid_at 时刻有效的上级（relation_change_logs 按 created_at 重放：bound_at ≤ paid_at 且未解除的上级，bound_at / unbound_at 由相邻记录的 created_at 推出，BR-INV-11）；paid_at 时尚无上级 → 直推份额为 0，事后绑定不补。间推受益人（indirect_enabled=true 时）= 直推上级在 paid_at 时刻的上级，同样按 relation_change_logs 重放；任一层在 paid_at 时不存在 → 间推份额归平台，事后绑定不补。 | 默认假设 | level_change_logs（需有 effective_at）；relation_change_logs（bound_at = 该条 created_at，unbound_at = 同一用户下一条记录的 created_at，BR-INV-11；表名见 13 §13.8）；commission_splits.beneficiaries.level；等级变更接口；邀请绑定接口 POST /v1/me/inviter |
 | BR-CALC-13 | **受益人失效时份额归平台**<br>受益人失效时其份额归平台留存，不得向上顺延给更上级，也不得转给其他受益人；本条对直推与间推受益人同样适用（直推上级失效时，间推份额仍按间推受益人自身状态判定，不因此上移或下移）。快照生成时判定：受益人不存在或已注销（deletion_status ∈ {processing, done}）→ forfeited，终局不变；risk_state 为 banned、frozen、appealing 的受益人在快照中记 active，不在快照阶段剥夺。入账（月结批次，BR-FUND-04）执行时逐受益人判定（判定在 BR-FUND-16 细则「加锁流程」的锁内进行，用取得锁之后重读的受益人状态）：已注销或 risk_state=banned → 追加 forfeited 事件并写 forfeit_reason，份额计入 COMMISSION_REVENUE，此后不再补发（封禁经申诉撤销的，按 BR-FUND-22「申诉恢复」差错单经有权限者 step-up 处理后补发，一人可完成，拍板第二批 §8 ADD-05）；已被识别为未满 18 周岁 → 其推广份额（分享、直推、间推）同样 forfeited（forfeit_reason=minor，BR-ID-26 (b)），识别前已入账的不扣回；risk_state ∈ {frozen, appealing} → 该受益人入账延后（held），其他受益人照常入账，状态恢复 normal 后在后续月结批次（含补充批次，BR-FUND-04）补入账（订单已 CREDITED 时按 BR-FUND-01 R5a 与 BR-FUND-04 ⑫ 的受益人补记项，金额按执行时的 booked_base_fen 重算），转为 banned 时再判 forfeited；被剥夺的份额，每个受益人写一张平台凭证 `{order_key}:PLATFORM:FORFEIT:{uid}:{role}`（借 UNION_RECEIVABLE / 贷 COMMISSION_REVENUE），金额 = 该受益人按入账基数的应得，凭证带 forfeit_reason（banned、deleted、minor），首次入账（R5）与暂缓转没收（R5a）用同一个键，不另设按原因区分的平台科目（凭证粒度随 BR-FUND-05）；held 满 30 天仍无风控结论时告警，由人工处理，系统不因超时自动入账或剥夺；appealing 只由账户级申诉产生，订单申诉不改 risk_state（BR-ID-36）；注销冷静期（deletion_status=cooling）不算失效，照常入账（提现限制见 BR-FUND）。订单级风控命中（BLACKLIST_HIT）仍按 BR-FUND-07 整单作废（入账前 R6 → VOID；对应 04 O4），与受益人级 forfeited 分开。受益人级 held 只记在 commission_split_beneficiary_events，不设置订单级 hold 字段（hold 只由人工或风控按 BR-FUND-06 设置）。已入账的份额不因事后封禁而扣回（资金冻结见 BR-FUND-14 与风控 规划/01 E17）。 | 已确认 | splitCommission() 入参 beneficiary_status；settlement 入账任务（hold 与补入账）；commission_split_beneficiary_events；users.risk_state / deletion_status；客服话术（为何上级没拿到分佣、为何返利延后） |
@@ -299,7 +299,8 @@ platform = reserve_fen + (B − own − direct − indirect)   // reserve_fen �
   - 规划/04_数据模型与契约.md §3.2：「commission_splits 首次入库时生成，不可修改（未含 account_type、状态、平台留存）」
   - 规划/04_数据模型与契约.md §4.1 O2：「PLATFORM_PAID → PAID，副作用：生成分佣快照（无'已归因'条件）」
   - PRD修订_后端功能规划 §2.5 第 6 步：「订单首次入库且已归因时写快照并落四段金额（N、预留、B、平台利润）」
-- 来源：规划/01_需求规划.md §3；规划/02_系统架构.md §5.2；规划/04_数据模型与契约.md §3.2、§4.1 O1/O2/O11；docs/changes/20261001-平台预留比例.md；PRD修订_后端功能规划 §2.5、§3.1；docs/changes/20261001-拍板第二批.md §8 ADD-06
+  - 本条正文与细则表 2026-10-03 前写法：「未归因订单已为 rebate_status=VOID…时找回通过或改派，按 BR-FUND-01 R3b 只写 user_id、user_basis（BR-ATTR-09）、locked=true…」「| 未归因且已 VOID（对应 04 INVALID），找回通过或改派 | R3b：只写 user_id、user_basis、locked=true… |」（找回不受理 VOID 订单，负责人选决-07 A；同步重跑归属成功补入 R3b）（2026-10-03 资金规则对齐（负责人批准），方案 §6.11，同-17、决-07）
+- 来源：规划/01_需求规划.md §3；规划/02_系统架构.md §5.2；规划/04_数据模型与契约.md §3.2、§4.1 O1/O2/O11；docs/changes/20261001-平台预留比例.md；PRD修订_后端功能规划 §2.5、§3.1；docs/changes/20261001-拍板第二批.md §8 ADD-06；docs/changes/20261003-资金规则对齐.md
 - 需同步修改的规划文档：5 处（计数仅作记录，落点见 README §0.6）
 
 | 场景（platform_status / rebate_status） | 快照时点 |
@@ -308,7 +309,7 @@ platform = reserve_fen + (B − own − direct − indirect)   // reserve_fen �
 | 预售：先 DEPOSIT_PAID（已归因，rebate_status=ESTIMATED，预估 0），后付尾款 | platform_status 迁到 PAID 的事务（P2，对应 04 O2），定金阶段无快照 |
 | 回扫晚到，首次入库已是 RECEIVED / SETTLED 且已归因 | 首次入库事务（R2，同事务按 R4 进 WAITING） |
 | 首次入库未归因（UNATTRIBUTED） | 找回通过 / 后台改归属时（R3，对应 04 O11）；platform_status 仍为 DEPOSIT_PAID 时推迟到 P2 |
-| 未归因且已 VOID（对应 04 INVALID），找回通过或改派 | R3b：只写 user_id、user_basis、locked=true，不生成快照，rebate_status 保持 VOID；订单详情显示失效原因 |
+| 未归因且已 VOID（对应 04 INVALID），后台改派或同步重跑归属成功（找回不受理 VOID，决-07 A） | R3b：改派只写 user_id、user_basis=admin、locked=true；同步归属只写 user_id、user_basis=param；不生成快照，rebate_status 保持 VOID；订单详情显示失效原因 |
 | 首次入库即失效（platform_status=INVALID） | 不生成 |
 
 存储：
@@ -317,7 +318,7 @@ platform = reserve_fen + (B − own − direct − indirect)   // reserve_fen �
 - `commission_split_beneficiary_events(order_id, user_id, role, status ∈ {active, held, forfeited}, reason, created_at)`：只追加；当前状态取最后一条。
 - 重放同一订单事件不得重建快照（唯一约束 order_id）。
 - 四段金额与平台预估利润随快照与每个金额版本落库，见 BR-CALC-27。
-- 「VOID 订单找回通过只设 user_id」这一动作不改变 rebate_status，对应 BR-FUND-01 R3b（找回通过或改派：rebate_status 保持 VOID，只写 user_id、user_basis、locked=true，不生成快照、无分录；C-27 (c)）。
+- 「VOID 订单只设 user_id」这一动作不改变 rebate_status，对应 BR-FUND-01 R3b（后台改派或同步重跑归属成功：rebate_status 保持 VOID，只写 user_id、user_basis，改派另置 locked=true，不生成快照、无分录；C-27 (c)）；用户找回不受理 VOID 订单（2026-10-03 资金规则对齐决-07 选 A，原写「找回通过或改派」）。
 - BR-ATTR-01（DEPOSIT_PAID 也生成快照、关系与等级取生成时刻）与 BR-FUND-01 R3（比例与用户关系取批准时刻）中与本条、BR-CALC-11、BR-CALC-12 不一致的写法，以本主题为准。
 - 按 C-01、C-06 默认处理（状态名改用 BR-FUND-01；生成时点按本条），已由负责人确认 2026-09-30。
 
@@ -426,7 +427,7 @@ platform = reserve_fen + (B − own − direct − indirect)   // reserve_fen �
 - credit_requires_settle 一经置 true 不回退；settle_commission_fen 非空后该守卫自然失效。月结口径（拍板第二批 FUND-01，BR-FUND-04）下入账本就只用联盟结算额，该守卫不再改变入账时点，也不再派生单独的展示状态（BR-FUND-17 第 11 行 WAITING_SETTLE 已停用），订单按 WAITING 等状态展示（BR-TEXT-02）。按 C-27 (e) 默认处理，待财务确认。
 - commission_split_amounts 的幂等键 (order_id, commission_version, user_id, role)，order_id 为 orders 表内部主键（不用平台原始 sub_order_id，避免跨平台重号）；扣回凭证 uniq_key 见 BR-FUND-08。
 - 京东实际佣金变 0 的判失效规则见 BR-FUND-08。
-- 部分退款流水类型按 C-16 默认处理（CLAWBACK sub_type=PART_REFUND，不再写负向 SETTLE_ADJUST），待财务确认；状态名按 C-01 默认处理，已由负责人确认 2026-09-30。
+- 部分退款流水类型按 C-16（CLAWBACK sub_type=PART_REFUND，不再写负向 SETTLE_ADJUST），已由负责人 2026-10-03 确认默认（资金规则对齐决-04）；状态名按 C-01 默认处理，已由负责人确认 2026-09-30。
 
 #### BR-CALC-16 细则 · 比价订单的计算与展示
 
@@ -676,7 +677,7 @@ csv 至少覆盖：B=1234 自购（617/123/494）、B=2000 分享（1000/200/800
 5. BR-CALC-12：直推受益人按 paid_at 时的上级（默认）还是按快照时 parent_id【C-06 已由负责人确认 2026-09-30：按 paid_at】
 6. BR-CALC-24 / BR-ATTR：分享者经自己的分享链接下单按 self 还是 share（默认 self），影响比例与流水类型（单一余额后不再影响账户，税目统一 SERVICE_FEE），需 BR-ATTR 定稿（BR-CALC-24 已由负责人确认 2026-09-30，含「BR-ATTR 定稿前按 self」的默认；BR-ATTR 侧仍待定稿）
 7. 已解决（拍板第二批 FUND-17）：BR-CALC-13 held 满 30 天仍无风控结论时告警，由人工决定，系统不自动处理；序号保留。
-8. 部分退款负向调整的流水类型：已列入 §14.3 C-16，默认按 BR-FUND-08 写 CLAWBACK（sub_type=PART_REFUND），BR-CALC-15、BR-CALC-23 已按此改写，待财务确认
+8. 【已由负责人确认 2026-10-03，资金规则对齐决-04 确认默认】部分退款负向调整的流水类型：已列入 §14.3 C-16，默认按 BR-FUND-08 写 CLAWBACK（sub_type=PART_REFUND），BR-CALC-15、BR-CALC-23 已按此改写，待财务确认
 9. BR-CALC-11：三家订单接口能否拿到预售尾款付清时间，需在 09 表订单同步项验证
 10. 活动加成（P1 新人红包、邀请奖励）的计算口径与是否占用 8000 上限之外的预算，P1 前再定
 11. 已解决：BR-CALC-02（2026-10-01 改为先扣平台预留，拍板第二批 TRADE-02 确认）、BR-CALC-24（2026-09-30 确认）、BR-CALC-07 / 08 / 09（拍板第二批 FUND-15 按当前默认签字）、BR-CALC-22（§8 ADD-05）均为已确认；各数值见第 3 项；序号保留。
