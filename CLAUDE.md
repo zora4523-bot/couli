@@ -37,6 +37,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 平台能力实测事实（CAP-xxx） | `规划/09_平台能力验证/` |
 | 阶段验收用例与记录模板 | `规划/10` |
 | 谁实现、谁评审、合并规则、测试标准、记忆与上下文、何时问负责人 | `规划/11` |
+| 关键链路的时序图、状态图、判定路由（Mermaid）与画图时发现的不一致 | `规划/12` |
 | 技术栈与数据库规则（已锁定，改动须新 ADR） | `docs/adr/0001-技术栈基线.md`（模板在 `docs/templates/`） |
 
 ## 修改文档的硬约定
