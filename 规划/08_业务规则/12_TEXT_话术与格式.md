@@ -778,6 +778,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 分享面板·复制后 share.copied / share.open_wechat | 已复制，可以打开微信粘贴给好友｜打开微信 | 复制成功后提示；【打开微信】经微信 SDK 打开，本机没有微信时不显示按钮，提示改用表 C 的 share.wechat_unavailable |
 | 分享面板·保存图片 share.save_images / share.saved | 保存图片｜已保存 {n} 张图片到相册 | 海报与商品主图可多选后一次保存；{n} 为成功保存的张数；首次保存的权限说明按表 D |
 | 第三方页容器加载失败 external_page.load_failed / external_page.retry / external_page.close | 页面打不开，请检查网络后重试｜重试｜关闭 | `ExternalWebView` 主框架连不上、域名解析失败、超时或证书错误被取消时的原生错误页；不显示出错的完整 URL；网站自己返回的 4xx、5xx 页面照常显示（规划/03 §5.1，2026-10-03 功能对照 G-82） |
+| 设置页·清除缓存 settings.clear_cache / .size / .confirm / .confirm_ok / .confirm_cancel / .done | 清除缓存｜{size}｜只清除图片和网页缓存，不会退出登录，也不会清除你的设置｜清除｜取消｜已清除 | {size} 为图片与 WebView 缓存的合计，按 KB / MB 取整显示；点【清除缓存】先出确认框；不清的内容见规划/03 §4.3（2026-10-03 功能对照 G-89） |
+| 关于页·复制诊断信息 about.copy_diagnostics / .done | 复制诊断信息｜已复制，可以粘贴给客服 | 可选功能（规划/01 F-OBS-06）；复制的内容是固定的英文字段名加值，不经字典；不含密钥、完整设备标识与令牌（2026-10-03 功能对照 G-88） |
 | 余额流水·变动后余额 ledger.balance_after | 余额 {amount} | 每条分录行显示，{amount} 取 balance_after_fen，按 BR-TEXT-10 格式化，可为负；WITHDRAW_PAID 汇总条目不显示（BR-TEXT-19 细则「变动后余额」，2026-10-03 功能对照 G-75） |
 
 **表 D · 隐私与权限文案**（2026-10-03，功能对照 G-25、G-26、G-28；键名与用途由本表定，包内默认文案由法务定稿，规划/06 Q-F14。「要点或占位措辞」一列里的成句文字是代理起草的占位措辞，供开发与内测包使用，法务定稿后替换；占位稿不得用于提审与公开版本）
