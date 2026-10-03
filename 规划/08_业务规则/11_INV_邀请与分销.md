@@ -10,6 +10,8 @@
 
 订单状态统一按 BR-FUND-01 双状态书写（platform_status + rebate_status，C-01 默认处理）。与 规划/04 单一 order_status 的对照：O2「首次入库已归因」≈ rebate_status R2；O11「找回 / 后台改归属」≈ R3；INVALID ≈ rebate_status=VOID；CLAWED_BACK 同名；确认收货 = platform_status 首次到 RECEIVED（或经 P5 补写）。若负责人不采纳双状态，按 BR-FUND-01 的映射表回退。
 
+2026-10-03 功能对照补缺第 1 批（docs/changes/20261003-功能对照补缺.md；「功能对照 G-xx / Q-xx」是该批清单的编号，与 规划/10 §6.1 的 G-xx、规划/06 的 Q-xx 不是同一套）：BR-INV-03 细则补「第三方登录新号的两处提醒」（G-05，按 Q-01 默认 C 写，待负责人确认）；BR-INV-04、BR-INV-07 细则、BR-INV-21 同步指针与两个提醒开关。绑定渠道、先到先得、补填条件与期限都不变，条目状态不变。
+
 ### 11.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -34,7 +36,7 @@
 | BR-INV-18 | **邀请页与落地页内容**<br>GET /v1/invites/me（phone 级别，未绑手机返回 10005）：本人为已识别的未满 18 周岁用户（BR-INV-19）时返回 30413（data.reason=self_minor，客户端文案与入口隐藏按 BR-INV-19）；其余情况返回 200：{can_invite: bool, invite_code, landing_url, poster{template_id, background_url, variables}, direct_count}。当 inviter_unavailable(本人)=true（BR-INV-02）且不属于上述未成年情形时，can_invite=false，invite_code、landing_url、poster 均为 null，direct_count 照常返回；客户端 can_invite=false 时显示“暂不可邀请”，不展示原因。landing_url = `{share_domains 当前可用域名}/i/{invite_code}`，可附加渠道码参数，URL 中不得含 UID、手机号、昵称等个人信息。邀请文案模板变量只有 {nickname}、{invite_code}、{download_url}；海报 M-内测为固定模板 + 后台配置背景图，多模板 P1。后台保存邀请文案模板时必须执行 BR-INV-20 禁用词与广告法绝对化用语检查，不通过不能保存；海报背景图上线前需人工审核并留审核记录（审核人、时间、结论）。规则说明页不得出现“最高返利”“稳赚”及 BR-INV-20 禁用词。「我的」页邀请信息（拍板第二批 OPS-20）：显示本人邀请码（can_invite=false 或 30413 时不显示）；邀请人只显示「已绑定」或「未绑定」，GET /v1/me 只返回绑定状态，不返回、不展示邀请人的昵称、邀请码、头像或 UID；不显示等级（BR-INV-14）。 | 默认假设 | GET /v1/invites/me 响应（can_invite、30413）；InviteShare H5 页；invite-landing H5 页；后台邀请文案模板（禁用词检查）与海报背景配置（审核记录）；config.share_domains；「我的」页邀请区与 GET /v1/me 邀请人状态 |
 | BR-INV-19 | **未成年人邀请限制**<br>本条是未成年人邀请与分享侧效果（30401、30413、入口隐藏与提示文案）的唯一维护处。年龄、满 N 周岁时刻、「识别」时点（realname verified 时刻）与推广收益入账、识别前已入账推广收益的处理只在 BR-ID-26 维护；提现限制只在 BR-WDR-06 维护。判定时刻 = 绑定校验、邀请或分享接口请求、快照生成或入账的服务端时刻。已识别且在判定时刻未满 18 周岁的用户：inviter_unavailable=true（BR-INV-02），他人用其邀请码绑定返回 30401「邀请码无效」（不带 reason、不透露邀请人年龄）；本人调用 GET /v1/invites/me（BR-INV-18）、POST /v1/shares 及邀请码生成 / 获取接口返回 30413（data.reason=self_minor），客户端隐藏邀请与分享赚入口并提示「未满 18 周岁暂不开放邀请与分享赚」；作为上级时，快照生成时刻未满 18 周岁则不写直推受益人，份额归平台（BR-INV-13）；已生成的直推快照在入账时刻受益人已被识别为未满 18 周岁的，该份额入账时改归平台（BR-ID-26 (b)）；识别前已入账的 REFERRAL_CREDIT 留在余额中不动、不扣回、不另设冻结，未满 18 周岁期间该用户全部提现合计受 BR-WDR-06 月额度约束，满 18 周岁后不再受限（BR-ID-26 (c)，拍板第二批 FUND-10、§8 ADD-06）。提现限制见 BR-WDR-06。已有的下级关系保留，满 18 周岁时刻之后生成的快照恢复正常。未实名用户无法判断年龄，按成年处理。 | 已确认 | 实名信息（年龄推算，BR-ID-26）；BR-INV-02 inviter_unavailable；commission_splits 生成与入账；未成年提现月额度（BR-WDR-06）；GET /v1/invites/me、POST /v1/shares、邀请码生成 / 获取接口（30413）；错误码 30413（新增）；客户端邀请与分享赚入口隐藏；验收用例（含 2-29 边界、满周岁当日与次日） |
 | BR-INV-20 | **分销用语与不做事项**<br>用户端、后台、接口字段、推送与客服话术不得使用“代理、运营商、总代、合伙人、团队业绩、团队奖、分红、下线”等层级或团队计酬用语，等级只称 L1/L2/L3。不得实现：付费升级或付费获得分佣资格、邀请即升级、按发展人数或团队业绩晋升、面向用户的团队业绩/出单/GMV 排行、面向用户的团队收益汇总或按下级层级分列的下级贡献展示；不得收取任何入门费、会员费或购买门槛，不得以发展人数计酬（BR-INV-12）。间推开关开启后，间推份额在余额流水与收益明细中只作为「好友推广奖励」逐笔展示（BR-INV-17，话术按 BR-TEXT 字典），不单列层级、不称「二级」「间推」；「间推」只作内部术语。文案与代码需通过禁用词 CI 检查；后台可配置文案保存时执行同一词库检查（BR-INV-18）。 | 已确认 | 全部 UI 文案与帮助中心；后台菜单命名与可配置文案；CI 禁用词检查；客服话术；规则说明页；余额流水 / 收益明细（间推份额显示） |
-| BR-INV-21 | **邀请开关与配置项**<br>紧急开关 growth.invite_bind.enabled（默认 on，10 秒内生效，改动需 step-up 并告警）为 off 时：backfill 返回 30408；register 渠道照常建号但 invite_bind={failed, 30408}；landing-register 返回 30408 且不建号；后台改上级不受影响；已有关系与分佣计算不受影响；关闭期间注册的用户补填期限不顺延。/v1/config.invite 下发 required（MVP 固定 false）与 backfill_hours（默认 168）。频控配置：invite.fail_limit_per_day=5。等级相关配置：level.default=L1、level.promote.l2_min_orders=10、level.promote.l3_min_orders=50、level.promote.window_days=30。 | 默认假设 | 配置中心 growth.invite_bind.enabled、config.invite、invite.fail_limit_per_day、level.\*；三个绑定接口；落地页暂停态 |
+| BR-INV-21 | **邀请开关与配置项**<br>紧急开关 growth.invite_bind.enabled（默认 on，10 秒内生效，改动需 step-up 并告警）为 off 时：backfill 返回 30408；register 渠道照常建号但 invite_bind={failed, 30408}；landing-register 返回 30408 且不建号；后台改上级不受影响；已有关系与分佣计算不受影响；关闭期间注册的用户补填期限不顺延。/v1/config.invite 下发 required（MVP 固定 false）与 backfill_hours（默认 168），以及两个提醒开关 bind_phone_guide、before_buy_tip（默认 on，BR-INV-03 细则）。频控配置：invite.fail_limit_per_day=5。等级相关配置：level.default=L1、level.promote.l2_min_orders=10、level.promote.l3_min_orders=50、level.promote.window_days=30。 | 默认假设 | 配置中心 growth.invite_bind.enabled、config.invite、invite.fail_limit_per_day、level.\*；三个绑定接口；落地页暂停态 |
 | BR-INV-22 | **邀请奖励仅P1**<br>MVP（M-内测、M-公开）不得发放任何新人红包、签到奖励或邀请奖励。P1（W9 起）邀请奖励规则：奖励在被邀请人首单确认收货后才解锁；同设备、同支付宝、同实名各只能领 1 次；设日预算上限，预算扣减与发放同事务原子执行（条件更新 remaining_fen ≥ amount），扣不到即不发、不排队补发；手机号 HMAC 命中未过期注销留存记录（BR-ID-30 ⑩、BR-ID-28）的账号不计为有效新人（F-ACC-10）；同一 device_id 30 天内登录 ≥3 个账号的第 3 个账号起不发奖励（规划/01 E17 风控；08 尚无 BR-RISK 主题）；流水用 REWARD（sub_type=invite），计入 MKT_EXPENSE。“有效新人”口径见 BR-INV-23；奖励金额与预算数值在 P1 规格中定义。 | 默认假设 | 活动引擎（P1）；预算表 remaining_fen（P1）；注销留存表（phone_hmac，留存见 BR-ID-30 ⑩）；流水 REWARD；风控规则；验收用例（P1） |
 | BR-INV-23 | **会员口径仅P1（有效、活跃、新用户、有效新人）**<br>MVP（M-内测、M-公开）不得计算、存储、展示或使用任何会员口径标记，任何 MVP 规则不得以其为条件；首页弹窗等 MVP 人群投放只可使用请求时可直接查询的事实（是否已授权、是否有上级、有无订单），这些不属于会员口径（拍板第二批 OPS-10）。P1 启用时：每个口径只能由 packages/domain 的纯函数计算（输入 = 用户、订单与流水事实、判定时刻；参数全部读配置中心 member.\*，修改写操作日志），后台任务、活动引擎、报表共用该函数，不得在 SQL 或客户端另写一版；每个口径附决策表 fixture，至少 3 条，覆盖边界值（2/3 笔、窗口首尾时刻）。默认口径（沿用优券汇）：① 有效用户 = login_logs 中存在首条 App 登录成功记录起永久有效。② 活跃用户：每日 00:10 +08:00 重算；窗口 = [D−member.active_days 00:00, D 00:00) +08:00（默认 30 个完整自然日，D 为重算当日）；计数 = 本人为归属用户的子订单（自购 + 分享）中 paid_at 落在窗口内、且重算时刻 platform_status ∈ {PAID, RECEIVED, SETTLED}、rebate_status ∉ {VOID, CLAWED_BACK} 的笔数；≥ member.active_orders（默认 3）即活跃；不得含邀请人数、下级人数或团队业绩条件（BR-INV-15、BR-INV-20）。③ 新用户 = 本人为归属用户、platform_status 曾到达 PAID 或之后状态的子订单数 = 0；首次跟单即去标，订单之后失效也不恢复。④ 有效新人（P1 邀请奖励与「有效邀请」计数共用）= 被邀请人 parent_bind_source ∈ {landing, register, backfill}（后台改上级不计）、已绑手机、首笔 platform_status 到达 RECEIVED 的子订单实付金额（分）≥ member.valid_newcomer_min_paid_fen，且不命中 BR-INV-22 的排除条件；该门槛由财务在 P1 规格给出，给出前有效新人判定不得启用。「首提」「当日入账」「冻结中」属提现主题（BR-WDR-19、BR-WDR-27），本条不定义。 | 待决策 | packages/domain 会员口径纯函数与决策表 fixture（P1）；配置 member.active_days、member.active_orders、member.valid_newcomer_min_paid_fen；每日 00:10 重算任务（P1）；活动引擎与邀请奖励（P1，BR-INV-22）；BR-WDR-19 手续费矩阵活跃度维度（P1）；后台会员查询筛选（P1） |
 
@@ -107,6 +109,18 @@
 - 并发：同一用户两个请求同时补填不同码，只有一条条件更新成功，另一条返回 30402。
 - 第三方登录新号并入老账号（拍板第二批 OPS-04，规则见 BR-ID）只允许新号无订单、余额与上下级，合并不产生或改变任何邀请关系，老账号已有的上级与 self_bind_used 照旧。
 
+**第三方登录新号的两处提醒**（2026-10-03，功能对照 G-05；按功能对照 Q-01 默认 C「维持现状，只加提醒」写，待负责人确认。绑定渠道、先到先得与补填条件都不变；docs/changes/20261003-功能对照补缺.md）：
+
+- 背景：微信 / Apple / 华为登录新建的账号没有邀请码输入框，只能先绑手机再补填（上文）；而未绑手机也能购买（BR-ID-02），一旦有了订单，补填（BR-INV-07 (c)）与并入原账号（BR-ID-06）都不再可行。
+- ① 绑手机引导：第三方登录接口返回 `is_new_user=true`（规划/04 §6.1）时，登录成功后弹一次可跳过的引导，按钮【去绑定】（进 BindPhone）【暂不】。文案（BR-TEXT-14 invite.bind_phone_guide）说明两点：绑定手机号后可在期限内填写邀请码；已用手机号注册过的（含在邀请页注册），绑定同一个手机号、符合条件时可并入原账号（BR-ID-06）。每个账号只在建号的那次登录后出现一次；短信登录的新号已绑手机，不出现。
+- ② 首次购买前提示：账号仍可补填邀请码（`GET /v1/me` 的 invite_backfill.eligible=true：未绑上级、未用过自助绑定、在补填期限内，没有订单、找回申请与下级，且绑定开关打开；与 BR-INV-07 (a)(b)(c) 同一口径，未绑手机的账号同样计算）且从未展示过本提示时，用户点击购买后、发起 open 之前提示一次（BR-TEXT-14 invite.before_buy_tip）。按钮【先填邀请码】（已绑手机进补填页；未绑手机先进 BindPhone，绑定后进补填页）【继续购买】（继续本次 open）。服务端记已读（tip_key=inviter_before_buy，规划/04 §6.1 的 tips 接口），每个账号一次，换设备不重复。
+- 两处不连着出现：登录是由点击购买触发的（存在待恢复的购买 pending_action，BR-ID-10）时，只出 ①，用带下单提醒的那版正文（invite.bind_phone_guide.body_before_buy），同时把 ② 记为已读；用户点【暂不】或完成绑定后继续执行 pending_action。引导停留不算 pending_action 的前置步骤，不重置其计时，超时按 BR-ID-10 丢弃。
+- 开关：/v1/config.invite.bind_phone_guide、invite.before_buy_tip（都默认 on，BR-INV-21）；关闭后不弹，不影响任何绑定规则。
+- 两处提醒都不自动提交任何绑定，不改变「先到先得」「phone 级别才能绑定」「有订单不能补填」。
+- 待负责人二选一（功能对照 Q-01 的 A、B，确认前不做）：A 第三方新号建号时就允许填邀请码（放宽「绑定须 phone 级别」）；B 补填期限改从绑定手机时起算。
+- 例：用户先在邀请落地页用手机号 P 注册（上级 X），之后在 App 里点微信登录 → 新建账号 U（is_new_user=true）→ 弹绑手机引导 → 【去绑定】输入 P → 30411（mergeable）→ 确认并入 → 以落地页注册的账号登录，上级仍是 X（BR-ID-06）。
+- 例：U 点了【暂不】，第二天点【领券购买】→ 弹「下单后将不能再填写邀请码」→ 【继续购买】→ 照常 open；之后再买不再提示。账号已过补填期限或已有上级 → 不提示。
+
 #### BR-INV-04 细则 · 剪贴板邀请口令自动识别（MVP）
 
 - 状态：已确认（负责人 2026-09-30，依据 docs/changes/20260930-拍板第一批.md §3 BR-INV-04：「要自动识别，很重要，需要监听剪贴板；根据规则来，必须要做」；商品优先与触发前提由拍板第二批 OPS-06 确认）
@@ -120,6 +134,7 @@
 
 - 绑定渠道不新增：自动识别只是把邀请码交给现有渠道，已登录走 backfill、游客走 register，source 仍只取 BR-INV-03 的三个值；先到先得、30402 等语义不变（落地页已绑定的用户按 ③ 不会被提示）。
 - 触发对象判定在客户端用 GET /v1/me 的邀请人状态与 /v1/config.invite.backfill_hours 做预判，服务端以 BR-INV-02 / BR-INV-07 校验为准；客户端预判错误时照常返回 30402 / 30404 / 30409，客户端按 BR-TEXT-14 提示。
+- 已登录用户的预判可直接取 `GET /v1/me` 的 invite_backfill.eligible（服务端按 BR-INV-07 (a)(b)(c) 算好，BR-INV-07 细则；2026-10-03，功能对照 G-05），不必在客户端重算期限；第三方登录新号的绑手机引导与首次购买前提示见 BR-INV-03 细则，与本条的提示条互不替代。
 - 已登录但未绑手机（member）：点击提示条先引导绑手机（10005），绑定成功后再以同一邀请码调用 backfill；不在未绑手机时静默缓存后自动提交。
 - 游客预填的邀请码只保存在本机内存 / 本地存储、不上传，用户未提交登录即丢弃；有效期默认本次进程生命周期（待负责人确认）。
 - 与商品识别的关系（拍板第二批 OPS-06 确认）：同一段剪贴板文本若按 F-CLIP-02 / F-CLIP-03 命中商品链接或口令，只出商品提示条（clipboard.prompt），不再出邀请提示条；只有未命中商品规则、且本条抽取正则命中时才出邀请提示条。为降低普通文本误判，默认另加触发前提：文本含分享域名（config.share_domains）的落地页路径 `/i/{code}`，或含「邀请码」字样；该前提作为 /v1/config.clipboard 的可配置规则下发（拍板第二批 OPS-06 确认）。
@@ -187,6 +202,7 @@
 - 例：用户提交过找回申请（submitted，订单仍在未归因池）→ 30409。
 - 例：用户 10-02 付款，联盟同步延迟，10-03 补填 A 成功，10-04 订单入库 → 订单 paid_at &lt; parent_bound_at，快照不写 A，份额归平台（BR-INV-13）。
 - 只转链未下单的用户仍可补填（不以 link_logs 为条件）。
+- `GET /v1/me` 的 invite_backfill{eligible, deadline_at} 由服务端按本条 (a)(b)(c) 计算（未绑手机的账号同样计算，补填前须先绑手机），供客户端决定补填入口与「首次购买前提示」是否出现（BR-INV-03 细则「第三方登录新号的两处提醒」）；绑定时的校验仍只以本条为准（2026-10-03，功能对照 G-05）。
 - 期限随 `/v1/config.invite.backfill_hours` 下发，客户端据此隐藏补填入口，服务端以自身时钟为准。
 - 订单状态按 BR-FUND-01 双状态书写：「任何状态」指任意 platform_status 与任意 rebate_status（单一 order_status 写法下即含 INVALID、CLAWED_BACK）；rebate_status=UNATTRIBUTED 的订单 user_id 为空，不属于本人，不计入。按 C-01 默认处理，已由负责人确认 2026-09-30。
 
@@ -434,7 +450,7 @@
 #### BR-INV-21 细则 · 邀请开关与配置项
 
 - 状态：默认假设
-- 默认值：growth.invite_bind.enabled=on（生效 ≤10 秒，改动 step-up + 告警）；config.invite.required=false；config.invite.backfill_hours=168；invite.fail_limit_per_day=5（按 +08:00 自然日）；level.default=L1；level.promote.l2_min_orders=10；level.promote.l3_min_orders=50；level.promote.window_days=30（P1 才使用）；landing.ip_register_limit=3（由 BR-ID-32 维护，此处只列依赖）
+- 默认值：growth.invite_bind.enabled=on（生效 ≤10 秒，改动 step-up + 告警）；config.invite.required=false；config.invite.backfill_hours=168；config.invite.bind_phone_guide=on、config.invite.before_buy_tip=on（2026-10-03 新补，BR-INV-03 细则）；invite.fail_limit_per_day=5（按 +08:00 自然日）；level.default=L1；level.promote.l2_min_orders=10；level.promote.l3_min_orders=50；level.promote.window_days=30（P1 才使用）；landing.ip_register_limit=3（由 BR-ID-32 维护，此处只列依赖）
 - 决策人：代理可自定
 - 依赖平台能力：无
 - 取代：无
@@ -491,5 +507,6 @@
 11. 04 §3.2 users.status 字段未定义取值；本主题封禁判定只用 risk_state，需账号主题定义 users.status 或删除该字段。
 12. BR-INV-23（P1）开工前需定：有效新人实付金额门槛 member.valid_newcomer_min_paid_fen（财务）；有效新人是否另加「淘宝备案」「绑微信」条件（默认不加）；活跃窗口按 paid_at 还是 received_at 计（默认 paid_at，与 F-73「PAID 及以上状态」一致）。
 13. 落地页接口与阈值已按 BR-ID-32 合并（BR-INV-05）：BR-ID-32 的 `POST /v1/landing/login` 与本主题 `POST /v1/invites/landing-register` 指同一接口，路径统一需在 13 与 BR-ID-32 中同步；consent channel 取 h5_landing。
+14. 第三方登录（微信、Apple、华为）新建的账号怎样记上邀请人（功能对照 Q-01，2026-10-03）：当前按默认 C 维持现状，只加两处提醒（BR-INV-03 细则）；A「建号时就让填邀请码」与 B「补填期限从绑定手机时起算」都会改变绑定条件或期限，待负责人选定后再改 BR-INV-03、BR-INV-07。
 
 ---
