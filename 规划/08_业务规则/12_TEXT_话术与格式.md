@@ -693,7 +693,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 显示上次数据 net.stale_data | 网络不可用，以下为 {time} 的数据 | 订单、钱包页请求失败时显示缓存数据并附本提示；{time} 按 BR-TEXT-11（拍板第二批 TECH-20，代理起草） |
 | H5 加载失败 h5.load_failed | 页面加载失败，请重试 | 重试按钮（TECH-20，代理起草） |
 | 第三方页容器里的平台商品无法识别 external_page.product_unresolved | 该商品暂无法查返利 | 留在当前页，不在容器里继续打开这个商品页（BR-ATTR-29，2026-10-03 功能对照 G-02） |
-| 第三方页容器里拦下的平台页面 external_page.union_host_blocked | 这个页面暂不支持在这里打开，可以在 App 内搜索商品 | 按钮只有【去搜索】；不提供「继续访问」，也不提供交给浏览器或平台 App 打开的入口；原页面保持不动（BR-ATTR-29 ②（b），2026-10-03） |
+| 第三方页容器里拦下的平台页面 external_page.union_host_blocked | 这个页面暂不支持在这里打开，可以在 App 内搜索商品 | 按钮只有【去搜索】；不提供「继续访问」，也不提供交给浏览器或平台 App 打开的入口；原页面保持不动；内嵌框架被拦下时同一页面只提示一次（BR-ATTR-29 ②（b），2026-10-03） |
 | App 内链接落地页·分享者本人提示 link_landing.owner_hint | 这是你分享的商品，自己购买按自购返利计算 | 只在 `GET /v1/links/{link_id}` 返回 viewer_is_sharer=true 时显示；不显示金额（BR-ATTR-11，2026-10-03 功能对照 G-03） |
 | App 内链接落地页·链接失效 link_landing.invalid | 链接已失效 | 30144 时显示空态与按钮【去搜索】，不自动重试（BR-ATTR-05 细则） |
 | 分享中间页按钮 share_page.open_in_app | 在 App 中打开 | App 外浏览器里显示；微信内不显示；`open_in_app_url` 为 null 时不显示；文案不得带返利、红包等利益表述（BR-ATTR-05 细则，规划/09 CAP-X-03） |
