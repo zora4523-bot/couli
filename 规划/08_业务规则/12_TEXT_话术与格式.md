@@ -70,7 +70,7 @@
 - 来源：规划/04 §1 术语表、§2.3、§2.4、§3.2 account_balances、§4.2 W4–W8；规划/01 §1、§5 J4/J6/J7、F-WDR-01、F-WDR-09、F-MSG-02；规划/02 §5.2；PRD修订_后端功能规划 2.16、3.2；PRD v2.1 §9.3；参考_花卷云功能查漏底稿 §12、§16 #33；README §1.2；docs/changes/20260930-拍板第一批.md §3（C-02、BR-TEXT-01 行；D11、BR-FUND-04 行）；docs/changes/20260930-拍板第一批.md §10（负责人 2026-09-30 补充）；docs/changes/20261001-拍板第二批.md（OPS-01、§8 ADD-06）
 - 需同步修改的规划文档：6 处（计数仅作记录，落点见 README §0.6）
 
-**术语对照表（唯一口径）**：资金术语含义只在本表维护。BR-FUND-17 只维护 display_status 派生条件与「状态和金额只取接口」，BR-WDR-25 只维护提现副文案分支，README §1.2 为索引；三处与本表不一致时以本表为准。
+**术语对照表（唯一口径）**：资金术语含义只在本表维护。BR-FUND-17 只维护 display_status 派生条件与「状态和金额只取接口」，BR-WDR-25 只维护提现副文案分支，README §1.2 为索引；三处与本表不一致时以本表为准。承载这些术语的文案键改动要单独的后台权限与二次验证，范围见 BR-TEXT-12 细则「资金术语键」（2026-10-03，功能对照 G-76）。
 
 | 用户词 | 唯一含义 | 内部状态 / 字段 | 后台·报表词 | 能否提现 |
 | --- | --- | --- | --- | --- |
@@ -99,7 +99,7 @@
 **花卷云口径对照**（只作对照，字段与编码按 D19 不沿用）：预估佣金 ↔ 预估返 / 预估推广收益 / 预估收益（用户侧不出现「佣金」）；结算佣金 ↔ 已结算金额（实返 / 推广收益）；结算状态「未结」↔ 结算前（ESTIMATED、WAITING，用户侧「预估」），「已结」↔ 已结算（CREDITED），「已失效」↔ 已失效（VOID）或已扣回（CLAWED_BACK）。
 
 **钱包汇总口径**（`GET /v1/wallet/summary`，单一余额（拍板第二批 §8 ADD-06）；字段定义与计算只由 BR-FUND-18 维护，本条只定文案）：钱包只显示一组数——可提现余额、待抵扣（为负时）、冻结中、预估收益、已提现；不分「自购返利 / 推广收益」两栏，收入来源在余额流水按类型显示（BR-TEXT-19）。
-- 可提现余额 ¥{withdrawable_fen}；negative_fen > 0 时另显示「待抵扣 ¥{negative_fen}」，提现按钮置灰（BR-WDR-05）。冻结中 ¥{frozen_fen}。
+- 可提现余额 ¥{withdrawable_fen}；negative_fen > 0 时另显示「待抵扣 ¥{negative_fen}」，提现按钮置灰（BR-WDR-05）。冻结中 ¥{frozen_fen}。提现总开关关闭（`withdraw_enabled=false`，BR-WDR-17）时余额照常显示，提现按钮置灰并显示 error.30306 的文案（BR-TEXT-14 表 A），与提交提现得到 30306 时同一句，不另设文案键（2026-10-03，功能对照 G-73）。
 - 风控冻结（risk_state=frozen）与提现冻结记录（withdraw_holds，BR-WDR-05）不改变余额、不计入冻结中，只在钱包顶部显示「提现已暂停：{reason}」；reason 取字典 risk_msg.&lt;code> 文案（BR-TEXT-14），不得写风控规则细节；下发字段由 BR-WDR-05 定义。
 - 预估：显示「预估收益 ¥{estimated_total_fen}」；预估合计 estimated_total_fen = 该用户全部受益角色结算前份额（BR-FUND-18：estimated_fen + pending_credit_fen，不含定金阶段与未归因订单），由服务端返回合计值，客户端不相加；注「按联盟最新预估计算，以联盟结算金额为准」。
 - 预估下附进度行（只作说明，不是独立状态）：「其中已收货 ¥{pending_credit_fen}」；服务端返回 next_credit_period 时附「预计 {月份} 结算」（取值按 BR-FUND-18 与 BR-FUND-04 ⑪），credit_overdue=true 时附「入账核对中」，未返回时不显示月份；pending_credit_paused_fen > 0 时另附「其中 ¥{pending_credit_paused_fen} 暂缓入账」，不说明是维权还是 hold。保留「其中已收货」分项的理由：告诉用户哪部分会进入下一次联盟月结，金额名仍为「预估」。
@@ -523,6 +523,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 预售（拍板第二批 TRADE-10）：预售商品卡与详情显示标签 `tag.presale`「预售」，价格按定金 + 尾款总价显示（口径见 BR-PRICE），价格旁附 `presale.price_note`「定金与尾款以下单页为准」。
 - 未知编码：显示 `<enum>.UNKNOWN`（订单「状态更新中」、提现「处理中」）。
 - 后台修改字典或 texts：保存前过禁用词校验（BR-TEXT-13）与变量校验（模板变量必须与包内默认一致），发布时 dict_version +1，写审计。
+- 资金术语键（2026-10-03，功能对照 G-76；单设权限点是代理补全的默认假设，待负责人确认，规划/06「功能对照待确认」）：用户看到的资金措辞改一个字就可能改了含义（BR-TEXT-01 的「可提现余额」「已到账」「已结算」），这类键不归普通配置权限。范围：以 `order_status.`、`withdrawal_status.`、`withdraw_reject_reason.`、`withdraw_fail_reason.`、`ledger_type.`、`ledger.`、`earnings.`、`wallet.`、`withdraw.`、`withdraw_detail.` 开头的字典与 config.texts 键，以及 `error.303` 开头的提现错误文案；钱包页的金额标签以后建键时统一用 `wallet.` 前缀，落在这个范围里。修改它们须有后台权限点 `content.fund_terms`（规划/04 §11.2），每次修改都要二次验证，审计记录标「资金术语」并存前后值；只有普通配置权限 `config.general` 的账号改不了。BR-TEXT-14 表 D 的隐私与权限文案键另归 `content.agreement`，不在本范围。
 
 **JumpTip**：
 - 展示次数与已读记录按 BR-ATTR-21（每用户每平台首次外跳前 1 次，服务端记已读）。（G-13 默认处理，待运营确认；原「前 3 次、设备本地计数、不分平台、prefs.jump_tip_off」已删除。）
@@ -768,6 +769,12 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 找回指引·期限 claim.guide.window | 付款后 {claim_window_days} 天内可以申请找回 | {claim_window_days} 取 `/v1/config` 的 `claim.window_days`（服务端由 claim.window_hours 向下取整到天派生，BR-ATTR-17 细则「找回页的填写指引」）；为 null 时整句不显示（BR-TEXT-12），不写死天数（BR-TEXT-13）；帮助文章里不写期限数字 |
 | 找回指引·核对提示 claim.guide.caution | 填错会占用今天的找回次数，请核对后再提交 | 提交按钮上方；不写具体次数 |
 | 提现详情·交易流水号 withdraw_detail.trade_no / .copy / .copied | 交易流水号｜复制｜已复制交易流水号 | 只在提现详情、PAID_API 或 PAID_MANUAL 且有 channel_order_id 时显示，旁边是【复制】按钮，复制成功后提示第三句；列表不显示；不写「可在支付宝账单中查到」（BR-WDR-25 细则「交易流水号」，2026-10-03 功能对照 G-70） |
+| 提现页·页头 withdraw.balance_line / withdraw.remaining_counts | 可提现余额 {amount}｜今日还可提 {daily} 次，本月还可提 {monthly} 次 | {amount} 取 rules 的 withdrawable_fen，按 BR-TEXT-10 格式化；次数取 rules 的今日与本月剩余次数（BR-WDR-04 细则「提现页的金额输入与提交后去向」，2026-10-03 功能对照 G-72，下同） |
+| 提现页·本次上限 withdraw.max_line | 本次最多可提 {amount} | 只在 max_withdrawable_fen 小于可提现余额时显示在输入框下方 |
+| 提现页·全部提现 withdraw.all | 全部提现 | 填入 max_withdrawable_fen；为 0 或不能提现时置灰 |
+| 提现页·预估 withdraw.estimate / withdraw.estimate.net_only | 预计到账 {net}（手续费 {fee}，代扣个税 {tax}），以实际到账为准｜预计到账 {net}，以实际到账为准 | 金额都取 rules 的估算字段；手续费与税额都为 0 时用后一句；估算字段为空时整行不显示 |
+| 提现页·规则入口 withdraw.rules_link | 提现规则 | 页底文字入口，打开 help_links.withdraw_rules，未配置时不显示 |
+| 余额流水·变动后余额 ledger.balance_after | 余额 {amount} | 每条分录行显示，{amount} 取 balance_after_fen，按 BR-TEXT-10 格式化，可为负；WITHDRAW_PAID 汇总条目不显示（BR-TEXT-19 细则「变动后余额」，2026-10-03 功能对照 G-75） |
 
 **表 D · 隐私与权限文案**（2026-10-03，功能对照 G-25、G-26、G-28；键名与用途由本表定，包内默认文案由法务定稿，规划/06 Q-F14。「要点或占位措辞」一列里的成句文字是代理起草的占位措辞，供开发与内测包使用，法务定稿后替换；占位稿不得用于提审与公开版本）
 
@@ -967,6 +974,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 入账后部分退款写 CLAWBACK（sub_type=PART_REFUND），不写负向 SETTLE_ADJUST；按 C-16 默认处理，待财务确认。名称「部分退款扣回」的字典 key 为 ledger_type.CLAWBACK.name_part_refund。
 
 列表范围按 BR-FUND-15：用户余额流水只展示 available 子户分录，外加每张打款成功提现单 1 条 WITHDRAW_PAID 汇总条目（名称「提现到账」，含实际到账、代扣个税、手续费明细，不改可提现余额、不带 balance_after）；WITHDRAW_FEE、TAX_WITHHOLD 不单独成行，名称键保留供汇总条目明细使用；本条只维护名称与明细文案。按 C-26 默认处理，待财务确认。
+
+变动后余额（2026-10-03，功能对照 G-75；写法澄清，口径仍按 BR-FUND-15）：除 WITHDRAW_PAID 汇总条目外，用户流水的每一条分录行都显示变动后余额，取接口返回的 balance_after_fen（这条分录记账后的可用余额，BR-FUND-15），文案键 ledger.balance_after「余额 {amount}」（BR-TEXT-14 表 C），按 BR-TEXT-10 格式化，余额为负时带负号；WITHDRAW_PAID 汇总条目不改变可用余额，不显示这一项。邀请分佣类（masked=true）的行照样显示余额，余额本身不含下级信息。功能对照 G-75 的建议是「用户端一律不显示变动后余额」，与 BR-FUND-15 冲突，按规则以 08 为准，只补了接口字段与本段；要改为不显示，须先按 00 §8 修改 BR-FUND-15（决策人财务）。
 
 #### BR-TEXT-20 细则 · 推送短信分享渠道约束
 
