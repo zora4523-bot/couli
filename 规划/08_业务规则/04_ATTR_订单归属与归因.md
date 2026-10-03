@@ -50,7 +50,7 @@
 | BR-ATTR-26 | **归因流水线黑名单步骤**<br>BR-ATTR-01 ③ 对每条入库或更新的子订单检查 blocklist（BR-ID-31）中的两类名单，命中任一即按下方命中处理（① 尾号维度未启用时除外）：<br>① 订单号尾号黑名单（只适用淘宝）：订单父订单号（trade_parent_id，按字符串）的末 6 位字符，与名单中 dimension=order_no_suffix、platform=taobao、status=active 的值逐字符相等。该维度在 CAP-TB-07（09 U-42）验证通过、且配置 attr.blacklist.order_suffix_void_enabled（默认 false）打开前，命中只写 risk_hits（risk_action=manual_review），不改 rebate_status、用户侧无变化；打开后按下方命中处理。<br>② 渠道黑名单（渠道单）：订单 relation_id 与名单中 dimension=channel、同 union_account_id、status=active 的记录相等，且 start_at ≤ attr_at，end_at 为空或 attr_at &lt; end_at（半开区间，绝对时刻比较）。渠道单由后台导入（01 F-ORD-10）；导入时 start_at=导入时刻，end_at 可空（空=持续生效）。<br><br>命中后的处理：rebate_status ∈ {UNATTRIBUTED, ESTIMATED, WAITING} → 按 BR-FUND-01 R6（BR-FUND-07）置 VOID，reason_code=BLACKLIST，写 risk_hits（risk_action=void_commission）（流水线事件名 BLACKLIST_HIT；用户侧说明与申诉入口见 BR-TEXT-05）；rebate_status=CREDITED → 不自动扣回，写风控事件 blacklist_hit_after_credit 并进人工复核（复核确认后按 BR-FUND-01 R8（BLACKLIST_CONFIRMED）扣回）；rebate_status 已为 VOID 或 CLAWED_BACK → 不处理。黑名单只让订单失效，不改 user_id、buy_type。<br><br>检查时点：只在 BR-ATTR-01 流水线运行时（首次入库，或 content_hash 变化）检查。名单新增后，存量订单在其下一次同步更新时被检查；不做全表回扫。名单统一用 BR-ID-31 的 blocklist，不另建表；名单的新增、停用由运营管理员经二次验证操作，写审计；名单记录不物理删除，停用置 status=inactive；名单维护、申诉与命中记录按 BR-ID-31、BR-ID-36。订单侧黑名单只在本条维护，BR-ID-38 已废弃并指向本条（C-18）。 | 待验证 | blocklist（BR-ID-31；dimension 新增 order_no_suffix、channel，字段 platform、union_account_id、value、start_at、end_at、status）；配置 attr.blacklist.order_suffix_void_enabled；risk_hits；订单同步流水线 ③；orders.reason_code=BLACKLIST；风控事件 blacklist_hit_after_credit；后台名单管理与渠道单导入（F-ORD-10、F-ADM-18）；审计日志；09 U-42、CAP-TB-07 |
 | BR-ATTR-27 | **外跳路径与未安装降级**<br>“平台 × 端（iOS、Android、鸿蒙、H5）× 已装/未装”的首选路径（primary）与降级路径（fallbacks）只在本条维护，由服务端在 convert / open 响应中下发 primary、fallbacks，客户端只按顺序执行、不自行拼 scheme；按钮与提示文案进 BR-TEXT-14。默认矩阵见细则（取 09 U-59 与 CAP-TB-11、CAP-JD-11、CAP-PDD-11、CAP-X-04 降级列）。<br><br>路径选择的输入：<br>① 已装状态由客户端上报：convert 与 open 请求体带 installed ∈ {true, false, unknown}。iOS 用 canOpenURL 查 contracts/apps.json 声明的 scheme（在 LSApplicationQueriesSchemes 内）；Android 查 &lt;queries> 中声明的包名；鸿蒙查 querySchemes 声明的 scheme；H5 固定为 unknown；检测失败或未声明时报 unknown。端取请求头 X-Platform，不信任请求体。缺省 installed 按 unknown 处理。<br>② 服务端按 (platform, 端, installed) 查 specs/platform-matrix.csv 下发 primary、fallbacks；installed=unknown 时按“已安装”列下发，并在 fallbacks 末尾追加“未安装”列路径。按钮文案（如“安装淘宝后下单才有返利”）只在 installed=false 时于点击前展示；unknown 时在全部路径失败后展示。<br>③ 放行范围：每条路径在对应 CAP-*-11（鸿蒙另含 CAP-X-04）验证通过前是条件项。非生产环境，以及生产环境的 agent / 内测白名单用户（agent.whitelist_user_ids），按细则“默认矩阵”下发；生产对外用户只下发已验证路径，不得对外承诺“可返利”；某平台某端对外用户没有已验证路径时，该端该平台按下方“全部路径丢归因”处理。某条路径验证丢归因 → 从矩阵删除；某端某平台全部路径丢归因 → 该端隐藏该平台购买按钮并提示（按平台 × 端开关）。只有用户点击时才外跳（BR-ATTR-21）。每次外跳客户端上报 link_jump（路径、是否拉起成功）。 | 待验证 | contracts/apps.json；specs/platform-matrix.csv（键 platform × 端 × installed）；convert / open 请求体 installed（04 §6.3 新增）；请求头 X-Platform；convert / open 响应 primary、fallbacks；03 §4.5 TradeJump（改为按本条执行）；非生产 / 白名单放行默认矩阵；link_jump 上报；BR-TEXT-14 降级文案（取代“口令已复制，打开淘宝即可领券”）；CAP-TB-11、CAP-JD-11、CAP-PDD-11、CAP-X-04；按平台 × 端购买按钮开关 |
 | BR-ATTR-28 | **花卷云侧过滤与 AF-07 双向验证**<br>花卷云侧过滤（运营动作）：在花卷云“忽略的 PID / 不入库的 PID”中登记新 App 的推广位。默认做法（待验证）：淘宝填新 App 的媒体级 mm_a_b，京东、拼多多按推广位逐个填写。以下两点是未实测的外部行为，不得当作事实实现或对外承诺：① 淘宝一条媒体级 mm_a_b 能覆盖该媒体下现有和将来的全部推广位；② 京东、拼多多各最多 100 条（来源：花卷云功能查漏底稿 §3，以花卷云后台实际为准）。在 ① 被 AF-07 证实之前，淘宝每新增一个推广位也必须当天在花卷云逐条补填（与京东、拼多多相同）。W0 必须完成花卷云忽略配置并截图留档。<br><br>新增的推广位先处于 pending：计入 BR-ATTR-02 的归属白名单，但不用于转链。填写 hjy_ignore_confirmed_at 和截图路径之后，才能由 super 经二次验证改为 active；淘宝在 ① 证实后，推广位填媒体级配置对应的那条记录。<br><br>每个平台在打开 convert.enabled.&lt;platform> 之前，必须完成 AF-07 双向验证，时限为该平台 convert.enabled.&lt;platform> 打开前（权限已批的平台按 W1 安排；联盟权限获批晚于 W1 的平台顺延至获批后，按 09 README §7.0 处理）：新 App 链接的真实订单在新 App 入库、在花卷云不入库；优券汇链接的真实订单在新 App 不入库（drops 计数加 1）。核对时刻为付款后 T_check = 该平台 CAP-*-07 实测付款到可查询延迟 P95 + 余量（默认 P95 × 2，且不少于 30 分钟）；CAP-*-07 未出结果前，核对截止取付款后 24 小时，期间任一系统查到该笔即可判定。某平台 AF-07 未通过前，该平台 convert.enabled.&lt;platform> 不得打开。 | 待验证 | union_pids（pending → active 关卡、hjy_ignore_confirmed_at）；花卷云后台配置（运营动作）；05 W0/W1 清单；验收用例 AF-07；配置 convert.enabled.&lt;platform>；CAP-TB-05、CAP-JD-05、CAP-PDD-05（U-10）；CAP-TB-07、CAP-JD-07、CAP-PDD-07（U-18） |
-| BR-ATTR-29 | **第三方页容器内的平台页面与商品链接**<br>第三方页容器（路由 ExternalPage，容器 ExternalWebView，规划/03 §5.1）里不留「看起来能买、订单却不带用户归因」的入口。<br><br>① 配置侧（活动转链上线前）：后台保存任何可配置的跳转目标或外链（首页卡片与弹窗的跳转、公告条、推送与站内信模板的跳转、帮助 / 规则 / 公告文章里的外链）时，目标是 ExternalPage 且 url 主机命中「平台链接形态表」里联盟平台网页域名（category=union_host）的，拒绝保存，提示改用商品详情跳转或等活动转链上线。开关 external_page.union_host_block 默认 on，关闭须 step-up 并写审计。活动转链（按用户身份为联盟活动页生成推广链接，P1）上线后，联盟活动页只经活动转链入口打开，本项届时改写。<br><br>② 运行侧：ExternalWebView 的主框架导航（含容器打开的第一个 URL）在本地命中商品页形态（category=product）时，客户端取消这次导航，把该 URL（去掉 # 之后的部分）交 POST /v1/inputs/parse 识别。识别成功 → 打开原生 ProductDetail，之后与其他入口进入详情页相同：用户点购买才经 open 转链，scene=detail、pid_scene=self_buy（BR-ATTR-08），不新增 scene 取值，来源记在 spm 的页面段 external_page。识别失败（30131、30132、30141 或 5xxxx）→ 留在当前页并提示（文案见 BR-TEXT-14 external_page.product_unresolved），不在容器里继续打开这个商品页。只上传本地命中的 URL，不上传页面内容与 Cookie；不向第三方页面注入脚本、不改写页面。客户端开关 features.external_page.product_intercept 默认 on。<br><br>命中联盟平台域名、但不是商品页形态的页内导航照常加载，不拦截，只记一条埋点（平台与类别，不带完整 URL）；这类页面里下单没有用户归因，随 P1 活动转链解决。<br><br>平台链接形态表只有一份（platform × category × 模式，category ∈ {product, promo, union_host}）：服务端 parsing 与后台保存校验直接读，客户端经 /v1/config.link_patterns 取得、只用于本地预筛，命中后一律以服务端识别结果为准。promo（推广链接形态）一类供非 https 跳转、外跳与桥方法的规则使用，不在本条。 | 待决策 | 后台保存校验（pages、notify-templates、articles 等含跳转目标或外链的资源）；配置 external_page.union_host_block、features.external_page.product_intercept、/v1/config.link_patterns；specs/link-patterns.yaml；ExternalWebView 导航回调（三端）；POST /v1/inputs/parse；ProductDetail；BR-TEXT-14 external_page.product_unresolved；埋点 external_page_union_host；01 §4.2 ExternalPage、F-LINK-11；03 §5.1；07 联盟活动转链行；04 §9 trade.openUnionActivity（P1）；10 AC-S1-70 |
+| BR-ATTR-29 | **第三方页容器内的平台页面与商品链接**<br>第三方页容器（路由 ExternalPage，容器 ExternalWebView，规划/03 §5.1）里不留「看起来能买、订单却不带用户归因」的入口。<br><br>① 配置侧（活动转链上线前）：后台保存任何可配置的跳转目标或外链（首页卡片与弹窗的跳转、公告条、推送与站内信模板的跳转、帮助 / 规则 / 公告文章里的外链）时，目标是 ExternalPage 且 url 主机命中「平台链接形态表」里联盟平台网页域名（category=union_host）的，拒绝保存，提示改用商品详情跳转或等活动转链上线。开关 external_page.union_host_block 默认 on，关闭须 step-up 并写审计。活动转链（按用户身份为联盟活动页生成推广链接，P1）上线后，联盟活动页只经活动转链入口打开，本项届时改写。<br><br>② 运行侧：第三方页容器里的一切文档级导航与新窗口请求都按「平台链接形态表」判定，范围包括：主框架导航（容器打开的第一个 URL、页内点击、重定向的每一跳）、子框架（内嵌框架）加载的文档、页面请求打开的新窗口（window.open、target=_blank）。凡主机命中联盟平台网页域名（category=union_host）的一律不在容器里加载，分两种处理：<br>（a）主框架导航或新窗口请求指向商品页形态（category=product）：客户端取消这次导航，把该 URL（去掉 # 之后的部分）交 POST /v1/inputs/parse 识别。识别成功 → 打开原生 ProductDetail，之后与其他入口进入详情页相同：用户点购买才经 open 转链，scene=detail、pid_scene=self_buy（BR-ATTR-08），不新增 scene 取值，来源记在 spm 的页面段 external_page。识别失败（30131、30132、30141 或 5xxxx）→ 留在当前页并提示（BR-TEXT-14 external_page.product_unresolved）。<br>（b）其余命中的情况：主框架或新窗口去往其他平台页面（会场、店铺、搜索、购物车、结算页等）→ 取消这次导航，留在当前页并提示（BR-TEXT-14 external_page.union_host_blocked），只给【去搜索】一个去向，不提供「继续访问」，不提供把这个地址交给系统浏览器或平台 App 打开的入口；子框架要加载平台页面（不论是不是商品页）→ 这个框架不加载，页面其余部分照常显示，并出一次同样的提示。容器要打开的第一个 URL 就命中时，不进入容器，直接出提示。不命中的新窗口请求在当前容器里打开，仍受本条约束。<br>基本模式下，或客户端开关 features.external_page.product_intercept 关闭时，（a）不做识别，按（b）处理；任何情况下都不得变成直接加载平台页面。某一端做不到可靠拦截子框架的文档请求时，该端必须采用保守降级（细则「拦不到子框架时的保守降级」），不得因为拦不到就放行。只上传本地命中的商品页 URL，不上传页面内容与 Cookie；不向第三方页面注入脚本、不改写页面。每次命中记一条埋点（平台、类别、框架类型与处理结果，不带完整 URL）。<br><br>规则表的取用：客户端依次用 /v1/config.link_patterns 的当前版本、上一次成功拉取的版本、包内内置的规则表快照；内置快照至少含各联盟平台网页的注册域，按整域判定（宁可多拦）。拉取失败不得导致不拦截。<br><br>开关 external_page.union_host_block（默认 on）同时管 ① 与 ②（b）：服务端用它做保存校验，并随 /v1/config.features 下发给客户端；客户端取不到时按 on。只有负责人选定备选 B 并补齐页面提示之后才能关闭。<br><br>平台链接形态表只有一份（platform × category × 模式，category ∈ {product, promo, union_host}）：服务端 parsing 与后台保存校验直接读，客户端取得后只用于本地判定导航去向，商品识别一律以服务端结果为准。promo（推广链接形态）一类供非 https 跳转、外跳与桥方法的规则使用，不在本条。识别覆盖的限制与留待决定的事项见细则「覆盖限制与待定事项」。 | 待决策 | 后台保存校验（pages、notify-templates、articles 等含跳转目标或外链的资源）；配置 external_page.union_host_block（服务端与 /v1/config.features）、features.external_page.product_intercept、/v1/config.link_patterns；specs/link-patterns.yaml 与包内内置快照；ExternalWebView 导航回调（三端）；POST /v1/inputs/parse；ProductDetail；BR-TEXT-14 external_page.product_unresolved、external_page.union_host_blocked；埋点 external_page_union_host、external_page_nav_host（抽样）；配置 external_page.nav_host_sample_bp；01 §4.2 ExternalPage、F-LINK-11；03 §5.1；07 联盟活动转链行；04 §9 trade.openUnionActivity（P1）；10 AC-S1-70；06「功能对照待确认」Q-02 |
 
 ### 4.2 细则
 
@@ -170,6 +170,7 @@
 - 非分享 link（例如别人的卡片链接被做成深链转发）：同样先出卡片，点购买时按 ②③④ 处理（未登录 10001；他人的 link 由服务端为当前用户新登记并返回 new_link_id）。
 - link 不存在或不属于本 App：`GET /v1/links/{link_id}` 与 open 都返回 30144。本页没有卡片数据可供重新转链，显示空态（BR-TEXT-14 link_landing.invalid），不自动重试。
 - 分享中间页（App 外 H5）：`GET /v1/share-pages/{link_id}` 多返回 `open_in_app_url`（即上面的深链；开关 share.open_in_app.enabled 默认 on，关闭时为 null、页面不显示按钮）。微信内不显示这个按钮，改为引导用浏览器打开（BR-TEXT-14 share_page.open_in_browser_hint）；按钮与引导文案不得带返利、红包等利益表述（规划/09 CAP-X-03 记录的微信外链规范）。深链的关联文件只放链接子域，不放分享页域名（规划/02 §3.4）。
+- App 没有被拉起时（未安装，或系统没有接管这条深链），链接子域按 link 类型分流（规划/02 §3.4；2026-10-03 按评审补）：分享 link 回到它的分享中间页，页面改为显示下载入口；非分享 link 到下载引导页，link_id 不存在时同样到下载引导页，对外不区分这两种情况。下载引导页是不取任何 link 数据的静态页：匿名访问者只看到应用名称与图标、下载入口和【已安装，重新打开】按钮，看不到商品、价格、返利，也看不到链接主人的任何信息；该页不调用 `GET /v1/share-pages/{link_id}`（它对非分享 link 返回 30144），也不调用 `GET /v1/links/{link_id}`。安装并登录后重新打开同一条深链，仍按上面的规则进 LinkLanding。
 - 淘宝：App 外仍按 BR-ATTR-10 细则（负责人 2026-10-03 确认）用预先转好的推广链接与淘口令；在 App 内经本入口打开时，open 按本条「2026-10-03 淘宝」说明下发带分享者身份的打开指令。两条路并存。
 
 **例**：A 分享的 L3，C 在浏览器里的分享页点【在 App 中打开】→ C 的 App 进入 LinkLanding，看到商品、券与券后价（没有返利金额）→ C 点购买 → open 用 A 的身份与分享位 → 订单归 A（BR-ATTR-10）。A 自己点同一个按钮 → 页面提示这是自己分享的商品 → 点购买 → 新登记 L5，走自购位（BR-ATTR-11）。
@@ -292,6 +293,12 @@ C-05 已由负责人决定（拍板第二批 §8 ADD-01）：一次绑定永久�
 #### BR-ATTR-10 细则 · 转链者、分享者与购买者
 
 - 淘宝分享实现（负责人 2026-10-03 确认，docs/changes/20261003-淘宝转链改客户端百川.md §6-1）：分享时在 App 内用分享者身份转成我方推广链接并生成淘口令，分享内容带淘口令或推广链接；H5 分享中间页提供「复制淘口令」。取不到推广链接或口令时不生成淘宝分享，不以原链接代替。归属规则本身不变。
+- 中间页的口令按打开环境区分（2026-10-03，按评审补，保守写法；第 2 轮修订）：
+  - 展示：在系统浏览器里打开时显示【复制淘口令】；在微信内置浏览器里打开时不显示这个按钮，只显示「用浏览器打开」引导，到系统浏览器后再出现【复制淘口令】与【在 App 中打开】（BR-ATTR-05 细则「App 内打开链接的入口」；《微信外部链接内容管理规范》2.17，规划/09 CAP-X-03）。
+  - 页面与首次响应不带口令：分享中间页的页面内容，以及 `GET /v1/share-pages/{link_id}` 的响应，在任何环境下都不含口令。口令只在用户点【复制淘口令】时才单独请求：`POST /v1/share-pages/{link_id}/tpwd`，带首次响应下发的短时票据 `tpwd_ticket`。
+  - 票据与限频：票据只在服务端按请求的 UA 判断为非微信环境、且这个 link 有口令时下发，否则为 null（没有 UA 的请求按微信处理）。票据绑定 link_id，600 秒有效，最多换 3 次口令；取口令的请求按 IP 与 link_id 限频（默认同一 IP 对同一 link 每分钟 5 次，配置 share.tpwd_rate_per_min，超限 42901）。取口令的请求若 UA 是微信内置浏览器或没有 UA，或票据无效、过期、用尽 → 一律 20001（data.fields=[ticket]），不返回口令。 口令本身是公开的分享材料：票据与限频只用来降低被微信识别的概率和接口被滥用的程度，不承诺防止对多个分享链接批量取口令（第 3 轮评审）。
+  - 缓存：这两个接口的响应都带 `Cache-Control: no-store`，不经 CDN 缓存；静态页面对所有环境是同一份，本身不含口令，按钮显示与否只取决于有没有票据。
+  - 如实说明：UA 只用来适配展示，是客户端的声明，不能当作内容隔离的保证。伪装成普通浏览器的请求（包括平台的检测程序）能拿到票据并换到口令。这套做法只是降低分享页被识别为含口令的概率，不是保证；分享域名仍可能被微信封禁，一旦封禁所有分享链接在微信内都打不开。风险与取舍并入功能对照 Q-34（规划/06「功能对照待确认」，默认微信内不提供），待负责人确认。负责人确认的「H5 可以复制淘口令」按此在微信外生效。本项只管中间页展示什么，归属规则不变。
 
 - 状态：默认假设
 - 默认值：购买者不获得返利；中间页不引导购买者改用自己的链接。理由：联盟订单只能带一个身份；引导改链会直接拿走分享者的收益，损害分享积极性
@@ -720,31 +727,47 @@ C-05 已由负责人决定（拍板第二批 §8 ADD-01）：一次绑定永久�
 #### BR-ATTR-29 细则 · 第三方页容器内的平台页面与商品链接
 
 - 状态：待决策（功能对照 Q-02：活动转链上线前，首页活动位能不能直接放淘宝、京东、拼多多的官方活动页；本条按默认 A 写，2026-10-03）
-- 默认值：A——活动转链上线前不放，后台保存时拦下指向联盟平台网页域名的外链；用户在第三方页面里点到平台商品页时，转回本 App 的商品详情，点购买才转链。理由：未转链的平台页面里下单，订单不带用户归因（不在本 App 推广位上，或落进未归因池，BR-ATTR-16），用户拿不到返利也无从找回；与「不得做不带跟单参数的直接唤起」（BR-ATTR-21）是同一原则。备选 B：允许放，页面顶部一直显示「在本页直接下单不计返利」（改变对外说法，须负责人选定后另行回写）
+- 默认值：A——活动转链上线前不放，后台保存时拦下指向联盟平台网页域名的外链；第三方页容器里凡是去往联盟平台网页域名的文档级导航与新窗口请求都不加载（含内嵌框架）：点到平台商品页时转回本 App 的商品详情（点购买才转链），其他平台页面一律拦下并提示。理由：未转链的平台页面里下单，订单不带用户归因（不在本 App 推广位上，或落进未归因池，BR-ATTR-16），用户拿不到返利也无从找回；与「不得做不带跟单参数的直接唤起」（BR-ATTR-21）是同一原则。备选 B：允许放，页面顶部一直显示「在本页直接下单不计返利」（改变对外说法，须负责人选定后另行回写）
 - 决策人：负责人
 - 依赖平台能力：—（各平台商品页与推广链接的 URL 形态由 parsing 任务按真实样本整理，不属联盟接口能力；P1 活动转链各平台可用的接口与权限待核，淘宝链接 API 为邀请制，规划/09 2_TB §2.5）
 - 取代：
   - 规划/01 §4.2 ExternalPage 行：「联盟活动页、商家页」（MVP 不再用于联盟平台页面）
   - 规划/03 §5.1 ExternalWebView 行：「联盟活动页、商家页、任何第三方 URL」「任意 https」
 - 来源：docs/research/20261003-功能对照缺口清单.md（G-02）、docs/research/20261003-功能对照待确认问题.md（Q-02）；docs/changes/20261003-功能对照补缺.md；规划/01 §4.2、F-HOME-09；规划/03 §5.1；规划/04 §9 trade.openUnionActivity；规划/07 §3；BR-ATTR-08、BR-ATTR-12、BR-ATTR-16、BR-ATTR-21、BR-PRICE-21
-- 需同步修改的规划文档：规划/01 §4.2 ExternalPage 行与 F-LINK-11；规划/03 §5.1；规划/04 §6.6 后台保存校验、§10.1 link_patterns 与两个开关；规划/07 联盟活动转链行；规划/10 AC-S1-70；BR-TEXT-14 表 C（已同步 2026-10-03）
+- 需同步修改的规划文档：规划/01 §4.2 ExternalPage 行与 F-LINK-11；规划/03 §4.3、§5.1；规划/04 §6.6 后台保存校验、§10.1 link_patterns 与两个开关；规划/06「功能对照待确认」Q-02；规划/07 联盟活动转链行；规划/10 AC-S1-70；BR-TEXT-14 表 C（已同步 2026-10-03）
 
 **平台链接形态表**（`specs/link-patterns.yaml`，由 parsing 任务维护；本条只定类别和各类别的用途，具体域名与路径模式按真实样本整理、随平台变化更新，不写进本条）：
 
 | category | 含义 | 谁用 |
 | --- | --- | --- |
-| `union_host` | 联盟平台的网页域名（按注册域匹配，含子域）。MVP 覆盖淘宝 / 天猫、京东、拼多多；其他平台接入时加进同一张表 | ① 后台保存校验 |
-| `product` | 平台商品详情页的 URL 形态（主机 + 路径模式） | ② ExternalWebView 导航预筛 |
+| `union_host` | 联盟平台的网页域名（按注册域匹配，含子域）。MVP 覆盖淘宝 / 天猫、京东、拼多多；其他平台接入时加进同一张表 | ① 后台保存校验；② 运行侧判定哪些导航不在容器里加载 |
+| `product` | 平台商品详情页的 URL 形态（主机 + 路径模式） | ②（a）哪些被拦下的导航交服务端识别、转回原生商品详情 |
 | `promo` | 推广链接形态（联盟短链、推广落地域名） | 非 https 跳转、外跳与桥方法的规则（另见对应条目），本条不用 |
 
-- 匹配只看主机与路径。客户端预筛用的表随 /v1/config 下发并带版本；拉取失败用上一次成功的版本，都没有时不拦截、照常加载，不得因此阻塞页面。
+- 匹配只看主机与路径。客户端用的规则表随 /v1/config 下发并带版本；取用顺序：当前版本 → 上一次成功拉取的版本 → 包内内置快照（构建时由 `specs/link-patterns.yaml` 生成）。内置快照至少含各联盟平台网页的注册域，只按整域判定：拿不到商品页形态时，商品页也按「其他平台页面」拦下。任何情况下都有规则可用，拉取失败不得导致不拦截。
 - ① 的校验点：保存或发布时由服务端校验，不能只在后台前端校验。被拒时返回 20001，data.fields 指向该跳转字段，后台提示「联盟平台页面要等活动转链上线后才能配置；商品请改用商品详情跳转」（后台文案，不进用户侧字典）。指向这些平台的商品一律配置为 `{route: "ProductDetail", params}`。
-- ② 的细节：同一个 URL 在一次识别完成前不重复请求；识别请求按 `POST /v1/inputs/parse` 的现有规则签名与限流；基本模式不发识别请求、照常加载（基本模式没有设备签名，也不能购买）。识别成功后原生详情页压在容器之上，返回即回到原页面。
+- ② 的细节：判定在导航或加载发起时做，重定向的每一跳、每一个子框架的文档请求、每一个新窗口请求都判，命中即取消，不等页面加载。（a）同一个 URL 在一次识别完成前不重复请求；识别请求按 `POST /v1/inputs/parse` 的现有规则签名与限流；识别成功后原生详情页压在容器之上，返回即回到原页面。基本模式没有设备签名、不能调识别接口，商品页同样按（b）拦下并提示；基本模式禁止的只是本 App 的购买接口，管不到第三方网页里的下单，所以不能放行。
+- ②（b）的提示（BR-TEXT-14 external_page.union_host_blocked）只给【去搜索】；容器的「在浏览器打开」之类入口对被拦下的地址不可用。被拦下后原页面保持不动。
 - ② 不区分这次导航是不是用户点击触发的：转回的是本 App 内的原生页面，不是外跳；外跳仍只在用户点击购买时发生（BR-ATTR-21）。
-- 开关：external_page.union_host_block=off 时不做 ① 的拒绝，只应在负责人选定备选 B 并补齐页面提示之后关闭；features.external_page.product_intercept=off 时 ② 不拦截，页内照常加载。
+- 开关：external_page.union_host_block（默认 on）同时管 ① 的保存拒绝与 ② 的阻断，只应在负责人选定备选 B 并补齐页面提示之后关闭，关闭须 step-up 并写审计；客户端从 /v1/config.features 取它，取不到按 on。features.external_page.product_intercept=off 只是停掉（a）的识别回流，商品页改按（b）拦下，不会变成放行。
 - 例：公告文章里放了一个品牌官网链接 → 可以保存，App 内用 ExternalPage 打开。运营想在首页 banner 放某平台的大促会场链接 → 保存被拒，提示改用商品详情跳转或等活动转链上线。
 - 例：用户在品牌官网页里点了一个指向某平台商品详情页的链接 → 容器取消这次跳转 → 识别成功 → 进入本 App 的商品详情，显示券、券后价与预估返利 → 点【领券购买】经 open 转链外跳，订单归该用户。识别返回 30132 → 提示「该商品暂无法查返利」，仍停在官网页。
+- 例：品牌官网页里的「去旗舰店」按钮指向某平台的店铺页，或页面自动重定向到平台会场 → 容器取消这次导航 → 提示「这个页面暂不支持在这里打开」并给【去搜索】，官网页保持不动。规则表拉取失败、只有包内快照时结果相同。
+- 例：第三方页面用内嵌框架装了一个平台商品页，或用 window.open 打开平台会场 → 框架不加载、新窗口不打开，出同样的提示；用 target=_blank 打开的平台商品链接按（a）交识别，成功进原生商品详情。
+
+**拦不到子框架时的保守降级**（2026-10-03，第 2 轮评审补）：三端各自选用能拦到主框架导航、子框架文档请求与新窗口请求的回调来实现 ②（具体接口接入时按官方文档核对，规划/03 §5.1、§5.6）。某一端做不到可靠拦截子框架的文档请求时，该端按下面的顺序处理，并写进该端的实现说明与验收（第 3 轮评审改：不设外链白名单作为替代，运营事前检查不能代替运行时阻断）：
+
+- 整页拦截：页面发出的任何请求，只要去往联盟平台网页域名，不论资源类型，就停止加载整页并出（b）的提示。
+- 连整页拦截也做不到的端：该端不在 App 内打开第三方页面，ExternalPage 一律提示用户改用系统浏览器。
+
+**覆盖限制与待定事项**（2026-10-03，第 2 轮评审改写；取代原「尚未闭合的边界」）：
+
+- 子框架与新窗口：属于本条 ② 的要求，必须做到，不是待确认项。
+- 规则表之外的域名（识别覆盖的限制，如实登记）：平台新启用的域名、第三方短链的落地域名，在补进规则表之前拦不住。只在命中后才记的埋点发现不了它们，所以另设抽样埋点 external_page_nav_host：对容器内全部文档级导航（主框架、子框架、新窗口）按 external_page.nav_host_sample_bp（默认 1000，即 10%）抽样，只记注册域、框架类型与是否命中规则，不带路径、参数与来源页；parsing 任务定期回看未命中的域名并更新规则表。这项埋点属于浏览相关信息，上线前写进个人信息收集清单（06 Q-F1）。在此之外没有别的办法保证不漏，不把这一项写成已解决。
+- 平台上不含购买入口的页面（帮助、协议、客服页等）：现在全部拦下，符合默认 A。只有将来要加放行白名单时才需要负责人决定（属于对默认 A 的放宽）。
+- 拉起平台 App 的非 https 跳转（scheme 等）不在本条，按第三方页容器的导航规则处理（规划/03 §5.1，功能对照 G-21）；默认 A 下同样不得成为没有归因的购买入口。
 - 容器内的非 https 跳转与下载（2026-10-03，功能对照 G-21）：第三方页面里指向平台 App 的自定义 scheme、`intent://` 等非 https 跳转一律不执行，无论是页面自动跳还是用户点了页面里的「打开 App」。平台 App 只能经 商品详情 → open → 外跳 打开（BR-ATTR-21「只有点击购买时才外跳」、BR-ATTR-27），否则就是不带归因的唤起，与本条要堵的是同一个口子。容器怎样拦截、上报、提示，下载怎样处理，标题栏的【在浏览器打开】，都是容器的实现规则，只在 规划/03 §5.1 维护，本条不复述；提示文案见 BR-TEXT-14 表 C。promo 类别（推广链接形态）这一批仍未使用，留给桥方法与系统浏览器外跳的规则（功能对照 G-45，后续批次）。
+- 品牌官网等非联盟平台页面里的下单与本 App 的返利无关，不拦截、不提示。
 
 ### 4.3 本主题未决问题
 
@@ -757,7 +780,7 @@ C-05 已由负责人决定（拍板第二批 §8 ADD-01）：一次绑定永久�
 7. 各平台付定金阶段的预售订单是否同步、是否返回定金时间（BR-ATTR-25），如果不返回，预售单的归因时点需要改用其他字段
 8. 【已由 C-27 处理：① → BR-FUND-01 R3a；② → R14；VOID 且 user_id 为空的找回/改派 → R3b；R3 取值时点随 C-06】BR-FUND-01 的 rebate_status 迁移表缺两项，需在 BR-FUND-01 补齐（本主题按下述结果书写）：① 未归因订单经后续同步按参数归属（user_basis=param）时 UNATTRIBUTED → ESTIMATED / WAITING（R3 只列了 CLAIM_APPROVED、ADMIN_REASSIGN）；② 已归属订单改归属（前稿 O12）的红冲与重记，需要一个 rebate_status 不变的自迁移，承载同事务内的分录变更。另外 BR-FUND-01 R3 写“比例与用户关系取批准时刻”，与 BR-CALC-12（paid_at）不一致，按 C-06 应随之修订
 9. 【已由 C-27 (f) 处理：复核确认后由有权限者 step-up 确认（一人可完成，拍板第二批 §8 ADD-05），按 BR-FUND-01 R8（BLACKLIST_CONFIRMED）写 CLAWBACK；与 BR-ID-38 的重复维护已由 C-18 处理（并入 BR-ATTR-26）】已入账（rebate_status=CREDITED）订单命中黑名单（BR-ATTR-26）时是否扣回、按什么流水类型扣回，BR-FUND-01 R8 未列“黑名单”事件；在财务决定前只进人工复核
-10. 活动转链上线前，首页活动位能不能直接放淘宝、京东、拼多多的官方活动页（功能对照 Q-02，2026-10-03）：BR-ATTR-29 按默认 A 写（不放、后台保存时拦截、第三方页面里点到的平台商品转回本 App 商品详情），待负责人确认；P1 活动转链各平台可用的接口与权限待核
+10. 活动转链上线前，首页活动位能不能直接放淘宝、京东、拼多多的官方活动页（功能对照 Q-02，2026-10-03）：BR-ATTR-29 按默认 A 写（不放、后台保存时拦截；第三方页容器里去往联盟平台网页域名的导航都不加载，商品页转回本 App 商品详情，其他平台页面拦下并提示），待负责人确认；子框架与新窗口已纳入阻断范围；规则表之外的域名属识别覆盖的限制，靠抽样埋点与样本更新来发现（细则「覆盖限制与待定事项」）；平台的非购买页面现在全部拦下，将来要开白名单才需负责人决定；P1 活动转链各平台可用的接口与权限待核
 11. 分享链接能不能在本 App 内直接打开（功能对照 Q-03，2026-10-03）：BR-ATTR-05 细则按默认 A 写（做 LinkLanding 与分享中间页的【在 App 中打开】），待负责人确认
 
 ---
