@@ -16,6 +16,8 @@
 
 2026-10-03 功能对照补缺第 2 批（同一变更记录的「第 2 批」，功能对照 G-09～G-21）：逐条改动在各条细则里注「2026-10-03，功能对照 G-xx」，各条状态不变。本批不新增 BR-TEXT 条目。同日按评审补文案键 external_page.download_unsupported，改 10004、claim.guide.window、earnings.metric.credited.hint 等行的说明（变更记录 §2.8）；第 2 轮评审后补 pending_confirm.\* 各键，改表 A 的 10001、10004、10005、30304 行；第 3 轮评审后表 A 加 20903，表 C 加放弃上一笔的各键（pending_confirm.withdraw.abandon、pending_confirm.abandon、pending_confirm.abandon.confirm、pending_confirm.abandoned、pending_confirm.abandon_busy、pending_confirm.already_done）与 pending_confirm.cannot_confirm，删去随本机有效期取消的 pending_confirm.expired（变更记录 §2.8 第 3 轮第 1、2 条）。
 
+2026-10-03 功能对照补缺第 4 批（docs/changes/20261003-功能对照补缺.md「第 4 批」，功能对照 G-35～G-65）：逐条改动在各条细则里注「2026-10-03，功能对照 G-xx」，各条状态不变，不新增 BR-TEXT 条目。BR-TEXT-01 细则（不显示累计收益）、BR-TEXT-02 正文影响面与细则（订单分组与查找、订单号显示、查看商品、预售节点与金额）、BR-TEXT-10 细则（金额隐藏）、BR-TEXT-18 细则（累计收益的答复、三个常见问题）、BR-TEXT-20 细则（分享文案不带邀请码）；BR-TEXT-14 表 A 30153 与 50304 两行、表 B 新增 50304.search_disabled、表 C 新增购买加载、百川不可用、授权管理、订单分组与筛选、预售、查看商品、金额隐藏各键；BR-TEXT-22 新增 agent.notice.search_disabled。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -134,7 +136,7 @@
 - 状态：默认假设
 - 默认值：状态粒度与文案沿用 规划/04 §2.3（已定），状态名按 BR-FUND-01 双状态换算，用户可见状态取 BR-FUND-17 派生的 display_status（派生顺序归资金主题，本条只定文案）；订单侧用词随 BR-TEXT-01（C-02 负责人决定：结算前称「预估」，结算后称「已结算」，2026-09-30 取代原方案 A 的「到账→入账」）；share 单用「推广收益」前缀、直推分佣不进订单列表（J7）、按钮合并规则、未知编码「状态更新中」、share 跨商品隐去标题为本条新补默认。
 - 决策人：负责人
-- 依赖平台能力：share 单是否会归入非分享商品（跨商品归因）取决于各平台推广位归因规则（规划/09 订单归属项，待实测）
+- 依赖平台能力：share 单是否会归入非分享商品（跨商品归因）取决于各平台推广位归因规则（规划/09 订单归属项，待实测）；预售单定金阶段的付款金额与定金时间取决于各平台订单字段（CAP-TB-07、CAP-JD-07、CAP-PDD-07，2026-10-03 功能对照 G-63）
 - 取代：
   - PRD修订_后端功能规划 3.2：「按 union_status + rebate_status 组合映射（PAID+ESTIMATED 等）」（双状态按 BR-FUND-01 采纳，字段名以 platform_status + rebate_status 为准；本条改为按派生的 display_status 映射文案）
   - 本条原方案 A 文案（2026-09-30 随 C-02、D11 取代）：PAID hint「确认收货满 {wait_days} 天后入账」；WAITING「已收货，等待入账」+「预计 {expected_credit_date} 入账」；CREDITED「已入账」；CREDITED_PART_CLAWED「已入账（部分扣回 {z}）」；RIGHTS_PENDING hint「售后结束后重新计算入账日」；时间线「预计入账 {expected_credit_date} → 入账 {credited_at}」

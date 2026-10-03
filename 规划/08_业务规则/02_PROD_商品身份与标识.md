@@ -6,6 +6,8 @@
 
 本节规定：“同一商品”的判定、product_key 格式/派生/不可变、raw_item_id 与 item_ref 取用、缓存与去重口径。共 11 条（已确认 6、默认假设 1、待决策 1、待验证 3）。
 
+2026-10-03 功能对照补缺第 4 批（docs/changes/20261003-功能对照补缺.md「第 4 批」；「功能对照 G-xx / Q-xx」是该批缺口清单与待确认题的编号）：BR-PROD-10 正文加一句、细则新增「按平台的搜索开关」（功能对照 G-47），状态不变；本批不新增、不作废 BR-PROD 条目。
+
 ### 2.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -349,7 +351,7 @@ INSERT … ON CONFLICT (app_id, product_key) DO UPDATE SET …
 - 状态：已确认（平台编码、天猫归入 taobao、转链开关部分）；shop_type 取数为待验证子项（2026-09-30 补：订单侧能否识别天猫未实测，登记 15 §15.2）
 - 默认值：字符串编码；天猫归入 taobao；生成 product_key 与转链开关解耦；商品侧 shop_type 由联盟 user_type 映射（0→taobao，1→tmall）；orders.shop_type 在 CAP-TB-07 验证前可空，按 orders.product_key 取 product_refs.shop_type 回填，product_key 为 null 时保持 null
 - 决策人：负责人
-- 依赖平台能力：订单侧天猫标识字段待 规划/09 CAP-TB-07（U-43）；未验证前 orders.shop_type 可空，由商品侧 user_type 回填。商品侧 user_type（0 淘宝、1 天猫）来源为 09 U-43「商品侧 user_type」（可信度中，抓取摘要；09 中见于 CAP-TB-03 物料搜索出参），同样待 S0 录制确认
+- 依赖平台能力：订单侧天猫标识字段待 规划/09 CAP-TB-07（U-43）；未验证前 orders.shop_type 可空，由商品侧 user_type 回填。商品侧 user_type（0 淘宝、1 天猫）来源为 09 U-43「商品侧 user_type」（可信度中，抓取摘要；09 中见于 CAP-TB-03 物料搜索出参），同样待 S0 录制确认；按平台的搜索开关何时打开取决于该平台 CAP-TB-03、CAP-JD-03、CAP-PDD-03 的结论（细则「按平台的搜索开关」，2026-10-03 功能对照 G-47）
 - 取代：
   - PRD修订_后端功能规划_2026-09-29.md 1.5、2.5：「tmall 仅作 sub_platform（改为 shop_type=tmall）」
   - 返利 App PRD（三端原生 + H5 + Agent）.md §6：「平台编码含 taobao_flash（淘宝闪购，原饿了么）（改为 eleme）」
