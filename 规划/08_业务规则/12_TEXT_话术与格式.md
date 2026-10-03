@@ -684,6 +684,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 30303.payee_daily_users | 该收款账号今日暂不能再收款，请明天再试 | 同左 | 不透露其他会员信息 |
 | 30303.self_purchase_required | 需有近期已确认收货的自购订单才能提现 | 同左 | BR-WDR-04（天数与门槛不写入文案，BR-TEXT-13） |
 | 30303.payout_account_change_limit | 本月收款账号变更次数已用完，下月可再变更 | 同左 | BR-WDR-02 |
+| 30303.payout_account_verify_limit | 今日收款账号核验次数已用完，请明天再试 | 同左 | BR-WDR-02 细则「核验次数上限」（2026-10-03 功能对照 G-13）；不透露核验结果，不说明次数 |
 | 30411.mergeable | 该手机号已注册。可将当前{provider_name}登录并入该手机号账号，并入后当前账号停用 | 该手机号已注册，可将当前登录方式并入该手机号账号 | 按钮【并入】【取消】；【并入】凭 data.merge_ticket 调并号接口（BR-ID-06，拍板第二批 OPS-04）；provider_name 取 微信 / Apple / 华为账号 |
 | 50301.maintenance | {platform_name}维护中，请稍后再试 | 该平台维护中，请稍后再试 | 购买按钮置灰「稍后再试」；Toast 显示文案 |
 | 50301.not_launched | {platform_name}返利即将开放 | 该平台返利即将开放 | 卡片购买按钮置灰并显示该文案（即 platform_coming_soon），不弹 Toast |
