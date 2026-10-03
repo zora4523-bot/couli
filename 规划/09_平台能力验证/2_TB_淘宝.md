@@ -99,7 +99,7 @@
 
 **CAP-TB-06 转链**
 
-未知项：各形态链接与口令的有效期，是否有 expire 字段；`item_dto.external_id` 是否出现在订单数据里（若出现，淘宝就有点击级参数，可替代 15 天近似回填）；不传 sku_id 时用户进入默认规格还是商品页，传 sku_id 是否影响跟单；转链响应能否看出所用推广位 / relation_id 生效；转链结果能否跨用户复用（规则禁止，但须确认链接内是否已固化 relation_id）；只传 `item_dto` 按 ID 转链是否需要邀约权限（V-01）；万能转链不可用时 privilege.get 是否可用、是否支持 relation_id。
+未知项：各形态链接与口令的有效期，是否有 expire 字段；`item_dto.external_id` 是否出现在订单数据里（若出现，淘宝就有点击级参数，可替代 15 天近似回填）；不传 sku_id 时用户进入默认规格还是商品页，传 sku_id 是否影响跟单；转链响应能否看出所用推广位 / relation_id 生效；转链结果能否跨用户复用（规则禁止，但须确认链接内是否已固化 relation_id）；只传 `item_dto` 按 ID 转链是否需要邀约权限（V-01）；万能转链不可用时 privilege.get 是否可用、是否支持 relation_id。店铺推广链接（2026-10-03，功能对照 G-55，P1 候选「进店」用）：只靠基础 API（店铺相关接口）能否取得带用户 relation_id 与推广位的店铺推广链接、在店铺里下单是否归因到该用户；有结论前「进店」不做（规划/07 §3）。
 
 步骤：
 1. 代理：写 `tools/probe/taobao/tb06_convert.ts`，对 TB-02 商品各转一次（带 relation_id、带 / 不带 sku_id、带 external_id=link 短码），记录全部形态字段与耗时；对短链与口令每天用 TB-01 接口解析一次直至失效，记录有效天数。
@@ -145,13 +145,14 @@
 
 **CAP-TB-11 唤起与归因保持（对应 05 HM-04）**
 
-未知项：百川鸿蒙版 openByUrl 是否支持 relationId、是否支持备案所需 authorize（06 Q-G11）；scheme 直接打开 s.click / uland 链接时归因是否保留（三端分别）；手淘是否支持 Universal Link / Android App Link / 鸿蒙 App Linking 打开推广链接；未安装淘宝时 H5（内置 WebView 或系统浏览器）下单是否保留归因；微信内打开淘宝短链下单是否保留归因（见 X-03）；百川 SDK 隐私合规要求（首次启动前不得初始化等）对冷启动唤起的影响。
+未知项：百川鸿蒙版 openByUrl 是否支持 relationId、是否支持备案所需 authorize（06 Q-G11）；scheme 直接打开 s.click / uland 链接时归因是否保留（三端分别）；手淘是否支持 Universal Link / Android App Link / 鸿蒙 App Linking 打开推广链接；未安装淘宝时 H5（内置 WebView 或系统浏览器）下单是否保留归因；微信内打开淘宝短链下单是否保留归因（见 X-03）；百川 SDK 隐私合规要求（首次启动前不得初始化等）对冷启动唤起的影响；回跳（2026-10-03，功能对照 G-50）：设置本 App 自己的回跳 scheme 与只依赖 SDK 自带回调两种情况下，在淘宝里点返回能否回到本 App 并显示待跟单卡；百川初始化失败的触发条件、返回的错误码，以及失败后重试一次能否恢复（BR-ATTR-27 淘宝行说明）。
 
 步骤：
 1. 人：W0 申请新 App 的百川 AppKey（iOS / Android / 鸿蒙），提交鸿蒙加白（V-03）。
 2. 代理：在三端最小探测 App（V-37，不依赖正式客户端）实现 4 种打开方式：百川 openByUrl(s.click)、scheme、通用链接 / App Link / App Linking、H5；`tools/probe/taobao/tb11_jump.ts` 为每种方式生成带独立 adzone 的链接（或同 adzone 不同商品）以便区分。
 3. 人：每端每种方式先各下 1 笔小额真实订单（已安装 / 未安装淘宝各一轮），定出首选路径后再补到首选 ≥3 单（受 §0.2 硬规则 5 限额约束），记录是否拉起、是否落到正确商品页、订单是否带新 App adzone 与 relation_id。
 4. 代理：客户端 link_jump 上报与订单录制存 `fixtures/union-recordings/taobao/cap-tb-11/`。
+5. （2026-10-03，功能对照 G-50）人：三端在探测 App 上各做一轮回跳检查——设置回跳 scheme 与不设置各一次，拉起淘宝后点返回，记录是否回到本 App、是否显示待跟单卡；在断网或移除 SDK 配置等条件下制造一次初始化失败，记录错误码与重试结果。结论回填本条与 BR-ATTR-27 淘宝行，实测前「能回到 App」不写成能力。
 
 **CAP-TB-12 配额与凭据**
 

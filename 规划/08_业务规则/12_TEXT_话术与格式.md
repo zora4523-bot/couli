@@ -18,6 +18,8 @@
 
 2026-10-03 功能对照补缺第 3 批（同一变更记录的「第 3 批」，功能对照 G-22～G-34；同日按评审与编排会话裁定：表 D 加 perm.btn.continue、写明用途键按权限类型映射、权限点标为代理补全的默认假设，BR-TEXT-13 细则补真实数据播报默认不做，变更记录 3.9）：BR-TEXT-13 新增榜单类词「高佣」「收益榜」（G-34，按功能对照 Q-27 默认 A）并补首页公告条不做收益播报的说明（G-33）；BR-TEXT-14 表 A 新增 10405（G-24），表 C 新增未安装微信时的三个键与两个按钮键（G-31）、更新提示的两个按钮键（G-24），新增表 D「隐私与权限文案」（G-25、G-26、G-28，文案由法务定稿）；BR-TEXT-17 细则新增「联盟物料频道」（G-34）。各条状态不变，本批不新增 BR-TEXT 条目。第 2 轮评审后（变更记录 3.10）：表 A 的 10405 行补强更页的次要入口与受限会话，表 C 加强更页的三个次要入口键。第 3 轮评审后（变更记录 3.11）：表 B 加 10403.h5_read_only、10405.no_account；表 A 的 10405 行补 data.min_supported_version 为 null 时的分支。
 
+2026-10-03 功能对照补缺第 4 批（docs/changes/20261003-功能对照补缺.md「第 4 批」，功能对照 G-35～G-65）：逐条改动在各条细则里注「2026-10-03，功能对照 G-xx」，各条状态不变，不新增 BR-TEXT 条目。BR-TEXT-01 细则（不显示累计收益）、BR-TEXT-02 正文影响面与细则（订单分组与查找、订单号显示、查看商品、预售节点与金额）、BR-TEXT-10 细则（金额隐藏）、BR-TEXT-18 细则（累计收益的答复、三个常见问题）、BR-TEXT-20 细则（分享文案不带邀请码）；BR-TEXT-14 表 A 30153 与 50304 两行、表 B 新增 50304.search_disabled、表 C 新增购买加载、百川不可用、授权管理、订单分组与筛选、预售、查看商品、金额隐藏各键；BR-TEXT-22 新增 agent.notice.search_disabled。 第 1 轮评审后（同一变更记录 4.8，按编排会话裁定）：BR-TEXT-02 细则新增「订单的检索范围与分享单的投影」（订单列表、订单详情与 AI 助手共用的唯一维护处），「订单列表的状态分组与查找」的搜索一项与「share 单」一段改为引用；BR-TEXT-14 表 C 加 order_list.other_product。状态不变，不新增条目。 第 2 轮评审后（同一变更记录 4.9）：BR-TEXT-02 细则「订单的检索范围与分享单的投影」的找回一项由「不在本段范围」改为引用 BR-ATTR-17 细则「本人的分享单按不存在处理」。状态不变，不新增条目。 第 3 轮评审后（同一变更记录 4.10）：BR-TEXT-02 细则找回一项改为所有分享单都按不存在处理（引用 BR-ATTR-17 细则「分享单按不存在处理」）；BR-TEXT-14 表 A 30201 的文案改为不区分原因的「没有找到可以找回的订单，…」。状态不变，不新增条目。
+
 2026-10-03 资金规则对齐（docs/changes/20261003-资金规则对齐.md，负责人批准）：BR-TEXT-02 映射表的阅读列随 BR-FUND-17 第 3 行与「查看者本人份额暂缓」同步；BR-TEXT-02、BR-TEXT-19 的 C-16 改为已确认（决-04）。文案与条目状态不变。
 
 2026-10-03 功能对照补缺第 5 批（同一变更记录的「第 5 批」，功能对照 G-66～G-96）：BR-TEXT-13 正文与细则写明匹配前的归一化（G-95）；BR-TEXT-12 细则新增「资金术语键」（G-76，单设后台权限点是代理补全的默认，待负责人确认）；BR-TEXT-01 细则补提现关闭时的钱包文案与资金术语键指针（G-73、G-76）；BR-TEXT-18 细则补提现对账的答复（G-70）；BR-TEXT-19 细则补「变动后余额」（G-75，按 BR-FUND-15，没有采用清单「一律不显示」的建议）；BR-TEXT-14 表 C 新增提现详情、提现页、分享面板、第三方页容器加载失败、设置页清除缓存、关于页诊断信息、余额流水变动后余额的文案键，表 D 新增隐私中心系统权限的文案键。各条状态不变，没有新增条目与错误码。同日按第 1 轮评审修改（变更记录 5.9）：BR-TEXT-12 细则「资金术语键」改为认定规则加完整清单（补 `tag.rebate`、返利位与无返利文案、资金类通知模板，机器可读清单 `specs/fund-term-keys.yaml`）；BR-TEXT-09 细则加改措辞的权限一句；BR-TEXT-13 正文与「归一化」加去掉默认可忽略字符一步与 U+034F、U+FE0F 的向量，新增「首页公告条的关闭与内容版本」；BR-TEXT-14 表 C 新增 withdraw.estimate.calculating。各条状态不变，没有新增条目与错误码。 第 2 轮评审后（变更记录 5.10）：BR-TEXT-12 细则「资金术语键」补齐无返利的错误文案、找回与风控提示、淘礼金与授权说明、账号类资金通知与还没有取键名的资金文案，`specs/fund-term-keys.yaml` 改为「资金术语」「普通」两段、每个键与模板都要归类，写入口共用一个键级检查；BR-TEXT-23、BR-TEXT-14 各加一句指针；BR-TEXT-13 正文与「归一化」再去组合附加符（Mn、Me），补 U+0301、U+20DD、U+0332 的向量；BR-TEXT-14 表 C 新增 app_update.unavailable、app_update.official_site、app_update.retry。各条状态不变，没有新增条目与错误码。
@@ -27,7 +29,7 @@
 | 编号 | 规则 | 状态 | 影响面 |
 | --- | --- | --- | --- |
 | BR-TEXT-01 | **收益术语唯一含义**<br>用户可见文案与客服话术中，下列词只能按本表含义使用（后台与报表口径编码见 BR-TEXT-21）。**结算前一律称「预估」**：「预估返 / 预估返利」指自购返利从商品卡下单前估算、订单付款直到联盟结算并经后台核对入账前的全部阶段（订单 rebate_status ∈ {ESTIMATED, WAITING}，BR-FUND-01；含已收货等待联盟结算、售后中、核对中）；「预估推广收益」指分享单与邀请分佣（直推、间推）同阶段金额；「预估收益」是钱包中全部来源（自购、分享、邀请）结算前的合计（用户只有一个余额，拍板第二批 §8 ADD-06）；三者均不可提现；用户侧不再单列「待入账」金额或状态，不使用「待结算」「结算中」。**联盟结算并经后台核对、按月结批次计入可提现余额后（BR-FUND-04）才用确定表达**：订单侧「已结算」（rebate_status=CREDITED，含部分扣回、已补差），已结算金额自购称「实返」、分享与邀请分佣称「推广收益」，都计入同一可提现余额。「可提现」（钱包标题「可提现余额」）等于 withdrawable_fen = max(available_fen, 0)，available_fen &lt; 0 时负数部分显示为「待抵扣」（negative_fen，BR-FUND-18）；「冻结中」等于 frozen_fen（审核中与打款中提现单的金额）；「已到账」只指提现 withdrawal_status ∈ {PAID_API, PAID_MANUAL}；「已提现」等于已到账提现单申请金额 amount_fen 的累计。「入账」只作动作词（结算金额计入可提现余额，如「售后处理中，入账暂停」、流水「自购返利入账」），不作订单状态名。用户可见文案不得出现「返利到账」「佣金」（含推广佣金、比价佣金、确认收货佣金、结算佣金）。口径与花卷云「预估佣金 / 结算佣金；结算状态 未结 / 已结 / 已失效」一致（对照见细则）。按负责人决定（C-02，变更记录 §3），取代原方案 A。 | 已确认 | dict_items（order_status.&lt;display_status>、withdrawal_status、ledger_type 文案）；GET /v1/wallet/summary 字段按 BR-FUND-18（withdrawable_fen、negative_fen、frozen_fen、estimated_total_fen（预估合计）、estimated_fen、pending_credit_fen、pending_credit_paused_fen、next_credit_period（预计结算月份）、credit_overdue、withdrawn_fen、risk_paused_reason；订单预计结算月份 expected_credit_period 见 BR-FUND-04 ⑪），本条只定文案；Wallet、OrderList、OrderDetail、ProductDetail 页面；推送模板 ORDER_TRACKED / CREDITED；客服话术库；docs/glossary.md；Agent explain_order 话术；specs/banned-words.yaml（BR-TEXT-13：「预估收益」「已结算」移出用户侧禁用词） |
-| BR-TEXT-02 | **订单状态用户文案映射**<br>订单列表与详情的状态文案必须由服务端返回的 display_status（子订单粒度；由 BR-FUND-01 的 platform_status、rebate_status 与 hold、rights_pending、金额按 BR-FUND-17 派生表从上到下取第一个匹配项，本条不另定派生顺序）按下表一一映射，文案取自 /v1/dict 的 order_status.&lt;display_status>；rebate_status=UNATTRIBUTED（未归因池，user_id 为空）的订单不得出现在任何用户接口；buy_type=share 的订单只出现在分享者的 scope=share 列表，金额前缀用「预估推广收益 / 推广收益」；直推分佣（REFERRAL）订单不得以订单形式出现在邀请人的任何列表或详情，只在余额流水按 BR-TEXT-19 显示；详情页按钮 = 状态固有按钮 + reason.action 按钮（BR-TEXT-05），最多 2 个，有 reason.action 时它为主按钮；未知状态编码必须显示 order_status.UNKNOWN 文案，不得显示编码原文。 | 默认假设 | dict_items.order_status（按 display_status 编码）；GET /v1/orders、GET /v1/orders/{order_id}（display_status、reason、reason_action、est_rebate_fen、actual_fen、clawback_fen、expected_credit_period、credit_overdue（BR-FUND-04 ⑪，取代 expected_credit_date）、timeline、is_other_product）；Agent order_status 卡片；OrderList、OrderDetail 页面；验收用例 F-ORD-07（每状态 fixture + 三端截图；share 跨商品；按钮组合）；客服话术库 |
+| BR-TEXT-02 | **订单状态用户文案映射**<br>订单列表与详情的状态文案必须由服务端返回的 display_status（子订单粒度；由 BR-FUND-01 的 platform_status、rebate_status 与 hold、rights_pending、金额按 BR-FUND-17 派生表从上到下取第一个匹配项，本条不另定派生顺序）按下表一一映射，文案取自 /v1/dict 的 order_status.&lt;display_status>；rebate_status=UNATTRIBUTED（未归因池，user_id 为空）的订单不得出现在任何用户接口；buy_type=share 的订单只出现在分享者的 scope=share 列表，金额前缀用「预估推广收益 / 推广收益」；直推分佣（REFERRAL）订单不得以订单形式出现在邀请人的任何列表或详情，只在余额流水按 BR-TEXT-19 显示；详情页按钮 = 状态固有按钮 + reason.action 按钮（BR-TEXT-05），最多 2 个，有 reason.action 时它为主按钮；未知状态编码必须显示 order_status.UNKNOWN 文案，不得显示编码原文。 | 默认假设 | dict_items.order_status（按 display_status 编码）；GET /v1/orders、GET /v1/orders/{order_id}（display_status、reason、reason_action、est_rebate_fen、actual_fen、clawback_fen、expected_credit_period、credit_overdue（BR-FUND-04 ⑪，取代 expected_credit_date）、timeline、is_other_product）；Agent order_status 卡片；OrderList、OrderDetail 页面；验收用例 F-ORD-07（每状态 fixture + 三端截图；share 跨商品；按钮组合）；客服话术库；订单列表的状态分组与查找参数（status_group、platform、q、paid_month）、订单号显示格式（order_no / masked_order_no）、详情的 product_key 与「查看商品」、预售单的定金节点与金额（细则，2026-10-03 功能对照 G-60～G-63） |
 | BR-TEXT-03 | **订单差额与异常提示**<br>订单金额与首次预估不同、部分退款、维权中、入账延迟、比价风险时，必须在状态文案下按本表叠加提示；差额 = 当前金额 − initial_est_fen（该用户角色在分佣快照生成时（BR-CALC-10）的金额，单位分；首次预估为区间时取上限 rebate_max_fen；找回单以批准时生成的快照为准，BR-FUND-01 R3）；差额行只在 rebate_status=CREDITED（display_status ∈ {CREDITED, CREDITED_PART_CLAWED}）且 \|差额\| ≥ 1 分时显示；rebate_status ∈ {ESTIMATED, WAITING} 只在部分退款时显示「预估返 ¥{initial} → ¥{current}」，其他预估波动不显示差额；维权中、hold、入账延迟由 display_status（RIGHTS_PENDING、REVIEWING、CREDITING）表达，提示文案按本条；差额原因取该子订单最近一次写入的 diff 类 reason_code，无记录时用 SETTLE_DIFF；同时满足多项时按本条优先级；风控 hold 原因不得向用户透出。 | 默认假设 | orders / commission_splits（initial_est_fen、diff_reason_code、refunded_quantity_at_credit）；GET /v1/orders/{order_id}（diff_fen、diff_reason、display_status）；OrderDetail 页面；客服话术库；验收用例：部分退款（入账前 / 后）、比价区间、结算补差、维权中、hold 超期、维权与超期同时满足 fixture |
 | BR-TEXT-04 | **预计结算月份口径**<br>入账跟随联盟月结（月结账单日按联盟返回的结算数据生成月结账单、后台确认后批量结算入可提现余额，BR-FUND-04），用户侧不再按「收货日 + wait_days」给出预计入账日期，不得承诺具体入账日期或天数。已收货订单（display_status=WAITING）展示**预计结算月份**「预计 {credit_period} 结算」，不显示确认收货月（例：10 月确认收货、联盟一般次月结算 → 「预计 11 月结算」）：credit_period 取服务端返回的 expected_credit_period（YYYY-MM，预计结算月份；取值、何时为 null 与逾期判断 credit_overdue 只由 BR-FUND-04 ⑪ 维护，本条不写算法），客户端只格式化（同年「11 月」，跨年「2027 年 1 月」）、不得推算；字段为 null 时不显示月份；RIGHTS_PENDING、REVIEWING、CREDITING 不展示月份；商品详情与 display_status=PAID 的订单只显示「确认收货后随联盟月度结算入账」，不得写具体天数或日期（不得出现「15 天」「满 N 天」），入账开关 credit.enabled.&lt;platform>=off 时不展示（BR-FUND-04）；平台未返回可用收货时间的订单不进 WAITING（BR-FUND-02，G-14）。 | 已确认 | GET /v1/orders/{order_id} expected_credit_period、credit_overdue（BR-FUND-04 ⑪，取代 expected_credit_date 的用户侧展示）；Agent order_status 卡片；GET /v1/wallet/summary 预计结算月份（BR-FUND-18）；ProductDetail「确认收货后随联盟月度结算入账」文案（texts，无变量）；验收用例：显示的是结算月份而非收货月（10 月收货 →「预计 11 月结算」）、各 display_status 是否展示月份、字段为 null 时不显示、跨年格式、入账开关关闭时不展示入账时点文案、文案不出现天数与日期（周期取法与逾期用例归 BR-FUND-04）；客服话术 |
 | BR-TEXT-05 | **原因码字典与文案**<br>订单 reason 只能取下表编码（规划/ 命名为准），每个编码必须在 dict_items 配置 kind（void / diff / claim）、title、desc、claimable、action；rebate_status ∈ {VOID, CLAWED_BACK}（display_status INVALID、CLAWED_BACK）的订单只能带 void 类原因，金额变化必须带 diff 类原因；claim 类编码（NOT_TRACKED、RELATION_INVALID）不得写入已归因订单的 orders.reason，只用于 explain_order、找回页查询结果；action 取值枚举 CLAIM（找回页）、REAUTH（AuthSheet）、CONTACT_CS（客服会话页）、APPEAL（申诉页），以数组存储，当前每个编码最多 1 个；reason_sub 存在时用 order_reason_sub.&lt;SUB>.desc 替换 desc，显示为「{title}：{sub.desc}」；其他文档的旧编码在同步 / 导入时映射到本表，不得新增同义编码；用户可见文案不得出现「佣金」；每个编码必须有 fixture 与截图。 | 默认假设 | contracts/enums/order_reason.json、contracts/enums/reason_action.json；dict_items.order_reason（kind、title、desc、claimable、action）、dict_items.order_reason_sub；orders.reason、orders.reason_sub；维权导入 rights-imports 映射；OrderDetail、Agent explain_order、找回页；客服话术库；验收用例：每编码 fixture + 截图；claim 类编码不出现在已归因订单 |
@@ -108,6 +110,7 @@
 - 预估：显示「预估收益 ¥{estimated_total_fen}」；预估合计 estimated_total_fen = 该用户全部受益角色结算前份额（BR-FUND-18：estimated_fen + pending_credit_fen，不含定金阶段与未归因订单），由服务端返回合计值，客户端不相加；注「按联盟最新预估计算，以联盟结算金额为准」。
 - 预估下附进度行（只作说明，不是独立状态）：「其中已收货 ¥{pending_credit_fen}」；服务端返回 next_credit_period 时附「预计 {月份} 结算」（取值按 BR-FUND-18 与 BR-FUND-04 ⑪），credit_overdue=true 时附「入账核对中」，未返回时不显示月份；pending_credit_paused_fen > 0 时另附「其中 ¥{pending_credit_paused_fen} 暂缓入账」，不说明是维权还是 hold。保留「其中已收货」分项的理由：告诉用户哪部分会进入下一次联盟月结，金额名仍为「预估」。
 - 已提现 ¥{withdrawn_fen}（BR-FUND-18：Σ 该用户 PAID_API / PAID_MANUAL 提现单 amount_fen）；提现记录中逐单展示「实际到账 {net}」。
+- 不显示累计收益（2026-10-03，功能对照 G-37；按功能对照 Q-11 默认 B，负责人 2026-10-03 未回答、按现状，`docs/changes/20261003-拍板第三批.md` §4）：钱包不显示「累计已到账收益」「累计收益」「历史总收益」一类的累计总额，也不为此加字段（BR-FUND-18 不变）。用户问到时客服按 BR-TEXT-18 细则的统一答复回答。负责人改选显示时，口径要另写进 08 资金主题（只计返利、分享、邀请分佣的入账以及售后扣回与结算补差，不计坏账核销；人工调账计不计由负责人定），再加字段与词条，不能直接拿后台月末核对的累计入账净额（BR-FUND-23 的 X1，含坏账核销）当用户收益。
 
 例：用户 A 有 3 笔自购订单：(PAID, ESTIMATED) 预估 ¥2.5、(RECEIVED, WAITING) 预估 ¥4（淘宝订单 10 月确认收货，联盟尚未返回结算时间，expected_credit_period=2026-11）、(RECEIVED, CREDITED) ¥6；无提现。接口返回 withdrawable_fen=600、estimated_total_fen=650、pending_credit_fen=400、estimated_fen=250、next_credit_period=2026-11、withdrawn_fen=0 → 钱包显示「可提现余额 ¥6｜预估收益 ¥6.5（其中已收货 ¥4，预计 11 月结算）｜已提现 ¥0」。用户问「返利到账了吗」，客服回答：「¥6 已结算，可提现；另有预估收益 ¥6.5，其中已收货的 ¥4 预计 11 月结算，¥2.5 待确认收货」。
 
@@ -139,7 +142,7 @@
 - 状态：默认假设
 - 默认值：状态粒度与文案沿用 规划/04 §2.3（已定），状态名按 BR-FUND-01 双状态换算，用户可见状态取 BR-FUND-17 派生的 display_status（派生顺序归资金主题，本条只定文案）；订单侧用词随 BR-TEXT-01（C-02 负责人决定：结算前称「预估」，结算后称「已结算」，2026-09-30 取代原方案 A 的「到账→入账」）；share 单用「推广收益」前缀、直推分佣不进订单列表（J7）、按钮合并规则、未知编码「状态更新中」、share 跨商品隐去标题为本条新补默认。
 - 决策人：负责人
-- 依赖平台能力：share 单是否会归入非分享商品（跨商品归因）取决于各平台推广位归因规则（规划/09 订单归属项，待实测）
+- 依赖平台能力：share 单是否会归入非分享商品（跨商品归因）取决于各平台推广位归因规则（规划/09 订单归属项，待实测）；预售单定金阶段的付款金额与定金时间取决于各平台订单字段（CAP-TB-07、CAP-JD-07、CAP-PDD-07，2026-10-03 功能对照 G-63）
 - 取代：
   - PRD修订_后端功能规划 3.2：「按 union_status + rebate_status 组合映射（PAID+ESTIMATED 等）」（双状态按 BR-FUND-01 采纳，字段名以 platform_status + rebate_status 为准；本条改为按派生的 display_status 映射文案）
   - 本条原方案 A 文案（2026-09-30 随 C-02、D11 取代）：PAID hint「确认收货满 {wait_days} 天后入账」；WAITING「已收货，等待入账」+「预计 {expected_credit_date} 入账」；CREDITED「已入账」；CREDITED_PART_CLAWED「已入账（部分扣回 {z}）」；RIGHTS_PENDING hint「售后结束后重新计算入账日」；时间线「预计入账 {expected_credit_date} → 入账 {credited_at}」
@@ -174,9 +177,46 @@
 - 实返 y = actual_fen = credited_fen + Σ 该子订单本账户 SETTLE_ADJUST 流水金额（带符号）− Σ 该子订单本账户 CLAWBACK 流水金额绝对值（display_status ∈ {CREDITED, CREDITED_PART_CLAWED} 时展示）。
 - 扣回 z = clawback_fen = Σ 该子订单本账户 CLAWBACK 流水金额绝对值（含 sub_type=PART_REFUND 的部分扣回，BR-FUND-08）。
 
-**share 单（分享者视角）**：状态文案同上；金额行「预估推广收益 ¥x」/「推广收益 ¥y」；不展示买家信息。子订单 product_key 与分享时 link_id 登记的商品不一致时，标题显示「好友购买的其他商品」，不展示标题、图片、SKU（平台是否存在跨商品归因见 规划/09，待实测）。
+**share 单（分享者视角）**：状态文案同上；金额行「预估推广收益 ¥x」/「推广收益 ¥y」；不展示买家信息。子订单 product_key 与分享时 link_id 登记的商品不一致时，标题显示「好友购买的其他商品」，不展示标题、图片、SKU（服务端不下发这些字段，见下文「订单的检索范围与分享单的投影」；平台是否存在跨商品归因见 规划/09，待实测）。
 
-**时间线**（详情页）：付款 {paid_at} → 收货 {received_at} → 预计 {credit_period} 结算（BR-TEXT-04，credit_period 为预计结算月份；expected_credit_period 为 null 时该节点只显示「联盟结算」）→ 已结算 {credited_at}；display_status 为 INVALID / CLAWED_BACK 时追加「失效 / 扣回 {time}」节点，CREDITED_PART_CLAWED 追加「部分扣回 {time}」节点；未发生的节点置灰；时间格式见 BR-TEXT-11。
+**时间线**（详情页）：付款 {paid_at} → 收货 {received_at} → 预计 {credit_period} 结算（BR-TEXT-04，credit_period 为预计结算月份；expected_credit_period 为 null 时该节点只显示「联盟结算」）→ 已结算 {credited_at}；display_status 为 INVALID / CLAWED_BACK 时追加「失效 / 扣回 {time}」节点，CREDITED_PART_CLAWED 追加「部分扣回 {time}」节点；未发生的节点置灰；时间格式见 BR-TEXT-11。预售单（2026-10-03，功能对照 G-63）在最前面加「付定金 {deposit_paid_at}」节点，原「付款」节点改称「付尾款 {paid_at}」，其余不变；deposit_paid_at 取平台返回的定金支付时间（与 BR-ATTR-25 预售单 attr_at 同一来源），平台不返回时该节点只显示「付定金」、不带时间。非预售单没有这个节点。返利金额仍按上表 DEPOSIT_PAID 行不显示。
+
+**预售单的付款金额**（2026-10-03，功能对照 G-63；默认写法，定稿等 CAP-TB-07、CAP-JD-07、CAP-PDD-07 的预售序列实测）：display_status=DEPOSIT_PAID 时，订单接口的实付金额字段 pay_amount_fen 取已付定金金额，列表与详情显示「已付定金 {amount}」（键 `order_list.deposit_amount`）；尾款付清后取实付总额，按普通订单显示。平台不返回定金金额时为 null，不显示金额，不把预售总价当成已付。实测发现平台在定金阶段返回的是别的口径时，按实测改本段与 规划/04 §6.4 的说明。
+
+**订单号的显示**（2026-10-03，功能对照 G-61；自购单完整、分享单脱敏按负责人 2026-10-03 已定，`docs/changes/20261003-拍板第三批.md` §2，本段只补格式）：
+- 本人自购单（scope=self）：显示完整订单号 `order_no`，可复制；取用户在平台订单页看到的那个编号（有父单号的平台取父单号，否则取子单号），各平台的取值字段登记在 `specs/union/<platform>.md`。
+- 分享单（scope=share）：只显示 `masked_order_no`，不可复制（不给复制按钮，长按也不出复制菜单）。脱敏在服务端完成，分享单的接口响应里不出现完整单号。格式按字符计（含「-」）：长度 ≥ 10 时保留前 4 位与末 2 位，中间不论多少位都换成 4 个「*」；长度 < 10 时只保留末 2 位，前面换成 4 个「*」。例：`3712345678901234567` → `3712****67`；`251003-123456789012345` → `2510****45`；`12345678` → `****78`。
+- 为什么末尾只留 2 位：部分平台的订单号尾号可能对应买家账号（BR-ATTR-26 的淘宝订单号尾号维度，待 CAP-TB-07、09 U-42 验证），分享单的下单人是别人，多露尾号可能让分享者把几笔订单关联到同一个买家；保留前 4 位与末 2 位已够分享者与客服对照是哪一笔。
+- 发给上级的通知与流水不含任何订单号（BR-TEXT-09、BR-TEXT-19）；任何接口都不向邀请人返回好友的订单号。
+
+**订单列表的状态分组与查找**（2026-10-03，功能对照 G-60）：订单列表（自购、分享两个子 Tab 各自）顶部有状态分组 Tab，默认「全部」；另有平台筛选、按月份筛选与搜索框。分组由服务端按 display_status 归组，客户端只传分组名：
+
+| status_group | 分组名（字典 order_status_group.&lt;group>） | 包含的 display_status |
+| --- | --- | --- |
+| all | 全部 | 全部，含未知编码 |
+| estimating | 预估中 | DEPOSIT_PAID、PAID、WAITING、CREDITING、RIGHTS_PENDING、REVIEWING |
+| credited | 已结算 | CREDITED、CREDITED_PART_CLAWED |
+| no_rebate | 无返利 | NO_REBATE、INVALID、CLAWED_BACK |
+
+- 分组名不用「待结算」「结算中」（BR-TEXT-13），「已结算」与 BR-TEXT-01 同义；「无返利」指这笔订单没有或不再有返利（含结算前失效与结算后扣回，各单的状态文案仍按上表映射）。未知编码只出现在「全部」。
+- 平台筛选：单选一个平台，只作用于当前子 Tab。
+- 按月份：按付款时间（+08:00）的年月筛选；只能选可查范围以内的月份（BR-ID-30 细则「订单类记录」的 earliest_visible_date）。
+- 搜索：自购单里，输入内容与某笔订单的父单号或子单号完全相同时按单号精确命中，否则按标题包含匹配；分享单只按标题匹配，不按单号匹配。检索范围、单号与标题怎样匹配、分享单返回哪些字段，按下一段「订单的检索范围与分享单的投影」，AI 助手查订单用同一套。
+- 筛选条件可以叠加；切换子 Tab 时分组回到「全部」，其余条件清空。
+
+**订单的检索范围与分享单的投影**（2026-10-03 第 4 批第 1 轮评审后补，按编排会话裁定；原来只写在订单列表的搜索里，AI 助手的订单类工具仍能按单号命中分享单、按真实标题匹配好友买的其他商品，等于绕过了上一段。本段是唯一维护处：订单列表的搜索与筛选、订单详情、AI 助手的 `list_my_orders` 与 `explain_order`（BR-AI-07），以及以后新增的任何订单检索入口，都按本段；BR-ATTR-10、BR-AI-07 只引用）：
+- 范围：只在当前账号名下的订单里查，即 `GET /v1/orders` 的 scope=self（本人自购）与 scope=share（本人分享）可见的子订单；不含未归因池、直推与间推分佣订单和其他用户的订单；可查范围按 BR-ID-30 细则「订单类记录」。
+- 按单号：只匹配本人自购单，输入与父单号或子单号完全相同才算命中。分享单不参与任何按单号的匹配：完整单号、脱敏号、单号片段都不命中。
+- 按标题：自购单按商品标题做不区分大小写的包含匹配；分享单只按分享者看得到的标题匹配，实购商品与分享商品不一致的子订单（is_other_product=true）不参与标题匹配。
+- 返回的投影：分享单在任何出口（列表、详情、AI 助手的 order_status 卡片与工具返回给模型的内容）都只给分享者可见的字段。订单号只有 masked_order_no（格式见上文「订单号的显示」），不出现完整单号；is_other_product=true 的子订单不下发标题、商品图、SKU 与 product_key（title、image_url 为 null，客户端显示「好友购买的其他商品」，键 `order_list.other_product`）；不下发购买者的任何信息。这些字段在服务端裁掉，不靠客户端隐藏。
+- 查不到与不存在不区分：按上面的规则匹配不到的单号或关键词（包括它其实属于本人的分享单），与不存在的单号得到完全相同的结果：订单列表返回空结果；`explain_order` 返回 NOT_TRACKED 与找回入口（BR-AI-07 细则判定规则第 3 条）；`list_my_orders` 不返回该笔。
+- 找回（`POST /v1/orders/claims`）是用户自己提交单号与付款日期的申请，不是检索，校验顺序与结论只按 BR-ATTR-17；其中分享单不论申请人是不是分享者，都按不存在处理（与不存在的单号得到同一个错误码与文案、同样计入失败次数，排在付款日期、状态、归属等判断之前，父单号与多子单相同），规则只在 BR-ATTR-17 细则「分享单按不存在处理」（2026-10-03 第 4 批第 2 轮评审后改，原写「不在本段范围」；2026-10-04 第 3 轮评审后由本人的分享单扩到所有分享单）。
+- 例：U1 分享商品 X，好友经分享链接买了 X（分享单 O1，单号 3712345678901234567）和另一件商品 Y（分享单 O2，is_other_product=true，Y 的标题含「牙刷」）。U1 在分享子 Tab 搜 `3712345678901234567` → 空结果；搜「牙刷」→ 空结果；搜 X 的标题词 → 命中 O1，单号显示 `3712****67`。U1 问 AI「帮我查订单 3712345678901234567」→ `explain_order` 返回 NOT_TRACKED 与找回入口，和随便编一个格式正确的单号得到的响应相同；问「上周有没有买牙刷」→ `list_my_orders(keyword=牙刷)` 不返回 O2；问「上周的订单」→ 返回 O1、O2 两张卡，O2 的 title 为 null（卡片显示「好友购买的其他商品」），两张卡与工具返回的内容里都没有完整单号。
+
+**详情页的「查看商品」**（2026-10-03，功能对照 G-62）：订单详情的商品信息区可以点击（入口文字 `order_detail.view_product`「查看商品」），打开该商品的原生详情页（ProductDetail），之后与其他入口进入详情页相同：显示当前价格与预估返利，用户点购买才经 open 转链，是一次新的点击与新的归因（BR-ATTR-05、BR-ATTR-08），不沿用这笔订单的任何链接或归因。
+- 显示条件：订单接口返回的 product_key 不为空；本人自购单，或商品与分享时一致的分享单（is_other_product=false）。分享单的实购商品与分享商品不一致（is_other_product=true）时不显示，避免露出好友买了什么；直推、间推分佣的订单本来就不出现在订单列表（上文）。
+- 不占详情页底部「最多 2 个按钮」的名额，也不改变按钮规则。
+- 商品已下架或信息失效时按详情页现有规则处理（BR-PRICE-14、BR-PROD-05），不在订单页预先判断。
 
 例：子订单 (PAID, ESTIMATED)，预估区间 320–450 分 → 列表「已付款，返利待确认｜预估返 ¥3.2–¥4.5」；10 月收货后 (RECEIVED, WAITING)、预估 450 分、联盟尚未返回结算时间、expected_credit_period=2026-11 → 「已收货，等待联盟结算｜预估返 ¥4.5｜预计 11 月结算」；月结批次核对入账后 → 「已结算｜实返 ¥4.5」。(SETTLED, CLAWED_BACK) + PUNISH → 按钮「联系客服」（主）+「查看流水」。
 
@@ -482,6 +522,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 推送合并求和对区间取下限 / 上限分别求和（BR-TEXT-09）；钱包「预估中」显示 BR-FUND-18 estimated_fen 单值（BR-TEXT-01）。
 - 比例（_bp）只在后台显示：bp/100 + 「%」并去末尾 0（1250 → 12.5%）。
 - 三端与 H5、服务端共用 specs/client-behavior.md 中的同一组测试向量（上表）。
+- 金额隐藏（2026-10-03，功能对照 G-64；可选功能，UI 稿采用时实现）：「我的」、钱包、订单列表与详情这几个原生页的金额区有一个隐藏开关（小眼睛，无障碍标签取 BR-TEXT-14 表 C `amount_mask.hide` / `amount_mask.show`）。打开后，余额、待抵扣、冻结中、已提现、预估收益与其中各分项、订单的预估返、实返、推广收益、扣回金额都显示为固定的「****」，不显示「¥」、位数与正负号；实付金额是否一起隐藏由 UI 稿定。开关是本机偏好，存在本机、不上传，换账号沿用、卸载即清；不改接口与计算，推送、站内信、H5 页面（如收益看板）不受影响。
 
 #### BR-TEXT-11 细则 · 时间与日期格式化
 
@@ -626,8 +667,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 30143 | 商品信息已失效，请重新搜索 | 同左 | 跳搜索（BR-PROD-05） |
 | 30144 | 购买链接已失效，正在重新获取 | 同左 | 重新请求转链（BR-ATTR-05）；App 内链接落地页（LinkLanding）不用本文案，显示表 C 的 link_landing.invalid 空态（2026-10-03） |
 | 30151 | 这个淘宝账号暂时无法绑定到当前账号，本次购买无法获得返利 | 同左 | 【仍去购买（无返利）】【联系客服】；不透露对方账号与冷却原因（BR-ID-18、BR-ID-19） |
-| 30153 | 该平台返利已被停用，请联系客服 | 同左 | 【仍去购买（无返利）】【联系客服】（BR-ID-17、BR-ID-18） |
-| 30201 | 没有找到这笔订单，请核对订单号；刚下单的订单可能还未同步，请稍后再试 | 同左 | — |
+| 30153 | 该平台返利已被停用，请联系客服 | 同左 | 【仍去购买（无返利）】【联系客服】（BR-ID-17、BR-ID-18）；授权管理页只给【联系客服】（BR-ID-17 细则「授权管理页」，2026-10-03 功能对照 G-58） |
+| 30201 | 没有找到可以找回的订单，请核对订单号；刚下单的订单可能还未同步，请稍后再试 | 同左 | —；不存在的单号与找回时按不存在处理的分享单用同一文案，不区分原因（BR-ATTR-17 细则「分享单按不存在处理」；2026-10-04 第 4 批第 3 轮评审后改，原为「没有找到这笔订单，请核对订单号；刚下单的订单可能还未同步，请稍后再试」） |
 | 30202 | 这笔订单暂不能找回 | 同左 | 按 data.reason 取表 B 子键 |
 | 30203 | 今日找回次数已用完，请明天再试 | 同左 | 按 data.reason 取表 B 子键 |
 | 30204 | 这笔订单已被认领，无法找回 | 同左 | 不透露认领方信息 |
@@ -684,7 +725,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 50301 | 按 data.reason 取表 B 子键；无 reason 时「{platform_name}维护中，请稍后再试」 | 该平台维护中，请稍后再试 | 见表 B |
 | 50302 | AI 暂不可用，可以先用搜索找货 | 同左 | 只在无模型降级的关键词搜索也失败时返回（BR-AI-14，拍板第二批 AI-05）；跳搜索页并预填 data.fallback 中的关键词 |
 | 50303 | 暂时无法确认价格，请稍后再试 | 同左 | 不外跳返利链接；主按钮「稍后再试」，次按钮「仍去购买（无返利）」（BR-PRICE-13、BR-PRICE-08） |
-| 50304（新增，代理自定、负责人 2026-10-01 接受；13 §13.11 登记） | {platform_name}搜索暂不可用，请稍后再试 | 搜索暂不可用，请稍后再试 | 搜索无可用缓存时返回（BR-PROD-07，拍板第二批 TRADE-12）；搜索页显示空态与重试按钮，不改读商品池冒充搜索结果 |
+| 50304（新增，代理自定、负责人 2026-10-01 接受；13 §13.11 登记） | {platform_name}搜索暂不可用，请稍后再试 | 搜索暂不可用，请稍后再试 | 搜索无可用缓存时返回（BR-PROD-07，拍板第二批 TRADE-12）；搜索页显示空态与重试按钮，不改读商品池冒充搜索结果；data.reason=search_disabled 时按表 B 子键（2026-10-03 功能对照 G-47） |
 | 50305（新增，2026-10-03 功能对照 G-04；13 §13.11 登记） | {provider_name}登录暂时不可用，请稍后再试或改用其他登录方式 | 该登录方式暂时不可用，请稍后再试或改用其他登录方式 | 第三方登录服务超时或故障（BR-ID-04）；provider_name 取 微信 / Apple / 华为账号（data.provider）；登录页保留其他登录方式，不自动重试 |
 | 50401 | 出了点问题，请稍后再试（{trace6}） | 出了点问题，请稍后再试 | 重试 |
 | 其他 5xxxx | 出了点问题，请稍后再试（{trace6}） | 出了点问题，请稍后再试 | 重试 |
@@ -721,6 +762,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 30411.mergeable | 该手机号已注册。可将当前{provider_name}登录并入该手机号账号，并入后当前账号停用 | 该手机号已注册，可将当前登录方式并入该手机号账号 | 按钮【并入】【取消】；【并入】凭 data.merge_ticket 调并号接口（BR-ID-06，拍板第二批 OPS-04）；provider_name 取 微信 / Apple / 华为账号 |
 | 50301.maintenance | {platform_name}维护中，请稍后再试 | 该平台维护中，请稍后再试 | 购买按钮置灰「稍后再试」；Toast 显示文案 |
 | 50301.not_launched | {platform_name}返利即将开放 | 该平台返利即将开放 | 卡片购买按钮置灰并显示该文案（即 platform_coming_soon），不弹 Toast |
+| 50304.search_disabled | {platform_name}暂不提供搜索，可以粘贴商品链接查返利 | 该平台暂不提供搜索，可以粘贴商品链接查返利 | 该平台搜索开关关闭（BR-PROD-10 细则「按平台的搜索开关」，2026-10-03 功能对照 G-47）；不显示重试按钮，给【粘贴链接查返利】；三家都关闭时搜索页用同一句（{platform_name} 缺省按包内默认）；Agent 用 BR-TEXT-22 的 agent.notice.search_disabled |
 
 **表 C · 降级场景文案**（非错误码）
 
@@ -732,6 +774,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 京东/拼多多未安装或鸿蒙降级到网页 | 将通过浏览器打开{platform_name} | — |
 | 鸿蒙淘宝降级 H5 | 鸿蒙版可能影响返利跟踪，如未显示订单可申请找回 | — |
 | 某端全部路径丢归因 | 本设备暂不支持{platform_name}返利 | 隐藏购买按钮 |
+| 淘宝客户端 SDK 不可用 jump.taobao_sdk_unavailable | 暂时无法打开淘宝，请稍后再试 | 百川初始化重试后仍失败、且本次没有可执行的后续步骤时显示；不外跳，不给无返利购买（BR-ATTR-27 淘宝行说明，2026-10-03 功能对照 G-50） |
 | 待跟单卡（pending_track_card） | 订单同步中｜在{platform_name}下单后，订单通常会在一段时间内同步到这里，同步可能有延迟（CAP-\*-07 实测后改为「最长约 {n} 分钟」，n 取 order_sync.delay_hint_min.&lt;platform>） | 找回入口「未跟单？去找回」的出现条件按 BR-ATTR-17、BR-ATTR-21 |
 | platform_coming_soon（= error.50301.not_launched，表 B） | {platform_name}返利即将开放 | 卡片按钮；只在 50301 data.reason=not_launched 时出现 |
 | platform_no_rebate | {platform_name}暂不支持返利 | — |
@@ -744,6 +787,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 剪贴板识别提示条 clipboard.prompt | 检测到商品链接，查返利？ | 出现条件、读取时机与方式只按 BR-ID-16 |
 | 剪贴板邀请提示条 clipboard.invite_prompt | 检测到好友邀请码 {invite_code}，绑定为邀请人？ | 出现条件按 BR-INV-04（商品优先；含落地页链接或「邀请码」字样才提示，拍板第二批 OPS-06），读取方式只按 BR-ID-16；点击后进入绑定确认，不直接绑定 |
 | 购买请求超时 buy.timeout | 网络不稳定，请重试 | 重试沿用同一幂等键，不自动外跳（超时时长与重试规则归 规划/03 §4.2，拍板第二批 TRADE-22） |
+| 购买请求进行中 buy.opening / buy.opening.cancel | 正在打开{platform_name}｜取消 | 点击购买、open 请求发出后的加载层；只写平台名，不显示金额，不出现返利与券相加的合计（BR-PRICE-05）；点【取消】、离开页面或 App 进入后台后，之后到达的响应只更新卡片、不外跳，用户再点购买才外跳（规划/03 §4.5，2026-10-03 功能对照 G-46）；包内默认：正在打开｜取消 |
 | 显示上次数据 net.stale_data | 网络不可用，以下为 {time} 的数据 | 订单、钱包页请求失败时显示缓存数据并附本提示；{time} 按 BR-TEXT-11（拍板第二批 TECH-20，代理起草） |
 | H5 加载失败 h5.load_failed | 页面加载失败，请重试 | 重试按钮（TECH-20，代理起草） |
 | 第三方页容器里的平台商品无法识别 external_page.product_unresolved | 该商品暂无法查返利 | 留在当前页，不在容器里继续打开这个商品页（BR-ATTR-29，2026-10-03 功能对照 G-02） |
@@ -773,6 +817,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 第三方新号绑手机引导·购买前版本 invite.bind_phone_guide.body_before_buy | 绑定手机号后，可在期限内填写邀请码。已用手机号注册过的，绑定同一个手机号、符合条件时可把当前登录方式并入原账号。下单后将不能再填写邀请码，也不能并入原账号 | 登录由点击购买触发时用这一版，按钮同上；【暂不】后继续本次购买（BR-INV-03 细则） |
 | 首次购买前邀请码提示 invite.before_buy_tip | 下单后将不能再填写邀请码。有邀请码可以先填写 | 按钮【先填邀请码】【继续购买】；每个账号一次，服务端记已读（BR-INV-03 细则） |
 | 对被邀请人的告知 invite.notice_inviter | 绑定后，你订单带来的收益金额和状态会通知邀请你的人，不含商品信息 | 邀请落地页（协议勾选框上方）、App 内注册页邀请码输入框下方、补填页、剪贴板邀请口令的绑定确认页；只作告知，不加勾选框（BR-INV-16 细则「对被邀请人的告知」、BR-INV-18，2026-10-03 功能对照 G-16） |
+| 授权管理页 auth_manage.title / .status.authorized / .status.unauthorized / .action.authorize | 授权管理｜已授权｜未授权｜去授权 | 只有这两种状态文案，不显示账号名、昵称、头像与授权时间；blocked 时不给【去授权】，改显示 error.30153 与【联系客服】（BR-ID-17 细则「授权管理页」，2026-10-03 功能对照 G-58） |
+| 授权管理页说明 auth_manage.rebind_note | 暂不支持自助更换授权的淘宝账号，需要时请联系客服 | 页面底部固定显示（BR-ID-19） |
 | 登录页求助入口 login.help_entry | 登录遇到问题 | 登录页文字入口，打开 help_links.login_help 的帮助文章，未配置时打开帮助中心首页；无需登录（BR-ID-02 细则「未登录时的隐私入口」，2026-10-03 功能对照 G-18） |
 | 微信登录拉不起 login.wechat_unavailable | 未安装微信，请使用其他方式登录 | 检测为未安装时不显示微信登录按钮；本提示只在检测结果未知、点击后拉不起微信时出现，登录页保留其他登录方式（BR-ID-04 细则「未安装微信时」，2026-10-03 功能对照 G-31） |
 | 微信分享不可用 share.wechat_unavailable | 未安装微信，可以复制后分享 | 未安装时分享面板不列微信渠道，保留复制、保存海报与系统分享；H5 指定微信渠道而本机没有微信时提示一次（BR-ID-04 细则） |
@@ -785,6 +831,13 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 比价无返利卡片原因行 no_rebate.price_compare | 这次被判为比价，没有返利 | 卡片按 open 响应换成无返利态后显示在返利位置，旁边保留文字入口【看看相似商品】；其他无返利情形仍显示「暂无返利」 |
 | 相似商品入口 no_rebate.price_compare.similar | 看看相似商品 | 进入搜索页，平台同原商品，搜索词取卡片标题，去掉原商品（BR-PRICE-08 细则） |
 | 订单列表查询范围提示 order_list.history_hint | 只显示 {date} 之后的订单，更早的订单请联系客服 | 包内默认：更早的订单请联系客服。只在服务端返回 earliest_visible_date 时显示在列表底部；{date} 按 BR-TEXT-11 的纯日期格式；默认配置不限制范围，此时不显示（BR-ID-30 细则「订单类记录」，2026-10-03 功能对照 G-14） |
+| 订单列表状态分组 order_status_group.all / .estimating / .credited / .no_rebate | 全部｜预估中｜已结算｜无返利 | 订单列表自购、分享子 Tab 下的分组 Tab，成员只按 BR-TEXT-02 细则「订单列表的状态分组与查找」；不得改成「待结算」「结算中」（BR-TEXT-13）（2026-10-03 功能对照 G-60） |
+| 订单列表筛选与搜索 order_list.filter.platform / .filter.month / .search.placeholder | 平台｜月份｜搜订单号或商品名 | 分享子 Tab 的搜索框提示改用 order_list.search.placeholder_share「搜商品名」（分享单不按单号搜）（2026-10-03 功能对照 G-60） |
+| 分享单里好友买的其他商品 order_list.other_product | 好友购买的其他商品 | 分享单 is_other_product=true 时代替标题显示（服务端不下发标题与商品图），订单列表、订单详情与 AI 助手的订单卡片共用（BR-TEXT-02 细则「订单的检索范围与分享单的投影」，2026-10-03 第 4 批第 1 轮评审后补） |
+| 预售单定金金额 order_list.deposit_amount | 已付定金 {amount} | display_status=DEPOSIT_PAID 且 pay_amount_fen 不为 null 时代替实付金额显示；{amount} 按 BR-TEXT-10（BR-TEXT-02 细则「预售单的付款金额」，2026-10-03 功能对照 G-63） |
+| 预售单时间线 order_timeline.deposit_paid / order_timeline.final_paid | 付定金 {time}｜付尾款 {time} | 只用于预售单；没有定金时间时 order_timeline.deposit_paid 只显示「付定金」（BR-TEXT-02 细则「时间线」） |
+| 订单详情查看商品 order_detail.view_product | 查看商品 | 订单详情商品信息区的入口，显示条件见 BR-TEXT-02 细则「详情页的「查看商品」」（2026-10-03 功能对照 G-62） |
+| 金额隐藏开关 amount_mask.hide / amount_mask.show | 隐藏金额｜显示金额 | 「我的」、钱包、订单页金额区小眼睛按钮的无障碍标签；隐藏时金额统一显示「****」（BR-TEXT-10 细则「金额隐藏」，2026-10-03 功能对照 G-64） |
 | 找回指引入口 claim.guide.entry | 订单号在哪里找？ | 找回表单订单号输入框下方；打开 help_links.claim_guide.&lt;platform> 的帮助文章，未配置时不显示（BR-ATTR-17 细则「找回页的填写指引」，2026-10-03 功能对照 G-15） |
 | 找回指引·订单号 claim.guide.order_no | 请填写{platform_name}订单详情页显示的订单编号，整串填写；主订单号、子订单号都可以 | 包内默认：请填写订单详情页显示的订单编号，整串填写。选定平台后显示 |
 | 找回指引·付款日期 claim.guide.paid_date | 请填写付款成功的日期；预售订单填付定金的日期 | 付款日期输入框下方 |
@@ -948,6 +1001,11 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 话术库条目结构：{场景, 引用 dict key 列表, 标准回复模板, 可执行动作（找回 / 重新授权 / 申诉 / 转财务）}。
 - 例：用户问「我的返利怎么还没到」，订单 (RECEIVED, WAITING)、display_status=WAITING、expected_credit_period=2026-11 → 标准回复「这笔订单已收货，预估返 ¥4.5，预计 11 月结算，结算后可在钱包提现」（2026-09-30 随 C-02、D11 改写，原「预计 10-17 入账」；同日按负责人补充改为预计结算月份，原「预计随淘宝 10 月联盟结算后入账」，变更记录 §10）。订单 display_status=INVALID、reason=OTHER_TLJ → 「下单时使用了其他推广者的淘礼金，订单归对方，这笔没有返利」。
 - 例：邀请人问「我邀请的好友买了什么」→ 「为保护好友隐私，只能看到推广收益金额，看不到好友的订单」。
+- 面向有返利经验用户的常见问题（2026-10-03，功能对照 G-65；D25：同时面向返利新用户与已有返利经验的用户）：帮助中心与客服话术库各放一组，措辞按本条引用字典键，不写死流水名称，不用「团队」「下线」「粉丝」等词（BR-INV-20），也不提其他 App：
+  - 「为什么看不到我邀请的好友买了什么？」→ 为保护好友隐私，只显示好友带来的推广收益，不显示好友的订单、商品和下单时间（BR-INV-16）。
+  - 「邀请带来的收益在哪里看？」→ 结算前计入钱包的「预估收益」合计，不逐笔列出；结算后在余额流水里逐笔显示，名称取 ledger_type.REFERRAL_CREDIT.name（间推开启时另有 ledger_type.REFERRAL_CREDIT.name_indirect），日期只到日（BR-INV-17、BR-TEXT-19）；收益看板上线后另可看本月、上月的合计（BR-FUND-25）。
+  - 「订单里的「分享」是什么？」→ 别人通过你分享的商品链接下的单，收益记在你名下（预估推广收益 / 推广收益）；下单的人这单拿不到返利；你只看到商品、实付、件数、状态和脱敏订单号（BR-ATTR-10、BR-TEXT-02）。
+- 例（2026-10-03，功能对照 G-37）：用户问「我一共拿到过多少返利」→「钱包不提供累计收益合计。已结算的每一笔都在余额流水里，可以按时间查看；提现成功的总额是钱包里的「已提现」」（收益看板上线后另加一句「本月、上月的已结算金额可以在收益看板看」，BR-FUND-25）。不说「到账收益」：「已到账」只指提现（BR-TEXT-01）。
 - BLACKLIST 与 hold：客服后台可见内部原因，但对用户只说字典文案并引导申诉。
 - 验收：抽取话术库全部条目跑禁用词扫描与 dict key 存在性校验。
 - 话术库按 display_status（BR-FUND-17）建场景，不按单一 order_status；按 C-01 默认处理，已由负责人确认 2026-09-30。
@@ -1021,6 +1079,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 - 例：分享模板「【淘宝】#标题# 券后 #券后价#」→ 保存拒绝；改为「#标题# 券后 #券后价#，复制 #口令# 打开淘宝」通过。
 - 例：商品标题「【天猫】伊利官方旗舰店纯牛奶」→ 渲染用「伊利旗舰店纯牛奶」。
+- 商品分享文案不带邀请码与下载地址（2026-10-03，功能对照 G-41；按功能对照 Q-17 默认 A 写，待负责人确认）：分享模板的变量白名单维持 #标题# #券后价# #口令# #链接# 四个，不加 #邀请码#、#下载地址#。理由：买的人从分享单拿不到返利（BR-ATTR-10），文案里带邀请码和下载地址，容易被读成「下载就能返利」；《微信外部链接内容管理规范》2.3.1 条禁止以利益诱导下载或跳转外部 App（规划/09 CAP-X-03）。邀请码与下载地址只用于邀请文案（BR-INV-18 的 {invite_code}、{download_url}）。负责人改选 B（做成可选项、默认关闭）时：只加这两个变量，做成模板级开关、默认关闭，保存时同样过 BR-TEXT-13 与 BR-INV-20 校验，不得出现「下载即可返利」一类对购买者的承诺，微信好友与群渠道是否开放 #下载地址# 按 CAP-X-03 的结论定；展示收益金额或店铺的变量一律不引入。
 - 短信（待验证）：签名 ≤8 字、签名 + 模板 ≤68 字按 1 条计费，「红包」「下载」等词易被驳回——来源为花卷云查漏底稿，需在阿里云短信控制台实际报备验证。
 - 交易类推送挂厂商消息分类（小米通知类别、OPPO「个人账号与资产变化」、华为「帐号动态」）——同为待验证。
 - WD_FAILED 短信示例：「【{签名}】你的提现打款未成功，¥10 已退回余额，请在 App 内查看原因。」须实测字数与审核结果。
@@ -1109,6 +1168,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | agent.notice.no_cheaper | 再便宜点无结果（BR-AI-05，同 BR-PRICE-15） | 没有找到比当前结果更便宜的商品。 |
 | agent.notice.more_orders | 订单超过本次上限（BR-AI-07） | 更多订单请到订单页查看。 |
 | agent.notice.tlj_taobao_only | 非淘宝平台问淘礼金（BR-AI-17） | 淘礼金仅支持淘宝。 |
+| agent.notice.search_disabled | 用户只要某个搜索开关已关闭的平台的商品（BR-PROD-10 细则「按平台的搜索开关」，2026-10-03 功能对照 G-47） | {platform_name}暂不提供搜索，可以把商品链接发给我查返利。 |
 | agent.notice.title_based | 比较或适用性问题（BR-AI-18，AI-07） | 以上只根据商品标题判断，具体以商品详情为准。 |
 | agent.suggest.no_result.1–3 | 无结果建议（BR-AI-08） | 去掉价格条件再找｜只搜{q_short}｜换个平台看看 |
 | agent.disclaimer.commission | 佣金披露（BR-AI-10，BR-TEXT-13 例外） | 推荐商品含推广链接，购买后本平台可能获得佣金。 |
