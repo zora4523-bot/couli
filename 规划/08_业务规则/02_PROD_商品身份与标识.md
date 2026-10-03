@@ -376,7 +376,7 @@ INSERT … ON CONFLICT (app_id, product_key) DO UPDATE SET …
 **按平台的搜索开关**（2026-10-03，功能对照 G-47；属实现补充，落实规划/00 §4 搜索行的能力条件，不改变本条已确认的判定）：原来隐藏某个平台的搜索 Tab 要发版，CAP-*-03 不达标的平台「不进搜索 Tab」（规划/00 §4）也没有运行时的落点。
 
 - 开关：服务端紧急开关 `search.enabled.<platform>`（规划/04 §10.2，修改需 step-up、写审计，10 秒内生效）。默认 off：该平台 CAP-*-03 判为支持，或部分支持且降级已实现并验收后（规划/09 README §1.1），由有开关权限的账号打开；某平台搜索出问题时也用它临时关闭。
-- 作用范围只有关键词搜索：off 时该平台不出现在搜索页的平台 Tab；`GET /v1/products/search` 对该平台返回 50304，`data.platform` 为该平台、`data.reason=search_disabled`（不新开码：动作与「搜索暂不可用」同属这一码，只差原因，按 08 §13.11 的分配规则用 data.reason 区分，客户端动作按 reason 分支）；Agent 的 `search_products` 不对该平台发起检索，多平台检索时跳过它。输入链接或口令直达详情、商品详情、转链、订单都不受影响（输入链接直达本来就不受 CAP-*-03 约束，规划/00 §4）。
+- 作用范围只有关键词搜索：off 时该平台不出现在搜索页的平台 Tab；`GET /v1/products/search` 对该平台返回 50304，`data.platform` 为该平台、`data.reason=search_disabled`（不新开码：含义同属「该平台搜索不可用」，按 08 §13.11 的分配规则用 data.reason 区分原因，客户端动作按 reason 分支，做法与 50301 区分 maintenance、not_launched 相同）；Agent 的 `search_products` 不对该平台发起检索，多平台检索时跳过它。输入链接或口令直达详情、商品详情、转链、订单都不受影响（输入链接直达本来就不受 CAP-*-03 约束，规划/00 §4）。它与 platforms 表的搜索能力标记是两回事：能力标记表示平台有没有搜索这种形态，没有的按正文返回 30131；本开关只对有这种能力的平台在运行时开关。
 - 下发：服务端由开关派生 `/v1/config.features.search_status.<platform>` ∈ {on, off}；搜索页只显示 on 的平台 Tab，默认 Tab（规划/01 F-PROD-01）对应的平台为 off 时取第一个为 on 的平台；三家都为 off 时搜索页只保留「粘贴链接查返利」的入口与说明（文案同 error.50304.search_disabled）。客户端取用顺序同其他配置（当前、上一次成功的版本、包内默认），包内默认为 off。客户端按旧配置仍对已关闭的平台发了搜索请求，收到 50304 search_disabled 时刷新配置、隐藏该 Tab，不显示重试按钮。
 - 与转链开关 `convert.enabled.<platform>` 相互独立，四种组合都有定义：都开——照常；可搜不可买（搜索 on、转链 off）——搜索结果照常出卡，购买按钮按 50301 与 `platform_status`（维护中或即将开放，BR-TEXT-14）；可买不可搜（搜索 off、转链 on）——没有该平台的搜索 Tab，粘贴链接照常查返利与购买；都关——两者同时生效。
 - Agent：用户只要该平台的商品时，用固定话术 `agent.notice.search_disabled`（BR-TEXT-22）答复，并提示可以发链接查返利；多平台的请求里不提这个平台。

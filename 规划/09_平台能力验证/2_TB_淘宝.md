@@ -143,7 +143,7 @@
 
 **CAP-TB-11 唤起与归因保持（对应 05 HM-04）**
 
-未知项：百川鸿蒙版 openByUrl 是否支持 relationId、是否支持备案所需 authorize（06 Q-G11）；scheme 直接打开 s.click / uland 链接时归因是否保留（三端分别）；手淘是否支持 Universal Link / Android App Link / 鸿蒙 App Linking 打开推广链接；未安装淘宝时 H5（内置 WebView 或系统浏览器）下单是否保留归因；微信内打开淘宝短链下单是否保留归因（见 X-03）；百川 SDK 隐私合规要求（首次启动前不得初始化等）对冷启动唤起的影响；回跳（2026-10-03，功能对照 G-50）：设置本 App 回跳 scheme（`apps.json` 入站回调）与只依赖 SDK 自带回调两种情况下，在淘宝里点返回能否回到本 App 并显示待跟单卡；百川初始化失败的触发条件、返回的错误码，以及失败后重试一次能否恢复（BR-ATTR-27 淘宝行说明）。
+未知项：百川鸿蒙版 openByUrl 是否支持 relationId、是否支持备案所需 authorize（06 Q-G11）；scheme 直接打开 s.click / uland 链接时归因是否保留（三端分别）；手淘是否支持 Universal Link / Android App Link / 鸿蒙 App Linking 打开推广链接；未安装淘宝时 H5（内置 WebView 或系统浏览器）下单是否保留归因；微信内打开淘宝短链下单是否保留归因（见 X-03）；百川 SDK 隐私合规要求（首次启动前不得初始化等）对冷启动唤起的影响；回跳（2026-10-03，功能对照 G-50）：设置本 App 自己的回跳 scheme 与只依赖 SDK 自带回调两种情况下，在淘宝里点返回能否回到本 App 并显示待跟单卡；百川初始化失败的触发条件、返回的错误码，以及失败后重试一次能否恢复（BR-ATTR-27 淘宝行说明）。
 
 步骤：
 1. 人：W0 申请新 App 的百川 AppKey（iOS / Android / 鸿蒙），提交鸿蒙加白（V-03）。
