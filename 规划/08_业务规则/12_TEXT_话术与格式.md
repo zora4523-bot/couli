@@ -429,6 +429,7 @@
 | WD_FAILED | 推送 + 站内 + 短信 | 提现打款未成功：{reason}，{amount} 已退回余额；账号类失败码追加「，可修改收款账号后重试」 |
 | CLAIM_RESULT | 站内 | 订单找回成功，预估返 {rebate} / 订单找回未通过：{reason}（claim_reject_reason.&lt;CODE>.title，BR-ATTR 维护） |
 
+- 改措辞的权限（2026-10-03，功能对照 G-76 第 1 轮评审后补）：本表全部模板都是资金术语，改措辞须有后台权限点 `content.fund_terms` 并每次二次验证（BR-TEXT-12 细则「资金术语键」），只有消息模板权限 `content.article` 的账号改不了；变量与含义照旧不能改。
 - {amount} 在 CLAWBACK 中为负值格式（如 -¥3.2）；{rebate} 为区间时按 BR-TEXT-10 格式化；合并求和对下限、上限分别求和：两单 ¥1–¥2 与 ¥3 → 「预估返共 ¥4–¥5」。
 - title_short = 商品标题先按 BR-TEXT-20 去平台前缀与「官方」，再按 Unicode 扩展字素簇取前 12 个 + 「…」；原标题 ≤12 个字素时不加「…」。邀请类模板不得使用 title_short 及任何商品、下级变量，模板保存校验只允许 {rebate}、{rebate_sum}、{amount}、{n}。
 - 上级隐私：直推、间推上级收到的通知只含金额与状态，点击跳转钱包余额流水（BR-TEXT-19，不可跳订单），不跳订单详情；客服对上级的答复同样不透露下级订单（BR-TEXT-18）。
@@ -528,7 +529,15 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 预售（拍板第二批 TRADE-10）：预售商品卡与详情显示标签 `tag.presale`「预售」，价格按定金 + 尾款总价显示（口径见 BR-PRICE），价格旁附 `presale.price_note`「定金与尾款以下单页为准」。
 - 未知编码：显示 `<enum>.UNKNOWN`（订单「状态更新中」、提现「处理中」）。
 - 后台修改字典或 texts：保存前过禁用词校验（BR-TEXT-13）与变量校验（模板变量必须与包内默认一致），发布时 dict_version +1，写审计。
-- 资金术语键（2026-10-03，功能对照 G-76；单设权限点是代理补全的默认假设，待负责人确认，规划/06「功能对照待确认」）：用户看到的资金措辞改一个字就可能改了含义（BR-TEXT-01 的「可提现余额」「已到账」「已结算」），这类键不归普通配置权限。范围：以 `order_status.`、`withdrawal_status.`、`withdraw_reject_reason.`、`withdraw_fail_reason.`、`ledger_type.`、`ledger.`、`earnings.`、`wallet.`、`withdraw.`、`withdraw_detail.` 开头的字典与 config.texts 键，以及 `error.303` 开头的提现错误文案；钱包页的金额标签以后建键时统一用 `wallet.` 前缀，落在这个范围里。修改它们须有后台权限点 `content.fund_terms`（规划/04 §11.2），每次修改都要二次验证，审计记录标「资金术语」并存前后值；只有普通配置权限 `config.general` 的账号改不了。BR-TEXT-14 表 D 的隐私与权限文案键另归 `content.agreement`，不在本范围。
+- 资金术语键（2026-10-03，功能对照 G-76；单设权限点是代理补全的默认假设，待负责人确认，规划/06「功能对照待确认」；第 1 轮评审后补认定规则与完整清单，原写法只按前缀列范围，漏了 `tag.rebate`）：用户看到的资金措辞改一个字就可能改了含义（BR-TEXT-01 的「预估返」「已结算」「可提现余额」「已到账」），这类键不归普通配置权限。
+  - 认定规则：字典、`config.texts` 的键与交易通知模板（notify-templates）里，满足下列任一条的都是资金术语键：① 文案说的是金额处在什么状态——预估、结算（入账）、扣回、失效、冻结、提现、到账、退回余额、余额为负（待抵扣）；② 文案说明金额为什么变了或为什么没有（订单原因码、差额行、比价无返利）；③ 显示在返利金额的位置，或代替返利金额标签（RebateTag 及替代它的文案）；④ 模板变量里有按 BR-TEXT-10 格式化的金额（如 {amount}、{rebate}、{rebate_sum}、{sum}、{promo_sum}、{net}、{fee}、{tax}、{max}）；⑤ 文案用到 BR-TEXT-01 术语对照表「用户词」一列的任一个词。拿不准的按资金术语键处理。
+  - 完整清单（2026-10-03；新增键按上面的规则归类，归入后在这里补一项）：
+    - 前缀（键名以它开头的全部键）：`order_status.`、`order_reason.`、`order_reason_sub.`、`withdrawal_status.`、`withdraw_reject_reason.`、`withdraw_fail_reason.`、`ledger_type.`、`ledger.`、`earnings.`、`wallet.`、`withdraw.`、`withdraw_detail.`、`pending_confirm.withdraw.`，以及 `error.303`（提现错误文案，含 `error.303xx.<reason>` 子键）。订单详情的差额行与时间线、钱包页与收益看板的金额标签以后建键时，分别用 `order_status.`、`wallet.`、`earnings.` 前缀，落在本范围里。
+    - 单列的键：`tag.rebate`（预估返）、`rebate_amount_unknown`、`rebate_login_to_view`、`no_rebate_hint`、`platform_no_rebate`、`no_rebate.price_compare`、`no_rebate.price_compare.confirm`、`order.price_compare.hint`、`btn.buy.no_rebate`、`error.30412`（有进行中的提现）、`error.30416`（有待扣回金额）。
+    - 交易通知模板：BR-TEXT-09 表中的全部模板（ORDER_TRACKED、ORDER_INVALID、CREDITED、CLAWBACK、WD_SUCCESS、WD_REJECTED、WD_FAILED、CLAIM_RESULT），以及 WD_OVERDUE（BR-TEXT-07）、BALANCE_ADJUSTED（BR-FUND-24）。
+    - Agent 固定话术（BR-TEXT-22）与账号类站内信（BR-TEXT-23）里命中认定规则的键同样算，由下一项的 CI 核对找出来。
+  - 机器可读的清单 `specs/fund-term-keys.yaml`（前缀、单列的键、通知模板，另有「命中规则但不算」的例外表，每条写理由，如 `link_landing.invalid`「链接已失效」说的是链接不是金额）与本条一致，后台权限守卫与 CI 都读它，不按键名另猜。CI 扫描 `contracts/texts.default.json` 与通知模板：命中 ④⑤ 而既不在清单里、也不在例外表里的键报错，新键必须先归类才能合入；例外表的改动按资金类评审。
+  - 权限：修改清单里的键与模板须有后台权限点 `content.fund_terms`（规划/04 §11.2），每次修改都要二次验证，审计记录标「资金术语」并存前后值；只有普通配置权限 `config.general` 的账号改不了这些键，只有 `content.article` 的账号改不了这些通知模板，保存被拒并写审计。保存时照常过禁用词与变量校验。帮助中心与返利规则文章不是文案键，仍归 `content.article`，靠禁用词校验与配置变量渲染数值（BR-TEXT-13）约束。BR-TEXT-14 表 D 的隐私与权限文案键另归 `content.agreement`，不在本范围。
 
 **JumpTip**：
 - 展示次数与已读记录按 BR-ATTR-21（每用户每平台首次外跳前 1 次，服务端记已读）。（G-13 默认处理，待运营确认；原「前 3 次、设备本地计数、不分平台、prefs.jump_tip_off」已删除。）
