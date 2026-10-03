@@ -658,7 +658,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 50301 | 按 data.reason 取表 B 子键；无 reason 时「{platform_name}维护中，请稍后再试」 | 该平台维护中，请稍后再试 | 见表 B |
 | 50302 | AI 暂不可用，可以先用搜索找货 | 同左 | 只在无模型降级的关键词搜索也失败时返回（BR-AI-14，拍板第二批 AI-05）；跳搜索页并预填 data.fallback 中的关键词 |
 | 50303 | 暂时无法确认价格，请稍后再试 | 同左 | 不外跳返利链接；主按钮「稍后再试」，次按钮「仍去购买（无返利）」（BR-PRICE-13、BR-PRICE-08） |
-| 50304（新增，代理自定、负责人 2026-10-01 接受；13 §13.11 登记） | {platform_name}搜索暂不可用，请稍后再试 | 搜索暂不可用，请稍后再试 | 搜索无可用缓存时返回（BR-PROD-07，拍板第二批 TRADE-12）；搜索页显示空态与重试按钮，不改读商品池冒充搜索结果 |
+| 50304（新增，代理自定、负责人 2026-10-01 接受；13 §13.11 登记） | {platform_name}搜索暂不可用，请稍后再试 | 搜索暂不可用，请稍后再试 | 搜索无可用缓存时返回（BR-PROD-07，拍板第二批 TRADE-12）；搜索页显示空态与重试按钮，不改读商品池冒充搜索结果；data.reason=search_disabled 时按表 B 子键（2026-10-03 功能对照 G-47） |
 | 50305（新增，2026-10-03 功能对照 G-04；13 §13.11 登记） | {provider_name}登录暂时不可用，请稍后再试或改用其他登录方式 | 该登录方式暂时不可用，请稍后再试或改用其他登录方式 | 第三方登录服务超时或故障（BR-ID-04）；provider_name 取 微信 / Apple / 华为账号（data.provider）；登录页保留其他登录方式，不自动重试 |
 | 50401 | 出了点问题，请稍后再试（{trace6}） | 出了点问题，请稍后再试 | 重试 |
 | 其他 5xxxx | 出了点问题，请稍后再试（{trace6}） | 出了点问题，请稍后再试 | 重试 |
@@ -693,6 +693,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 30411.mergeable | 该手机号已注册。可将当前{provider_name}登录并入该手机号账号，并入后当前账号停用 | 该手机号已注册，可将当前登录方式并入该手机号账号 | 按钮【并入】【取消】；【并入】凭 data.merge_ticket 调并号接口（BR-ID-06，拍板第二批 OPS-04）；provider_name 取 微信 / Apple / 华为账号 |
 | 50301.maintenance | {platform_name}维护中，请稍后再试 | 该平台维护中，请稍后再试 | 购买按钮置灰「稍后再试」；Toast 显示文案 |
 | 50301.not_launched | {platform_name}返利即将开放 | 该平台返利即将开放 | 卡片购买按钮置灰并显示该文案（即 platform_coming_soon），不弹 Toast |
+| 50304.search_disabled | {platform_name}暂不提供搜索，可以粘贴商品链接查返利 | 该平台暂不提供搜索，可以粘贴商品链接查返利 | 该平台搜索开关关闭（BR-PROD-10 细则「按平台的搜索开关」，2026-10-03 功能对照 G-47）；不显示重试按钮，给【粘贴链接查返利】；三家都关闭时搜索页用同一句（{platform_name} 缺省按包内默认）；Agent 用 BR-TEXT-22 的 agent.notice.search_disabled |
 
 **表 C · 降级场景文案**（非错误码）
 
@@ -704,6 +705,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 京东/拼多多未安装或鸿蒙降级到网页 | 将通过浏览器打开{platform_name} | — |
 | 鸿蒙淘宝降级 H5 | 鸿蒙版可能影响返利跟踪，如未显示订单可申请找回 | — |
 | 某端全部路径丢归因 | 本设备暂不支持{platform_name}返利 | 隐藏购买按钮 |
+| 淘宝客户端 SDK 不可用 jump.taobao_sdk_unavailable | 暂时无法打开淘宝，请稍后再试 | 百川初始化重试后仍失败、且本次没有可执行的后续步骤时显示；不外跳，不给无返利购买（BR-ATTR-27 淘宝行说明，2026-10-03 功能对照 G-50） |
 | 待跟单卡（pending_track_card） | 订单同步中｜在{platform_name}下单后，订单通常会在一段时间内同步到这里，同步可能有延迟（CAP-\*-07 实测后改为「最长约 {n} 分钟」，n 取 order_sync.delay_hint_min.&lt;platform>） | 找回入口「未跟单？去找回」的出现条件按 BR-ATTR-17、BR-ATTR-21 |
 | platform_coming_soon（= error.50301.not_launched，表 B） | {platform_name}返利即将开放 | 卡片按钮；只在 50301 data.reason=not_launched 时出现 |
 | platform_no_rebate | {platform_name}暂不支持返利 | — |
@@ -716,6 +718,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 剪贴板识别提示条 clipboard.prompt | 检测到商品链接，查返利？ | 出现条件、读取时机与方式只按 BR-ID-16 |
 | 剪贴板邀请提示条 clipboard.invite_prompt | 检测到好友邀请码 {invite_code}，绑定为邀请人？ | 出现条件按 BR-INV-04（商品优先；含落地页链接或「邀请码」字样才提示，拍板第二批 OPS-06），读取方式只按 BR-ID-16；点击后进入绑定确认，不直接绑定 |
 | 购买请求超时 buy.timeout | 网络不稳定，请重试 | 重试沿用同一幂等键，不自动外跳（超时时长与重试规则归 规划/03 §4.2，拍板第二批 TRADE-22） |
+| 购买请求进行中 buy.opening / buy.opening.cancel | 正在打开{platform_name}｜取消 | 点击购买、open 请求发出后的加载层；只写平台名，不显示金额，不出现返利与券相加的合计（BR-PRICE-05）；点【取消】、离开页面或 App 进入后台后，之后到达的响应只更新卡片、不外跳，用户再点购买才外跳（规划/03 §4.5，2026-10-03 功能对照 G-46）；包内默认：正在打开｜取消 |
 | 显示上次数据 net.stale_data | 网络不可用，以下为 {time} 的数据 | 订单、钱包页请求失败时显示缓存数据并附本提示；{time} 按 BR-TEXT-11（拍板第二批 TECH-20，代理起草） |
 | H5 加载失败 h5.load_failed | 页面加载失败，请重试 | 重试按钮（TECH-20，代理起草） |
 | 第三方页容器里的平台商品无法识别 external_page.product_unresolved | 该商品暂无法查返利 | 留在当前页，不在容器里继续打开这个商品页（BR-ATTR-29，2026-10-03 功能对照 G-02） |
@@ -1022,6 +1025,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | agent.notice.no_cheaper | 再便宜点无结果（BR-AI-05，同 BR-PRICE-15） | 没有找到比当前结果更便宜的商品。 |
 | agent.notice.more_orders | 订单超过本次上限（BR-AI-07） | 更多订单请到订单页查看。 |
 | agent.notice.tlj_taobao_only | 非淘宝平台问淘礼金（BR-AI-17） | 淘礼金仅支持淘宝。 |
+| agent.notice.search_disabled | 用户只要某个搜索开关已关闭的平台的商品（BR-PROD-10 细则「按平台的搜索开关」，2026-10-03 功能对照 G-47） | {platform_name}暂不提供搜索，可以把商品链接发给我查返利。 |
 | agent.notice.title_based | 比较或适用性问题（BR-AI-18，AI-07） | 以上只根据商品标题判断，具体以商品详情为准。 |
 | agent.suggest.no_result.1–3 | 无结果建议（BR-AI-08） | 去掉价格条件再找｜只搜{q_short}｜换个平台看看 |
 | agent.disclaimer.commission | 佣金披露（BR-AI-10，BR-TEXT-13 例外） | 推荐商品含推广链接，购买后本平台可能获得佣金。 |
