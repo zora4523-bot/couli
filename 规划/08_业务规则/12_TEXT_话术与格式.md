@@ -697,7 +697,9 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | App 内链接落地页·分享者本人提示 link_landing.owner_hint | 这是你分享的商品，自己购买按自购返利计算 | 只在 `GET /v1/links/{link_id}` 返回 viewer_is_sharer=true 时显示；不显示金额（BR-ATTR-11，2026-10-03 功能对照 G-03） |
 | App 内链接落地页·链接失效 link_landing.invalid | 链接已失效 | 30144 时显示空态与按钮【去搜索】，不自动重试（BR-ATTR-05 细则） |
 | 分享中间页按钮 share_page.open_in_app | 在 App 中打开 | App 外浏览器里显示；微信内不显示；`open_in_app_url` 为 null 时不显示；文案不得带返利、红包等利益表述（BR-ATTR-05 细则，规划/09 CAP-X-03） |
-| 分享中间页·微信内引导 share_page.open_in_browser_hint | 请点右上角，选择在浏览器打开 | 只在微信内显示，代替【在 App 中打开】（规划/03 §8.3） |
+| 分享中间页·微信内引导 share_page.open_in_browser_hint | 请点右上角，选择在浏览器打开 | 只在微信内显示，代替【在 App 中打开】与【复制淘口令】（规划/03 §8.3） |
+| 分享中间页按钮 share_page.copy_tpwd | 复制淘口令 | 只在接口响应带 `tpwd_ticket` 时显示（微信内不显示）；点击时才取口令并写入剪贴板，成功后提示「已复制淘口令」（share_page.copy_tpwd.done）（BR-ATTR-10 细则，2026-10-03） |
+| 下载引导页按钮 download_guide.download / download_guide.reopen | 下载 App｜已安装，重新打开 | 非分享链接的深链没有拉起 App 时显示的静态页；【已安装，重新打开】重新访问原深链；页面不展示任何链接内容（BR-ATTR-05 细则，2026-10-03） |
 | 第三方新号绑手机引导 invite.bind_phone_guide.title / .body | 绑定手机号｜绑定手机号后，可在期限内填写邀请码。已用手机号注册过的，绑定同一个手机号、符合条件时可把当前登录方式并入原账号 | 按钮【去绑定】【暂不】；出现条件按 BR-INV-03 细则（2026-10-03 功能对照 G-05）；并号条件只按 BR-ID-06，文案不写天数（BR-TEXT-13） |
 | 第三方新号绑手机引导·购买前版本 invite.bind_phone_guide.body_before_buy | 绑定手机号后，可在期限内填写邀请码。已用手机号注册过的，绑定同一个手机号、符合条件时可把当前登录方式并入原账号。下单后将不能再填写邀请码，也不能并入原账号 | 登录由点击购买触发时用这一版，按钮同上；【暂不】后继续本次购买（BR-INV-03 细则） |
 | 首次购买前邀请码提示 invite.before_buy_tip | 下单后将不能再填写邀请码。有邀请码可以先填写 | 按钮【先填邀请码】【继续购买】；每个账号一次，服务端记已读（BR-INV-03 细则） |
