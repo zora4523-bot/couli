@@ -787,6 +787,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 提现页·本次上限 withdraw.max_line | 本次最多可提 {amount} | 只在 max_withdrawable_fen 小于可提现余额时显示在输入框下方 |
 | 提现页·全部提现 withdraw.all | 全部提现 | 填入 max_withdrawable_fen；为 0 或不能提现时置灰 |
 | 提现页·预估 withdraw.estimate / withdraw.estimate.net_only | 预计到账 {net}（手续费 {fee}，代扣个税 {tax}），以实际到账为准｜预计到账 {net}，以实际到账为准 | 金额都取 rules 的估算字段；手续费与税额都为 0 时用后一句；估算字段为空时整行不显示 |
+| 提现页·估算计算中 withdraw.estimate.calculating | 计算中… | 输入金额一变化就替换旧估算，新估算返回且归属核对通过后换成上一行；清空输入时估算行隐藏，估算请求失败或超时时也隐藏（BR-WDR-04 细则，2026-10-03 第 5 批第 1 轮评审后补） |
 | 提现页·规则入口 withdraw.rules_link | 提现规则 | 页底文字入口，打开 help_links.withdraw_rules，未配置时不显示 |
 | 分享面板·复制 share.copy_full / share.copy_tpwd_only / share.copy_link_only | 复制完整文案｜只复制淘口令｜只复制链接 | 第二个只在淘宝商品出现，第三个用于京东、拼多多；淘宝取不到推广链接或口令时都不出现（BR-ATTR-10 细则；规划/01 F-SHARE-08，2026-10-03 功能对照 G-83，下同） |
 | 分享面板·复制后 share.copied / share.open_wechat | 已复制，可以打开微信粘贴给好友｜打开微信 | 复制成功后提示；【打开微信】经微信 SDK 打开，本机没有微信时不显示按钮，提示改用表 C 的 share.wechat_unavailable |
