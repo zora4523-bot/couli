@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>线框 · 钱包 Wallet · v20261004</title>
+<link rel="stylesheet" href="../tokens/variables.css">
+<link rel="stylesheet" href="../tokens/foundations.css">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+  /* 本页专用：只用令牌变量，不写新色值 */
+  .wp-nav-side { flex: none; width: var(--interaction-target-minimum); color: var(--color-text-secondary); font-size: var(--font-size-title); line-height: var(--font-line-height-title); font-weight: var(--font-weight-regular); }
+  .wp-inline { display: inline-block; align-self: flex-start; }
+  .wf-empty .wp-inline { align-self: center; }
+  .wf-empty .wf-title { color: var(--color-text-primary); }
+  .wp-full { align-self: stretch; }
+  .wp-balance { font-size: var(--font-size-display); line-height: var(--font-line-height-display); }
+  .wp-kv { display: flex; flex-direction: column; gap: var(--space-1); }
+  .wp-eye { display: inline-flex; align-items: center; justify-content: center; min-width: var(--interaction-target-minimum); min-height: var(--interaction-target-minimum); padding: 0; border: 0; background: transparent; color: var(--color-text-secondary); font: inherit; }
+  .wp-eye i { position: relative; display: block; width: var(--space-6); height: var(--space-3); border: 1px solid var(--color-border-control); border-radius: var(--radius-pill); }
+  .wp-eye i::after { content: ""; position: absolute; left: 50%; top: 50%; width: var(--space-1); height: var(--space-1); transform: translate(-50%, -50%); border-radius: var(--radius-pill); background: var(--color-border-control); }
+  .wp-eye--closed i::before { content: ""; position: absolute; left: calc(var(--space-1) * -1); right: calc(var(--space-1) * -1); top: 50%; height: 1px; background: var(--color-border-control); transform: rotate(-25deg); }
+  .wf-card.wp-list { padding: 0; }
+  .wp-row { position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: var(--interaction-target-minimum); padding: var(--space-2) var(--space-3); }
+  .wp-row + .wp-row { border-top: 1px solid var(--color-border-subtle); }
+  .wp-chev { color: var(--color-text-secondary); }
+  .wp-progress { display: flex; flex-direction: column; gap: var(--space-1); padding-left: var(--space-2); border-left: 2px solid var(--color-border-subtle); font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .wp-placeholder { display: inline-block; padding: 0 var(--space-1); border: 1px dashed var(--color-border-control); border-radius: var(--radius-small); color: var(--color-text-secondary); font-size: var(--font-size-caption); }
+  .wp-switch { outline: 1px dashed var(--color-border-control); outline-offset: calc(var(--space-1) * -1); }
+  .wp-banner-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+  .wp-variant-label { font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); }
+  .wp-sk-label { width: 35%; height: var(--space-3); }
+  .wp-sk-amount { width: 55%; height: var(--space-8); }
+  .wp-sk-line { height: var(--space-4); }
+  .wp-sk-btn { height: var(--component-button-min-height); border-radius: var(--radius-button); }
+  .wp-sk-row { height: var(--interaction-target-minimum); }
+  .wp-under-btn { text-align: center; }
+  /* 评审批注：按钮左上角的「待定」，表示按钮状态未定，不是按钮旁要显示的文字 */
+  .wp-todo-corner { position: absolute; top: calc(var(--space-2) * -1); left: var(--space-2); z-index: 2; }
+  .wp-cond { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-1); outline: 1px dashed var(--color-border-control); border-radius: var(--radius-small); }
+</style>
+</head>
+<body>
+<header class="wf-head">
+  <h1>钱包 <code>Wallet</code> · 线框 v20261004</h1>
+  <p>依据：规划 main 2d23ae7 的 01 §4.1「我的」行、§4.2 Wallet / Ledger / Earnings / WithdrawRecords / RiskNotice / Appeal / DeleteAccount 行、§5 J4 J6、§6 E10 F-SET-04、E11 F-WDR-01 / F-WDR-14、F-RISK-04、F-ACC-10、F-CFG-08；08 BR-FUND-10 / 11 / 14 / 18 / 25、BR-TEXT-01 / 04 / 06 / 10 / 11 / 14 / 19 / 23、BR-WDR-01 / 03 / 05 / 17、BR-ID-02 / 10 / 27 / 31 / 36；04 §6.1 GET /v1/me、§6.4 wallet/summary 与 appeals、§10.1 features；05 F1-12；03 §4.2、§10；10 AC-S2-07、AC-S2-33、AC-S1-60、AC-S1-105；design/references/interaction-patterns.md §3。线框级，不是视觉稿。</p>
+  <p>示例数字全部是样例值（¥12.34、¥56.78、¥7.89、¥5.67 等），不代表真实数据；「今天」按 2026-10-04 计；金额按 BR-TEXT-10 格式化（整数元不带小数，如 ¥0）。</p>
+  <div class="wf-legend"><span><span class="wf-pin wf-pin--inline">1</span> 编号对应右侧注释</span><span><span class="wf-todo-tag">待定</span> 规划未定，见注释里的编号</span><span><span class="wp-placeholder">虚线框</span> 中性占位，不是文案</span><span>按钮左上角的 <span class="wf-todo-tag">待定</span> = 按钮状态未定（评审批注，不是按钮旁的文字）</span><span>虚线外框的整行 / 整块 = 按条件出现（开关、余额为负等）</span><span><span class="wf-tag">M-公开</span> 阶段标记，内测期不显示</span></div>
+</header>
+
+<main class="wf-states">
+
+  <!-- ===================== 1. 正常态 ===================== -->
+  <section class="wf-state" aria-label="状态 1：正常态（已登录）">
+    <div>
+      <p class="wf-state__label">1. 正常态 · 已登录<small>余额不为负、没有暂停、提现开关打开；从「我的」进入</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar wf-anchor"><span class="wf-pin">1</span><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title">钱包</span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack">
+            <div class="wf-row wf-row--between">
+              <div class="wf-anchor wp-inline"><span class="wf-pin">2</span>
+                <div class="wf-muted">可提现余额</div>
+                <div class="wf-amount wp-balance">¥12.34</div>
+              </div>
+              <span class="wf-anchor"><span class="wf-pin">3</span><button class="wp-eye" type="button" aria-label="隐藏金额"><i></i></button></span>
+            </div>
+            <div class="wf-grid-2 wf-anchor"><span class="wf-pin">4</span>
+              <div class="wp-kv"><span class="wf-caption">冻结中</span><span class="wf-amount">¥0</span></div>
+              <div class="wp-kv"><span class="wf-caption">已提现</span><span class="wf-amount">¥23.45</span></div>
+            </div>
+            <div class="wf-anchor"><span class="wf-pin">5</span><button class="couli-button-primary wf-btn--block" type="button">提现</button></div>
+          </div>
+          <div class="wf-card wf-anchor wf-stack"><span class="wf-pin">6</span>
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥56.78</div>
+            <div class="wf-caption">按联盟最新预估计算，以联盟结算金额为准</div>
+            <div class="wp-progress">
+              <span>其中已收货 ¥34.56，预计 11 月结算</span>
+              <span>其中 ¥4.56 暂缓入账</span>
+            </div>
+          </div>
+          <div class="wf-card wp-list">
+            <div class="wp-row wf-anchor"><span class="wf-pin">7</span><span>余额流水</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row wf-anchor"><span class="wf-pin">8</span><span>提现记录</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row wf-anchor wp-switch"><span class="wf-pin">9</span><span>收益看板 <span class="wf-tag">M-公开</span></span><span class="wp-chev" aria-hidden="true">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>导航栏 · 标题「钱包」（01 §4.2 <code>Wallet</code> 页面名）· <code>F-WDR-01</code> · 路由 <code>Wallet</code>（原生，M-内测；只能 App 内与推送打开，不声明深链，<code>BR-ID-10</code> 细则「路由入口矩阵」）。二级页不画底部 Tab <span class="wf-todo-tag">待定</span>（规划未写）</li>
+      <li>余额主卡 · 「可提现余额 ¥{withdrawable_fen}」· <code>F-WDR-01</code> · <code>BR-TEXT-01</code> 术语表与「钱包汇总口径」· 字段 <code>BR-FUND-18</code>；单一余额，不分自购 / 推广两栏（ADD-06）；不显示「累计收益」「历史总收益」类总额（<code>BR-TEXT-01</code> 细则，功能对照 G-37 / Q-11 默认 B）· 路由 <code>Wallet</code></li>
+      <li>金额隐藏开关（小眼睛）· 无障碍标签 <code>amount_mask.hide</code>「隐藏金额」· <code>BR-TEXT-14</code> 表 C · <code>BR-TEXT-10</code> 细则「金额隐藏」· 可选功能，UI 稿采用时实现（功能对照 G-64，AC-S1-105 条件项）；本机偏好，不上传</li>
+      <li>冻结中 / 已提现 · 「冻结中 ¥{frozen_fen}」「已提现 ¥{withdrawn_fen}」· <code>BR-TEXT-01</code>（冻结中 = 审核中、打款中提现单的金额，不含风控冻结；已提现 = 已到账提现单申请额合计，不是累计收益）· <code>BR-FUND-14</code>、<code>BR-FUND-18</code></li>
+      <li>【提现】（01 §5 J6 第 2 步）· <code>F-WDR-01</code> · <code>BR-WDR-01</code>（只能原生发起）· 路由 <code>Withdraw</code>；能不能提、最低额与次数由提现页取规则判断（<code>BR-FUND-18</code> 说明、<code>BR-WDR-07</code>），钱包不预判。不同身份点【提现】的去向由服务端码决定，钱包页本身不区分显示、不预判：未绑手机 → <code>BindPhone</code>（10005），已绑手机未实名 → <code>RealName</code>（30304 / 规则接口的 block_code）（<code>BR-ID-02</code> 身份矩阵「收款账号、提现」行，01 J6 第 2 步，<code>BR-TEXT-14</code> 表 A 10005）。注销冷静期见状态 14</li>
+      <li>预估收益 · 「预估收益 ¥{estimated_total_fen}」+ 注「按联盟最新预估计算，以联盟结算金额为准」；进度行「其中已收货 ¥x，预计 {月份} 结算」「其中 ¥x 暂缓入账」· <code>F-WDR-01</code> · <code>BR-TEXT-01</code>、<code>BR-TEXT-04</code>、<code>BR-FUND-18</code>；取服务端合计，客户端不相加；不出现「待入账」。其他写法见状态 13</li>
+      <li>余额流水 · 入口文字取 08 用词「余额流水」（<code>BR-TEXT-01</code>、<code>BR-TEXT-18</code>；01 §4.2 页面名「收益明细 / 余额流水」）· <code>F-WDR-01</code> · <code>BR-TEXT-19</code> · 路由 <code>Ledger</code>（H5，只读）。收入来源只在余额流水里按类型显示（<code>BR-TEXT-01</code>「收入来源在余额流水按类型显示」，01 §4.2 <code>Wallet</code>「流水标明来源」），钱包页不加来源说明行</li>
+      <li>提现记录 · 01 §4.2 <code>WithdrawRecords</code> 页面名 · <code>F-WDR-09</code> · <code>BR-TEXT-06</code> · 路由 <code>WithdrawRecords</code></li>
+      <li>收益看板 · 文案键 <code>earnings.title</code>「收益看板」· <code>F-WDR-14</code> · <code>BR-FUND-25</code>（待决策，06 功能对照 Q-10 默认 A）· 路由 <code>Earnings</code>（H5，M-公开）；虚线外框 = 入口按 <code>features.earnings.dashboard.visible</code> 显示或隐藏（服务端由 <code>earnings.dashboard.enabled</code> 派生，04 §10.1、05 F1-12、<code>BR-FUND-25</code>），内测期不显示</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 2. 金额隐藏 ===================== -->
+  <section class="wf-state" aria-label="状态 2：金额隐藏">
+    <div>
+      <p class="wf-state__label">2. 金额隐藏<small>用户点了小眼睛；可选功能，UI 稿采用时实现</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title">钱包</span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack">
+            <div class="wf-row wf-row--between">
+              <div class="wf-anchor wp-inline"><span class="wf-pin">2</span>
+                <div class="wf-muted">可提现余额</div>
+                <div class="wf-amount wp-balance">****</div>
+              </div>
+              <span class="wf-anchor"><span class="wf-pin">1</span><button class="wp-eye wp-eye--closed" type="button" aria-label="显示金额"><i></i></button></span>
+            </div>
+            <div class="wp-cond wf-anchor"><span class="wf-pin">3</span>
+              <span class="wp-variant-label">余额为负时才出现</span>
+              <div class="wf-banner wf-banner--warning">待抵扣 ****，<span class="wp-placeholder">后半句</span> <span class="wf-todo-tag">待定</span></div>
+            </div>
+            <div class="wf-grid-2">
+              <div class="wp-kv"><span class="wf-caption">冻结中</span><span class="wf-amount">****</span></div>
+              <div class="wp-kv"><span class="wf-caption">已提现</span><span class="wf-amount">****</span></div>
+            </div>
+            <button class="couli-button-primary wf-btn--block" type="button">提现</button>
+          </div>
+          <div class="wf-card wf-anchor wf-stack"><span class="wf-pin">4</span>
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">****</div>
+            <div class="wf-caption">按联盟最新预估计算，以联盟结算金额为准</div>
+            <div class="wp-progress">
+              <span>其中已收货 ****，预计 11 月结算</span>
+              <span>其中 **** 暂缓入账</span>
+            </div>
+          </div>
+          <div class="wf-card wp-list wf-anchor"><span class="wf-pin">5</span>
+            <div class="wp-row"><span>余额流水</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row"><span>提现记录</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row wp-switch"><span>收益看板 <span class="wf-tag">M-公开</span></span><span class="wp-chev" aria-hidden="true">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>小眼睛（已隐藏）· 无障碍标签 <code>amount_mask.show</code>「显示金额」· <code>BR-TEXT-14</code> 表 C · <code>BR-TEXT-10</code> 细则「金额隐藏」（功能对照 G-64）· 与「我的」、订单页共用同一个本机开关（01 §4.2 <code>Me</code> 行），换账号沿用、卸载即清 · 路由 <code>Wallet</code></li>
+      <li>余额、待抵扣、冻结中、已提现一律显示「****」，不带「¥」、位数与正负号 · <code>BR-TEXT-10</code> 细则「金额隐藏」· AC-S1-105 ②；只改显示，接口与计算不变</li>
+      <li>待抵扣（余额为负时才出现，见状态 5）· 隐藏时显示「待抵扣 ****」· <code>BR-TEXT-10</code>、<code>BR-TEXT-01</code>；后半句仍 <span class="wf-todo-tag">待定</span>（同状态 5 注释 2）</li>
+      <li>预估收益与其中各分项同样「****」· <code>BR-TEXT-10</code>、<code>BR-TEXT-01</code>；月份不是金额，规则没列入隐藏范围，照常显示</li>
+      <li>入口照常；余额流水、收益看板是 H5，隐藏期间不受影响（<code>BR-TEXT-10</code>）· 路由 <code>Ledger</code>、<code>Earnings</code></li>
+    </ol>
+  </section>
+
+  <!-- ===================== 3. 余额为 0 ===================== -->
+  <section class="wf-state" aria-label="状态 3：余额为 0">
+    <div>
+      <p class="wf-state__label">3. 余额为 0<small>新用户或刚提完、暂无预估：各项都是 ¥0</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title">钱包</span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack">
+            <div class="wf-row wf-row--between">
+              <div class="wf-anchor wp-inline"><span class="wf-pin">1</span>
+                <div class="wf-muted">可提现余额</div>
+                <div class="wf-amount wp-balance">¥0</div>
+              </div>
+              <button class="wp-eye" type="button" aria-label="隐藏金额"><i></i></button>
+            </div>
+            <div class="wf-grid-2 wf-anchor"><span class="wf-pin">3</span>
+              <div class="wp-kv"><span class="wf-caption">冻结中</span><span class="wf-amount">¥0</span></div>
+              <div class="wp-kv"><span class="wf-caption">已提现</span><span class="wf-amount">¥0</span></div>
+            </div>
+            <div class="wf-anchor"><span class="wf-pin">2</span><span class="wf-todo-tag wp-todo-corner">待定</span>
+              <button class="couli-button-primary wf-btn--block" type="button">提现</button>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor wf-stack"><span class="wf-pin">4</span>
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥0</div>
+            <div class="wf-caption">按联盟最新预估计算，以联盟结算金额为准</div>
+            <div class="wp-progress">
+              <span>其中已收货 ¥0 <span class="wf-todo-tag">待定</span></span>
+            </div>
+          </div>
+          <div class="wf-card wp-list">
+            <div class="wp-row"><span>余额流水</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row"><span>提现记录</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row wp-switch"><span>收益看板 <span class="wf-tag">M-公开</span></span><span class="wp-chev" aria-hidden="true">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>「可提现余额 ¥0」· <code>BR-TEXT-10</code>（0 分显示「¥0」）· <code>BR-FUND-18</code> withdrawable_fen · 路由 <code>Wallet</code></li>
+      <li class="wf-todo">【提现】按钮左上角 <span class="wf-todo-tag">待定</span>：余额为 0 时是否置灰，规划未写（<code>BR-TEXT-01</code> 只写待抵扣与提现关闭两种置灰；<code>BR-FUND-18</code> 说明能不能提以提现规则接口为准）· 路由 <code>Withdraw</code> · 随 06 Q-E5 关键页确认</li>
+      <li>冻结中 ¥0、已提现 ¥0 照常显示 · <code>BR-TEXT-01</code>（钱包一组数里只有待抵扣按条件出现）</li>
+      <li>预估收益 ¥0；next_credit_period 为 null 时不显示月份（<code>BR-TEXT-01</code>、<code>BR-TEXT-04</code>）。分项为 0 时「其中已收货 ¥0」是否显示 <span class="wf-todo-tag">待定</span>（规划未写）</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 4. 有冻结中金额 ===================== -->
+  <section class="wf-state" aria-label="状态 4：有冻结中金额">
+    <div>
+      <p class="wf-state__label">4. 有冻结中金额<small>有审核中或打款中的提现单；示例冻结中 ¥7.89</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title">钱包</span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack">
+            <div class="wf-row wf-row--between">
+              <div class="wf-anchor wp-inline"><span class="wf-pin">2</span>
+                <div class="wf-muted">可提现余额</div>
+                <div class="wf-amount wp-balance">¥12.34</div>
+              </div>
+              <button class="wp-eye" type="button" aria-label="隐藏金额"><i></i></button>
+            </div>
+            <div class="wf-grid-2">
+              <div class="wp-kv wf-anchor wp-inline"><span class="wf-pin">1</span><span class="wf-caption">冻结中</span><span class="wf-amount">¥7.89</span></div>
+              <div class="wp-kv"><span class="wf-caption">已提现</span><span class="wf-amount">¥23.45</span></div>
+            </div>
+            <button class="couli-button-primary wf-btn--block" type="button">提现</button>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥56.78</div>
+            <div class="wf-caption">按联盟最新预估计算，以联盟结算金额为准</div>
+            <div class="wp-progress"><span>其中已收货 ¥34.56，预计 11 月结算</span></div>
+          </div>
+          <div class="wf-card wp-list">
+            <div class="wp-row"><span>余额流水</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row wf-anchor"><span class="wf-pin">3</span><span>提现记录</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row wp-switch"><span>收益看板 <span class="wf-tag">M-公开</span></span><span class="wp-chev" aria-hidden="true">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>「冻结中 ¥7.89」只显示金额 · <code>BR-TEXT-01</code> 术语表「冻结中」（PENDING_REVIEW / APPROVED / PAYING 提现单的金额）与钱包口径「冻结中 ¥{frozen_fen}」· <code>BR-FUND-14</code> ④ · 路由 <code>Wallet</code>。<span class="wf-todo">可选变体：冻结中 ¥7.89 <span class="wp-placeholder">审核中 / 打款中</span> <span class="wf-todo-tag">待定</span>——<code>BR-FUND-14</code> 细则「冻结中（附原因）」写原因 = 提现单状态文案（<code>BR-TEXT-06</code>），但 <code>BR-TEXT-01</code> 已把 01 J6 / F-WDR-01 的「冻结中（附原因）」列入取代项；04 §6.4 <code>wallet/summary</code> 没有提现单状态字段，要显示需改 04 契约。08 内部同步缺陷，按 08 修正哪一处待定</span></li>
+      <li>可提现余额已不含冻结部分 · <code>BR-FUND-18</code> withdrawable_fen；【提现】照常，今日、本月还可提几次在提现页显示（<code>BR-WDR-04</code> 细则）</li>
+      <li>提现记录 · 冻结中的单在这里看进度与时效（<code>BR-TEXT-06</code>、<code>BR-TEXT-07</code>）· 路由 <code>WithdrawRecords</code>；提交后不能自行撤销（01 §4.2 <code>Withdraw</code> 行，FUND-20）</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 5. 待抵扣 / 余额为负 ===================== -->
+  <section class="wf-state" aria-label="状态 5：有待抵扣（余额为负）">
+    <div>
+      <p class="wf-state__label">5. 有待抵扣 · 余额为负<small>已结算订单被扣回，余额变负；示例待抵扣 ¥5.67</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title">钱包</span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack">
+            <div class="wf-row wf-row--between">
+              <div class="wf-anchor wp-inline"><span class="wf-pin">1</span>
+                <div class="wf-muted">可提现余额</div>
+                <div class="wf-amount wp-balance">¥0</div>
+              </div>
+              <button class="wp-eye" type="button" aria-label="隐藏金额"><i></i></button>
+            </div>
+            <div class="wf-banner wf-banner--warning wf-anchor"><span class="wf-pin">2</span>待抵扣 ¥5.67，后续返利将优先抵扣 <span class="wf-todo-tag">待定</span></div>
+            <div class="wf-grid-2 wf-anchor"><span class="wf-pin">4</span>
+              <div class="wp-kv"><span class="wf-caption">冻结中</span><span class="wf-amount">¥0</span></div>
+              <div class="wp-kv"><span class="wf-caption">已提现</span><span class="wf-amount">¥23.45</span></div>
+            </div>
+            <div class="wf-anchor"><span class="wf-pin">3</span><button class="couli-button-primary wf-btn--block" type="button" aria-disabled="true">提现</button></div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥56.78</div>
+            <div class="wf-caption">按联盟最新预估计算，以联盟结算金额为准</div>
+            <div class="wp-progress"><span>其中已收货 ¥34.56，预计 11 月结算</span></div>
+          </div>
+          <div class="wf-card wp-list">
+            <div class="wp-row wf-anchor"><span class="wf-pin">5</span><span>余额流水</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row"><span>提现记录</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row wp-switch"><span>收益看板 <span class="wf-tag">M-公开</span></span><span class="wp-chev" aria-hidden="true">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>「可提现余额 ¥0」· <code>BR-TEXT-01</code>（available &lt; 0 时可提现显示 ¥0）· <code>BR-FUND-18</code> withdrawable_fen = max(available, 0) · AC-S2-07、AC-S2-33 b · 路由 <code>Wallet</code></li>
+      <li>「待抵扣 ¥5.67」· <code>BR-TEXT-01</code>（negative_fen &gt; 0 时另显示「待抵扣 ¥{negative_fen}」）；<span class="wf-todo">后半句 <span class="wf-todo-tag">待定</span>：「后续返利将优先抵扣」取 <code>BR-FUND-10</code> 细则「展示」，没有文案键；而且用词与 <code>BR-TEXT-01</code> 不符——「返利」只指自购（结算后自购称「实返」，分享与邀请称「推广收益」），负余额却会被任何来源的入账抵扣（AC-S2-07 ③ 不区分新入账来自自购还是推广）。中性写法供负责人选：「后续入账将优先抵扣」（「入账」按 <code>BR-TEXT-01</code> 作动作词），待 08 <code>BR-TEXT-01</code> 加键后定</span>；文字说明加状态底色，不只靠颜色</li>
+      <li>【提现】置灰 · <code>BR-TEXT-01</code>、<code>BR-WDR-05</code>、<code>BR-FUND-11</code> · <code>F-SET-04</code>；如果仍发起提交，返回 30302「账户有待抵扣金额，抵扣完成前暂不能提现」（<code>BR-TEXT-14</code> 表 A）· AC-S2-27</li>
+      <li>冻结中通常回到 ¥0：变负时未打款的提现单自动驳回、冻结额用于抵扣（<code>BR-WDR-05</code> (a)、<code>BR-FUND-11</code>），驳回原因在提现记录里显示（<code>BR-TEXT-08</code>）· AC-S2-08</li>
+      <li>余额流水里能看到「订单扣回」/「部分退款扣回」等变动（<code>BR-TEXT-19</code>）· 路由 <code>Ledger</code></li>
+    </ol>
+  </section>
+
+  <!-- ===================== 6. 账户冻结 / 提现冻结 ===================== -->
+  <section class="wf-state" aria-label="状态 6：账户冻结，提现已暂停">
+    <div>
+      <p class="wf-state__label">6. 账户冻结 · 提现已暂停<small>风控冻结（可带到期时间）或有生效的提现冻结记录；余额照常</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title">钱包</span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-banner wf-banner--warning wf-anchor wp-banner-row"><span class="wf-pin">1</span>
+            <span>提现已暂停：异常交易，预计 10-15 00:00 恢复 <span class="wf-todo-tag">待定</span></span>
+            <span class="wf-anchor"><span class="wf-pin">2</span><span class="wp-placeholder">查看说明 ›</span> <span class="wf-todo-tag">待定</span></span>
+          </div>
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">3</span>
+            <div class="wf-row wf-row--between">
+              <div class="wp-inline">
+                <div class="wf-muted">可提现余额</div>
+                <div class="wf-amount wp-balance">¥12.34</div>
+              </div>
+              <button class="wp-eye" type="button" aria-label="隐藏金额"><i></i></button>
+            </div>
+            <div class="wf-grid-2">
+              <div class="wp-kv"><span class="wf-caption">冻结中</span><span class="wf-amount">¥0</span></div>
+              <div class="wp-kv"><span class="wf-caption">已提现</span><span class="wf-amount">¥23.45</span></div>
+            </div>
+            <div class="wf-anchor"><span class="wf-pin">4</span><span class="wf-todo-tag wp-todo-corner">待定</span>
+              <button class="couli-button-primary wf-btn--block" type="button">提现</button>
+            </div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥56.78</div>
+            <div class="wf-caption">按联盟最新预估计算，以联盟结算金额为准</div>
+            <div class="wp-progress"><span>其中已收货 ¥34.56，预计 11 月结算</span></div>
+          </div>
+          <div class="wf-card wp-list">
+            <div class="wp-row"><span>余额流水</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row"><span>提现记录</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row wp-switch"><span>收益看板 <span class="wf-tag">M-公开</span></span><span class="wp-chev" aria-hidden="true">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>顶部提示「提现已暂停：{reason}」· <code>F-WDR-01</code>（风控暂停顶部提示）· <code>BR-TEXT-01</code> 钱包汇总口径 · 接口字段 <code>risk_paused_reason</code>（<code>BR-FUND-18</code>：返回「用户可见原因 key」）· AC-S2-33 a、AC-S1-60 · 路由 <code>Wallet</code>。<span class="wf-todo">示例横幅 <span class="wf-todo-tag">待定</span>，三处没定：① reason 来源——<code>BR-TEXT-01</code> 写「reason 取字典 <code>risk_msg.&lt;code&gt;</code> 文案」，<code>BR-TEXT-23</code> 细则写「risk_state=frozen 时 {reason} 显示原因类别（<code>risk_reason.&lt;category&gt;</code>）」，08 内部冲突；示例「异常交易」只是按 <code>BR-TEXT-23</code> 画的样例，按 08 修正哪一处由负责人或编排会话定；只有提现冻结记录（withdraw_holds）时各 code 的文案规划也没写。② 到期时间——「，预计 {frozen_until} 恢复」（<code>BR-TEXT-23</code>，时间按 <code>BR-TEXT-11</code>）要的 frozen_until 不在 04 §6.4 <code>wallet/summary</code> 里，需另取 <code>GET /v1/me</code> 的 <code>risk.frozen_until</code>（04 §6.1），或在 04 <code>wallet/summary</code> 加字段（同步缺口）。③ 申诉中（appealing、prev=frozen）提现仍被拦（<code>BR-WDR-05</code>、<code>BR-ID-36</code>），但 <code>BR-FUND-18</code> 只在 risk_state=frozen 或有生效 withdraw_holds 时返回 risk_paused_reason，此时提示是否仍显示没写</span></li>
+      <li class="wf-todo">去说明页的入口 <span class="wf-todo-tag">待定</span> · 01 §4.2 <code>RiskNotice</code>「封禁 / 冻结说明页」覆盖冻结（原因类别、冻结期限、申诉入口，<code>BR-ID-31</code>、<code>BR-ID-36</code>），但钱包上的入口文字与位置规划未写 · 路由 <code>RiskNotice</code>（冻结时的样子见状态 7b）</li>
+      <li>余额、冻结中、预估照常：风控冻结不改余额、不计入冻结中（<code>BR-FUND-14</code> ③、<code>BR-TEXT-01</code>）· 路由 <code>Wallet</code></li>
+      <li class="wf-todo">【提现】按钮左上角 <span class="wf-todo-tag">待定</span>：规划只定顶部提示，没写按钮是否置灰（AC-S2-33 a 也没有按钮断言）；进入提现页会被拦下，提示「提现已暂停，如有疑问请联系客服」（<code>BR-TEXT-14</code> 表 B <code>30303.account_frozen</code>，<code>BR-WDR-05</code>）· 路由 <code>Withdraw</code> · 随 06 Q-E5</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 7a. 账号封禁 → RiskNotice ===================== -->
+  <section class="wf-state" aria-label="状态 7a：账号封禁，转到封禁说明页">
+    <div>
+      <p class="wf-state__label">7a. 账号封禁 → 封禁说明页<small>risk_state=banned：钱包接口返回 10006，转到 RiskNotice</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar wf-anchor"><span class="wf-pin">1</span><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title"><span class="wp-placeholder">说明页标题</span> <span class="wf-todo-tag">待定</span></span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-empty">
+            <div class="wf-img"></div>
+            <div class="wf-anchor wp-inline"><span class="wf-pin">2</span><span class="wf-title">账号已被限制使用</span></div>
+            <div class="wf-anchor wp-inline"><span class="wf-pin">3</span><span>原因：异常交易 <span class="wf-todo-tag">待定</span></span></div>
+            <div class="wf-anchor wp-full"><span class="wf-pin">4</span><button class="couli-button-primary wf-btn--block" type="button">申诉</button></div>
+            <div class="wf-anchor wp-inline"><span class="wf-pin">5</span><span class="wp-placeholder">注销入口</span> <span class="wf-todo-tag">待定</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>进入方式 · 打开钱包时 <code>GET /v1/wallet/summary</code> 不在 10006 白名单，返回 10006 → 按 <code>BR-TEXT-14</code> 表 A 10006 的动作显示封禁说明页 · <code>BR-ID-31</code> · 路由 <code>RiskNotice</code>（01 §4.2「封禁 / 冻结说明页」）。导航栏标题文字 <span class="wf-todo-tag">待定</span>（规划未写）</li>
+      <li>「账号已被限制使用」· 文案键 <code>error.10006</code>（<code>BR-TEXT-14</code> 表 A）· <code>BR-TEXT-23</code> 细则 · <code>F-RISK-04</code></li>
+      <li>原因类别「异常交易」· 字典 <code>risk_reason.abnormal_trade</code>（<code>BR-TEXT-23</code> 原因类别表），不写规则细节；封禁不显示期限（永久，AC-S1-60 ①）；数据取 <code>GET /v1/me</code> 的 <code>risk.reason_category</code>。<span class="wf-todo">「原因：」前缀 <span class="wf-todo-tag">待定</span>：说明页没有对应文案键，这里借用的是 <code>BR-TEXT-23</code> 站内信模板「原因：{reason_category}」的写法</span></li>
+      <li>【申诉】· <code>BR-TEXT-23</code> 细则、<code>BR-ID-36</code> · 路由 <code>Appeal</code>；提交后的样子见状态 7c</li>
+      <li class="wf-todo">注销入口 <span class="wf-todo-tag">待定</span> · <code>BR-ID-31</code> 的例子写「展示封禁说明与申诉、注销入口」，入口文字与位置规划未写；<code>DeleteAccount</code> 为 M-公开（<code>F-ACC-10</code>）</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 7b. 风控冻结 → 冻结说明页 ===================== -->
+  <section class="wf-state" aria-label="状态 7b：风控冻结，冻结说明页">
+    <div>
+      <p class="wf-state__label">7b. 风控冻结 → 冻结说明页<small>risk_state=frozen：只影响提现；从钱包顶部提示进入（入口待定）</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar wf-anchor"><span class="wf-pin">1</span><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title"><span class="wp-placeholder">说明页标题</span> <span class="wf-todo-tag">待定</span></span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-empty">
+            <div class="wf-img"></div>
+            <div class="wf-anchor wp-inline"><span class="wf-pin">2</span><span class="wp-placeholder">冻结说明标题</span> <span class="wf-todo-tag">待定</span></div>
+            <div class="wf-anchor wp-inline"><span class="wf-pin">3</span><span>原因：异常交易 <span class="wf-todo-tag">待定</span></span></div>
+            <div class="wf-anchor wp-inline"><span class="wf-pin">4</span><span class="wp-placeholder">解冻时间 {frozen_until} 的句式</span> <span class="wf-todo-tag">待定</span></div>
+            <div class="wf-anchor wp-full"><span class="wf-pin">5</span><button class="couli-button-primary wf-btn--block" type="button">申诉</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>冻结说明页 · 01 §4.2 <code>RiskNotice</code>「原因类别、冻结期限（封禁永久）、申诉入口」· <code>F-RISK-04</code> · <code>BR-ID-31</code>、<code>BR-ID-36</code> · 路由 <code>RiskNotice</code>；只按 <code>GET /v1/me</code> 的 <code>risk{state, reason_category, frozen_until}</code> 展示（AC-S1-60 ①）。冻结不拦 GET，钱包照常打开（状态 6），进入本页的入口见状态 6 钉 2 <span class="wf-todo-tag">待定</span>；导航栏标题同 7a <span class="wf-todo-tag">待定</span></li>
+      <li class="wf-todo">标题 <span class="wf-todo-tag">待定</span>：规划没有冻结说明页的标题文案；<code>error.10006</code>「账号已被限制使用」是封禁用的（<code>BR-TEXT-23</code> 细则），不能用于冻结（规划未写）</li>
+      <li>原因类别 · 字典 <code>risk_reason.&lt;category&gt;</code>（<code>BR-TEXT-23</code>，示例 abnormal_trade「异常交易」），取 <code>risk.reason_category</code>；「原因：」前缀同 7a <span class="wf-todo-tag">待定</span></li>
+      <li class="wf-todo">解冻时间 <span class="wf-todo-tag">待定</span> · AC-S1-60 ① a「显示原因类别与解冻时间」，取 <code>risk.frozen_until</code>（<code>BR-ID-36</code>）；时间可按 <code>BR-TEXT-11</code> 未来时间格式（<code>BR-TEXT-23</code> 站内信例「11-30 00:00」），但说明页的句式与文案键规划未写；frozen_until 为空（不定期冻结，AC-S1-60 b）时这一行写什么也没写</li>
+      <li>【申诉】· AC-S1-60 ①「两者都有申诉入口」· <code>BR-ID-36</code>（账户申诉对象含 frozen）· 路由 <code>Appeal</code>；申诉期间（appealing、prev=frozen）提现仍返回 30303（<code>BR-WDR-05</code>）</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 7c. 申诉处理中 ===================== -->
+  <section class="wf-state" aria-label="状态 7c：账户申诉处理中">
+    <div>
+      <p class="wf-state__label">7c. 账户申诉处理中<small>封禁后提交了申诉：risk_state=appealing、prev=banned，限制仍按封禁（10006）</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title"><span class="wp-placeholder">说明页标题</span> <span class="wf-todo-tag">待定</span></span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-empty">
+            <div class="wf-img"></div>
+            <div class="wf-anchor wp-inline"><span class="wf-pin">1</span><span class="wf-title">账号已被限制使用</span></div>
+            <div class="wf-anchor wp-inline"><span class="wf-pin">2</span><span>原因：异常交易 <span class="wf-todo-tag">待定</span></span></div>
+            <div class="wf-anchor wp-inline"><span class="wf-pin">3</span><span class="wp-placeholder">申诉进度（处理中）</span> <span class="wf-todo-tag">待定</span></div>
+            <div class="wf-anchor wp-full"><span class="wf-pin">4</span><span class="wf-todo-tag wp-todo-corner">待定</span><button class="couli-button-primary wf-btn--block" type="button">申诉</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>「账号已被限制使用」· <code>error.10006</code>（<code>BR-TEXT-14</code> 表 A）· 申诉期间对外限制同 prev_risk_state，钱包仍 10006 → 说明页（<code>BR-ID-36</code>、AC-S1-60 ⑤）· 路由 <code>RiskNotice</code></li>
+      <li>原因类别同 7a · <code>risk_reason.&lt;category&gt;</code>（<code>BR-TEXT-23</code>）；「原因：」前缀 <span class="wf-todo-tag">待定</span></li>
+      <li class="wf-todo">申诉进度 <span class="wf-todo-tag">待定</span> · <code>BR-TEXT-23</code> 细则「申诉进度与结果在说明页经申诉接口查看」· <code>GET /v1/me/appeals</code>（04 §6.1，10006 白名单内）；规划没有申诉状态的文案键（结果只有站内信 <code>APPEAL_RESULT</code> 模板），处理中显示什么、要不要写结案时限都没写（规划未写）</li>
+      <li class="wf-todo">按钮左上角 <span class="wf-todo-tag">待定</span>：处理中再次提交返回原申诉单、不新建（<code>BR-ID-36</code>、AC-S1-60 ⑤），这时按钮仍显示【申诉】、改为查看进度还是隐藏，规划未写 · 路由 <code>Appeal</code>（01 §4.2「提交申诉与查看进度」）</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 8. 提现功能关闭 ===================== -->
+  <section class="wf-state" aria-label="状态 8：提现功能关闭">
+    <div>
+      <p class="wf-state__label">8. 提现功能关闭<small>后台关了提现总开关（withdraw_enabled=false）；规划另有要求（AC-S2-33 c）</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title">钱包</span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack">
+            <div class="wf-row wf-row--between">
+              <div class="wf-anchor wp-inline"><span class="wf-pin">1</span>
+                <div class="wf-muted">可提现余额</div>
+                <div class="wf-amount wp-balance">¥12.34</div>
+              </div>
+              <button class="wp-eye" type="button" aria-label="隐藏金额"><i></i></button>
+            </div>
+            <div class="wf-grid-2">
+              <div class="wp-kv"><span class="wf-caption">冻结中</span><span class="wf-amount">¥0</span></div>
+              <div class="wp-kv"><span class="wf-caption">已提现</span><span class="wf-amount">¥23.45</span></div>
+            </div>
+            <div class="wf-anchor wf-stack"><span class="wf-pin">2</span>
+              <button class="couli-button-primary wf-btn--block" type="button" aria-disabled="true">提现</button>
+              <span class="wf-caption wp-under-btn">提现功能暂时关闭，请稍后再试</span>
+            </div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥56.78</div>
+            <div class="wf-caption">按联盟最新预估计算，以联盟结算金额为准</div>
+            <div class="wp-progress"><span>其中已收货 ¥34.56，预计 11 月结算</span></div>
+          </div>
+          <div class="wf-card wp-list">
+            <div class="wp-row"><span>余额流水</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row"><span>提现记录</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row wp-switch"><span>收益看板 <span class="wf-tag">M-公开</span></span><span class="wp-chev" aria-hidden="true">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>余额与预估照常显示 · <code>BR-TEXT-01</code>（功能对照 G-73）· 04 §6.4 <code>withdraw_enabled</code> · 路由 <code>Wallet</code></li>
+      <li>【提现】置灰，并显示「提现功能暂时关闭，请稍后再试」· 文案键 <code>error.30306</code>（<code>BR-TEXT-14</code> 表 A，与提交时得到 30306 同一句，不另设键）· <code>BR-WDR-17</code> · AC-S2-33 c。这是本页唯一画在按钮下方的用户文案；放在按钮下方是版式建议</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 9. 游客 ===================== -->
+  <section class="wf-state" aria-label="状态 9：游客引导登录">
+    <div>
+      <p class="wf-state__label">9. 游客 · 引导登录<small>未登录：「我的」Tab 不显示余额区，钱包入口改为引导登录</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wf-navbar__title">我的</span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-anchor wf-stack"><span class="wf-pin">1</span>
+            <div class="wf-row"><span class="wf-avatar"></span><span class="wf-anchor wp-inline"><span class="wf-pin">2</span><span class="wp-placeholder">引导登录文案</span> <span class="wf-todo-tag">待定</span></span></div>
+            <div class="wf-anchor"><span class="wf-pin">3</span><button class="couli-button-primary wf-btn--block" type="button">登录</button></div>
+          </div>
+          <div class="wf-card wp-list wf-anchor"><span class="wf-pin">4</span>
+            <div class="wp-row"><span>帮助中心</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row"><span>设置</span><span class="wp-chev" aria-hidden="true">›</span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span class="is-active"><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>「我的」Tab 游客态 · 01 §4.1「我的」行（游客：引导登录）· 余额、【提现】、预估收益都不显示 · 路由 <code>Me</code>；钱包接口需要登录（04 §6.4 鉴权 login）</li>
+      <li class="wf-todo">引导文案 <span class="wf-todo-tag">待定</span>：01 §4.1 只写「引导登录」，没有文案键（规划未写）；头像用默认（01 §4.1，拍板第二批 OPS-13）</li>
+      <li>【登录】 · 按钮文字用 01 §4.2 的页面名（同订单页游客态）；<code>BR-TEXT-14</code> 表 C 只有 <code>login.help_entry</code>「登录遇到问题」与 <code>rebate_login_to_view</code>「登录查看返利」，都不是这个按钮，正式文案键规划未写；按钮样式随 UI 稿，线框与订单页统一画成主按钮。点后去路由 <code>Login</code>（01 §4.2），登录成功回到来源页（01 §4.2 <code>Login</code> 行、<code>BR-ID-10</code>）；未登录时调钱包接口返回 10001「请先登录」（<code>BR-TEXT-14</code> 表 A）；未登录点推送先登录、再打开消息中心（<code>BR-ID-10</code> 细则「推送点击的落点」）</li>
+      <li>保留帮助中心与【设置】入口，游客无需登录可进入（01 §4.1，<code>BR-ID-02</code> 细则，功能对照 G-18）· 路由 <code>Help</code>、<code>Settings</code></li>
+    </ol>
+  </section>
+
+  <!-- ===================== 10. 加载中 ===================== -->
+  <section class="wf-state" aria-label="状态 10：加载中">
+    <div>
+      <p class="wf-state__label">10. 加载中<small>首次进入、本机没有上次数据</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title">钱包</span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack wf-anchor" aria-busy="true"><span class="wf-pin">1</span>
+            <div class="wf-skeleton wp-sk-label"></div>
+            <div class="wf-skeleton wp-sk-amount"></div>
+            <div class="wf-grid-2"><div class="wf-skeleton wp-sk-line"></div><div class="wf-skeleton wp-sk-line"></div></div>
+            <div class="wf-skeleton wp-sk-btn"></div>
+          </div>
+          <div class="wf-card wf-stack wf-anchor" aria-busy="true"><span class="wf-pin">2</span>
+            <div class="wf-skeleton wp-sk-label"></div>
+            <div class="wf-skeleton wp-sk-amount"></div>
+            <div class="wf-skeleton wp-sk-line"></div>
+          </div>
+          <div class="wf-card wf-stack" aria-busy="true">
+            <div class="wf-skeleton wp-sk-row"></div>
+            <div class="wf-skeleton wp-sk-row"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>余额主卡骨架 · 通用组件 <code>Skeleton</code>（03 §10.2）；骨架只占位，不显示任何数字或「¥0」，避免被当成真实余额 · 路由 <code>Wallet</code></li>
+      <li>预估卡、入口列表同样占位；请求 10 秒超时，读接口自动重试 1 次（03 §4.2，拍板第二批 TECH-20），仍失败转状态 11a / 11b 或 12 · <code>F-CFG-08</code></li>
+    </ol>
+  </section>
+
+  <!-- ===================== 11a. 加载失败 · 服务端出错（无上次数据） ===================== -->
+  <section class="wf-state" aria-label="状态 11a：加载失败，服务端出错，没有上次数据">
+    <div>
+      <p class="wf-state__label">11a. 加载失败 · 服务端出错<small>返回 5xxxx 且本机没有上次成功的数据</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title">钱包</span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-empty wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-img"></div>
+            <span>出了点问题，请稍后再试（a1b2c3）</span>
+            <span class="wf-anchor"><span class="wf-pin">2</span><button class="couli-button-primary" type="button">重试</button> <span class="wf-todo-tag">待定</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>错误态 · 通用组件 <code>ErrorState</code>（03 §10.2）· 「出了点问题，请稍后再试（{trace6}）」· 文案键 <code>error.50001</code> / 其他 5xxxx（<code>BR-TEXT-14</code> 表 A，必须附 trace_id 后 6 位；a1b2c3 为样例）· 路由 <code>Wallet</code></li>
+      <li class="wf-todo">【重试】<span class="wf-todo-tag">待定</span>：「重试」取自 <code>BR-TEXT-14</code> 表 A 50001 的动作栏，表 C 没有通用重试按钮键（规划未写）；读接口重试，不涉及写操作</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 11b. 加载失败 · 断网或超时（无上次数据） ===================== -->
+  <section class="wf-state" aria-label="状态 11b：加载失败，断网或超时，没有上次数据">
+    <div>
+      <p class="wf-state__label">11b. 加载失败 · 断网或超时<small>拿不到任何响应且本机没有上次成功的数据</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title">钱包</span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-empty wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-img"></div>
+            <span><span class="wp-placeholder">断网 / 超时且没有上次数据时的文案</span> <span class="wf-todo-tag">待定</span></span>
+            <span class="wf-anchor"><span class="wf-pin">2</span><button class="couli-button-primary" type="button">重试</button> <span class="wf-todo-tag">待定</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li class="wf-todo">错误态 · 通用组件 <code>ErrorState</code>（03 §10.2）· 文案 <span class="wf-todo-tag">待定</span>：规划未写（<code>net.stale_data</code> 只用于有上次数据，<code>h5.load_failed</code> 只用于 H5）· <code>F-CFG-08</code> · 路由 <code>Wallet</code></li>
+      <li class="wf-todo">【重试】<span class="wf-todo-tag">待定</span>：同 11a，没有按钮键（规划未写）</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 12. 加载失败（有上次数据） ===================== -->
+  <section class="wf-state" aria-label="状态 12：加载失败，显示上次数据">
+    <div>
+      <p class="wf-state__label">12. 加载失败 · 显示上次数据<small>请求失败（断网、超时或服务端出错），本机有上次成功的数据（F-CFG-08）</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title">钱包</span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-banner wf-banner--info wf-anchor"><span class="wf-pin">1</span>网络不可用，以下为 今天 09:05 的数据</div>
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">2</span>
+            <div class="wf-row wf-row--between">
+              <div class="wp-inline">
+                <div class="wf-muted">可提现余额</div>
+                <div class="wf-amount wp-balance">¥12.34</div>
+              </div>
+              <button class="wp-eye" type="button" aria-label="隐藏金额"><i></i></button>
+            </div>
+            <div class="wf-grid-2">
+              <div class="wp-kv"><span class="wf-caption">冻结中</span><span class="wf-amount">¥0</span></div>
+              <div class="wp-kv"><span class="wf-caption">已提现</span><span class="wf-amount">¥23.45</span></div>
+            </div>
+            <div class="wf-anchor"><span class="wf-pin">3</span><span class="wf-todo-tag wp-todo-corner">待定</span>
+              <button class="couli-button-primary wf-btn--block" type="button">提现</button>
+            </div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥56.78</div>
+            <div class="wf-caption">按联盟最新预估计算，以联盟结算金额为准</div>
+            <div class="wp-progress"><span>其中已收货 ¥34.56，预计 11 月结算</span></div>
+          </div>
+          <div class="wf-card wp-list wf-anchor"><span class="wf-pin">4</span>
+            <div class="wp-row"><span>余额流水</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row"><span>提现记录</span><span class="wp-chev" aria-hidden="true">›</span></div>
+            <div class="wp-row wp-switch"><span>收益看板 <span class="wf-tag">M-公开</span></span><span class="wp-chev" aria-hidden="true">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>提示条「网络不可用，以下为 {time} 的数据」· 文案键 <code>net.stale_data</code>（<code>BR-TEXT-14</code> 表 C，用处「订单、钱包页请求失败时显示」）· 时间按 <code>BR-TEXT-11</code>（示例「今天 09:05」）· <code>F-CFG-08</code>（拍板第二批 TECH-20）· 路由 <code>Wallet</code>。03 §4.2 写的是「更新于 HH:mm」，以 08 为准。<span class="wf-todo">服务端出错（5xxxx）时也用这句，「网络不可用」与事实不符 <span class="wf-todo-tag">待定</span>：需在 08 按断网与服务端出错区分，或改措辞（规划未写）</span></li>
+      <li>金额为上次成功的数据（03 §4.2）；不重新计算、不拼凑</li>
+      <li class="wf-todo">【提现】按钮左上角 <span class="wf-todo-tag">待定</span>：显示上次数据时是否可点，规划未写（提现页每次进入先取规则，<code>BR-WDR-07</code> 细则）· 路由 <code>Withdraw</code></li>
+      <li>入口与其他状态一致，收益看板同样按 <code>features.earnings.dashboard.visible</code> 显示或隐藏（状态 1 注释 9）；规划没有「离线时隐藏看板入口」的规则（01 §4.2 <code>Earnings</code> 只写「开关关闭时隐藏」）· 路由 <code>Ledger</code>、<code>WithdrawRecords</code>、<code>Earnings</code></li>
+    </ol>
+  </section>
+
+  <!-- ===================== 13. 预估进度行的几种写法 ===================== -->
+  <section class="wf-state" aria-label="状态 13：预估收益进度行的几种写法">
+    <div>
+      <p class="wf-state__label">13. 预估收益进度行的几种写法<small>规划另有要求：按服务端返回决定显示月份、核对中、暂缓</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-body">
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">1</span>
+            <span class="wp-variant-label">a · 有预计结算月份</span>
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥56.78</div>
+            <div class="wp-progress"><span>其中已收货 ¥34.56，预计 11 月结算</span></div>
+          </div>
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">2</span>
+            <span class="wp-variant-label">b · 有暂缓部分</span>
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥56.78</div>
+            <div class="wp-progress"><span>其中已收货 ¥34.56，预计 11 月结算</span><span>其中 ¥4.56 暂缓入账</span></div>
+          </div>
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">3</span>
+            <span class="wp-variant-label">c · credit_overdue=true 且 next_credit_period=null</span>
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥56.78</div>
+            <div class="wp-progress"><span>其中已收货 ¥34.56，入账核对中</span></div>
+          </div>
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">4</span>
+            <span class="wp-variant-label">d · 没有月份、未逾期</span>
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥56.78</div>
+            <div class="wp-progress"><span>其中已收货 ¥34.56</span></div>
+          </div>
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">5</span>
+            <span class="wp-variant-label">e · 月份与「入账核对中」同时出现</span>
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥56.78</div>
+            <div class="wp-progress"><span>其中已收货 ¥34.56，预计 11 月结算</span><span><span class="wp-placeholder">「入账核对中」与月份的连接写法</span> <span class="wf-todo-tag">待定</span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>有预计月份 · 「其中已收货 ¥{pending_credit_fen}，预计 {月份} 结算」· <code>BR-TEXT-01</code>、<code>BR-TEXT-04</code>（与今天同年显示「{M} 月」，跨年「{YYYY} 年 {M} 月」）· next_credit_period 取值 <code>BR-FUND-18</code> · 写法同 AC-S2-33</li>
+      <li>有暂缓 · 「其中 ¥{pending_credit_paused_fen} 暂缓入账」，只在 &gt; 0 时出现，不说明是维权还是其他原因 · <code>BR-TEXT-01</code></li>
+      <li>只有核对中 · credit_overdue=true、next_credit_period=null 时附「入账核对中」，不显示月份 · <code>BR-TEXT-01</code>、<code>BR-FUND-18</code>；与「其中已收货」的连接方式按 AC-S2-33 进度行类推</li>
+      <li>没有月份 · next_credit_period 为 null、credit_overdue=false 时不显示月份，客户端不推算（<code>BR-TEXT-01</code>、<code>BR-TEXT-04</code>）</li>
+      <li class="wf-todo">月份与核对中并存 · <code>BR-FUND-18</code> 细则：逾期的单不计入 next_credit_period、只置 credit_overdue=true，其他订单照样给出月份，两者可以同时返回；这时两段怎样连接 <span class="wf-todo-tag">待定</span>（规划未写，<code>BR-TEXT-01</code> 只分别写了两段的触发条件）</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 14. 注销冷静期（M-公开） ===================== -->
+  <section class="wf-state" aria-label="状态 14：注销冷静期">
+    <div>
+      <p class="wf-state__label">14. 注销冷静期 <span class="wf-tag">M-公开</span><small>已申请注销、在 7×24 小时冷静期内；可撤回</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wp-nav-side" aria-hidden="true">‹</span><span class="wf-navbar__title">钱包</span><span class="wp-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-row wf-row--between">
+              <div class="wp-inline">
+                <div class="wf-muted">可提现余额</div>
+                <div class="wf-amount wp-balance">¥12.34</div>
+              </div>
+              <button class="wp-eye" type="button" aria-label="隐藏金额"><i></i></button>
+            </div>
+            <div class="wf-grid-2">
+              <div class="wp-kv"><span class="wf-caption">冻结中</span><span class="wf-amount">¥0</span></div>
+              <div class="wp-kv"><span class="wf-caption">已提现</span><span class="wf-amount">¥23.45</span></div>
+            </div>
+            <div class="wf-anchor"><span class="wf-pin">2</span><span class="wf-todo-tag wp-todo-corner">待定</span>
+              <button class="couli-button-primary wf-btn--block" type="button">提现</button>
+            </div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wf-muted">预估收益</div>
+            <div class="wf-amount wf-amount--lg">¥56.78</div>
+            <div class="wf-caption">按联盟最新预估计算，以联盟结算金额为准</div>
+            <div class="wp-progress"><span>其中已收货 ¥34.56，预计 11 月结算</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>钱包照常显示 · 冷静期内所有 GET 接口在 10007 白名单（<code>BR-ID-27</code>），金额与入口同状态 1；规划没写冷静期内钱包要加提示，不画 · <code>F-ACC-10</code>（M-公开）· 路由 <code>Wallet</code></li>
+      <li class="wf-todo">【提现】按钮左上角 <span class="wf-todo-tag">待定</span>：提交提现 <code>POST /v1/withdrawals</code> 不在白名单，返回 10007，按 <code>BR-TEXT-14</code> 表 A 10007（data.stage=冷静期）跳注销进度页、不弹提示；钱包上是否提前置灰或直接转注销进度页，规划未写。提现规则接口是 GET、照常放行，<code>BR-WDR-03</code> 的检查里没有冷静期，用户可能填完金额、提交时才被拦。注销进度页没有单列路由名（01 §4.2 只有 <code>DeleteAccount</code>）· 路由 <code>Withdraw</code></li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="wf-foot">
+  <h2>本页覆盖的状态</h2>
+  <ul>
+    <li>1. 正常态（已登录）</li>
+    <li>2. 金额隐藏（可选功能；含余额为负时的「待抵扣 ****」）</li>
+    <li>3. 余额为 0</li>
+    <li>4. 有冻结中金额（只显示金额；附状态标签为可选变体，待定）</li>
+    <li>5. 有待抵扣 · 余额为负（待扣回）</li>
+    <li>6. 账户冻结 · 提现已暂停（含提现冻结记录）</li>
+    <li>7a. 账号封禁 → 封禁说明页 RiskNotice</li>
+    <li>7b. 风控冻结 → 冻结说明页 RiskNotice（原因类别 + 解冻时间）</li>
+    <li>7c. 账户申诉处理中（prev=banned）</li>
+    <li>8. 提现功能关闭（规划另有要求：AC-S2-33 c、功能对照 G-73）</li>
+    <li>9. 游客 · 引导登录（「我的」Tab）</li>
+    <li>10. 加载中</li>
+    <li>11a. 加载失败 · 服务端出错（没有上次数据）</li>
+    <li>11b. 加载失败 · 断网或超时（没有上次数据）</li>
+    <li>12. 加载失败 · 显示上次数据（规划另有要求：F-CFG-08）</li>
+    <li>13. 预估收益进度行的几种写法 a–e（规划另有要求：BR-TEXT-01 进度行）</li>
+    <li>14. 注销冷静期（M-公开；BR-ID-27）</li>
+  </ul>
+
+  <h2>待定项</h2>
+  <ul>
+    <li><span class="wf-todo-tag">待定</span> 【提现】按钮在余额为 0（状态 3）、风控冻结或提现冻结记录生效（状态 6）、显示上次数据（状态 12）、注销冷静期（状态 14）时是否置灰或怎样拦 —— 规划未写（BR-TEXT-01 只定待抵扣与提现关闭两种置灰，AC-S2-33 a 无按钮断言）；随 06 Q-E5</li>
+    <li><span class="wf-todo-tag">待定</span> 「提现已暂停：{reason}」的 reason 取 <code>risk_msg.&lt;code&gt;</code>（BR-TEXT-01）还是 <code>risk_reason.&lt;category&gt;</code>（BR-TEXT-23 细则）（状态 6）—— 08 内部冲突，按 08 修正哪一处由负责人或编排会话定</li>
+    <li><span class="wf-todo-tag">待定</span> 提现已暂停的到期时间从哪取（状态 6）—— 另取 GET /v1/me 的 risk.frozen_until，或在 04 §6.4 wallet/summary 加字段（同步缺口）</li>
+    <li><span class="wf-todo-tag">待定</span> 申诉中（appealing、prev=frozen）钱包是否仍显示「提现已暂停」（状态 6）—— BR-FUND-18 的 risk_paused_reason 返回条件不含 appealing</li>
+    <li><span class="wf-todo-tag">待定</span> 提现冻结记录各原因的 <code>risk_msg.&lt;code&gt;</code> 文案（状态 6）—— 规划未写（BR-TEXT-14 risk_msg 字典后台可编辑，未列 code）</li>
+    <li><span class="wf-todo-tag">待定</span> 冻结时从钱包去说明页的入口文字与位置（状态 6）—— 规划未写（01 §4.2 RiskNotice 行）</li>
+    <li><span class="wf-todo-tag">待定</span> 冻结中是否附提现单状态（审核中 / 打款中）（状态 4）—— BR-FUND-14 细则「附原因」与 BR-TEXT-01 取代项冲突，wallet/summary 无提现单状态字段；按 08 修正处待定</li>
+    <li><span class="wf-todo-tag">待定</span> 「待抵扣」提示后半句的文案键与用词（状态 2、5）—— BR-FUND-10 细则句「后续返利将优先抵扣」无键，且「返利」只指自购；候选「后续入账将优先抵扣」，待 08 BR-TEXT-01 加键</li>
+    <li><span class="wf-todo-tag">待定</span> 预估分项为 0 时是否显示「其中已收货 ¥0」（状态 3）；月份与「入账核对中」同时出现时的连接写法（状态 13 e）—— 规划未写</li>
+    <li><span class="wf-todo-tag">待定</span> 游客引导登录文案与登录按钮文案（状态 9）—— 规划未写（01 §4.1 只写「引导登录」）</li>
+    <li><span class="wf-todo-tag">待定</span> 说明页：导航栏标题、「原因：」前缀（状态 7a、7b、7c）；冻结时的标题、解冻时间句式、不定期冻结时写什么（状态 7b）；注销入口（状态 7a）—— 规划未写（BR-ID-31 例；DeleteAccount 为 M-公开）</li>
+    <li><span class="wf-todo-tag">待定</span> 申诉处理中的进度文案，以及处理中【申诉】按钮怎样显示（状态 7c）—— 规划未写（BR-TEXT-23 只说经申诉接口查看）</li>
+    <li><span class="wf-todo-tag">待定</span> 断网或超时且没有上次数据时的错误文案（状态 11b）；【重试】按钮的文案键（状态 11a、11b）—— 规划未写（表 A 只写动作「重试」）</li>
+    <li><span class="wf-todo-tag">待定</span> 服务端出错时仍显示「网络不可用，以下为 {time} 的数据」措辞不准（状态 12）—— 需在 08 BR-TEXT-14 区分或改措辞</li>
+    <li><span class="wf-todo-tag">待定</span> 二级页是否保留底部 Tab（状态 1 起）—— 规划未写；随 06 Q-E5</li>
+    <li><span class="wf-todo-tag">待定</span> 小眼睛（金额隐藏）做不做 —— 可选功能，UI 稿采用时实现（BR-TEXT-10 细则、AC-S1-105 条件项）；随 06 Q-E5</li>
+    <li><span class="wf-todo-tag">待定</span> 收益看板入口是否进正式公开版 —— 06 功能对照 Q-10、08/14 BR-FUND-25（待决策，默认 A）</li>
+  </ul>
+
+  <h2>请负责人确认</h2>
+  <ul>
+    <li>钱包最上面只放一个「可提现余额」和【提现】按钮，下面写「冻结中」「已提现」，再单独一块写「预估收益」和预计哪个月结算；不显示「一共赚了多少」。这样排可以吗？</li>
+    <li>余额是 0、账户被暂停提现、网络断了只能看旧数据、或者正在注销的时候，【提现】按钮是直接变灰，还是照常能点、点进去再告诉原因？请定一个统一做法。</li>
+    <li>余额变成负数时，提示后半句想用「后续入账将优先抵扣」（规则里原写「后续返利」，但分享和邀请的收益也会拿来抵扣），可以吗？另外，金额旁边的小眼睛（一点就把所有金额变成 ****）要不要做？</li>
+  </ul>
+</footer>
+</body>
+</html>

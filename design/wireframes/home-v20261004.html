@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>线框 · 首页 Home · v20261004</title>
+<link rel="stylesheet" href="../tokens/variables.css">
+<link rel="stylesheet" href="../tokens/foundations.css">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+  /* 本页专用（hm- 前缀）：颜色、字号、间距、圆角只用令牌；宽高为线框尺寸。 */
+  .hm-top { flex: none; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2) var(--space-4) var(--space-1); }
+  .hm-search { display: flex; align-items: center; gap: var(--space-2); }
+  .hm-search__field { flex: 1; display: flex; align-items: center; gap: var(--space-2); color: var(--color-text-secondary); font-size: var(--font-size-footnote); }
+  .hm-search__icon { flex: none; width: 16px; height: 16px; border: 2px solid var(--color-border-control); border-radius: var(--radius-pill); }
+  .hm-ask { flex: none; }
+  .hm-ask--todo { border-style: dashed; color: var(--color-text-secondary); }
+  .hm-notice { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-small); background: var(--color-background-surface); font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .hm-notice__text { flex: 1; }
+  .hm-notice__dot { flex: none; width: 16px; height: 16px; border-radius: var(--radius-small); background: var(--color-background-muted); }
+  .hm-close { flex: none; display: inline-flex; align-items: center; justify-content: center; color: var(--color-text-secondary); font-size: var(--font-size-body); line-height: 1; }
+  .hm-banner { position: relative; }
+  .hm-banner .wf-img { width: 100%; height: 132px; border-radius: var(--radius-card); }
+  .hm-adtag { position: absolute; top: var(--space-2); left: var(--space-2); }
+  .hm-dots { position: absolute; bottom: var(--space-2); left: 0; right: 0; display: flex; justify-content: center; gap: var(--space-1); }
+  .hm-dots i { width: 6px; height: 6px; border-radius: var(--radius-pill); background: var(--color-border-control); }
+  .hm-icongrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-3) var(--space-2); text-align: center; font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .hm-icongrid i { display: block; width: 36px; height: 36px; margin: 0 auto var(--space-1); border-radius: var(--radius-small); background: var(--color-background-muted); }
+  .hm-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
+  .hm-scroll { display: flex; gap: var(--space-2); overflow: hidden; }
+  .hm-mini { position: relative; flex: none; width: 104px; display: flex; flex-direction: column; gap: var(--space-1); }
+  .hm-mini .wf-img { width: 104px; height: 88px; }
+  .hm-activity { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+  .hm-activity .wf-img { width: 100%; height: 72px; border-radius: var(--radius-card); }
+  .hm-feed { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+  .hm-pcard { position: relative; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2); border-radius: var(--radius-card); background: var(--color-background-surface); box-shadow: var(--shadow-card); }
+  .hm-pcard .wf-img { width: 100%; height: 132px; }
+  .hm-pcard__tags { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+  .hm-price { display: flex; align-items: baseline; gap: var(--space-1); flex-wrap: wrap; }
+  .hm-price .wf-amount { font-size: var(--font-size-body); }
+  .hm-sub { font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .hm-rebate { display: flex; align-items: center; justify-content: space-between; gap: var(--space-1); }
+  .hm-info { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 1px solid var(--color-border-control); border-radius: var(--radius-pill); font-size: var(--font-size-caption); line-height: 1; color: var(--color-text-secondary); }
+  .hm-disclaimer { position: relative; padding: var(--space-2) var(--space-1); border-top: 1px solid var(--color-border-subtle); font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .hm-anno { padding: var(--space-2) var(--space-3); border: 1px dashed var(--color-border-control); border-radius: var(--radius-small); background: transparent; font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .hm-anno b { color: var(--color-text-primary); }
+  .hm-clip { position: relative; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-card); background: var(--color-background-surface); box-shadow: var(--shadow-floating); }
+  .hm-clip__text { flex: 1; }
+  .hm-syspaste { flex: none; display: inline-flex; align-items: center; min-height: var(--interaction-target-minimum); padding: 0 var(--space-3); border: 1px dashed var(--color-border-control); border-radius: var(--radius-pill); font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .hm-tabbar-todo { flex: none; padding: var(--space-3) var(--space-4) var(--space-6); border-top: 1px dashed var(--color-border-control); background: var(--color-background-surface); text-align: center; font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .hm-popup { position: absolute; left: var(--space-8); right: var(--space-8); top: 18%; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
+  .hm-popup .wf-img { width: 100%; height: 360px; border-radius: var(--radius-card); }
+  .hm-popup__close { display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-pill); background: var(--color-background-surface); font-size: var(--font-size-title); line-height: 1; color: var(--color-text-primary); }
+  .hm-ptr { display: flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-1) 0; font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .hm-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--color-border-subtle); border-top-color: var(--color-border-control); border-radius: var(--radius-pill); }
+  .hm-sk-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-3) var(--space-2); }
+  .hm-sk-grid .wf-skeleton { width: 36px; height: 36px; margin: 0 auto; }
+  .hm-basic { display: flex; flex-direction: column; gap: var(--space-2); }
+  .hm-navbtn { flex: none; font-size: var(--font-size-footnote); font-weight: var(--font-weight-regular); color: var(--color-text-link); }
+  .hm-paste { align-self: flex-start; }
+  .wf-notes .hm-sample { color: var(--color-text-primary); }
+  /* 状态标题较长时不把左列撑宽，保持手机 375 宽、注释列紧贴右侧 */
+  .wf-state > div:first-child { max-width: 375px; }
+  /* PlatformBadge 的小图标占位（03 §10.2「文字 + 小图标」）：中性虚线方块，不画任何商标形状；图标本身只放 design/icons/platform/ */
+  .wf-tag--source::before { content: ""; flex: none; width: 10px; height: 10px; margin-right: var(--space-1); border: 1px dashed var(--color-border-control); }
+  .hm-mini .hm-sub { line-height: var(--font-line-height-caption); }
+  .hm-mini .hm-rebate { justify-content: flex-start; }
+  .hm-pastes { display: flex; align-items: flex-end; gap: var(--space-4); }
+  .hm-pastes__col { display: flex; flex-direction: column; gap: var(--space-1); }
+  .hm-result { position: relative; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border: 1px dashed var(--color-border-control); border-radius: var(--radius-card); }
+  .hm-result__head { font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .hm-rcard { position: relative; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2) var(--space-3); border-radius: var(--radius-card); background: var(--color-background-surface); box-shadow: var(--shadow-card); }
+  .hm-rcard__main { display: flex; gap: var(--space-2); }
+  .hm-rcard__main .wf-img { width: 64px; height: 64px; }
+  .hm-rcard__info { flex: 1; display: flex; flex-direction: column; gap: var(--space-1); }
+  .hm-fail { display: flex; flex-direction: column; gap: var(--space-2); }
+  .hm-fail__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+  .hm-btn-off { background: var(--color-button-primary-disabled-background); color: var(--color-button-primary-disabled-text); border-style: dashed; }
+  /* 遮罩：wireframe.css 的 .wf-scrim 写死了 rgba 色值，本页改用令牌 + 不透明度覆盖，不改共用样式 */
+  .wf-scrim { background: var(--color-text-primary); opacity: 0.4; }
+  /* 贴满手机宽度的条（Tab、下拉提示）上的编号钉放到内侧，避免被手机圆角裁掉 */
+  .wf-pin.hm-pin-in { top: var(--space-1); right: var(--space-2); }
+  /* 提示条右侧已有按钮的编号钉，条本身的钉放左上角 */
+  .wf-pin.hm-pin-left { right: auto; left: calc(var(--space-2) * -1); }
+</style>
+</head>
+<body>
+<header class="wf-head">
+  <h1>首页 <code>Home</code> · 线框 v20261004</h1>
+  <p>依据：规划 main 2d23ae7 的 01 §4.1、§4.2（Home、BasicMode 行）、§5 J1 J2、§6 E03 HOME、E06 CLIP；03 §4.1、§4.2、§4.3、§4.6、§6、§10；04 §6.2；08 BR-TEXT-01/10/12/13/14/17、BR-PRICE-01/03/04/05/06/07/08/09/17/21/22、BR-ID-02/03/10/11/16、BR-INV-04/07、BR-AI-11/12；09 5_X CAP-X-02；10 AC-S1-02、03、08、09、10、63；design/references/interaction-patterns.md。线框级，不是视觉稿。</p>
+  <p>示例数字（¥12.34、¥0.56、¥0.28–¥0.56 等价格与返利、邀请码 AB23CD、trace 尾号 c3d4e5）全部是样例值，不是报价；商品标题、图片、公告、Banner、金刚区名称都由联盟接口或运营配置下发，用灰条和占位图表示。虚线框「标注」是给开发看的说明，不是界面元素。</p>
+  <div class="wf-legend"><span><span class="wf-pin wf-pin--inline">1</span> 编号对应右侧注释</span><span><span class="wf-todo-tag">待定</span> 规划未定，见注释里的编号</span><span><span class="wf-tag wf-tag--source">淘宝</span> 平台来源 PlatformBadge：文字 + 虚线小方块（小图标占位，图标只放 icons/platform/，线框不画任何商标形状；03 §10.2）</span></div>
+</header>
+
+<main class="wf-states">
+
+  <!-- ===================== 状态 1 ===================== -->
+  <section class="wf-state" aria-label="状态 1：正常态（已登录）">
+    <div>
+      <p class="wf-state__label">1. 正常态 · 已登录 · 假设 Agent 已开放<small>同意隐私政策、已登录，配置与信息流都拉取成功；Agent 对当前用户已开放（登记号已填好，或用户在内部测试名单内，BR-AI-12），否则看到的是状态 7。按 iOS 画：Android 默认与鸿蒙的正常态都带「粘贴查返利」按钮，见 6c。长图示意，实际为滚动页面。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field wf-anchor"><span class="wf-pin">1</span><span class="hm-search__icon"></span><span>[搜索框占位文字]</span> <span class="wf-todo-tag">待定</span></div>
+            <span class="wf-btn hm-ask wf-anchor"><span class="wf-pin">2</span>问 AI</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-notice wf-anchor"><span class="wf-pin">3</span><span class="hm-notice__dot"></span><span class="hm-notice__text">[公告文字 · 首页配置或公告 CMS]</span><span class="hm-close couli-touch-target" aria-label="关闭公告">×</span></div>
+
+          <div class="hm-banner wf-anchor"><span class="wf-pin">4</span><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span><div class="hm-dots"><i></i><i></i><i></i></div></div>
+
+          <div class="wf-card wf-anchor"><span class="wf-pin">5</span>
+            <div class="hm-icongrid">
+              <span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span>
+              <span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span>
+            </div>
+          </div>
+
+          <div class="wf-card wf-anchor"><span class="wf-pin">6</span>
+            <div class="hm-section-head"><span class="wf-title">[卡片标题 · 运营配置]</span><span class="wf-link wf-caption">[更多]</span></div>
+            <div class="hm-scroll">
+              <div class="hm-mini"><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span><span class="hm-sub">券后</span><span class="wf-amount">¥19.9</span><span class="hm-sub">券前 ¥22.9 · 券 ¥3</span><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥1.1</span><span class="hm-info" aria-label="口径说明">i</span></div></div>
+              <div class="hm-mini"><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span><span class="hm-sub">售价</span><span class="wf-amount">¥26.8</span><span class="hm-sub">[无券状态的呈现] <span class="wf-todo-tag">待定</span></span><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥0.9</span><span class="hm-info" aria-label="口径说明">i</span></div></div>
+              <div class="hm-mini"><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span><span class="hm-sub">券后</span><span class="wf-amount">¥8.8</span><span class="hm-sub">券前 ¥9.8 · 券 ¥1</span><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥0.42</span><span class="hm-info" aria-label="口径说明">i</span></div></div>
+            </div>
+          </div>
+
+          <div class="hm-activity wf-anchor"><span class="wf-pin">7</span><div class="wf-img"></div><div class="wf-img"></div></div>
+
+          <div class="wf-card wf-anchor"><span class="wf-pin">8</span>
+            <div class="hm-section-head"><span class="wf-title">[卡片标题 · 运营配置]</span></div>
+            <div class="hm-feed">
+              <div class="hm-pcard">
+                <div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span>
+                <div class="wf-line" style="width: 100%"></div>
+                <div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag">有券</span></div>
+                <div class="hm-price"><span class="hm-sub">券后</span><span class="wf-amount">¥15.6</span></div>
+                <div class="hm-sub">券前 ¥18.6 · 券 ¥3</div>
+                <div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥0.78</span><span class="hm-info" aria-label="口径说明">i</span></div>
+              </div>
+              <div class="hm-pcard">
+                <div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span>
+                <div class="wf-line" style="width: 100%"></div>
+                <div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">京东</span></div>
+                <div class="hm-price"><span class="hm-sub">售价</span><span class="wf-amount">¥32</span></div>
+                <div class="hm-sub">[无券状态的呈现] <span class="wf-todo-tag">待定</span></div>
+                <div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥1.6</span><span class="hm-info" aria-label="口径说明">i</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hm-feed wf-anchor"><span class="wf-pin">9</span>
+            <div class="hm-pcard wf-anchor"><span class="wf-pin">10</span>
+              <div class="wf-img"></div>
+              <div class="wf-line" style="width: 100%"></div><div class="wf-line" style="width: 70%"></div>
+              <div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag">有券</span></div>
+              <div class="wf-anchor"><span class="wf-pin">11</span>
+                <div class="hm-price"><span class="hm-sub">券后</span><span class="wf-amount">¥12.34</span></div>
+                <div class="hm-sub">券前 ¥17.34 · 券 ¥5</div>
+              </div>
+              <div class="hm-rebate wf-anchor"><span class="wf-pin">12</span><span class="wf-tag wf-tag--pending">预估返 ¥0.56</span><span class="hm-info" aria-label="口径说明">i</span></div>
+            </div>
+            <div class="hm-pcard">
+              <div class="wf-img"></div>
+              <div class="wf-line" style="width: 100%"></div><div class="wf-line" style="width: 55%"></div>
+              <div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">京东</span></div>
+              <div class="hm-price"><span class="hm-sub">售价</span><span class="wf-amount">¥45.6</span></div>
+              <div class="hm-sub">[无券状态的呈现] <span class="wf-todo-tag">待定</span></div>
+              <div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥2.34</span><span class="hm-info">i</span></div>
+            </div>
+            <div class="hm-pcard">
+              <div class="wf-img"></div>
+              <div class="wf-line" style="width: 100%"></div><div class="wf-line" style="width: 65%"></div>
+              <div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">拼多多</span><span class="wf-tag">有券</span></div>
+              <div class="hm-price"><span class="hm-sub">拼单券后</span><span class="wf-amount">¥9.9</span></div>
+              <div class="hm-sub">拼单券前 ¥12.9 · 券 ¥3</div>
+              <div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥0.3</span><span class="hm-info">i</span></div>
+            </div>
+            <div class="hm-pcard">
+              <div class="wf-img"></div>
+              <div class="wf-line" style="width: 100%"></div><div class="wf-line" style="width: 60%"></div>
+              <div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag">预售</span></div>
+              <div class="hm-price"><span class="hm-sub">售价</span><span class="wf-amount">¥88</span></div>
+              <div class="hm-sub">定金与尾款以下单页为准</div>
+              <div class="hm-sub">[无券状态的呈现] <span class="wf-todo-tag">待定</span></div>
+              <div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥3.21</span><span class="hm-info">i</span></div>
+            </div>
+          </div>
+
+          <div class="hm-disclaimer wf-anchor"><span class="wf-pin">13</span>券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准<br>预估返利以平台结算为准，未结算或订单失效时不返</div>
+          <div class="hm-anno"><b>标注</b>：信息流继续向下分页加载（置底、无限）；口径说明在无限加载里怎样「每屏一次」<span class="wf-todo-tag">待定</span></div>
+        </div>
+        <nav class="wf-tabbar wf-anchor"><span class="wf-pin hm-pin-in">14</span><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>顶部搜索框 · <code>F-PROD-01</code> <code>F-PROD-02</code>（J1 第 1 步）· 占位文字没有文案键 <span class="wf-todo-tag">待定</span>（规划未写；热词 F-PROD-03 是否用作占位也未写）· 点击进路由 <code>Search</code>。卡片注册表（03 §6.3）里没有搜索框，按固定原生区画。</li>
+      <li>「问 AI」按钮 · 01 §4.1（按钮名，无文案键）· 开放判定 <code>BR-AI-12</code>、<code>BR-ID-03</code>；本状态假设已开放 · 路由 <code>AgentChat</code>（01 §4.1 未写参数，不带 context）。</li>
+      <li>公告条 <code>notice_bar</code> · <code>F-HOME-02</code> · <code>BR-TEXT-13</code> 细则「首页公告条的关闭与内容版本」· 条目形状 04 §6.2 <code>NoticeItem</code>；数据源两种：<code>static</code>（运营在首页配置里直接填写）或 <code>api</code>（03 §6.3），只有 api 数据源限定为只读公告 CMS；两种都不做收益、成交播报（BR-TEXT-13）；<code>closable=true</code> 才有 ×，关闭记在本机 · 点击按 <code>target {route, params}</code>（F-HOME-09）。</li>
+      <li>轮播图 <code>banner</code> · <code>F-HOME-02</code> <code>F-HOME-03</code> · 角标只按下发的 <code>ad_label</code> 原样显示，默认「推广」（<code>BR-TEXT-17</code>，OPS-24）· 跳转 <code>{route, params}</code>，外链只经 <code>ExternalPage</code>，不能配联盟平台页面（F-HOME-09、BR-ATTR-29）。</li>
+      <li>金刚区 <code>icon_grid</code> · <code>F-HOME-02</code> · 列数 4/5、行数、角标由配置下发（03 §6.3）；图标与名称是运营配置 · 跳转 <code>{route, params}</code>。</li>
+      <li>商品横滑 <code>product_scroll</code>（数据源 product_pool）· <code>F-HOME-02</code> <code>F-HOME-03</code> · 商品池卡下发「推广」（<code>BR-TEXT-17</code>）；改用 union_material 时为 null、不标 · 价格按 <code>BR-PRICE-04</code>：有券主价「券后 ¥x」+ 副行「券前 ¥x · 券 ¥y」，无券「售价 ¥x」并显示无券状态（呈现 <span class="wf-todo-tag">待定</span>）· 首页商品池按 normal 出单值「预估返」（<code>BR-PRICE-07</code>）· 展示了券后价或售价，disclaimer_keys 含 <code>price_basis</code>（<code>BR-PRICE-03</code>、BR-PRICE-17），每张小卡放 i 图标；但 BR-PRICE-03 的呈现形式只列了搜索列表、首页物料流、Agent 卡片流，没列商品池卡，口径说明全文放在横滑下方还是并入页面底部 <span class="wf-todo-tag">待定</span>（14_待决策汇总 BR-PRICE-03 行，负责人）；信息流整块隐藏（5a）时横滑仍然需要口径说明 · 卡片点进 <code>ProductDetail</code>。</li>
+      <li>活动入口 <code>activity_entry</code>（1–3 图）· <code>F-HOME-02</code> · 是否带「推广」只看下发的 <code>ad_label</code>（BR-TEXT-17 只点名活动 Banner）· 跳转 <code>{route, params}</code>。</li>
+      <li>商品网格 <code>product_grid</code>（数据源 product_pool / union_material）· <code>F-HOME-02</code>（验收「每种卡片有 golden 样例」）<code>F-HOME-03</code> · 列数 1/2 由 <code>props.columns</code> 下发（03 §6.3），本稿画 2 列；1 列为单列卡片，只用文字标注：价格、预估返、i 图标与「推广」规则同 product_scroll（BR-PRICE-04、BR-PRICE-03、BR-TEXT-17），口径说明位置同样 <span class="wf-todo-tag">待定</span> · 卡片点进 <code>ProductDetail</code>。</li>
+      <li>联盟物料信息流 <code>feed_infinite</code> · <code>F-HOME-02</code> <code>F-HOME-03</code> · 混合三平台、置底、分页（TRADE-15）；频道只能选白名单，客户端不传频道、不重排（<code>BR-TEXT-17</code> 细则「联盟物料频道」，按 06 功能对照 Q-27 默认 A）；<code>ad_label=null</code> 不标推广；无返利商品已在服务端过滤（<code>BR-PRICE-08</code>），所以信息流里不会出现「暂无返利」「去购买（无返利）」· 数据接口 <code>GET /v1/pages/home/sections/{id}/items</code>（04 §6.2）。</li>
+      <li>信息流卡片 · <code>ProductCard</code>（03 §10.2）· 用横向 / 网格 / 大卡哪种布局 <span class="wf-todo-tag">待定</span>（规划未写，按 UI 稿，06 Q-E5）；平台来源 <code>PlatformBadge</code> 按 03 §10.2 是「文字 + 小图标」，小图标只放 <code>design/icons/platform/</code>，本稿用虚线小方块占位、不画商标；「有券」「预售」来自服务端 <code>benefit_tags</code>（04 §8.3），「预售」键 <code>tag.presale</code>、说明 <code>presale.price_note</code>（BR-PRICE-22、BR-TEXT-12）；卡片上是否直接放购买按钮 <span class="wf-todo-tag">待定</span>（规划未写）· 点卡进 <code>ProductDetail</code>（参数 platform、product_key）。</li>
+      <li>价格 <code>PriceTag</code> · <code>BR-PRICE-04</code> <code>BR-PRICE-05</code> · 有券：主价「券后 ¥x」+ 副行「券前 ¥x · 券 ¥y」，不划线、不用「原价」；无券只显示「售价 ¥x」，并显示无券状态（呈现方式 <span class="wf-todo-tag">待定</span>，规划未写）；拼多多加「拼单」；预售按总价显示（BR-PRICE-22），同样按有券 / 无券两种画；本页所有商品卡统一按这条画 · 格式 <code>BR-TEXT-10</code>。<span class="hm-sample">样例：1734 − 500 = 1234 分 → 券后 ¥12.34。</span></li>
+      <li>预估返 <code>RebateTag</code> · 键 <code>tag.rebate</code>「预估返」· <code>BR-PRICE-07</code>（首页物料流按 normal，只出单值）、<code>BR-PRICE-06</code>、<code>BR-TEXT-01</code>（结算前只说「预估」）· 用等待色，不用成功色（interaction-patterns §3）；信息流里不出现「暂无返利」「可返利，金额以订单为准」（这两种卡只从粘贴入口出，见 6f），「登录查看返利」只用于 Agent 游客卡（BR-AI-11）；是否另显示「预估返后 ¥x」<span class="wf-todo-tag">待定</span>（BR-PRICE-09 影响面未列首页）。</li>
+      <li>口径说明 <code>DisclaimerFooter</code> · <code>BR-PRICE-03</code> <code>BR-PRICE-17</code> · 单卡只放 i 图标、点开看全文；列表底部一次全文，按 <code>disclaimer_keys</code> 顺序：<code>price_basis</code>、<code>rebate_estimate</code>（默认文案见 BR-PRICE-03、BR-PRICE-17）。</li>
+      <li>底部 Tab · 01 §4.1 · Tab 文案与图标由 <code>/v1/config</code> 下发；Agent 开放时第二项是「AI 助手」（本状态假设已开放；未开放见状态 7）· 路由 <code>Home</code> / <code>AgentChat</code> / <code>OrderList</code> / <code>Me</code>。另：<code>ui.grayscale=true</code> 时首页整体置灰（03 §6.2 ⑧）；卡片曝光按可见 ≥50% 且 ≥500 毫秒记一次（03 §6.2 ⑦）。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 2 ===================== -->
+  <section class="wf-state" aria-label="状态 2：游客">
+    <div>
+      <p class="wf-state__label">2. 游客（已同意隐私政策、未登录）· 假设 Agent 已开放<small>首页可用（01 §4.1、BR-ID-02），布局同状态 1，只标出不同之处。假设登记号已填好、对全部用户开放（BR-AI-12）；登记前游客看到的是状态 7。按 iOS 画，Android 默认与鸿蒙另带「粘贴查返利」按钮（6c）。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask wf-anchor"><span class="wf-pin">1</span>问 AI</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-banner wf-anchor"><span class="wf-pin">2</span><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span><div class="hm-dots"><i></i><i></i></div></div>
+          <div class="hm-anno"><b>标注</b>：游客看到哪些卡片由服务端按 <code>condition.login</code> 只下发命中的，和已登录可以不同</div>
+          <div class="hm-feed wf-anchor"><span class="wf-pin">3</span>
+            <div class="hm-pcard wf-anchor"><span class="wf-pin">4</span>
+              <div class="wf-img"></div>
+              <div class="wf-line" style="width: 100%"></div><div class="wf-line" style="width: 70%"></div>
+              <div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag">有券</span></div>
+              <div class="hm-price"><span class="hm-sub">券后</span><span class="wf-amount">¥12.34</span></div>
+              <div class="hm-sub">券前 ¥17.34 · 券 ¥5</div>
+              <div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥0.56</span><span class="hm-info">i</span></div>
+            </div>
+            <div class="hm-pcard">
+              <div class="wf-img"></div>
+              <div class="wf-line" style="width: 100%"></div><div class="wf-line" style="width: 55%"></div>
+              <div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">京东</span></div>
+              <div class="hm-price"><span class="hm-sub">售价</span><span class="wf-amount">¥45.6</span></div>
+              <div class="hm-sub">[无券状态的呈现] <span class="wf-todo-tag">待定</span></div>
+              <div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥2.34</span><span class="hm-info">i</span></div>
+            </div>
+          </div>
+          <div class="hm-disclaimer">券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准<br>预估返利以平台结算为准，未结算或订单失效时不返</div>
+        </div>
+        <nav class="wf-tabbar wf-anchor"><span class="wf-pin hm-pin-in">5</span><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>「问 AI」· Agent 开放后游客也能找货看卡，按设备额度（<code>BR-ID-03</code>）；未开放见状态 7 · 路由 <code>AgentChat</code>。</li>
+      <li>人群卡片 · <code>F-HOME-01</code> <code>F-HOME-08</code> · <code>GET /v1/pages/home</code> 鉴权 optional，服务端按可选令牌判断人群，<code>condition</code> 只用 login、has_parent、union_authorized、has_order 四个事实（03 §6.1，OPS-05、OPS-10）· 卡片内容由运营配置。</li>
+      <li>信息流 · <code>BR-ID-02</code>（游客可看首页与预估返利）· <code>BR-PRICE-06</code> 写报价按查看者等级、游客按注册默认等级（算法 BR-CALC-20）；但卡片数据接口 <code>GET /v1/pages/home/sections/{id}/items</code> 的鉴权是 none（04 §6.2），服务端拿不到查看者等级，两处冲突。游客与登录用户看到的金额是否不同 <span class="wf-todo-tag">待定</span>（规划未写，列入规划空白）。<span class="hm-sample">本稿样例金额与状态 1 相同，不表示结论。</span></li>
+      <li>卡片点击 · 进 <code>ProductDetail</code>；首页本身不拦登录，点购买时才返回 10001 → <code>Login</code>，登录后恢复（<code>BR-ID-02</code>、<code>BR-ID-10</code>）。剪贴板查返利游客也可用（BR-ID-02「剪贴板/链接输入识别」行），见状态 6。</li>
+      <li>底部 Tab · 同状态 1；「订单」「我的」进去后引导登录（01 §4.1），不在首页处理。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 3 ===================== -->
+  <section class="wf-state" aria-label="状态 3：加载（骨架）">
+    <div>
+      <p class="wf-state__label">3. 加载 · 骨架屏<small>本机没有 LKG（首次安装等）且网络还没返回；超过 1.5 秒改渲染包内默认（状态 4b）。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search wf-anchor"><span class="wf-pin">1</span>
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask">问 AI</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="wf-skeleton wf-anchor" style="height: 132px; border-radius: var(--radius-card)"><span class="wf-pin">2</span></div>
+          <div class="wf-card"><div class="hm-sk-grid"><span class="wf-skeleton"></span><span class="wf-skeleton"></span><span class="wf-skeleton"></span><span class="wf-skeleton"></span><span class="wf-skeleton"></span></div></div>
+          <div class="wf-skeleton" style="height: 120px; border-radius: var(--radius-card)"></div>
+          <div class="hm-feed wf-anchor"><span class="wf-pin">3</span>
+            <div class="hm-pcard"><div class="wf-skeleton" style="height: 132px"></div><div class="wf-line"></div><div class="wf-line" style="width: 60%"></div><div class="wf-skeleton" style="height: 18px; width: 70%"></div></div>
+            <div class="hm-pcard"><div class="wf-skeleton" style="height: 132px"></div><div class="wf-line"></div><div class="wf-line" style="width: 60%"></div><div class="wf-skeleton" style="height: 18px; width: 70%"></div></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>搜索区与底部 Tab · 不等首页配置先出，是本稿的安排 <span class="wf-todo-tag">待定</span>（规划未写；01 §4.1 只列首页组成，搜索框不在卡片注册表 03 §6.3 里）；底部 Tab 文案先取 LKG 或包内 <code>default_config.json</code>（03 §4.3）。</li>
+      <li>配置卡片骨架 · <code>Skeleton</code>（03 §10.2）· <code>F-HOME-04</code>：有 LKG 时立即渲染 LKG，不出骨架；无 LKG 时等网络，超过 1.5 秒先渲染包内 <code>default_home.json</code>（03 §6.2 ④，TECH-10）。骨架块的形状数量只是示意。</li>
+      <li>信息流骨架 · 03 §6.2 ③：<code>union_material</code> 由卡片各自请求；首屏图片在拿到配置后预取（03 §6.2 ⑤）· 向下分页时的「加载中」样式与文字 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 4a ===================== -->
+  <section class="wf-state" aria-label="状态 4a：配置拉取失败，用 LKG">
+    <div>
+      <p class="wf-state__label">4a. 配置拉取失败 · 用 LKG<small><code>/v1/pages/home</code> 500 或超时，本机有上次成功渲染的版本。</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-ptr wf-anchor"><span class="wf-pin hm-pin-in">2</span><span class="hm-spinner"></span><span>[下拉刷新提示]</span> <span class="wf-todo-tag">待定</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask">问 AI</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-anno wf-anchor"><span class="wf-pin">1</span><b>标注</b>：以下是 LKG（最近一次成功<b>渲染</b>的版本），界面与状态 1 相同，不白屏、不弹错误</div>
+          <div class="hm-banner"><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span></div>
+          <div class="wf-card"><div class="hm-icongrid"><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span></div></div>
+          <div class="hm-feed wf-anchor"><span class="wf-pin">3</span>
+            <div class="hm-pcard"><div class="wf-img"></div><div class="wf-line"></div><div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">拼多多</span></div><div class="hm-price"><span class="hm-sub">拼单价</span><span class="wf-amount">¥19.9</span></div><div class="hm-sub">[无券状态的呈现] <span class="wf-todo-tag">待定</span></div><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥0.8</span><span class="hm-info">i</span></div></div>
+            <div class="hm-pcard"><div class="wf-img"></div><div class="wf-line"></div><div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag">有券</span></div><div class="hm-price"><span class="hm-sub">券后</span><span class="wf-amount">¥12.34</span></div><div class="hm-sub">券前 ¥17.34 · 券 ¥5</div><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥0.56</span><span class="hm-info">i</span></div></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>LKG 渲染 · <code>F-HOME-04</code> · 三级兜底「网络最新 → LKG → 包内 default_home.json」（03 §6.2 ④，TECH-10）；验收「接口 500 或超时，首页不白屏」。规划没有要求失败提示，本稿不画提示条。<code>/v1/config</code> 失败同样先 LKG 后包内默认（03 §4.3）。</li>
+      <li>下拉刷新 · <code>F-HOME-04</code> · 后台拿到新版本不替换当前屏，下次冷启动或用户下拉刷新时替换（03 §6.2 ④）· 下拉提示的样式与文字 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>信息流 · 仍由卡片单独请求，失败时整块隐藏（见状态 5a）；样例里拼多多无券显示「拼单价 ¥x」并显示无券状态（呈现 <span class="wf-todo-tag">待定</span>，<code>BR-PRICE-04</code>）。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 4b ===================== -->
+  <section class="wf-state" aria-label="状态 4b：配置拉取失败，无 LKG，用包内默认">
+    <div>
+      <p class="wf-state__label">4b. 配置拉取失败 · 无 LKG，用包内默认<small>无 LKG 且网络超过 1.5 秒没返回或失败，渲染安装包里的 <code>default_home.json</code>。</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask">问 AI</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-anno wf-anchor" style="min-height: 220px"><span class="wf-pin">1</span><b>标注</b>：包内 <code>default_home.json</code> 的卡片与内容 <span class="wf-todo-tag">待定</span>（规划未写）。<br><br><code>static</code> 数据源的卡（banner、icon_grid、activity_entry）也要联网加载图片；断网时图片能否显示，取决于 <code>default_home.json</code> 是否带内置图，规划未写 <span class="wf-todo-tag">待定</span>。需要请求数据的卡（product_pool、union_material、api）失败时按 F-HOME-05 隐藏。</div>
+          <div class="hm-anno wf-anchor"><span class="wf-pin">2</span><b>标注</b>：开关 <code>home.fallback</code> 的含义 <span class="wf-todo-tag">待定</span>（03 §4.3 只列名字）</div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>包内默认首页 · <code>F-HOME-04</code> · 03 §6.2 ④（只写「超过 1.5 秒先渲染包内默认」）、§3.4（只列 <code>Resources/default_home.json</code>）· 内容、是否带内置图片 <span class="wf-todo-tag">待定</span>：规划未写，建议由负责人或运营在 UI 稿阶段定（06 Q-E5）。</li>
+      <li><code>home.fallback</code> 开关 · 03 §4.3、04 §10.1 只列在客户端开关里，没有写开和关分别怎样 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 5a ===================== -->
+  <section class="wf-state" aria-label="状态 5a：信息流为空或请求失败">
+    <div>
+      <p class="wf-state__label">5a. 信息流为空 / 请求失败<small>信息流数据源失败、没有数据，或频道被移出白名单：整块隐藏，不显示空壳。</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask">问 AI</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-banner"><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span></div>
+          <div class="wf-card"><div class="hm-icongrid"><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span></div></div>
+          <div class="hm-activity"><div class="wf-img"></div><div class="wf-img"></div></div>
+          <div class="hm-anno wf-anchor" style="min-height: 140px"><span class="wf-pin">1</span><b>标注</b>：这里原是联盟物料信息流，已整块隐藏：没有「暂无商品」空态，也没有重试按钮。页面在最后一张配置卡片处结束。</div>
+          <div class="hm-anno wf-anchor"><span class="wf-pin">2</span><b>标注</b>：配置卡片也全部隐藏、整页只剩搜索框时怎么办 <span class="wf-todo-tag">待定</span></div>
+          <div class="hm-anno wf-anchor"><span class="wf-pin">3</span><b>标注</b>：页面上还有带价格的 product_scroll / product_grid 时，信息流隐藏后口径说明（price_basis）仍要显示，放在哪里 <span class="wf-todo-tag">待定</span></div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>信息流隐藏 · <code>F-HOME-05</code> · 03 §6.2 ③「失败或为空时隐藏该卡，不显示空壳」；频道不在白名单时服务端不取数，区块按没有数据处理并告警（<code>BR-TEXT-17</code> 细则「联盟物料频道」）· 解析或渲染异常另上报 <code>sdui_card_error</code>（F-HOME-05）。</li>
+      <li>整页没有任何卡片 · 规划只写了单卡隐藏，没有页面级空态或重试 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>口径说明 · <code>BR-PRICE-03</code>（凡展示券后价的地方 disclaimer_keys 都含 price_basis）· 本稿把全文画在信息流底部（状态 1 钉 13）；信息流隐藏后，商品池卡片的口径说明全文放在哪里 <span class="wf-todo-tag">待定</span>（BR-PRICE-03 呈现形式没列商品池卡，14_待决策汇总 BR-PRICE-03 行）。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 5b ===================== -->
+  <section class="wf-state" aria-label="状态 5b：信息流向下分页失败或到底">
+    <div>
+      <p class="wf-state__label">5b. 信息流向下分页失败 / 到底<small>首页已有信息流，继续上滑加载下一页时失败，或上游没有更多。</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask">问 AI</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-feed">
+            <div class="hm-pcard"><div class="wf-img"></div><div class="wf-line"></div><div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">京东</span></div><div class="hm-price"><span class="hm-sub">售价</span><span class="wf-amount">¥45.6</span></div><div class="hm-sub">[无券状态的呈现] <span class="wf-todo-tag">待定</span></div><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥2.34</span><span class="hm-info">i</span></div></div>
+            <div class="hm-pcard"><div class="wf-img"></div><div class="wf-line"></div><div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag">有券</span></div><div class="hm-price"><span class="hm-sub">券后</span><span class="wf-amount">¥12.34</span></div><div class="hm-sub">券前 ¥17.34 · 券 ¥5</div><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥0.56</span><span class="hm-info">i</span></div></div>
+          </div>
+          <div class="wf-banner wf-banner--info wf-anchor" style="text-align: center"><span class="wf-pin">1</span>[分页加载失败的提示与重试] <span class="wf-todo-tag">待定</span></div>
+          <div class="wf-caption wf-anchor" style="text-align: center"><span class="wf-pin">2</span>[没有更多时的结尾] <span class="wf-todo-tag">待定</span></div>
+          <div class="hm-disclaimer">券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准<br>预估返利以平台结算为准，未结算或订单失效时不返</div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>分页失败 · 已加载的卡片保留；第 2 页起失败怎样提示、能否点击重试 <span class="wf-todo-tag">待定</span>（规划未写；03 §4.2 只定读接口自动重试 1 次）。不能借用错误码文案。</li>
+      <li>没有更多 · <code>has_more</code> 以上游返回为准（<code>BR-PRICE-08</code>）；过滤无返利后不足一页时服务端最多补拉 1 页 · 结尾样式与文字 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 6a ===================== -->
+  <section class="wf-state" aria-label="状态 6a：剪贴板提示条（商品链接）">
+    <div>
+      <p class="wf-state__label">6a. 剪贴板提示条 · 商品链接 · iOS<small>iOS：回前台且剪贴板变化时，detectPatterns 命中 URL 类模式后出提示条；纯口令文案（不含链接）能否触发待 CAP-X-02 实测 <span class="wf-todo-tag">待定</span>。Android 打开「自动识别」开关、本地过滤命中后同样展示（BR-ID-16 例），鸿蒙没有这个提示条（见 6c）。</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask">问 AI</span>
+          </div>
+          <div class="hm-clip wf-anchor"><span class="wf-pin hm-pin-left">1</span>
+            <span class="hm-clip__text">检测到商品链接，查返利？</span>
+            <span class="hm-syspaste wf-anchor"><span class="wf-pin">2</span>[系统控件 UIPasteControl]</span>
+            <span class="hm-close couli-touch-target wf-anchor" aria-label="关闭"><span class="wf-pin">3</span>×</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-banner"><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span></div>
+          <div class="hm-anno wf-anchor"><span class="wf-pin">4</span><b>标注</b>：提示条放在搜索框下方、何时自动消失、点击后「识别中」的样子 <span class="wf-todo-tag">待定</span></div>
+          <div class="hm-feed">
+            <div class="hm-pcard"><div class="wf-img"></div><div class="wf-line"></div><div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag">有券</span></div><div class="hm-price"><span class="hm-sub">券后</span><span class="wf-amount">¥12.34</span></div><div class="hm-sub">券前 ¥17.34 · 券 ¥5</div><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥0.56</span><span class="hm-info">i</span></div></div>
+            <div class="hm-pcard"><div class="wf-img"></div><div class="wf-line"></div><div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">京东</span></div><div class="hm-price"><span class="hm-sub">售价</span><span class="wf-amount">¥45.6</span></div><div class="hm-sub">[无券状态的呈现] <span class="wf-todo-tag">待定</span></div><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥2.34</span><span class="hm-info">i</span></div></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>剪贴板识别提示条 · <code>F-CLIP-01</code> <code>F-CLIP-02</code> · 文案键 <code>clipboard.prompt</code>（BR-TEXT-14 表 C）· 读取方式只按 <code>BR-ID-16</code>（待决策，法务）：iOS 回前台且剪贴板变化时只调 detectPatterns 探测、不读内容；detectPatterns 没有口令类模式（09 CAP-X-02，状态「未开始」），只含口令、不含链接时 iOS 可能不出提示条 <span class="wf-todo-tag">待定</span>（列入规划空白；09 的降级列写「未命中不出提示条，首页常驻粘贴按钮」，还没进 08、01）。Android 默认不读（见 6c），开关打开后读 1 次并按 F-CLIP-02 本地过滤（长度、排除词、本 App 复制内容的 hash），同一 hash 24 小时只提示一次——这几条只适用于 Android 打开开关的情况；iOS 出提示条前不读内容、算不了 hash，怎样判断「剪贴板变化」、怎样去重（例如按 changeCount）<span class="wf-todo-tag">待定</span>（规划未写，列入规划空白）。后台可按平台关闭（F-CLIP-05，见 6c 钉 4）。</li>
+      <li>读取按钮 · iOS 是提示条内的 <code>UIPasteControl</code>（虚线框表示系统控件），按钮外观与文字由系统给，不出现「允许粘贴」弹窗（F-CLIP-01，AC-S1-03）；Android 开关打开后点提示条本身 · 点击后才调 <code>POST /v1/inputs/parse</code>，只上传识别出的链接 / 口令与标题片段（BR-ID-16）。识别成功出卡见 6f，识别不了或请求失败见 6e。</li>
+      <li>关闭 · 商品提示条能否手动关闭 <span class="wf-todo-tag">待定</span>（规划只对邀请提示条写了「关闭即放弃」，BR-INV-04 ④）。</li>
+      <li>位置与反馈 · 规划未写位置、停留时长；interaction-patterns §1 建议「识别中」在原入口显示处理中 <span class="wf-todo-tag">待定</span>（06 Q-E5，按 UI 稿）。敏感页面（登录、提现等）不识别，回到首页也不补出（BR-ID-16 细则）；识别前后不改写剪贴板；基本模式不读（见状态 8）。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 6b ===================== -->
+  <section class="wf-state" aria-label="状态 6b：剪贴板提示条（线报素材）">
+    <div>
+      <p class="wf-state__label">6b. 剪贴板提示条 · 线报素材<small>识别为线报素材（含「淘礼金限量」「88会员」之类）时，按钮换成进 AI 助手。</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask">问 AI</span>
+          </div>
+          <div class="hm-clip wf-anchor"><span class="wf-pin hm-pin-left">1</span>
+            <span class="hm-clip__text">[素材提示语] <span class="wf-todo-tag">待定</span></span>
+            <span class="wf-btn wf-anchor"><span class="wf-pin">2</span>让 AI 帮我看看</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-anno wf-anchor"><span class="wf-pin">3</span><b>标注</b>：iOS 点系统粘贴控件之前读不到内容，出提示条时无法判断是不是素材；素材在哪一步判定、按钮何时换成「让 AI 帮我看看」<span class="wf-todo-tag">待定</span></div>
+          <div class="hm-banner"><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span></div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>素材提示条 · <code>F-CLIP-04</code> · 提示语没有文案键（<code>clipboard.prompt</code> 说的是「商品链接」）<span class="wf-todo-tag">待定</span>（规划未写，需在 BR-TEXT-14 表 C 补键）。</li>
+      <li>「让 AI 帮我看看」· 按钮名取 01 §4.1、<code>F-CLIP-04</code>（没有文案键）· 路由 <code>AgentChat</code>，<code>context={text}</code>（01 §4.1 情境入口）；情境入口自动发首条消息、计 1 次额度（BR-AI-01 细则「边界」）；淘礼金结论只按 BR-TEXT-15，首版按 D7 显示 unknown（J2 第 3 步）。Agent 未开放时这个按钮怎么办见状态 7。</li>
+      <li>判定时机 · <code>BR-ID-16</code> 规定 iOS 点 UIPasteControl 前不读内容，<code>J2</code> 第 3 步写成服务端识别后进 AgentChat，<code>F-CLIP-04</code> 写成提示条按钮直接是「让 AI 帮我看看」，三处衔接没写清 <span class="wf-todo-tag">待定</span>（规划未写，列入规划空白）。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 6c ===================== -->
+  <section class="wf-state" aria-label="状态 6c：Android 默认与鸿蒙正常态的粘贴查返利入口">
+    <div>
+      <p class="wf-state__label">6c. Android 默认 / 鸿蒙正常态 · 「粘贴查返利」<small>这两端首页正常态都带这个入口，其余部分同状态 1。Android 自动识别开关默认关闭，回前台不读剪贴板，用自绘按钮；鸿蒙只用系统 PasteButton，没有回前台提示条。</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask">问 AI</span>
+          </div>
+          <div class="hm-pastes">
+            <div class="hm-pastes__col"><span class="wf-caption">Android</span><span class="wf-btn hm-paste wf-anchor"><span class="wf-pin">1</span>粘贴查返利</span></div>
+            <div class="hm-pastes__col"><span class="wf-caption">鸿蒙</span><span class="hm-syspaste wf-anchor"><span class="wf-pin">2</span>[系统控件 PasteButton]</span></div>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-anno wf-anchor"><span class="wf-pin">3</span><b>标注</b>：入口在首页的位置（这里画在搜索框下方）<span class="wf-todo-tag">待定</span>；同一台设备只出现其中一种，这里并排是为了对照</div>
+          <div class="hm-anno wf-anchor"><span class="wf-pin">4</span><b>标注</b>：后台关闭 <code>clipboard.enabled.&lt;platform&gt;</code> 时三端都不出提示条；「粘贴查返利」入口是否一起隐藏 <span class="wf-todo-tag">待定</span></div>
+          <div class="hm-banner"><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span></div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>Android「粘贴查返利」· 按钮名取 <code>BR-ID-16</code> 正文（没有文案键）· 自绘按钮；开关默认关闭时首页只有这个入口，用户点击后才读剪贴板并调 <code>POST /v1/inputs/parse</code>（BR-ID-16 例、AC-S1-03）· 结果见 6f / 6e。</li>
+      <li>鸿蒙 <code>PasteButton</code> · <code>BR-ID-16</code>「鸿蒙：只提供 PasteButton『粘贴查返利』」· 系统安全控件，画法同 6a 的 iOS 系统控件（虚线占位）；按钮文字能否定制成「粘贴查返利」待 09 CAP-X-02 实测（未开始）<span class="wf-todo-tag">待定</span>；不申请 READ_PASTEBOARD 时只能用 PasteButton、不能自动识别，所以鸿蒙没有 6a、6d 那样的回前台提示条；READ_PASTEBOARD 能否申请待 06 Q-G11。</li>
+      <li>位置 · <code>BR-ID-16</code> 只写「首页展示『粘贴查返利』按钮」，位置 <span class="wf-todo-tag">待定</span>（规划未写，按 UI 稿，06 Q-E5）。Android 的「打开 App 自动识别剪贴板」开关在设置页，不在首页。</li>
+      <li>后台关闭 · <code>F-CLIP-05</code>「后台可按平台一键关闭」，客户端开关 <code>clipboard.enabled.&lt;platform&gt;</code>（03 §4.3）· 关闭后不出提示条；「粘贴查返利」按钮与鸿蒙 PasteButton 是否保留 <span class="wf-todo-tag">待定</span>（01、03、08 都没写；09 CAP-X-02 降级列写「用户看到手动粘贴入口」，未进 08）。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 6d ===================== -->
+  <section class="wf-state" aria-label="状态 6d：剪贴板邀请口令提示条">
+    <div>
+      <p class="wf-state__label">6d. 剪贴板提示条 · 好友邀请码 · Android 打开开关后<small>未命中商品、文本含邀请落地页链接或「邀请码」字样，且当前用户还能绑定邀请人。按 BR-ID-16「影响」，这个提示条实际只对打开自动识别开关的 Android 用户生效；iOS 的形态 <span class="wf-todo-tag">待定</span>，鸿蒙没有这个提示条。</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask">问 AI</span>
+          </div>
+          <div class="hm-clip wf-anchor"><span class="wf-pin hm-pin-left">1</span>
+            <span class="hm-clip__text">检测到好友邀请码 AB23CD，绑定为邀请人？</span>
+            <span class="hm-close couli-touch-target wf-anchor" aria-label="关闭"><span class="wf-pin">2</span>×</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-anno wf-anchor"><span class="wf-pin">3</span><b>标注 · iOS</b>：点 UIPasteControl 之前读不到内容，拿不到 {invite_code}，也判断不了「邀请码」字样与商品优先；提示条能否先显示邀请码、要不要内嵌 UIPasteControl <span class="wf-todo-tag">待定</span></div>
+          <div class="hm-anno wf-anchor"><span class="wf-pin">4</span><b>标注 · 鸿蒙与 Android 默认</b>：回前台不读剪贴板，不出这个提示条；用户可在注册页、补填页点「粘贴」读取</div>
+          <div class="hm-banner"><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span></div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>邀请提示条 · <code>F-CLIP-06</code> · 文案键 <code>clipboard.invite_prompt</code>「检测到好友邀请码 {invite_code}，绑定为邀请人？」（BR-TEXT-14 表 C）· <code>BR-INV-04</code>：商品优先；只对可绑定用户（游客，或已登录且无上级、未用过绑定机会、在补填期限内）；读取方式同 BR-ID-16 · 点击后：已登录进绑定确认（不直接绑定，补填页没有路由名，见规划空白）；绑定接口 <code>POST /v1/me/inviter</code> 要求已绑手机（BR-ID-02 矩阵「绑定上级」行、BR-INV-07），已登录未绑手机的返回 10005 → <code>BindPhone</code>，完成后按 pending_action 回到绑定确认（BR-ID-10、BR-TEXT-14 表 A 10005）；游客把邀请码预填到 <code>Login</code> 的邀请码输入框，不上传。<span class="hm-sample">AB23CD 为样例码。</span></li>
+      <li>关闭 · 「关闭提示条即放弃」，同一内容 hash 24 小时只提示一次（BR-INV-04 ④、F-CLIP-02；hash 去重只在 Android 读到内容后才做得到）。</li>
+      <li>iOS · <code>BR-ID-16</code>（iOS 只用 detectPatterns 探测、不读内容）、09 CAP-X-02 未知项（只含「邀请码」字样时能否在读取前判断）· <code>clipboard.invite_prompt</code> 带 {invite_code}，iOS 读取前拿不到，提示条形态 <span class="wf-todo-tag">待定</span>（列入规划空白；10 AC-S1-63 却按三端都出提示条并展示邀请码断言）。</li>
+      <li>鸿蒙与 Android 默认 · <code>BR-ID-16</code> 细则「影响」：开关默认关闭、鸿蒙只有 PasteButton 时，邀请口令自动识别在这两种情况下不生效；用户可在注册页、补填页的「粘贴」按钮读取（BR-INV-04，BR-ID-16 例）。是否为邀请口令放宽默认值属 BR-ID-16 的法务待决策项（14_待决策汇总 BR-ID-16 行）。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 6e ===================== -->
+  <section class="wf-state" aria-label="状态 6e：查返利识别不了或请求失败">
+    <div>
+      <p class="wf-state__label">6e. 点了查返利 · 识别不了 / 请求失败<small><code>POST /v1/inputs/parse</code> 返回 30132、30131，拼多多链接识别不到商品；或超时、5xxxx、42901。</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask">问 AI</span>
+          </div>
+          <div class="hm-clip wf-anchor"><span class="wf-pin hm-pin-left">1</span>
+            <span class="hm-clip__text">这个口令暂时识别不了</span>
+            <span class="wf-btn wf-anchor"><span class="wf-pin">2</span>用商品名搜索</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-anno wf-anchor"><span class="wf-pin">3</span><b>标注</b>：错误（含下方通用失败）在提示条原位显示、Toast 还是弹窗 <span class="wf-todo-tag">待定</span></div>
+          <div class="hm-fail wf-card wf-anchor"><span class="wf-pin">4</span>
+            <span class="wf-caption">通用失败样例（三选一出现）</span>
+            <div class="hm-fail__row"><span>出了点问题，请稍后再试（c3d4e5）</span><span class="wf-btn">重试</span></div>
+            <div class="wf-divider"></div>
+            <div class="hm-fail__row"><span>操作太频繁，请稍后再试</span><span class="wf-btn hm-btn-off" aria-disabled="true">[查返利按钮] 禁用中</span></div>
+            <div class="wf-divider"></div>
+            <div class="hm-fail__row"><span>[超时、无响应时的提示] <span class="wf-todo-tag">待定</span></span></div>
+          </div>
+          <div class="hm-banner"><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span></div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>识别失败提示 · <code>F-CLIP-03</code>（TRADE-07）· <code>error.30132</code>「这个口令暂时识别不了」；同一位置的其他情况：<code>error.30131</code>「暂不支持这个链接或平台」（无按钮）、<code>pdd.parse_failed</code>「暂时无法识别这个拼多多链接」（BR-TEXT-14 表 A、表 C）· 不自动出候选卡，不把失败说成淘礼金领完（J2）。</li>
+      <li>「用商品名搜索」· BR-TEXT-14 表 A 30132 动作 · 路由 <code>Search</code>，预填口令文本中「」内或首行商品名，提取不到则搜索框留空（AC-S1-08）。</li>
+      <li>呈现方式 · 规划只给了文案与按钮，没写展示位置 <span class="wf-todo-tag">待定</span>（规划未写，按 UI 稿，06 Q-E5）。</li>
+      <li>通用失败 · <code>BR-TEXT-14</code> 正文与表 A · 其他 5xxxx 走通用错误态：<code>error.50001</code>「出了点问题，请稍后再试（{trace6}）」+【重试】，附 trace_id 后 6 位、不足 6 位显示全部（表 A 50001、50401；03 §4.2）；42901：<code>error.42901</code>「操作太频繁，请稍后再试」，按 Retry-After 禁用触发按钮，没有该头时禁用 5 秒；请求 10 秒超时、POST 不自动重试（03 §4.2），超时或没有响应时的提示文案 <span class="wf-todo-tag">待定</span>（规划未写；<code>buy.timeout</code> 只用于 open）· 码值与动作以 08 §13.11 为准。<span class="hm-sample">c3d4e5 为样例尾号。</span></li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 6f ===================== -->
+  <section class="wf-state" aria-label="状态 6f：剪贴板识别成功出卡">
+    <div>
+      <p class="wf-state__label">6f. 点了查返利 · 识别成功出卡<small><code>POST /v1/inputs/parse</code> 识别到商品并返回卡片（J2 第 2 步，AC-S1-02）。卡片显示在哪里 <span class="wf-todo-tag">待定</span>，这里画成占位框；框里是只会从粘贴入口出现的几种卡，实际一次只出对应的那一种。</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask">问 AI</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-result wf-anchor"><span class="wf-pin">1</span>
+            <span class="hm-result__head">[识别结果的落点：首页内 / 半屏 / <code>ProductDetail</code>] <span class="wf-todo-tag">待定</span></span>
+
+            <div class="hm-rcard wf-anchor"><span class="wf-pin">2</span>
+              <div class="hm-rcard__main">
+                <div class="wf-img"></div>
+                <div class="hm-rcard__info">
+                  <div class="wf-line" style="width: 100%"></div>
+                  <div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag">有券</span></div>
+                  <div class="hm-price"><span class="hm-sub">券后</span><span class="wf-amount">¥12.34</span></div>
+                  <div class="hm-sub">券前 ¥17.34 · 券 ¥5</div>
+                </div>
+              </div>
+              <div class="hm-rebate"><span><span class="wf-tag wf-tag--pending">预估返 ¥0.28–¥0.56</span> <span class="hm-sub">以结算为准</span></span><span class="hm-info" aria-label="口径说明">i</span></div>
+              <div class="hm-sub">[预估返后 ¥x 是否显示] <span class="wf-todo-tag">待定</span></div>
+              <span class="couli-button-primary wf-btn--block">领券购买</span>
+            </div>
+
+            <div class="hm-rcard wf-anchor"><span class="wf-pin">3</span>
+              <div class="hm-rcard__main">
+                <div class="wf-img"></div>
+                <div class="hm-rcard__info">
+                  <div class="wf-line" style="width: 100%"></div>
+                  <div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">京东</span><span class="wf-tag">有券</span></div>
+                  <div class="hm-price"><span class="hm-sub">券后</span><span class="wf-amount">¥39.9</span></div>
+                  <div class="hm-sub">券前 ¥49.9 · 券 ¥10</div>
+                </div>
+              </div>
+              <div class="hm-rebate"><span class="wf-tag">暂无返利</span><span class="hm-info" aria-label="口径说明">i</span></div>
+              <span class="wf-btn wf-btn--block">去购买（无返利）</span>
+            </div>
+
+            <div class="hm-rcard wf-anchor"><span class="wf-pin">4</span>
+              <div class="hm-rcard__main">
+                <div class="wf-img"></div>
+                <div class="hm-rcard__info">
+                  <span class="hm-sub">[商品图与标题能否显示] <span class="wf-todo-tag">待定</span></span>
+                  <div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">拼多多</span></div>
+                  <span class="wf-tag wf-tag--pending">可返利，金额以订单为准</span>
+                </div>
+              </div>
+              <span class="couli-button-primary wf-btn--block">去购买</span>
+            </div>
+
+            <div class="hm-rcard wf-anchor"><span class="wf-pin">5</span>
+              <div class="hm-rcard__main">
+                <div class="wf-img"></div>
+                <div class="hm-rcard__info">
+                  <div class="wf-line" style="width: 100%"></div>
+                  <span class="hm-sub">暂时查不到该商品价格</span>
+                </div>
+              </div>
+              <span class="wf-btn wf-btn--block">稍后再试</span>
+            </div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>识别结果落点 · <code>F-CLIP-03</code>、J2 第 2 步、AC-S1-02 只写「返回卡片 / 出 1 张卡」，显示位置 <span class="wf-todo-tag">待定</span>（规划未写：首页内、半屏还是 <code>ProductDetail</code>，按 UI 稿，06 Q-E5）· 出卡只登记 link_id 与报价快照、不转链（04 §6.3，拍板第二批 TRADE-03）；一条内容最多处理 3 个链接、逐个出卡（04 §8.5）。</li>
+      <li>有返卡 · <code>BR-PRICE-21</code>（有券有返）<code>BR-PRICE-07</code> · entry_source=parse：淘宝在没有比价预判权限时（M-内测默认）判 price_compare_risk，显示区间「预估返 ¥a–¥b」+ <code>rebate_compare</code>「以结算为准」（BR-PRICE-17）；京东、拼多多不出区间，显示单值（AC-S1-02-JD/-PDD）· 按钮按 <code>cta.text_key</code>：有券 <code>btn.buy.coupon</code>【领券购买】，无券 <code>btn.buy</code>【去购买】（BR-TEXT-12 细则、BR-PRICE-21）· 点击经 <code>POST /v1/links/{link_id}/open</code> 复核转链后外跳；游客点击返回 10001 → <code>Login</code>（BR-ID-02）· 是否另显示「预估返后 ¥x」、单卡口径说明用 i 图标还是常驻全文 <span class="wf-todo-tag">待定</span>（BR-PRICE-09 影响面、BR-PRICE-03 呈现形式都没列粘贴结果卡）。<span class="hm-sample">¥0.28–¥0.56 为样例区间。</span></li>
+      <li>暂无返利卡 · <code>BR-PRICE-08</code>（用户粘贴的链接即使无返利也照常出卡）、AC-S1-10 · 返利位显示「暂无返利」（BR-TEXT-10 零值，尚无键名，BR-TEXT-12 细则「资金术语键」），不显示预估返与预估返后；按钮 <code>btn.buy.no_rebate</code>【去购买（无返利）】：目标是佣金为 0 的转链结果，或由 product_key 生成、不带推广参数的商品页，不外跳用户粘贴的原链接或口令（BR-PRICE-08、BR-PRICE-21）· 仍展示券后价，所以保留 i 图标（price_basis，BR-PRICE-03）。</li>
+      <li>金额未知卡 · <code>BR-PRICE-08</code>（拼多多直链）· 文案键 <code>rebate_amount_unknown</code>「可返利，金额以订单为准」（BR-TEXT-14 表 C）· 条件：联盟拿不到商品信息，且 <code>pdd.direct_convert.enabled</code> 打开（默认关，CAP-PDD-01 获批后打开）；开关关闭或条件不满足时按 BR-PROD-03 报错（见 6e）· 不显示任何价格与返利金额，所以没有 i 图标；按钮 <code>btn.buy</code>【去购买】，经 open 直链转链、不复核价格 · 商品图与标题能否显示 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>查不到价格卡 · <code>BR-PRICE-01</code>、AC-S1-09 · availability=price_unavailable：不显示任何金额，文案「暂时查不到该商品价格」、按钮「稍后再试」，不下发 link_id（规划未给这两处文案取键名）；不属于查返利三态（BR-PRICE-21）。拼多多多规格的「拼单券后 ¥x 起」「规格以下单页为准」见 AC-S1-02-PDD、BR-PROD-04，本稿不另画。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 7 ===================== -->
+  <section class="wf-state" aria-label="状态 7：Agent 未开放">
+    <div>
+      <p class="wf-state__label">7. Agent 未开放或已关闭<small>登记号填好前只对内部测试名单开放；其他人 <code>agent.entry.visible=false</code>，或运营关了 <code>agent.enabled</code>。</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask hm-ask--todo wf-anchor"><span class="wf-pin">1</span>问 AI <span class="wf-todo-tag">待定</span></span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-anno wf-anchor"><span class="wf-pin">2</span><b>标注</b>：剪贴板素材提示条（6b）的「让 AI 帮我看看」此时怎么办 <span class="wf-todo-tag">待定</span></div>
+          <div class="hm-banner"><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span></div>
+          <div class="wf-card"><div class="hm-icongrid"><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span></div></div>
+          <div class="hm-feed">
+            <div class="hm-pcard"><div class="wf-img"></div><div class="wf-line"></div><div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag">有券</span></div><div class="hm-price"><span class="hm-sub">券后</span><span class="wf-amount">¥12.34</span></div><div class="hm-sub">券前 ¥17.34 · 券 ¥5</div><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥0.56</span><span class="hm-info">i</span></div></div>
+            <div class="hm-pcard"><div class="wf-img"></div><div class="wf-line"></div><div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">京东</span></div><div class="hm-price"><span class="hm-sub">售价</span><span class="wf-amount">¥45.6</span></div><div class="hm-sub">[无券状态的呈现] <span class="wf-todo-tag">待定</span></div><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥2.34</span><span class="hm-info">i</span></div></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar wf-anchor"><span class="wf-pin hm-pin-in">3</span><span class="is-active"><i></i>首页</span><span><i></i>搜索</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>「问 AI」· 01 §4.1 只规定 Tab 替换，没写首页按钮；<code>error.30501</code>「AI 助手暂未开放」的动作写「入口隐藏或置灰」两可 · 隐藏还是置灰 <span class="wf-todo-tag">待定</span>（规划未写；开关 <code>agent.entry.visible</code>，03 §4.3）。置灰时按钮不能画成可用（interaction-patterns §2）。</li>
+      <li>素材提示条 · Agent 未开放时 <code>F-CLIP-04</code> 的入口去向 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>底部 Tab · 01 §4.1、<code>BR-AI-12</code> · 「AI 助手」替换为「搜索」，进路由 <code>Search</code>；开放判定为 agent.enabled=on 且（whitelist_only=off 或在内部测试名单），D16、AI-06 · 关闭 <code>agent.enabled</code> 后服务端 10 秒内对 <code>/v1/agent/*</code> 返回 30501（BR-AI-12）；Tab 在客户端下次拉到配置时替换（回前台时带 ETag 拉取，03 §4.3），规划没给 Tab 替换的时限。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 8 ===================== -->
+  <section class="wf-state" aria-label="状态 8：基本模式只读首页">
+    <div>
+      <p class="wf-state__label">8. 基本模式 <code>BasicMode</code> · 只读首页<small>首启弹窗与二次说明都点了不同意；之后冷启动直接进这里，不再自动弹窗。</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wf-navbar__title"></span><span class="hm-navbtn wf-anchor"><span class="wf-pin">1</span>设置</span></div>
+        <div class="hm-top">
+          <div class="wf-banner wf-banner--info hm-basic wf-anchor"><span class="wf-pin">2</span>
+            <span>当前为基本模式，只能浏览。开启完整功能后可以登录、查返利</span>
+            <span class="couli-button-primary wf-btn--block wf-anchor"><span class="wf-pin">3</span>开启完整功能</span>
+          </div>
+          <div class="hm-search">
+            <div class="couli-control hm-search__field wf-anchor"><span class="wf-pin">4</span><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask hm-ask--todo wf-anchor"><span class="wf-pin">5</span>问 AI <span class="wf-todo-tag">待定</span></span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-banner"><div class="wf-img"></div><span class="wf-tag hm-adtag">推广</span></div>
+          <div class="hm-feed wf-anchor"><span class="wf-pin">6</span>
+            <div class="hm-pcard"><div class="wf-img"></div><div class="wf-line"></div><div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag">有券</span></div><div class="hm-price"><span class="hm-sub">券后</span><span class="wf-amount">¥12.34</span></div><div class="hm-sub">券前 ¥17.34 · 券 ¥5</div><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥0.56</span><span class="hm-info">i</span></div></div>
+            <div class="hm-pcard"><div class="wf-img"></div><div class="wf-line"></div><div class="hm-pcard__tags"><span class="wf-tag wf-tag--source">拼多多</span><span class="wf-tag">有券</span></div><div class="hm-price"><span class="hm-sub">拼单券后</span><span class="wf-amount">¥9.9</span></div><div class="hm-sub">拼单券前 ¥12.9 · 券 ¥3</div><div class="hm-rebate"><span class="wf-tag wf-tag--pending">预估返 ¥0.3</span><span class="hm-info">i</span></div></div>
+          </div>
+          <div class="hm-disclaimer">券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准<br>预估返利以平台结算为准，未结算或订单失效时不返</div>
+        </div>
+        <div class="hm-tabbar-todo wf-anchor"><span class="wf-pin hm-pin-in">7</span>[底部 Tab：基本模式下是否保留、保留哪几项] <span class="wf-todo-tag">待定</span></div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>【设置】· <code>BR-ID-02</code> 细则「未登录时的隐私入口」：基本模式页给【设置】，进入后只有隐私中心（只读清单）、协议、关于、帮助、【开启完整功能】· 路由 <code>Settings</code> · 放在右上角是本稿安排 <span class="wf-todo-tag">待定</span>（规划未写位置）。</li>
+      <li>基本模式说明 · <code>BR-ID-11</code> <code>BR-ID-02</code> 细则 · 文案键 <code>privacy.basic_mode.notice</code>（BR-TEXT-14 表 D：代理起草的占位措辞，法务定稿，06 Q-F14；占位稿不得用于提审与公开版本）。放在页面顶部是本稿安排，位置 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>【开启完整功能】· 键 <code>privacy.basic_mode.enable</code> · 点击重新展示首启弹窗（BR-ID-02、BR-ID-11）· 不直接拉登录。</li>
+      <li>搜索 · 基本模式可匿名搜索（BR-ID-11 白名单）· 路由 <code>Search</code>。基本模式不读剪贴板：没有提示条，也没有「粘贴查返利」按钮（BR-ID-02「剪贴板/链接输入识别」basic ✖，BR-INV-04 ①）。</li>
+      <li>「问 AI」· Agent 对基本模式不可用（BR-ID-02「Agent 找货看卡」basic ✖）；按钮隐藏，还是显示但点击先弹首启弹窗（BR-ID-11「需同意的功能」）<span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>只读首页与信息流 · <code>BR-ID-02</code>「首页、搜索、商品详情（含预估返利）」basic 只读 · 匿名请求、不带设备号，服务端给全量版、不参与灰度（BR-ID-11 细则，F-HOME-07）· 点卡片可进 <code>ProductDetail</code>，点购买先弹首启弹窗（BR-ID-11 例）；不上报埋点与曝光（BR-ID-11）· 匿名请求下预估返按哪个等级报价，同状态 2 钉 3 <span class="wf-todo-tag">待定</span>，样例金额与状态 1 相同。</li>
+      <li>底部 Tab · 01 §4.2 <code>BasicMode</code> 行只写「首页、搜索、详情只读」与可进入的设置类页面；订单、我的、AI 助手是否显示 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+    </ol>
+  </section>
+
+  <!-- ===================== 状态 9 ===================== -->
+  <section class="wf-state" aria-label="状态 9：首页弹窗（M-公开）">
+    <div>
+      <p class="wf-state__label">9. 首页弹窗 <code>popup</code>（M-公开）<small>首页配置里下发的 1 个原生弹窗，命中人群、在时间段内、未超过每日次数时出现。</small></p>
+      <div class="wf-phone wf-phone--short" style="min-height: 640px">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="hm-top">
+          <div class="hm-search">
+            <div class="couli-control hm-search__field"><span class="hm-search__icon"></span><span>[搜索框占位文字]</span></div>
+            <span class="wf-btn hm-ask">问 AI</span>
+          </div>
+        </div>
+        <div class="wf-body">
+          <div class="hm-banner"><div class="wf-img"></div></div>
+          <div class="wf-card"><div class="hm-icongrid"><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span><span><i></i>[入口名]</span></div></div>
+        </div>
+        <div class="wf-scrim"></div>
+        <div class="hm-popup">
+          <div class="wf-img wf-anchor"><span class="wf-pin">1</span></div>
+          <span class="hm-popup__close couli-touch-target wf-anchor" aria-label="关闭弹窗"><span class="wf-pin">2</span>×</span>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>首页弹窗 · <code>F-HOME-08</code>（阶段 M-公开）· 原生弹窗，作为 <code>popup</code> 卡片下发（03 §6.1、§6.3，TECH-12）；每页最多 1 个；人群只用是否已授权、有无上级、有无订单（BR-INV-23，OPS-10）；每日次数与时间段由配置下发 · 图片内容与点击去向 <code>{route, params}</code> 由运营配置；是否带「推广」只看下发的 <code>ad_label</code>（BR-TEXT-17）。</li>
+      <li>关闭按钮 · <code>F-HOME-08</code> · 与弹窗同时出现、明显可见，不缩小、不遮挡，点一次即关闭；不以加群、关注、绑定邀请人或开权限作为关闭条件（G-74、G-96）· 按钮放在图片下方是本稿安排，具体位置按 UI 稿（06 Q-E5）。</li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="wf-foot">
+  <h2>本页覆盖的状态</h2>
+  <ol>
+    <li>正常态 · 已登录 · iOS · 假设 Agent 已开放（含公告条、Banner、金刚区、商品横滑、活动入口、商品网格 2 列、联盟物料信息流四种价格样例：淘宝有券、京东无券、拼多多有券、淘宝预售，口径说明；所有商品卡按 BR-PRICE-04 画副行或无券状态、带 i 图标）</li>
+    <li>游客 · 假设 Agent 已开放</li>
+    <li>加载 · 骨架屏（无 LKG）</li>
+    <li>配置拉取失败：4a 用 LKG；4b 无 LKG 用包内默认</li>
+    <li>信息流：5a 为空 / 请求失败（整块隐藏）；5b 向下分页失败 / 到底</li>
+    <li>剪贴板：6a iOS 商品链接提示条（Android 开关打开后同样）；6b 线报素材「让 AI 帮我看看」；6c Android 默认 / 鸿蒙正常态的「粘贴查返利」（Android 自绘按钮、鸿蒙系统 PasteButton，含后台关闭开关的标注）；6d 好友邀请码提示条（只适用于 Android 打开开关后，iOS 待定、鸿蒙没有）；6e 识别不了（30132 / 30131 / 拼多多识别失败）与请求失败（5xxxx、42901、超时）；6f 识别成功出卡（有返、暂无返利、金额未知、查不到价格）</li>
+    <li>Agent 未开放：底部 Tab「AI 助手」替换为「搜索」</li>
+    <li>基本模式 BasicMode · 只读首页</li>
+    <li>首页弹窗 popup（M-公开，规划另有要求，补画）</li>
+  </ol>
+  <p class="wf-caption">信息流不会出现「暂无返利 / 去购买（无返利）」（服务端过滤，BR-PRICE-08），也不会出现「可返利，金额以订单为准」与「暂时查不到该商品价格」（只来自粘贴入口），这几种卡画在 6f；「登录查看返利」只用于 Agent 游客卡，跟着 AI 助手页的线框走。</p>
+
+  <h2>待定项</h2>
+  <ul>
+    <li><span class="wf-todo-tag">待定</span> 搜索框占位文字（没有文案键；热词是否作占位也未写）· 规划未写，需在 BR-TEXT-14 补键</li>
+    <li><span class="wf-todo-tag">待定</span> 信息流卡片布局（横向 / 网格 / 大卡）、卡片上是否直接放购买按钮 · 规划未写（03 §10.2 只列三种布局），按 UI 稿，06 Q-E5</li>
+    <li><span class="wf-todo-tag">待定</span> 无券时「无券状态」怎样呈现（信息流、商品横滑、商品网格、预售卡都用到）· BR-PRICE-04 只写要显示，规划未写呈现</li>
+    <li><span class="wf-todo-tag">待定</span> 信息流卡片与剪贴板识别结果卡是否显示「预估返后 ¥x」· BR-PRICE-09 影响面未列首页与粘贴结果卡，规划未写</li>
+    <li><span class="wf-todo-tag">待定</span> 口径说明在无限加载信息流里「每屏底部一次」的做法；商品横滑、商品网格（商品池卡）与粘贴结果卡的口径说明全文放哪里，信息流隐藏时怎样补 · BR-PRICE-03 呈现形式只列搜索列表、首页物料流、Agent 卡片流（14_待决策汇总 BR-PRICE-03 行，负责人）</li>
+    <li><span class="wf-todo-tag">待定</span> 游客与登录用户看到的预估返是否不同 · BR-PRICE-06 写按查看者等级，04 §6.2 卡片分页接口鉴权为 none，规划未写如何取舍</li>
+    <li><span class="wf-todo-tag">待定</span> 分页加载中、分页失败与重试、没有更多的提示 · 规划未写</li>
+    <li><span class="wf-todo-tag">待定</span> 下拉刷新的提示样式与文字 · 规划未写</li>
+    <li><span class="wf-todo-tag">待定</span> 搜索区与底部 Tab 是否不等首页配置先出 · 本稿安排，规划未写</li>
+    <li><span class="wf-todo-tag">待定</span> 包内 <code>default_home.json</code> 的内容、是否带内置图片（断网时 static 卡片的图能否显示）；开关 <code>home.fallback</code> 的含义 · 规划未写（03 §3.4、§4.3、§6.2 只列名字）</li>
+    <li><span class="wf-todo-tag">待定</span> 首页所有卡片都隐藏时的页面级空态 · 规划未写（F-HOME-05 只写单卡）</li>
+    <li><span class="wf-todo-tag">待定</span> iOS 只含口令、不含链接时能否出提示条 · detectPatterns 没有口令类模式，待 09 CAP-X-02 实测（未开始）；09 降级列的「首页常驻粘贴按钮」未进 08、01</li>
+    <li><span class="wf-todo-tag">待定</span> iOS 怎样判断「剪贴板变化」与去重（例如按 changeCount）· F-CLIP-02 的本地过滤与 hash 去重要先读内容，只适用于 Android 打开开关的情况，规划未写 iOS 做法</li>
+    <li><span class="wf-todo-tag">待定</span> 剪贴板提示条的位置、停留时长、商品提示条能否关闭、点击后「识别中」的样子 · 规划未写，按 UI 稿，06 Q-E5；读取方式本身待 BR-ID-16（14_待决策汇总 BR-ID-16 行、G-20，法务）</li>
+    <li><span class="wf-todo-tag">待定</span> 剪贴板识别结果卡片在哪里显示（首页内、半屏还是商品详情）· 规划未写（J2、F-CLIP-03、AC-S1-02 只写「出 1 张卡」），06 Q-E5</li>
+    <li><span class="wf-todo-tag">待定</span> 拼多多直链「金额未知」卡能否显示商品图与标题 · BR-PRICE-08 只写不显示价格与金额，规划未写</li>
+    <li><span class="wf-todo-tag">待定</span> 线报素材提示条的提示语、素材在哪一步判定 · 规划未写（F-CLIP-04 与 BR-ID-16、J2 第 3 步衔接不上）</li>
+    <li><span class="wf-todo-tag">待定</span> 识别失败（30132 等）与通用失败显示在提示条原位、Toast 还是弹窗；查返利请求超时或没有响应时的提示文案 · 规划未写（03 §4.2 只给了 open 的 buy.timeout）</li>
+    <li><span class="wf-todo-tag">待定</span> iOS 邀请码提示条的形态（读取前拿不到 {invite_code}，能否先显示邀请码、要不要内嵌 UIPasteControl）· BR-ID-16「影响」、09 CAP-X-02 未知项；是否为邀请口令放宽 Android 默认值待法务（14_待决策汇总 BR-ID-16 行）</li>
+    <li><span class="wf-todo-tag">待定</span> 「粘贴查返利」入口在首页的位置；鸿蒙 PasteButton 能否显示这几个字；后台关闭 <code>clipboard.enabled.&lt;platform&gt;</code> 时这个入口是否保留 · 位置规划未写（06 Q-E5）；文字待 09 CAP-X-02 实测、06 Q-G11；关闭后的入口 01、03、08 未写</li>
+    <li><span class="wf-todo-tag">待定</span> Agent 未开放时首页「问 AI」隐藏还是置灰，素材提示条的去向 · 规划未写（01 §4.1、BR-AI-12 只写 Tab；BR-TEXT-14 30501 动作两可）</li>
+    <li><span class="wf-todo-tag">待定</span> 基本模式：说明条与【设置】的位置、「问 AI」是否显示、底部 Tab 是否保留 · 规划未写（01 §4.2 BasicMode 行、BR-ID-02 细则）；说明文案为占位措辞，待法务定稿 06 Q-F14</li>
+  </ul>
+
+  <h2>请负责人确认</h2>
+  <ul>
+    <li>AI 助手还没开放的时候，首页搜索框旁边的「问 AI」按钮是直接不显示，还是显示成灰色点不了？</li>
+    <li>首页下面那一长串商品，是点卡片先进商品页再买，还是每张卡片上直接放「领券购买」按钮？</li>
+    <li>用户粘贴链接查返利后，查出来的那张商品卡是直接显示在首页上、弹一个半屏，还是直接打开商品页？另外，复制的是带优惠说明的文案（比如写着淘礼金、88会员）时，提示条是直接让用户去问 AI，还是先帮他查一下返利？</li>
+  </ul>
+</footer>
+</body>
+</html>

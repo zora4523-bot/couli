@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>线框 · 提现 Withdraw · v20261004</title>
+<link rel="stylesheet" href="../tokens/variables.css">
+<link rel="stylesheet" href="../tokens/foundations.css">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+  /* 本页专用：只用令牌，不写新色值 */
+  .wd-back { width: var(--space-6); color: var(--color-text-secondary); font-weight: var(--font-weight-regular); }
+  .wd-input { display: flex; align-items: center; gap: var(--space-2); }
+  .wd-input .couli-control { flex: 1; display: flex; align-items: center; gap: var(--space-1); font-size: var(--font-size-heading); font-weight: var(--font-weight-semibold); }
+  .wd-input .couli-control small { font-size: var(--font-size-body); color: var(--color-text-secondary); font-weight: var(--font-weight-regular); }
+  .wd-ph { display: inline-block; padding: 0 var(--space-1); border: 1px dashed var(--color-border-control); border-radius: var(--radius-small); color: var(--color-text-secondary); font-size: var(--font-size-caption); font-weight: var(--font-weight-regular); }
+  .wd-dim { opacity: 0.45; }
+  .wf-btn--text:disabled { color: var(--color-text-secondary); }
+  .wd-code { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-2); }
+  .wd-code span { height: var(--interaction-target-minimum); display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border-control); border-radius: var(--radius-small); font-size: var(--font-size-heading); font-variant-numeric: tabular-nums; }
+  .wd-check { width: var(--space-5); height: var(--space-5); flex: none; border: 1px solid var(--color-border-control); border-radius: var(--radius-small); background: var(--color-background-surface); }
+  .wd-spin { display: inline-block; width: var(--space-4); height: var(--space-4); border-radius: var(--radius-pill); border: 2px solid var(--color-button-primary-disabled-text); border-right-color: transparent; }
+  .wd-doc { display: flex; flex-direction: column; gap: var(--space-2); }
+  .wd-kv { display: flex; justify-content: space-between; gap: var(--space-3); }
+  .wd-kv > span:first-child { color: var(--color-text-secondary); }
+  .wd-center { text-align: center; }
+  .wd-close { position: absolute; top: var(--space-3); right: var(--space-4); color: var(--color-text-secondary); }
+  .wd-code-wrap { padding-right: var(--space-5); }
+  .wd-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+  .wd-ghost { outline: 1px dashed var(--color-border-control); outline-offset: 2px; opacity: 0.5; }
+</style>
+</head>
+<body>
+<header class="wf-head">
+  <h1>提现 <code>Withdraw</code> · 线框 v20261004</h1>
+  <p>依据：规划 main 2d23ae7 的 01 §4.2（Withdraw / WithdrawRecords / RealName / PayoutAccount / LaborAgreement / RiskNotice / Appeal 行与「入口限制」）、§5 J6、§6 E11；04 §6.4（rules、withdrawals 接口）；08 07_WDR（BR-WDR-01/02/03/04/05/06/07/19/20/25/31 与 7.3）、12_TEXT（BR-TEXT-01/06/07/08/10/11/14/23）、10_ID（BR-ID-01/02/05/08/10/25/31/33/36）；12 §5.1、§5.9；03 §4.2、§4.4、§10.2；design/references/interaction-patterns.md §3。线框级，不是视觉稿。</p>
+  <p>示例数字都是样例值，不是配置值：可提现余额 ¥12.34、申请 ¥10、样例时刻 2026-10-12 10:00（周一，同 10 AC-S2-20）、收款账号与手机号用 BR-ID-33 的脱敏样例 138****5678。全页统一按首版默认：手续费 0（BR-WDR-19）、代扣个税 0（BR-WDR-20 税率表到位前税额记 0，FUND-04），所以预估只显示 <code>withdraw.estimate.net_only</code> 那句；带手续费、税额的句式只在注释里列出。最低额 ¥1、整元步长、每日 1 次 / 每月 10 次是开发期占位值（BR-WDR-04，ADD-03）。</p>
+  <div class="wf-legend"><span><span class="wf-pin wf-pin--inline">1</span> 编号对应右侧注释</span><span><span class="wf-todo-tag">待定</span> 规划未定，见注释里的编号</span><span><span class="wd-ph">[ … ]</span> 中性占位，不是文案</span><span><span class="wd-ghost">虚线淡显</span> 本样例条件下不显示，只标出位置</span><span>手机框里只画用户看得到的元素；给开发的说明都在右侧注释</span></div>
+</header>
+
+<main class="wf-states">
+
+  <!-- ========== 0. 进入取规则中 ========== -->
+  <section class="wf-state" aria-label="状态 0：进入页面，正在取提现规则">
+    <div>
+      <p class="wf-state__label">0. 进入 · 正在取规则（加载中）<small>每次进入、每次从前置页返回都先请求 GET /v1/withdrawals/rules；结果回来前显示骨架</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请<span class="wf-pin wf-pin--inline">1</span></span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">2</span>
+            <div class="wf-skeleton" style="height: var(--space-4); width: 40%"></div>
+            <div class="wf-skeleton" style="height: var(--space-8); width: 55%"></div>
+            <div class="wf-skeleton" style="height: var(--space-3); width: 70%"></div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wf-skeleton" style="height: var(--space-3); width: 30%"></div>
+            <div class="wf-skeleton" style="height: var(--space-10); width: 100%"></div>
+            <div class="wf-skeleton" style="height: var(--space-3); width: 50%"></div>
+          </div>
+          <div class="wf-card">
+            <div class="wf-skeleton" style="height: var(--space-5); width: 100%"></div>
+          </div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <div class="wf-anchor"><span class="wf-pin">3</span><button class="couli-button-primary wf-btn--block" type="button" disabled>提交</button> <span class="wf-todo-tag">待定·取数中是否可点</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>进入顺序 · 路由 <code>Withdraw</code> · F-WDR-03 · 先查本机有没有当前账号结果未知的提现未决记录，有就直接进状态 10（12 §5.1 第一个 break）；没有再请求 rules（BR-WDR-07 细则「前置步骤的回流」，01 J6 第 2 步）· 读接口 10 秒超时、自动重试 1 次（03 §4.2）· <span class="wf-todo">取数失败（网络或 5xxxx）时页面怎么显示待定（规划未写；03 §4.2 只写订单、钱包页显示上次数据）</span></li>
+      <li>骨架 · 组件 <code>Skeleton</code>（03 §10.2 通用组件）· 结果回来后按 can_withdraw 与 block_code 进入状态 1、3、4、5、12、14、15、16 等</li>
+      <li>【提交】 · <span class="wf-todo">规则回来前【提交】是否可点待定（规划未写），本线框按不可点画</span>；【提现规则】入口依赖 /v1/config.help_links，本态不画</li>
+    </ol>
+  </section>
+
+  <!-- ========== 1. 正常可提 ========== -->
+  <section class="wf-state" aria-label="状态 1：正常可提">
+    <div>
+      <p class="wf-state__label">1. 正常可提 · 已输入金额，估算已返回<small>规则返回 can_withdraw=true；用户输入 ¥10，停顿后服务端估算回来且与当前输入对得上</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请<span class="wf-pin wf-pin--inline">1</span></span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-anchor wf-stack"><span class="wf-pin">2</span>
+            <div>可提现余额 <span class="wf-amount wf-amount--lg">¥12.34</span></div>
+            <div class="wf-caption">今日还可提 1 次，本月还可提 10 次</div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wf-anchor"><span class="wf-pin">3</span><span class="wd-ph">[金额输入标签 · 待定]</span></div>
+            <div class="wd-input">
+              <div class="couli-control wf-anchor"><small>¥</small>10</div>
+              <span class="wf-anchor"><span class="wf-pin">4</span><button class="wf-btn wf-btn--text" type="button">全部提现</button></span>
+            </div>
+            <div class="wf-caption wf-anchor"><span class="wf-pin">5</span>本次最多可提 ¥12</div>
+            <div class="wf-chips wf-anchor"><span class="wf-pin">6</span><span class="wf-chip">¥5</span><span class="wf-chip">¥10</span><span class="wf-todo-tag">待定·可选</span></div>
+            <div class="wf-divider"></div>
+            <div class="wf-anchor"><span class="wf-pin">7</span>预计到账 ¥10，以实际到账为准</div>
+          </div>
+          <div class="wf-card wf-row wf-row--between wf-anchor"><span class="wf-pin">8</span>
+            <span class="wf-muted">收款账号 <span class="wf-todo-tag">待定</span></span>
+            <span>支付宝 138****5678 <span class="wf-muted">›</span></span>
+          </div>
+          <div class="wf-banner wf-banner--info wf-anchor"><span class="wf-pin">9</span>人工审核，工作日 24 小时内处理，节假日顺延</div>
+          <div class="wf-anchor"><span class="wf-pin">10</span><span class="wd-ph">[提交后不能自行撤销、需联系客服的提示 · 是否提示与文案待定]</span></div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <div class="wf-anchor"><span class="wf-pin">11</span><button class="couli-button-primary wf-btn--block" type="button">提交</button></div>
+          <div class="wd-center wf-anchor"><span class="wf-pin">12</span><span class="wf-link">提现规则</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>页面 · 路由 <code>Withdraw</code>（01 §4.2 页面名「提现申请」）· F-WDR-03 · 只能原生发起（<code>BR-WDR-01</code>）；不接受路由参数，打开时丢弃全部参数、记 <code>route_params_dropped</code>，金额不能被 H5、推送、运营配置预填（BR-WDR-01 细则，G-69）；深链不能打开（BR-ID-10 细则「路由入口矩阵」）；每次进入先取 <code>GET /v1/withdrawals/rules</code>。<span class="wf-todo">导航标题文案键待定（规划未写）</span></li>
+      <li>页头 · F-WDR-03 · <code>withdraw.balance_line</code> / <code>withdraw.remaining_counts</code>（BR-TEXT-14 表 C；BR-WDR-04 细则）· 余额取 rules 的 <code>withdrawable_fen</code>，与钱包同一口径（BR-FUND-18、BR-TEXT-01「可提现」）· 金额格式 <code>BR-TEXT-10</code></li>
+      <li>金额输入 · F-WDR-03 · 按元输入、只用整数换算成分（BR-TEXT-10）；最低额、步长、上限以提交时 BR-WDR-03 ⑨ 为准，客户端不另写一套（BR-WDR-04 细则）。<span class="wf-todo">输入框标签与占位文案待定（规划未写）</span></li>
+      <li>【全部提现】 · <code>withdraw.all</code> · 填 rules 的 <code>max_withdrawable_fen</code>，客户端不重算；为 0 或不能提现时置灰（BR-WDR-04 细则）</li>
+      <li>本次上限 · <code>withdraw.max_line</code> · 只在 max 小于可提现余额时显示（样例 ¥12.34 按整元步长向下取整为 ¥12，BR-WDR-03 细则）</li>
+      <li>快捷档位（可选） · 只显示服务端给的 <code>quick_amounts_fen</code>（BR-WDR-04 细则「UI 稿采用时实现」）· <span class="wf-todo">是否采用待定，随关键页确认 06 Q-E5</span></li>
+      <li>预估 · F-WDR-08、F-SET-07 · 样例按首版默认（手续费 0，BR-WDR-19；税率表到位前税额记 0，BR-WDR-20、FUND-04），用 <code>withdraw.estimate.net_only</code>「预计到账 {net}，以实际到账为准」· 手续费或税额不为 0 时改用 <code>withdraw.estimate</code>「预计到账 {net}（手续费 {fee}，代扣个税 {tax}），以实际到账为准」，按 BR-TEXT-06 例的口径（¥10 代扣 ¥0.8）即「预计到账 ¥9.2（手续费 ¥0，代扣个税 ¥0.8），以实际到账为准」（BR-TEXT-14 表 C）· 取 <code>est_fee_fen / est_tax_fen / est_net_fen</code>，客户端不自算；估算字段为空时整行不显示</li>
+      <li>收款账号 · F-WDR-02 · 脱敏串取服务端 <code>masked_account</code>（BR-ID-33 细则：支付宝 138****5678 / zh***@example.com；银行卡「招商银行 尾号 1234」）· 来源 <code>GET /v1/me/payout-account</code> · <span class="wf-todo">行标签文案键、能否点进 PayoutAccount 换绑待定（规划未写）</span></li>
+      <li>时效说明 · F-WDR-09 · <code>BR-TEXT-07</code>：自动到账总开关关（默认）用 <code>withdraw.sla_text</code>；开启后用 <code>withdraw.sla_text_auto</code>「符合条件的提现几分钟内自动到账，其余人工审核，工作日 24 小时内处理」· 提交前不预判单据走向</li>
+      <li>不能自撤 · FUND-20（01 §4.2 Withdraw 行）· <span class="wf-todo">规则已定；提交前是否提示、文案键待定（规划未写）</span></li>
+      <li>【提交】 · F-WDR-04 · 按钮名取 J6 / BR-WDR-07 细则【提交】· 每点一次生成新幂等键；没有有效 step_up_token 时弹二次验证（状态 7）</li>
+      <li>提现规则 · <code>withdraw.rules_link</code> · 打开 <code>help_links.withdraw_rules</code>，未配置时不显示（BR-WDR-04 细则）；文章数值由配置变量渲染（BR-TEXT-13）</li>
+    </ol>
+  </section>
+
+  <!-- ========== 2. 计算中 ========== -->
+  <section class="wf-state" aria-label="状态 2：计算中">
+    <div>
+      <p class="wf-state__label">2. 计算中 · 输入刚变化<small>用户点【全部提现】填入 ¥12（或改数字、点档位），旧估算立即失效</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请</span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack">
+            <div>可提现余额 <span class="wf-amount wf-amount--lg">¥12.34</span></div>
+            <div class="wf-caption">今日还可提 1 次，本月还可提 10 次</div>
+          </div>
+          <div class="wf-card wf-stack">
+            <span class="wd-ph">[金额输入标签 · 待定]</span>
+            <div class="wd-input wf-anchor"><span class="wf-pin">1</span>
+              <div class="couli-control"><small>¥</small>12</div>
+              <button class="wf-btn wf-btn--text" type="button">全部提现</button>
+            </div>
+            <div class="wf-caption">本次最多可提 ¥12</div>
+            <div class="wf-divider"></div>
+            <div class="wf-muted wf-anchor"><span class="wf-pin">2</span>计算中…</div>
+          </div>
+          <div class="wf-card wf-row wf-row--between">
+            <span class="wf-muted">收款账号 <span class="wf-todo-tag">待定</span></span>
+            <span>支付宝 138****5678 <span class="wf-muted">›</span></span>
+          </div>
+          <div class="wf-banner wf-banner--info">人工审核，工作日 24 小时内处理，节假日顺延</div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <div class="wf-anchor"><span class="wf-pin">3</span><button class="couli-button-primary wf-btn--block" type="button">提交</button></div>
+          <div class="wd-center"><span class="wf-link">提现规则</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>输入变化 · F-WDR-03 · 改数字、点【全部提现】或档位时，估算行马上换成「计算中…」，停顿约 0.5 秒后带 <code>amount_fen</code> 再取 rules（BR-WDR-04 细则「输入一变化旧估算立即失效」）</li>
+      <li>估算行 · <code>withdraw.estimate.calculating</code>「计算中…」· 清空输入、或换算后不是正整数分时不发请求、整行隐藏；请求失败或超时整行隐藏，不影响提交（BR-WDR-04 细则）· 只认最新且对得上的估算（BR-WDR-04 细则「估算响应的归属」）：① 账号相同 ② 同一页面实例（去前置页再回来仍是同一实例）③ 本实例最新序号 ④ 金额等于当前输入，四项都对才显示，否则丢弃、页面不变；页头、上限、档位也只取已应用的最新序号结果</li>
+      <li>【提交】 · 估算只是参考，计算中照常可提交；申请成功后以提现单固化的手续费、税额、净额为准（BR-WDR-04 细则、BR-WDR-19/20）</li>
+    </ol>
+  </section>
+
+  <!-- ========== 3. 前置引导：未实名 ========== -->
+  <section class="wf-state" aria-label="状态 3：进入先取规则，未实名，引导到 RealName">
+    <div>
+      <p class="wf-state__label">3. 进入先取规则 · 未实名 → RealName<small>rules 返回 can_withdraw=false、block_code=30304（首次提现的第一步）</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请<span class="wf-pin wf-pin--inline">1</span></span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">2</span>
+            <div>可提现余额 <span class="wf-amount wf-amount--lg">¥12.34</span></div>
+            <div class="wf-caption">今日还可提 1 次，本月还可提 10 次</div>
+          </div>
+          <div class="wf-card wf-stack">
+            <span class="wd-ph">[金额输入标签 · 待定]</span>
+            <div class="wd-input wf-anchor"><span class="wf-pin">3</span>
+              <div class="couli-control"><small>¥</small><span class="wd-ph">[占位 · 待定]</span></div>
+              <button class="wf-btn wf-btn--text" type="button" disabled>全部提现</button>
+            </div>
+            <div class="wf-banner wf-banner--warning wf-stack wf-anchor"><span class="wf-pin">4</span>
+              <span>请先完成实名认证</span>
+              <span class="wd-ph">[去 RealName 的引导按钮 · 文案、是否先停留在本页待定]</span>
+            </div>
+          </div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <div class="wf-anchor"><span class="wf-pin">5</span><button class="couli-button-primary wf-btn--block" type="button" disabled>提交</button> <span class="wf-todo-tag">待定·是否置灰</span></div>
+          <div class="wd-center"><span class="wf-link">提现规则</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>每次进入先取规则 · F-WDR-03 · 路由 <code>Withdraw</code> · 每次进入、每次从前置页返回都请求 rules，按 block_code 引导（BR-WDR-07 细则「前置步骤的回流」）· 取数期间见状态 0</li>
+      <li>页头 · 同状态 1；can_withdraw=false 时不显示「本次最多可提」（BR-WDR-04 细则）</li>
+      <li>金额输入为空、【全部提现】置灰 · 不接受预填（G-69）；max_withdrawable_fen=0 时置灰（BR-WDR-04 细则）· 阻断时仍可输入（10 AC-S2-62 ③ 先输入 ¥5 再去补办）</li>
+      <li>阻断提示 · F-ACC-08 · 30304 → <code>error.30304</code>「请先完成实名认证」，动作「跳 RealName」（BR-TEXT-14 表 A）→ 路由 <code>RealName</code>（单独同意、默认不勾选、姓名 + 身份证二要素，<code>BR-ID-25</code>）· 显示在金额附近（interaction-patterns §3）· 规划写的是按 block_code「跳到」前置页（01 J6 第 2 步、BR-TEXT-14 表 A）；<span class="wf-todo">没定的是进入页面时立即跳、还是先显示提示等用户点按钮，以及引导按钮文案（规划未写）</span> · 回流：补办完回到导航栈里的同一页面实例，重新取规则，保留金额，不自动提交、不重放、不登记 pending_action（BR-WDR-07 细则、BR-ID-10 细则「不适用的动作」，验收 AC-S2-62）· 未绑手机的会员：rules 鉴权为 login（04 §6.4；BR-WDR-03「只要求 access_token 有效」），不会返回 10005，按 ④ 先返回 30304 → RealName → 实名接口前置要求已绑手机，返回 10005（BR-ID-25；AC-S2-21 ①）→ <code>BindPhone</code>（BR-TEXT-14 表 A 10005）· <span class="wf-todo">绑完手机后回 RealName 还是回 Withdraw、Withdraw 路由的 auth 级别与入口守卫是否先拦未绑手机，待定（规划未写；BR-ID-02 矩阵只写提现「member ✖→绑手机」，03 §4.4 只列 auth 字段）</span></li>
+      <li>【提交】 · <span class="wf-todo">can_withdraw=false 时提现页【提交】是否置灰待定（规划未写；钱包【提现】在 30306、负余额时置灰，BR-TEXT-01；待确认态置灰已定，<code>pending_confirm.title</code>）</span>；若可点，提交返回同一码时按同一引导处理</li>
+    </ol>
+  </section>
+
+  <!-- ========== 4. 前置引导：未绑收款账号 ========== -->
+  <section class="wf-state" aria-label="状态 4：未绑收款账号，引导到 PayoutAccount">
+    <div>
+      <p class="wf-state__label">4. 未绑收款账号 / 姓名不一致 → PayoutAccount<small>实名已完成回到本页，rules 返回 block_code=30305（或 30307）；用户已输入 ¥5</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请</span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">1</span>
+            <div>可提现余额 <span class="wf-amount wf-amount--lg">¥12.34</span></div>
+            <div class="wf-caption">今日还可提 1 次，本月还可提 10 次</div>
+          </div>
+          <div class="wf-card wf-stack">
+            <span class="wd-ph">[金额输入标签 · 待定]</span>
+            <div class="wd-input wf-anchor"><span class="wf-pin">2</span>
+              <div class="couli-control"><small>¥</small>5</div>
+              <button class="wf-btn wf-btn--text" type="button" disabled>全部提现</button>
+            </div>
+            <div class="wf-banner wf-banner--warning wf-stack wf-anchor"><span class="wf-pin">3</span>
+              <span>请先绑定收款账号</span>
+              <span class="wd-ph">[去 PayoutAccount 的引导按钮 · 文案、是否先停留在本页待定]</span>
+            </div>
+          </div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <div class="wf-anchor"><span class="wf-pin">4</span><button class="couli-button-primary wf-btn--block" type="button" disabled>提交</button> <span class="wf-todo-tag">待定·是否置灰</span></div>
+          <div class="wd-center"><span class="wf-link">提现规则</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>页头 · 同状态 1（<code>withdraw.balance_line</code> / <code>withdraw.remaining_counts</code>）</li>
+      <li>已输入 ¥5 · 阻断时输入框照常可输入（AC-S2-62 ③）· can_withdraw=false 时估算字段为空，估算行不显示（BR-WDR-04 细则）</li>
+      <li>阻断提示 · F-WDR-02 · 30305 → <code>error.30305</code>「请先绑定收款账号」；30307 → <code>error.30307</code>「收款账号姓名与实名姓名不一致，请修改收款账号」；两者动作都是「跳 PayoutAccount」（BR-TEXT-14 表 A，BR-WDR-07 细则）· <span class="wf-todo">进入时立即跳还是先显示提示等用户点按钮、引导按钮文案待定（规划未写，同状态 3 第 4 条）</span> · 路由 <code>PayoutAccount</code>（F-WDR-02、<code>BR-WDR-02</code>）：支付宝或本人借记卡，银行卡三要素核验；保存带 step_up_token（action=payout_account_change）；只显示脱敏信息与本月还能变更的次数（BR-ID-33 细则，G-71）；从提现发起的完成后回 Withdraw、保留金额、不自动提交（BR-TEXT-14 表 A 30305）</li>
+      <li>【提交】 · 同状态 3 第 5 条 · <span class="wf-todo">是否置灰待定</span></li>
+    </ol>
+  </section>
+
+  <!-- ========== 5. 劳务协议签署 ========== -->
+  <section class="wf-state" aria-label="状态 5：首次提现前签劳务协议">
+    <div>
+      <p class="wf-state__label">5. 首次提现前签劳务协议 · LaborAgreement<small>rules 返回 block_code=10004（consent_type=labor_agreement），或协议改版标记需重签</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">劳务协议签署<span class="wf-pin wf-pin--inline">1</span></span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wd-doc wf-anchor"><span class="wf-pin">2</span>
+            <span class="wd-ph">[协议标题与版本 · 待法务]</span>
+            <div class="wf-line" style="width: 92%"></div>
+            <div class="wf-line" style="width: 100%"></div>
+            <div class="wf-line" style="width: 84%"></div>
+            <div class="wf-line" style="width: 96%"></div>
+            <div class="wf-line" style="width: 70%"></div>
+            <div class="wf-line" style="width: 100%"></div>
+            <div class="wf-line" style="width: 88%"></div>
+            <div class="wf-line" style="width: 94%"></div>
+            <div class="wf-line" style="width: 60%"></div>
+            <div class="wf-line" style="width: 100%"></div>
+            <div class="wf-line" style="width: 82%"></div>
+            <div class="wf-line" style="width: 90%"></div>
+            <div class="wf-line" style="width: 76%"></div>
+            <div class="wf-line" style="width: 100%"></div>
+            <div class="wf-line" style="width: 66%"></div>
+            <span class="wf-caption">[全文可滚动 · 协议文本待法务]</span>
+          </div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <div class="wf-row wf-anchor"><span class="wf-pin">3</span><span class="wd-check" aria-hidden="true"></span><span class="wd-ph">[勾选确认文案 · 待定]</span></div>
+          <div class="wf-anchor"><span class="wf-pin">4</span><button class="couli-button-primary wf-btn--block" type="button" disabled>同意并签署</button></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>页面 · 路由 <code>LaborAgreement</code>（01 §4.2 页面名「劳务协议签署」）· F-WDR-13 · <code>BR-WDR-31</code>：提现流程内展示全文、主动勾选后签署；只能原生，H5、桥、Agent 不得代签；不接受路由参数（G-69）· 由 rules 的 block_code 10004 或提交返回 10004（<code>error.10004</code>，BR-TEXT-14 表 A）打开</li>
+      <li>协议全文 · <span class="wf-todo">协议文本、是否要第三方电子签名待法务（06 Q-F13；07_WDR 7.3 第 15 条）</span>；按「推广服务、劳务报酬」一种口径起草，不分收益来源（BR-WDR-31 细则）</li>
+      <li>主动勾选 · 默认不勾选（BR-WDR-31「勾选 + 按钮」）· <span class="wf-todo">勾选文案待定（规划未写；随 06 Q-F13 协议定稿）</span></li>
+      <li>【同意并签署】 · 按钮名取 <code>BR-WDR-31</code>「用户主动勾选（默认不勾选）后点【同意并签署】」，未勾选时置灰（截图为未勾选）· 签署本身不需要二次验证（BR-WDR-31 细则）· 服务端留存签署记录（consent_records type=labor_agreement）· 签署后去向：回到 Withdraw，保留金额，不自动提交，用户重新点【提交】用新幂等键（BR-WDR-31 细则、BR-WDR-07 细则、BR-TEXT-14 表 A 10004；AC-S2-21 ⑤、AC-S2-55）· 协议改版标记需重签时下次再走本页（FUND-05）· 未实名不允许签署，先走 30304</li>
+    </ol>
+  </section>
+
+  <!-- ========== 6. 前置完成回到本页 ========== -->
+  <section class="wf-state" aria-label="状态 6：前置完成回到本页，保留金额，不自动提交">
+    <div>
+      <p class="wf-state__label">6. 前置完成回到本页 · 保留金额、不自动提交<small>实名、收款账号、劳务协议都办完，回到同一个提现页；默认手续费 0、税额 0</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请</span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">1</span>
+            <div>可提现余额 <span class="wf-amount wf-amount--lg">¥12.34</span></div>
+            <div class="wf-caption">今日还可提 1 次，本月还可提 10 次</div>
+          </div>
+          <div class="wf-card wf-stack">
+            <span class="wd-ph">[金额输入标签 · 待定]</span>
+            <div class="wd-input wf-anchor"><span class="wf-pin">2</span>
+              <div class="couli-control"><small>¥</small>5</div>
+              <button class="wf-btn wf-btn--text" type="button">全部提现</button>
+            </div>
+            <div class="wf-caption">本次最多可提 ¥12</div>
+            <div class="wf-divider"></div>
+            <div class="wf-anchor"><span class="wf-pin">3</span>预计到账 ¥5，以实际到账为准</div>
+          </div>
+          <div class="wf-card wf-row wf-row--between wf-anchor"><span class="wf-pin">4</span>
+            <span class="wf-muted">收款账号 <span class="wf-todo-tag">待定</span></span>
+            <span>支付宝 138****5678 <span class="wf-muted">›</span></span>
+          </div>
+          <div class="wf-banner wf-banner--info">人工审核，工作日 24 小时内处理，节假日顺延</div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <div class="wf-anchor"><span class="wf-pin">5</span><button class="couli-button-primary wf-btn--block" type="button">提交</button></div>
+          <div class="wd-center"><span class="wf-link">提现规则</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>回到本页 · 同一页面实例（还在导航栈里），重新取 rules；输入框有合法金额时请求带 <code>amount_fen</code>（BR-WDR-04 细则「估算响应的归属」、BR-WDR-07 细则）</li>
+      <li>金额保留 ¥5 · 在原生内存里保留，不经路由参数（BR-WDR-01 细则 G-69 末句）</li>
+      <li>预估 · <code>withdraw.estimate.net_only</code>（手续费与税额都为 0，BR-WDR-19 默认 0、BR-WDR-20 税率表到位前记 0）· 先显示「计算中…」再换成本句</li>
+      <li>收款账号 · 刚绑定的账号，脱敏显示（BR-ID-33 细则）</li>
+      <li>【提交】 · 不自动提交；用户再点才发起，用新幂等键；5 分钟内未核销的 step_up_token 可以继续用，不必再收短信（BR-WDR-07 细则、BR-WDR-01 细则）· 验收 AC-S2-62</li>
+    </ol>
+  </section>
+
+  <!-- ========== 7. 二次验证弹层 ========== -->
+  <section class="wf-state" aria-label="状态 7：二次验证弹层">
+    <div>
+      <p class="wf-state__label">7. 二次验证弹层 · StepUpSheet<small>点【提交】时没有有效的 step_up_token，服务端返回 10003</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请</span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack">
+            <div>可提现余额 <span class="wf-amount wf-amount--lg">¥12.34</span></div>
+            <div class="wf-caption">今日还可提 1 次，本月还可提 10 次</div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wd-input"><div class="couli-control"><small>¥</small>10</div></div>
+            <div>预计到账 ¥10，以实际到账为准</div>
+          </div>
+        </div>
+        <div class="wf-scrim"></div>
+        <div class="wf-sheet">
+          <span class="wd-close">× <span class="wf-todo-tag">待定</span></span>
+          <div class="wf-title wf-anchor"><span class="wf-pin">1</span>为保障资金安全，请先完成短信验证</div>
+          <div class="wf-caption wf-anchor"><span class="wf-pin">2</span><span class="wd-ph">[验证码发送说明 · 待定]</span> 138****5678</div>
+          <div class="wf-anchor wd-code-wrap"><span class="wf-pin">3</span><div class="wd-code"><span>3</span><span>8</span><span></span><span></span><span></span><span></span></div></div>
+          <div class="wf-row wf-row--between wf-anchor"><span class="wf-pin">4</span><span class="wf-caption">[错误提示位]</span><span class="wd-ph">[重新获取 · 倒计时文案待定]</span></div>
+          <div class="wf-anchor"><span class="wf-pin">5</span><button class="couli-button-primary wf-btn--block" type="button" disabled><span class="wd-ph">[确认按钮文案 · 待定]</span></button></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>弹层 · 组件 <code>StepUpSheet</code>（03 §10.2）· F-ACC-07 · 标题取 <code>error.10003</code>（BR-TEXT-14 表 A）· 验证通过后沿用原幂等键自动重放这一次提交（<code>BR-ID-08</code>、BR-WDR-07 细则），不用用户再点【提交】· 右上角关闭：规划只写了验证通过后的重放；本线框按「关闭后回到提现页、保留金额、不建单（10003 属 1xxxx，不写幂等记录，BR-WDR-07），下次点【提交】按 BR-WDR-07 细则生成新键」画 · <span class="wf-todo">是否允许关闭、关闭后的表现待定（规划未写）</span></li>
+      <li>接收号码 · 绑定手机号脱敏 3+4（<code>BR-ID-33</code>）· purpose=step_up、action=withdraw（04 <code>POST /v1/auth/sms-codes</code>）· <span class="wf-todo">发送说明文案待定（规划未写）</span></li>
+      <li>验证码 · 6 位数字、5 分钟有效、错 5 次作废（<code>BR-ID-05</code>）· 错误 <code>error.20002</code>「验证码错误，请重新输入」；失效 <code>error.20003</code>「验证码已失效，请重新获取」</li>
+      <li>重新获取 · 同一手机号 60 秒内 1 条、每日 10 条，超限 42901 按 Retry-After 置灰（BR-ID-05、03 §4.2）· <span class="wf-todo">按钮与倒计时文案待定（规划未写）</span></li>
+      <li>确认 · 拿到 step_up_token：5 分钟有效，绑定账号、设备与 action，只在提交成功时核销（<code>BR-WDR-01</code>）· <span class="wf-todo">按钮文案待定（规划未写）</span></li>
+    </ol>
+  </section>
+
+  <!-- ========== 8. 提交处理中 ========== -->
+  <section class="wf-state" aria-label="状态 8：提交处理中">
+    <div>
+      <p class="wf-state__label">8. 提交处理中<small>POST /v1/withdrawals 已发出、还没有回来</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请<span class="wf-pin wf-pin--inline">1</span></span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack">
+            <div>可提现余额 <span class="wf-amount wf-amount--lg">¥12.34</span></div>
+            <div class="wf-caption">今日还可提 1 次，本月还可提 10 次</div>
+          </div>
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">2</span>
+            <span class="wd-ph">[金额输入标签 · 待定]</span>
+            <div class="wd-input wd-dim">
+              <div class="couli-control"><small>¥</small>10</div>
+              <button class="wf-btn wf-btn--text" type="button" disabled>全部提现</button>
+            </div>
+            <div class="wf-divider"></div>
+            <div>预计到账 ¥10，以实际到账为准</div>
+          </div>
+          <div class="wf-card wf-row wf-row--between">
+            <span class="wf-muted">收款账号 <span class="wf-todo-tag">待定</span></span>
+            <span>支付宝 138****5678</span>
+          </div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <div class="wf-anchor"><span class="wf-pin">3</span><button class="couli-button-primary wf-btn--block" type="button" disabled><span class="wd-spin" aria-hidden="true"></span> 提交 <span class="wd-ph">[处理中文案 · 待定]</span></button></div>
+          <div class="wd-center"><span class="wf-link">提现规则</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>提交结果分流 · F-WDR-04 · 发送前写本机未决记录（12 §5.1）；请求 10 秒超时，写接口不自动重试（03 §4.2）· 去向（12 §5.1、BR-WDR-07 细则、BR-ID-10 细则「敏感操作的幂等键」、BR-TEXT-14 表 A）：<br>
+        ① 成功（PENDING_REVIEW）→ 状态 9；<br>
+        ② 没拿到带统一外壳的响应（超时、断网、进程被杀、网关错误页）→ 状态 10，不换键、不自动重发；<br>
+        ③ 10003 → 状态 7，验证后沿用原键重放；10002、10402 自动恢复后沿用原键重发 1 次；<br>
+        ④ 10001 / 10004 / 10005 / 30304 / 30305 / 30307 → 补办（Login、同意或签署组件、BindPhone，状态 3–5），回来后用户重新点【提交】、用新键；<br>
+        ⑤ 30301、30302、30303.*、30306、30309 → 在金额附近显示对应文案（状态 12–16 的版式），写入幂等记录、这个键结束；<br>
+        ⑥ 5xxxx（如 50001）→ <code>error.50001</code>「出了点问题，请稍后再试（{trace6}）」，动作「重试」；带外壳的错误码表示没有业务结果，这个键不再使用，重试即用户再点【提交】、用新键（BR-ID-10 细则「从未出现过结果未知的键」）· <span class="wf-todo">在提现页上以什么形式显示（03 §4.2 写 5xxxx 走通用错误态）、金额是否保留待定（规划未写）</span>；<br>
+        ⑦ 42901 → <code>error.42901</code>「操作太频繁，请稍后再试」，【提交】按 Retry-After 置灰，没有该头时 5 秒（BR-TEXT-14 表 A、03 §4.2）；<br>
+        ⑧ 10405 → 进入 <code>ForceUpdate</code> 全屏拦截，不重放、不登记 pending_action；这个键从未结果未知，升级后由用户重新操作、用新键（12 §5.1 ⓪a、BR-ID-01 细则「10405 与未决幂等键」）；<br>
+        ⑨ 10006 → <code>error.10006</code>「账号已被限制使用」→ 封禁说明页 <code>RiskNotice</code>（BR-TEXT-14 表 A、01 §4.2）；<br>
+        ⑩ 44001 → 状态 16（<code>risk_msg.&lt;code&gt;</code> + 申诉入口）</li>
+      <li>在途时输入区 · <span class="wf-todo">金额与【全部提现】在途时能否修改待定（规划未写）</span>；本线框按不可改画</li>
+      <li>【提交】处理中 · F-WDR-04 · <span class="wf-todo">规划没有写【提交】在途时的表现（12 §5.9 的在途置灰只说待确认态的【确认】【放弃】两个按钮），本线框按点击后立即置灰并显示处理中画（防重复点，同 interaction-patterns §1「点击购买」的做法）；处理中文案也待定（规划未写）</span></li>
+    </ol>
+  </section>
+
+  <!-- ========== 9. 提交成功 → 详情 ========== -->
+  <section class="wf-state" aria-label="状态 9：提交成功，进入该单详情">
+    <div>
+      <p class="wf-state__label">9. 提交成功 → 该单详情 · WithdrawRecords<small>建单成功（PENDING_REVIEW，人工审核单）；同时刷新钱包；不展示到账庆祝</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现记录<span class="wf-pin wf-pin--inline">1</span></span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack">
+            <div class="wf-row wf-row--between">
+              <span class="wf-stack"><span class="wf-caption"><span class="wd-ph">[申请金额标签]</span></span><span class="wf-amount wf-amount--lg">¥10</span></span>
+              <span><span class="wf-tag wf-tag--pending">审核中</span><span class="wf-pin wf-pin--inline">2</span></span>
+            </div>
+            <div class="wf-stack wf-anchor"><span class="wf-pin">3</span>
+              <span>预计 10-13 10:00 前完成审核</span>
+              <span class="wf-caption">人工审核，工作日 24 小时内处理，节假日顺延</span>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-stack wf-anchor"><span class="wf-pin">4</span>
+              <div class="wd-kv"><span>¥10 已冻结</span><span></span></div>
+              <div class="wd-kv"><span><span class="wd-ph">[手续费标签]</span></span><span>¥0</span></div>
+              <div class="wd-kv wd-ghost"><span><span class="wd-ph">[代扣个税标签]</span></span><span>¥0</span></div>
+              <div class="wd-kv"><span>实际到账</span><span class="wf-amount">¥10</span></div>
+              <div class="wd-kv"><span><span class="wd-ph">[收款账号标签]</span></span><span>支付宝 138****5678</span></div>
+              <div class="wd-kv"><span><span class="wd-ph">[申请时间标签]</span></span><span>2026-10-12 10:00</span></div>
+              <span class="wf-todo-tag">待定·字段标签</span>
+            </div>
+            <div class="wf-anchor"><span class="wf-pin">5</span><span class="wd-ph">[无撤销按钮；客服入口是否放这里 · 待定]</span></div>
+          </div>
+          <div class="wf-card wf-row wf-row--between wf-anchor"><span class="wf-pin">6</span>
+            <span class="wf-stack"><span>实际到账 <span class="wf-amount">¥5</span></span><span class="wf-caption">09-28</span></span>
+            <span class="wf-tag wf-tag--success">已到账</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>进入方式 · 路由 <code>WithdrawRecords</code>（01 §4.2 页面名「提现记录」）带 <code>withdrawal_id</code>，定位到本人这张单并展开详情（G-72）；同时刷新钱包摘要（BR-WDR-04 细则）· 不弹庆祝；本单（审核中）不出现「已到账」「提现成功」字样（BR-TEXT-01；interaction-patterns §3），列表里已打款成功的其他单照常显示「已到账」（钉 6）</li>
+      <li>状态标题 · F-WDR-09 · <code>withdrawal_status</code> PENDING_REVIEW →「审核中」（<code>BR-TEXT-06</code>）· 用 pending 状态色</li>
+      <li>副文案 · 人工审核单：「预计 {review_deadline} 前完成审核」（<code>BR-WDR-25</code>）+ <code>withdraw.sla_text</code>（BR-TEXT-07）；样例按 AC-S2-20：10-12 10:00 提交 → 10-13 10:00（BR-TEXT-11 同年未来时间「MM-DD HH:mm」）· 自动判定未完成时「处理中，结果会通知你」；判为自动到账时「预计几分钟内到账」（BR-WDR-25 表、OPS-17）</li>
+      <li>要素 · F-WDR-09 · <code>BR-WDR-25</code> ②：提现记录必须展示申请金额 amount、手续费、代扣税、实际到账 net 与各个时间点 · 取该单的 <code>amount_fen / fee_fen / tax_fen / net_fen</code>（04 <code>GET /v1/withdrawals/{id}</code>），是申请时固化的值，不是估算（BR-WDR-04 细则、BR-WDR-19/20）· 「实际到账」取 BR-TEXT-01 钱包汇总口径「提现记录中逐单展示「实际到账 {net}」」（审核中的单也这样写可能被读成已到账，见页尾「规划缺口」第 9 条）· 代扣个税行：tax_fen&gt;0 时显示；tax_fen=0 时按 BR-TEXT-06 边界「tax_fen=0 时不显示「已代扣个税」」同口径不显示（样例 tax=0，虚线行只标位置；该边界原文只针对 PAID 附加句，见页尾「规划缺口」第 8 条）· 「{amount} 已冻结」为 BR-TEXT-06 附加信息 · 收款账号取该单快照的 <code>masked_account</code>（BR-ID-33）· 申请时间精确到分钟（BR-TEXT-11），审核、到账等时间点随状态出现 · <span class="wf-todo">申请金额、手续费、代扣个税、收款账号、申请时间的标签文案键待定（规划未写；BR-TEXT-14 表 C 只有 withdraw_detail.trade_no）</span></li>
+      <li>不能自撤 · 不放【撤销】；要撤销只能联系客服，由后台以 USER_REQUEST 驳回（FUND-20、BR-WDR-10、F-ADM-23）· <span class="wf-todo">详情里是否放客服入口待定（规划未写）</span></li>
+      <li>列表其他单 · 金额口径写明：逐单显示「实际到账 {net}」（BR-TEXT-01 钱包汇总口径；BR-TEXT-06「已到账」金额显示 net_fen）· 「已到账」只用于 PAID_API / PAID_MANUAL（BR-TEXT-06、BR-TEXT-01）；列表过去时间同年「MM-DD」（BR-TEXT-11）；详情才显示可复制的交易流水号（<code>withdraw_detail.trade_no</code>，BR-WDR-25 细则）· <span class="wf-todo">列表行是否同时列申请额待定（规划未写）</span></li>
+    </ol>
+  </section>
+
+  <!-- ========== 10. 上一笔提现待确认 ========== -->
+  <section class="wf-state" aria-label="状态 10：上一笔提现待确认">
+    <div>
+      <p class="wf-state__label">10. 上一笔提现待确认（结果未知）<small>上一次【提交】没拿到响应（超时、断网、进程被杀、网关错误页）；之后每次进入本页都是这个状态，直到这一笔有结果</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请</span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-title">上一次提交的结果还没有确认<span class="wf-pin wf-pin--inline">2</span></div>
+            <div class="wf-anchor"><span class="wf-pin">3</span>上一笔提现 ¥10 还没有收到结果，收款账号 138****5678，请先确认</div>
+            <div class="wf-anchor"><span class="wf-pin">4</span><button class="couli-button-primary wf-btn--block" type="button">确认上一笔提现</button></div>
+            <div class="wf-anchor"><span class="wf-pin">5</span><button class="wf-btn wf-btn--block" type="button">放弃上一笔提现</button></div>
+          </div>
+          <div class="wf-card wf-stack wd-dim">
+            <div>可提现余额 <span class="wf-amount">¥12.34</span></div>
+            <div class="wd-input"><div class="couli-control"><small>¥</small><span class="wd-ph">[占位]</span></div></div>
+          </div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <div class="wf-anchor"><span class="wf-pin">6</span><button class="couli-button-primary wf-btn--block" type="button" disabled>提交</button></div>
+          <div class="wd-center"><span class="wf-link">提现规则</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>进入条件 · F-WDR-04 · 本机有当前账号的提现未决记录且出现过结果未知（BR-WDR-07 细则「结果未知时」、12 §5.9）· 不按时间过期；别的账号在这台设备登录时不展示、不发送 · 验收 AC-S2-62 ⑪–⑯</li>
+      <li>标题 · <code>pending_confirm.title</code>（BR-TEXT-14 表 C）</li>
+      <li>说明 · <code>pending_confirm.withdraw.desc</code> · {amount} 取本机未决记录；{payout_account} 取服务端当前绑定的脱敏账号（确认时如要新建，用的就是它）</li>
+      <li>【确认上一笔提现】 · <code>pending_confirm.withdraw.action</code> · 用原幂等键、原请求体重发；服务端已有结果就原样返回，没有就这一次受理（可能弹状态 7 的二次验证）· 在途时两个按钮都置灰 · 暂时确认不了 <code>pending_confirm.retry_later</code>；按原内容确认不了 <code>pending_confirm.cannot_confirm</code></li>
+      <li>【放弃上一笔提现】 · <code>pending_confirm.withdraw.abandon</code> · 先弹二次确认（状态 11）</li>
+      <li>【提交】置灰 · 只有建单成功、写入幂等记录的 3xxxx、已作废三种结果结束这一笔并恢复【提交】；10001/10004/10005 补办后回来仍是本状态（BR-WDR-07 细则）· <span class="wf-todo">本状态下金额输入区是否可编辑待定（规划未写），本线框按置灰画</span></li>
+    </ol>
+  </section>
+
+  <!-- ========== 11. 放弃上一笔·二次确认 ========== -->
+  <section class="wf-state" aria-label="状态 11：放弃上一笔提现的二次确认">
+    <div>
+      <p class="wf-state__label">11. 放弃上一笔 · 二次确认<small>状态 10 点【放弃上一笔提现】后弹出</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请</span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack">
+            <div class="wf-title">上一次提交的结果还没有确认</div>
+            <div>上一笔提现 ¥10 还没有收到结果，收款账号 138****5678，请先确认</div>
+          </div>
+        </div>
+        <div class="wf-scrim"></div>
+        <div class="wf-dialog">
+          <div class="wf-anchor"><span class="wf-pin">1</span>放弃后，上一次提交如果还没有被处理，以后也不会再被处理；如果已经处理完，会显示处理结果</div>
+          <div class="wd-btn-row">
+            <div class="wf-anchor"><span class="wf-pin">2</span><button class="wf-btn wf-btn--block" type="button">再想想</button></div>
+            <div class="wf-anchor"><span class="wf-pin">3</span><button class="couli-button-primary wf-btn--block" type="button">确定放弃</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>二次确认正文 · <code>pending_confirm.abandon.confirm</code>（BR-TEXT-14 表 C）· F-WDR-04</li>
+      <li>【再想想】 · <code>pending_confirm.abandon.cancel</code> · 关闭，仍是状态 10</li>
+      <li>【确定放弃】 · <code>pending_confirm.abandon.ok</code> · 调 <code>POST /v1/idempotency-keys/abandon</code>（action=withdraw）· 已作废 → <code>pending_confirm.abandoned</code>「上一次提交已放弃，可以重新提交」，恢复【提交】；原请求还在处理 → <code>pending_confirm.abandon_busy</code>，仍待确认；已处理完 → <code>pending_confirm.already_done</code> 后按原结果显示（12 §5.9、BR-WDR-07 细则）</li>
+    </ol>
+  </section>
+
+  <!-- ========== 12. 低于最低额 ========== -->
+  <section class="wf-state" aria-label="状态 12：可提现余额低于最低额">
+    <div>
+      <p class="wf-state__label">12. 低于最低额 · 进入即不可提<small>可提现余额按步长取整后低于单笔最低额：rules 返回 block_code=30303、block_reason=below_min、max=0</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请</span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">1</span>
+            <div>可提现余额 <span class="wf-amount wf-amount--lg">¥0.56</span></div>
+            <div class="wf-caption">今日还可提 1 次，本月还可提 10 次</div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wd-input wf-anchor"><span class="wf-pin">2</span>
+              <div class="couli-control"><small>¥</small><span class="wd-ph">[占位]</span></div>
+              <button class="wf-btn wf-btn--text" type="button" disabled>全部提现</button>
+            </div>
+            <div class="wf-banner wf-banner--warning wf-anchor"><span class="wf-pin">3</span>单笔最低提现 ¥1</div>
+          </div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <div class="wf-anchor"><span class="wf-pin">4</span><button class="couli-button-primary wf-btn--block" type="button" disabled>提交</button> <span class="wf-todo-tag">待定·是否置灰</span></div>
+          <div class="wd-center"><span class="wf-link">提现规则</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>页头 · 样例可提现余额 ¥0.56（<code>BR-TEXT-10</code>）</li>
+      <li>【全部提现】置灰 · max_withdrawable_fen=0（BR-WDR-03 细则：取整后低于最低额 → can_withdraw=false、below_min）</li>
+      <li>提示 · F-WDR-03 · <code>error.30303.below_min</code>「单笔最低提现 {min_amount}」，变量取 rules 的限制值（默认占位 ¥1，上线前超管填写，BR-WDR-04、ADD-03）· 显示在金额附近（interaction-patterns §3）· 未成年人本月额度用完时 rules 也会落到这一句，见页尾「规划缺口」第 3 条</li>
+      <li>【提交】 · <span class="wf-todo">是否置灰待定（同状态 3 第 5 条）</span></li>
+    </ol>
+  </section>
+
+  <!-- ========== 13. 余额不足 ========== -->
+  <section class="wf-state" aria-label="状态 13：输入超过余额，提交后返回 30301">
+    <div>
+      <p class="wf-state__label">13. 余额不足 · 提交后返回 30301<small>输入 ¥20 超过可提现余额；客户端与估算都不校验金额，提交（含二次验证）后才拿到结果</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请</span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack">
+            <div>可提现余额 <span class="wf-amount wf-amount--lg">¥12.34</span></div>
+            <div class="wf-caption">今日还可提 1 次，本月还可提 10 次</div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wd-input wf-anchor"><span class="wf-pin">1</span>
+              <div class="couli-control"><small>¥</small>20</div>
+              <button class="wf-btn wf-btn--text" type="button">全部提现</button>
+            </div>
+            <div class="wf-caption wf-anchor"><span class="wf-pin">2</span>本次最多可提 ¥12</div>
+            <div class="wf-banner wf-banner--error wf-anchor"><span class="wf-pin">3</span>可提现余额不足</div>
+            <div class="wf-divider"></div>
+            <div class="wf-anchor"><span class="wf-pin">4</span>预计到账 ¥20，以实际到账为准</div>
+          </div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <button class="couli-button-primary wf-btn--block" type="button">提交</button>
+          <div class="wd-center"><span class="wf-link">提现规则</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>输入 ¥20 · 客户端不比较余额与上限（BR-WDR-04 细则「客户端不另写一套」）</li>
+      <li>本次上限 · <code>withdraw.max_line</code> 仍显示，是用户唯一能提前看到的上限提示</li>
+      <li>提交结果 · <code>error.30301</code>「可提现余额不足」，无额外动作（BR-TEXT-14 表 A）· 二次验证排在余额校验之前（BR-WDR-03 ② 在 ⑩ 前），用户可能先收短信再看到这句（见页尾「规划缺口」第 2 条）；5 分钟内改金额重试不必再收短信（BR-WDR-01 细则）· 同一位置也用于 <code>error.30303.above_max</code> / <code>.not_multiple</code> / <code>.net_too_small</code>（表 B）</li>
+      <li>估算 · <code>withdraw.estimate.net_only</code>（样例 tax=0，与全页同一假设）· 规则写明「估算不校验金额」（BR-WDR-04 细则；04 rules 行），按规定仍显示 ¥20 的预计到账 → 容易误导，见页尾「规划缺口」第 1 条</li>
+    </ol>
+  </section>
+
+  <!-- ========== 14. 超出次数 ========== -->
+  <section class="wf-state" aria-label="状态 14：今日或本月提现次数已用完">
+    <div>
+      <p class="wf-state__label">14. 超出次数 · 今日 / 本月<small>今天已有 1 笔未被驳回或失败的提现（含还在审核中的那一笔）；rules 返回 block_reason=daily_count</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请</span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">1</span>
+            <div>可提现余额 <span class="wf-amount wf-amount--lg">¥12.34</span></div>
+            <div class="wf-caption">今日还可提 0 次，本月还可提 9 次</div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wd-input wf-anchor"><span class="wf-pin">2</span>
+              <div class="couli-control"><small>¥</small><span class="wd-ph">[占位]</span></div>
+              <button class="wf-btn wf-btn--text" type="button" disabled>全部提现</button>
+            </div>
+            <div class="wf-banner wf-banner--warning wf-anchor"><span class="wf-pin">3</span>今日提现次数已用完（每日 1 次），请明天再试</div>
+          </div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <button class="couli-button-primary wf-btn--block" type="button" disabled>提交</button>
+          <div class="wd-center"><span class="wf-link">提现规则</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>页头次数 · <code>withdraw.remaining_counts</code> · 取 rules 的今日、本月剩余次数（BR-WDR-04 细则）</li>
+      <li>【全部提现】置灰 · 次数用尽时 max=0（BR-WDR-03 细则）· 【提交】按 BR-WDR-04 细则 can_withdraw=false 处理 <span class="wf-todo">（是否置灰同状态 3 第 5 条待定）</span></li>
+      <li>提示 · F-WDR-03 · <code>error.30303.daily_count</code>「今日提现次数已用完（每日 {daily_count} 次），请明天再试」；本月用完 <code>error.30303.monthly_count</code>「本月提现次数已用完（每月 {monthly_count} 次）」· 默认每人每日 1 次、每月 10 次（ADD-06，占位值）· 驳回与打款未成功的单不占次数（BR-WDR-04 细则）· 上一笔还在审核中时：规划没有「有审核中的单就不能再提」这条，按次数判断；默认每日 1 次时当天第二笔被 daily_count 拦下（BR-WDR-04 细则例：09:00 那笔审核中，11:00 再提 → daily_count）· 同收款账号的两项次数：<code>error.30303.payee_daily_users</code>「该收款账号今日暂不能再收款，请明天再试」；payee_daily_count 字典没有文案，见页尾「规划缺口」第 4 条</li>
+    </ol>
+  </section>
+
+  <!-- ========== 15. 账户冻结 ========== -->
+  <section class="wf-state" aria-label="状态 15：账户提现冻结">
+    <div>
+      <p class="wf-state__label">15. 账户冻结<small>风控冻结（frozen，或申诉中且申诉前为 frozen）或有生效的提现冻结记录：rules 返回 block_reason=account_frozen</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请</span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">1</span>
+            <div>可提现余额 <span class="wf-amount wf-amount--lg">¥12.34</span></div>
+            <div class="wf-caption">今日还可提 1 次，本月还可提 10 次</div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wd-input wf-anchor"><span class="wf-pin">2</span>
+              <div class="couli-control"><small>¥</small><span class="wd-ph">[占位]</span></div>
+              <button class="wf-btn wf-btn--text" type="button" disabled>全部提现</button>
+            </div>
+            <div class="wf-banner wf-banner--warning wf-anchor"><span class="wf-pin">3</span>提现已暂停，如有疑问请联系客服</div>
+            <div class="wf-anchor"><span class="wf-pin">4</span><span class="wd-ph">[原因类别、预计恢复时间、申诉或客服入口 · 是否显示待定]</span></div>
+          </div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <button class="couli-button-primary wf-btn--block" type="button" disabled>提交</button>
+          <div class="wd-center"><span class="wf-link">提现规则</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>页头 · 冻结不改变余额，照常显示（BR-TEXT-01 钱包汇总口径）</li>
+      <li>【全部提现】置灰 · 被冻结时 max=0（BR-WDR-03 细则）</li>
+      <li>提示 · <code>error.30303.account_frozen</code>「提现已暂停，如有疑问请联系客服」· 不透露冻结来源（<code>BR-WDR-05</code>、BR-TEXT-14 表 B）· 来源：risk_state=frozen、appealing(prev=frozen) 或生效的 withdraw_holds</li>
+      <li>原因与入口 · 钱包顶部显示「提现已暂停：{reason}」与预计恢复时间（BR-TEXT-01、<code>BR-TEXT-23</code>）；01 §4.2 另有「封禁 / 冻结说明页」<code>RiskNotice</code>（原因类别、冻结期限、申诉入口）· <span class="wf-todo">提现页是否也显示原因类别、到期时间、申诉或客服入口，是否链到 RiskNotice，待定（规划未写）</span>；两处信息量不同、{reason} 字典来源不一致，见页尾「规划缺口」第 5、6 条 · 封禁（banned、appealing prev=banned）不走本状态：rules 按 BR-WDR-03 ③ 返回 10006 → <code>error.10006</code>「账号已被限制使用」→ 封禁说明页 <code>RiskNotice</code>（BR-TEXT-14 表 A）</li>
+    </ol>
+  </section>
+
+  <!-- ========== 16. 安全校验未通过（另列其他不能提现的原因） ========== -->
+  <section class="wf-state" aria-label="状态 16：安全校验未通过 44001（另列其他不能提现的原因）">
+    <div>
+      <p class="wf-state__label">16. 安全校验未通过 · 44001（另列其他原因）<small>命中黑名单（BR-WDR-03 ③a、BR-ID-31）：rules 返回 block_code=44001，或提交时返回 44001；同一版式用于 30302、30306、30309 等，原因写在金额附近</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="wd-back">‹</span><span class="wf-navbar__title">提现申请<span class="wf-pin wf-pin--inline">1</span></span><span class="wd-back"></span></div>
+        <div class="wf-body">
+          <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">2</span>
+            <div>可提现余额 <span class="wf-amount wf-amount--lg">¥12.34</span></div>
+            <div class="wf-caption">今日还可提 1 次，本月还可提 10 次</div>
+          </div>
+          <div class="wf-card wf-stack">
+            <div class="wd-input wf-anchor"><span class="wf-pin">3</span>
+              <div class="couli-control"><small>¥</small><span class="wd-ph">[占位]</span></div>
+              <button class="wf-btn wf-btn--text" type="button" disabled>全部提现</button>
+            </div>
+            <div class="wf-banner wf-banner--warning wf-anchor"><span class="wf-pin">4</span>操作未通过安全校验</div>
+            <div class="wf-anchor"><span class="wf-pin">5</span><span class="wd-ph">[申诉入口 · 文案待定]</span></div>
+          </div>
+        </div>
+        <div class="wf-footer wf-stack">
+          <button class="couli-button-primary wf-btn--block" type="button" disabled>提交</button>
+          <div class="wd-center"><span class="wf-link">提现规则</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>本状态与同一版式的其他原因 · 路由 <code>Withdraw</code> · F-WDR-03、F-RISK-04 · rules 只跳过签名与幂等、⓪⓪a②与金额比较，③a 黑名单照常判断，所以进入时就可能拿到 44001（BR-WDR-03 正文末句）· 同一版式的其他原因，文案都取 BR-TEXT-14：<br>
+        30302 <code>error.30302</code>「账户有待抵扣金额，抵扣完成前暂不能提现」，动作「展示负余额说明」（表 A；<code>BR-WDR-05</code>、F-SET-04），页头可提现余额显示 ¥0（withdrawable_fen = max(available_fen, 0)，BR-TEXT-01），<span class="wf-todo">负余额说明的内容待定（规划未写）</span>；前提：钱包有待抵扣时【提现】本来就置灰（BR-TEXT-01 钱包汇总口径），30302 通常出现在停留本页期间余额变负、提交时才返回，或从钱包以外的入口（站内信、推送，BR-ID-10 细则「路由入口矩阵」）进入时 ·<br>
+        30306 <code>error.30306</code>「提现功能暂时关闭，请稍后再试」，动作「提现按钮置灰」（表 A；BR-TEXT-01 G-73）·<br>
+        30309 <code>error.30309</code>「未成年人提现受限」，动作「展示未成年提现规则」（表 A；<code>BR-WDR-06</code>），rules 一侧见页尾「规划缺口」第 3 条 ·<br>
+        <code>error.30303.self_purchase_required</code>「需有近期已确认收货的自购订单才能提现」（表 B）</li>
+      <li>页头 · 44001 不改余额，照常显示（同状态 1）</li>
+      <li>【全部提现】置灰 · can_withdraw=false 时 max=0（BR-WDR-03 细则）· 【提交】<span class="wf-todo">是否置灰同状态 3 第 5 条待定</span></li>
+      <li>提示 · <code>error.44001</code>：显示字典 <code>risk_msg.&lt;code&gt;</code>，服务端只下发提示编码、不下发自由文本，未命中时显示「操作未通过安全校验」（BR-TEXT-14 正文与表 A）· 不透露命中维度（BR-ID-31「提示语可配」）· 显示在金额附近（interaction-patterns §3）</li>
+      <li>申诉入口 · 44001 动作「给申诉入口」（BR-TEXT-14 表 A）；<code>BR-ID-36</code> 把「44001 提示页」列为申诉入口，去向路由 <code>Appeal</code>（01 §4.2）· <span class="wf-todo">入口文案与样式待定（规划未写；封禁说明页用的是【申诉】，BR-TEXT-23 细则）</span> · 只命中黑名单、risk_state 仍为 normal 的用户能申诉什么，见页尾「规划缺口」第 7 条</li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="wf-foot">
+  <h2>本页覆盖的状态</h2>
+  <ol start="0">
+    <li>进入 · 正在取规则（Skeleton 加载态）</li>
+    <li>正常可提（已输入金额，估算已返回；首版默认手续费、税额为 0）</li>
+    <li>计算中（输入一变先显示「计算中…」，只认对得上的最新估算）</li>
+    <li>每次进入先取规则 · 未实名 → RealName（含未绑手机会员的 30304 → RealName → 10005 → BindPhone 链路，写在注释）</li>
+    <li>未绑收款账号 / 姓名不一致 → PayoutAccount（已输入金额保留）</li>
+    <li>首次提现前签劳务协议 → LaborAgreement（【同意并签署】）</li>
+    <li>前置完成回到本页：保留金额、不自动提交</li>
+    <li>二次验证弹层（StepUpSheet；关闭行为待定）</li>
+    <li>提交处理中（含提交结果分流：成功、结果未知、10003、补办类、3xxxx、5xxxx、42901、10405、10006、44001）</li>
+    <li>提交成功 → WithdrawRecords 该单详情（审核中；申请金额、手续费、代扣个税、实际到账、收款账号、申请时间；不展示到账庆祝）</li>
+    <li>上一笔提现待确认（结果未知）</li>
+    <li>放弃上一笔 · 二次确认</li>
+    <li>低于最低额（进入即不可提）</li>
+    <li>余额不足（提交后 30301）</li>
+    <li>超出次数（今日 / 本月；上一笔审核中时按次数拦；同收款账号次数）</li>
+    <li>账户冻结（封禁 10006 → RiskNotice 写在注释）</li>
+    <li>安全校验未通过 44001（带申诉入口；30302 待抵扣、30306 提现关闭、30309 未成年、自购门槛写在注释）</li>
+  </ol>
+
+  <h2>待定项</h2>
+  <ul>
+    <li><span class="wf-todo-tag">待定</span> 导航标题、金额输入标签与占位、收款账号行标签的文案键 —— BR-TEXT-14 表 C 没有对应键（规划未写）</li>
+    <li><span class="wf-todo-tag">待定</span> 收款账号行能否点进 PayoutAccount 换绑；没有绑定时这一行怎么显示 —— 规划未写（BR-WDR-02、01 §4.2 PayoutAccount 行只写了收款账号页本身）</li>
+    <li><span class="wf-todo-tag">待定</span> 快捷金额档位是否采用 —— BR-WDR-04 细则「UI 稿采用时实现」，随关键页确认 06 Q-E5</li>
+    <li><span class="wf-todo-tag">待定</span> 提交前是否提示「提交后不能自行撤销、需联系客服」及文案；提现详情是否放客服入口 —— 规划未写（FUND-20 只定了规则，01 §4.2、BR-WDR-10、F-ADM-23）</li>
+    <li><span class="wf-todo-tag">待定</span> 前置引导（RealName / PayoutAccount / LaborAgreement）：规划写的是按 block_code「跳到 / 弹」前置页（01 J6 第 2 步；BR-TEXT-14 表 A 30304「跳 RealName」、30305/30307「跳 PayoutAccount」、10004「弹劳务协议签署页」）；没定的是进入页面时立即跳、还是先显示提示等用户点按钮，以及引导按钮文案 —— 规划未写</li>
+    <li><span class="wf-todo-tag">待定</span> 未绑手机的会员：Withdraw 路由的 auth 级别（routes.json，03 §4.4）与入口守卫是否先拦未绑手机；实名接口返回 10005、绑完手机后回 RealName 还是回 Withdraw —— 规划未写（BR-ID-02 矩阵只写提现「member ✖→绑手机」；BR-ID-10 细则「不适用的动作」只写前置步骤不登记 pending_action）</li>
+    <li><span class="wf-todo-tag">待定</span> can_withdraw=false 时提现页【提交】是否置灰 —— 规划未写（钱包【提现】在 30306、负余额时置灰，BR-TEXT-01；30306 动作「提现按钮置灰」，BR-TEXT-14 表 A；待确认态置灰已定，pending_confirm.title）</li>
+    <li><span class="wf-todo-tag">待定</span> 进入时取规则：结果回来前【提交】是否可点、取数失败的页面表现 —— 规划未写（03 §4.2 只写读接口自动重试 1 次、订单与钱包页显示上次数据；03 §10.2 只列 Skeleton 组件）</li>
+    <li><span class="wf-todo-tag">待定</span> 劳务协议页：协议标题与版本、正文、勾选文案 —— 待法务，06 Q-F13；07_WDR 7.3 第 15 条（按钮名【同意并签署】已由 BR-WDR-31 定）</li>
+    <li><span class="wf-todo-tag">待定</span> 二次验证弹层：发送说明、重新获取与倒计时、确认按钮文案；右上角能否关闭、关闭后的表现 —— 规划未写（03 §10.2 只列 StepUpSheet 组件名；BR-ID-08 只写验证通过后沿用原键重放）</li>
+    <li><span class="wf-todo-tag">待定</span> 提交在途：【提交】是否置灰与处理中文案；在途与待确认时金额输入区能否编辑 —— 规划未写（12 §5.9 的在途置灰只说待确认态的【确认】【放弃】两个按钮）</li>
+    <li><span class="wf-todo-tag">待定</span> 提交得到 5xxxx 时在提现页上的显示形式与金额是否保留 —— 规划未写（BR-TEXT-14 表 A 50001 只写动作「重试」，03 §4.2 写 5xxxx 走通用错误态）</li>
+    <li><span class="wf-todo-tag">待定</span> 提现详情字段标签（申请金额、手续费、代扣个税、收款账号、申请时间）；列表行是否同时列申请额 —— 规划未写（BR-WDR-25 ② 只列要素，BR-TEXT-01 只定「实际到账 {net}」，BR-TEXT-14 表 C 只有 withdraw_detail.trade_no）</li>
+    <li><span class="wf-todo-tag">待定</span> 负余额说明的内容 —— 规划未写（BR-TEXT-14 表 A 30302 动作只写「展示负余额说明」）</li>
+    <li><span class="wf-todo-tag">待定</span> 冻结时提现页是否显示原因类别、预计恢复时间与申诉或客服入口，是否链到 RiskNotice —— 规划未写（BR-TEXT-23 只写了封禁说明页与钱包；01 §4.2 RiskNotice 为封禁 / 冻结说明页）</li>
+    <li><span class="wf-todo-tag">待定</span> 44001 处申诉入口的文案与样式 —— 规划未写（BR-TEXT-14 表 A 只写「给申诉入口」，BR-ID-36 列「44001 提示页」为入口；封禁说明页用【申诉】，BR-TEXT-23 细则）</li>
+  </ul>
+
+  <h2>规划缺口</h2>
+  <ol>
+    <li>估算不校验金额：输入超过余额（或低于最低额）时，rules 照样按这个金额返回预计到账，页面会出现「预计到账 ¥20」（状态 13）。出处：BR-WDR-04 细则「提现页的金额输入与提交后去向 · 预估」（估算不校验金额）、04 §6.4 rules 行。</li>
+    <li>二次验证排在金额校验之前：BR-WDR-03 ② 在 ⑨⑩⑪ 之前，金额填错要先收短信、验证完才看到 30301 / 30303 金额类原因；rules 又跳过 ⑨⑩ 中与本次金额有关的比较，提交前没有任何金额提示（只有「本次最多可提」一行）。出处：BR-WDR-03 正文判断顺序与末句、BR-WDR-04 细则。</li>
+    <li>未成年人本月额度用完时页面显示成「单笔最低提现 ¥1」：BR-WDR-03 细则 max_withdrawable_fen = floor_to_step(min(available, max_amount, 未成年本月剩余额度))，剩余为 0 时结果低于最低额，rules 返回 block_reason=below_min；而提交时走到 ⑫ 返回 30309「未成年人提现受限」。withdraw.minor_monthly_cap_fen=0（未成年一律禁提，BR-WDR-06 ②）同样如此。出处：BR-WDR-03 细则首条、BR-WDR-06、BR-TEXT-14 表 A 30309 与表 B below_min。</li>
+    <li>30303.payee_daily_count 没有文案：BR-WDR-03 细则与 BR-WDR-04 细则的「同步落点」都要求 12_TEXT 增加这条，但 BR-TEXT-14 表 B 没有这一行，命中时按 BR-TEXT-14 正文回落到 error.30303「暂不满足提现条件」。默认值下它不会先于前两项命中（BR-WDR-04 细则说明），放宽 daily_count_per_user 或 payee_daily_distinct_users 后才会出现。</li>
+    <li>冻结信息两处不一致：钱包顶部「提现已暂停：{reason}」显示原因类别、预计恢复时间与申诉入口（BR-TEXT-01 钱包汇总口径、BR-TEXT-23 正文与细则；01 §4.2 RiskNotice），提现页 error.30303.account_frozen 的动作却是「不透露冻结来源」（BR-TEXT-14 表 B、BR-WDR-05）。同一用户在两页看到的信息量不同。</li>
+    <li>钱包暂停提示 {reason} 的字典来源两处写法冲突：BR-TEXT-01 写取 risk_msg.&lt;code&gt;，BR-TEXT-23 正文与细则写取原因类别 risk_reason.&lt;category&gt;（「risk_state=frozen 时 {reason} 显示本条原因类别文案」）；只有 withdraw_holds（如 ledger_mismatch、manual、recon_diff，BR-WDR-05 细则）而 risk_state 不是 frozen 时，{reason} 取哪个字典两处都没写。</li>
+    <li>44001 的申诉入口没有对应的申诉对象：BR-TEXT-14 表 A 44001「给申诉入口」，BR-ID-36 也把「44001 提示页」列为申诉入口；但 BR-ID-36 的账户申诉只受理 risk_state ∈ {banned, frozen} 的用户，订单申诉只针对风控作废返利的订单。只命中黑名单（BR-ID-31、BR-WDR-03 ③a）而 risk_state=normal 的用户点申诉后走哪一类、接口受不受理，规划未写。</li>
+    <li>提现详情的代扣个税行在税额为 0 时显示还是隐藏没对上：BR-WDR-25 ② 要求提现记录展示代扣税；BR-TEXT-06 边界只写「tax_fen=0 时不显示「已代扣个税」」，针对的是 PAID_* 的附加句。本线框按同口径隐藏画（状态 9 钉 4 的虚线行）。</li>
+    <li>审核中的单也写「实际到账 {net}」：BR-TEXT-01 钱包汇总口径要求提现记录逐单展示「实际到账 {net}」，没有区分状态；审核中、打款中的单钱还没到，这个标签容易被读成已到账，而 BR-TEXT-01 只限制了「已到账」一词。本线框按原文画（状态 9 钉 4）。</li>
+  </ol>
+
+  <h2>请负责人确认</h2>
+  <ul>
+    <li>按现在的规定，金额填多了（超过余额）或填少了（低于最低额），要等点了提交、收完短信验证码之后才会提示；而且「预计到账」那一行照样会算出一个数。要不要改成输入时就直接提醒？</li>
+    <li>提交前要不要在按钮旁边提醒一句「提交后不能自己撤销，要撤销请联系客服」？提现记录里要不要放一个联系客服的入口？</li>
+    <li>要不要放「¥5 / ¥10」这类快捷金额按钮？账号被暂停提现时，钱包页会写原因和预计恢复时间，提现页要不要也写？</li>
+  </ul>
+</footer>
+</body>
+</html>

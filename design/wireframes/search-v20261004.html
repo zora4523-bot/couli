@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>线框 · 搜索结果 Search · v20261004</title>
+<link rel="stylesheet" href="../tokens/variables.css">
+<link rel="stylesheet" href="../tokens/foundations.css">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+  /* 本页专用：只用令牌变量，不写新色值 */
+  .srch-searchbar { flex: none; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-4) var(--space-2); }
+  .srch-back { flex: none; display: inline-flex; align-items: center; justify-content: center; width: var(--interaction-target-minimum); height: var(--interaction-target-minimum); margin-left: calc(var(--space-2) * -1); color: var(--color-text-secondary); font-size: var(--font-size-title); }
+  .srch-input { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-footnote); }
+  .srch-input__text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .srch-input__placeholder { color: var(--color-text-secondary); }
+  .srch-input__clear { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: var(--radius-pill); background: var(--color-background-muted); color: var(--color-text-secondary); font-size: var(--font-size-caption); }
+  .srch-caret { display: inline-block; width: 1px; height: 1.1em; vertical-align: middle; background: var(--color-text-primary); }
+  .srch-platforms { flex: none; padding: 0 var(--space-4); }
+  .srch-sort { flex: none; display: flex; gap: var(--space-3); padding: var(--space-2) var(--space-4) 0; font-size: var(--font-size-caption); color: var(--color-text-secondary); white-space: nowrap; }
+  .srch-sort .is-active { color: var(--color-text-primary); font-weight: var(--font-weight-semibold); }
+  .srch-filters { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4) 0; }
+  .srch-card { display: flex; gap: var(--space-3); align-items: flex-start; }
+  .srch-card__img { width: 96px; height: 96px; }
+  .srch-card__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+  .srch-card__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .srch-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1); }
+  .srch-price__label { font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .srch-i { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid var(--color-border-control); border-radius: var(--radius-pill); color: var(--color-text-secondary); font-size: var(--font-size-caption); line-height: 1; }
+  .srch-cta { min-height: var(--interaction-target-minimum); padding: 0 var(--space-3); font-size: var(--font-size-caption); white-space: nowrap; }
+  .srch-cta--disabled { border-color: transparent; background: var(--color-button-primary-disabled-background); color: var(--color-button-primary-disabled-text); }
+  .srch-disclaimer { padding: var(--space-3) 0 0; border-top: 1px dashed var(--color-border-subtle); font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .srch-kbd { flex: none; height: 216px; display: flex; align-items: center; justify-content: center; border-top: 1px solid var(--color-border-subtle); background: var(--color-background-muted); color: var(--color-text-secondary); font-size: var(--font-size-caption); }
+  .srch-spinner { flex: none; display: inline-block; width: 16px; height: 16px; border: 2px solid var(--color-border-subtle); border-top-color: var(--color-text-secondary); border-radius: var(--radius-pill); }
+  .srch-flow { padding: var(--space-2) var(--space-3); border: 1px dashed var(--color-border-control); border-radius: var(--radius-small); background: var(--color-background-surface); font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .srch-section-title { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); font-weight: var(--font-weight-semibold); }
+  .srch-variant { font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .srch-field { display: flex; align-items: center; gap: var(--space-2); }
+  .srch-field .couli-control { flex: 1; min-width: 0; font-size: var(--font-size-footnote); }
+  .srch-field .couli-control.srch-field--error { border-color: var(--color-status-error-text); }
+  .srch-error-text { font-size: var(--font-size-caption); color: var(--color-status-error-text); }
+  .srch-skel-card { display: flex; gap: var(--space-3); }
+  .srch-skel-card .wf-skeleton.srch-card__img { border-radius: var(--radius-small); }
+  .srch-skel-lines { flex: 1; display: flex; flex-direction: column; gap: var(--space-2); padding-top: var(--space-1); }
+  .srch-dim { opacity: 0.45; }
+  .srch-nowrap { white-space: nowrap; }
+  .srch-card .wf-row { flex-wrap: wrap; }
+  .srch-row-end { justify-content: flex-end; }
+  .srch-loadmore { display: flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-2) 0; font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .srch-w60 { width: 60%; }
+  .srch-w40 { width: 40%; }
+  .srch-w70 { width: 70%; }
+</style>
+</head>
+<body>
+<header class="wf-head">
+  <h1>搜索结果 <code>Search</code> · 线框 v20261004</h1>
+  <p>依据：规划 main 2d23ae7 的 01 §4.1、§4.2 Search / BasicMode / Login 行、§5 J1 J2、§6 E04 F-PROD-01～08、E05 F-LINK-01、E06 F-CLIP-01～05、§8 性能；03 §4.2、§4.4、§4.6、§6.1、§7.4、§10.2–§10.3；04 §6.3、§8.3、§8.5；08 的 02_PROD（BR-PROD-04/07/08/10）、03_PRICE（BR-PRICE-01/03/04/05/07/08/09/11/13/15/16/17/18/21/22）、10_ID（BR-ID-02/10/11/16）、12_TEXT（BR-TEXT-01/10/12/14 表 A–D/15/17）；10 的 AC-S1-01-TB/JD、02-TB/PDD、03、08、09、10、15、101；design/references/interaction-patterns.md §1。线框级，不是视觉稿。</p>
+  <p><strong>示例数字全是样例值</strong>（¥13.45、¥0.56–¥1.12 等），不是真实报价；商品标题、关键词为占位。平台来源只写文字，不放任何平台图形。所在底部 Tab：首页。手机框里带虚线框或灰色小字的「变体 · …」「（…）」是线框说明，不是界面文案。</p>
+  <div class="wf-legend"><span><span class="wf-pin wf-pin--inline">1</span> 编号对应右侧注释</span><span><span class="wf-todo-tag">待定</span> 规划未定，见注释里的编号</span><span><span class="wf-tag wf-tag--source">淘宝</span> 来源文字标签</span><span><span class="wf-tag wf-tag--pending">预估返 ¥x</span> 结算前金额（等待语义，不用成功色）</span></div>
+</header>
+
+<main class="wf-states">
+
+  <!-- ============ 状态 1 ============ -->
+  <section class="wf-state" aria-label="状态 1：输入中，搜索历史与热词">
+    <div>
+      <p class="wf-state__label">1. 输入中 · 搜索历史与热词<small>从首页搜索框进入或聚焦搜索框时；键盘弹起，结果区换成历史与热词。规划没有「输入联想」，本页不画。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar wf-anchor"><span class="wf-pin">1</span>
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">纯牛<span class="srch-caret"></span></span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="wf-body">
+          <div class="wf-stack wf-anchor"><span class="wf-pin">2</span>
+            <div class="srch-variant">iOS：回前台且系统探测命中时才出现</div>
+            <div class="wf-banner wf-banner--info wf-row wf-row--between"><span>检测到商品链接，查返利？</span><span class="wf-btn srch-cta">系统粘贴控件</span></div>
+            <div class="srch-variant">Android（自动识别开关默认关）· 鸿蒙 PasteButton</div>
+            <span class="wf-btn wf-btn--block">粘贴查返利</span>
+            <div class="srch-variant">变体 · 识别为线报素材时，提示条改为：</div>
+            <div class="wf-banner wf-banner--info wf-row wf-row--between"><span>（线报素材提示文案）<span class="wf-todo-tag">待定</span></span><span class="wf-btn srch-cta">让 AI 帮我看看</span></div>
+            <span class="wf-caption">搜索页上是否放、放在哪 <span class="wf-todo-tag">待定</span></span>
+          </div>
+          <div class="wf-stack wf-anchor"><span class="wf-pin">3</span>
+            <div class="srch-section-title"><span>（历史区标题）<span class="wf-todo-tag">待定</span></span><span class="wf-caption">（清空入口）<span class="wf-todo-tag">待定</span></span></div>
+            <div class="wf-chips"><span class="wf-chip">纯牛奶</span><span class="wf-chip">样例词 A</span><span class="wf-chip">样例词 B</span><span class="wf-chip">样例词 C</span></div>
+          </div>
+          <div class="wf-stack wf-anchor"><span class="wf-pin">4</span>
+            <div class="srch-section-title"><span>（热词区标题）<span class="wf-todo-tag">待定</span></span></div>
+            <div class="wf-chips"><span class="wf-chip">样例热词 1</span><span class="wf-chip">样例热词 2</span><span class="wf-chip">样例热词 3</span></div>
+          </div>
+        </div>
+        <div class="srch-kbd">系统键盘（回车键为搜索）</div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>搜索框与进入方式 · <code>F-PROD-01</code> <code>F-PROD-02</code> · 占位文案 <span class="wf-todo-tag">待定</span>（规划未写；按 <code>BR-TEXT-12</code> 取字典 / 包内默认，键未建）· 路由 <code>Search</code>。
+        <br>预填关键词进入：30132【用商品名搜索】与 <code>pdd.parse_failed</code>（预填「」内或首行商品名，取不到留空，在本页发生，见状态 16）；50302（预填 data.fallback 中的关键词）；【看看相似商品】（<code>no_rebate.price_compare.similar</code>：平台选成原商品的平台，关键词取卡片标题、客户端不改写，结果去掉 product_key 相同的那张；<code>BR-PRICE-08</code> 细则，开关默认关）。以上见 <code>BR-TEXT-14</code> 表 A、表 C。
+        <br>只跳搜索、不预填：30502、30143，表 C 的 <code>external_page.union_host_blocked</code>【去搜索】、<code>link_landing.invalid</code>【去搜索】。
+        <br>带参数进入：首页 SDUI 与深链可带 <code>params.q</code>（03 §6.1 示例；Search 可由 in_app / push / deeplink 打开，<code>BR-ID-10</code> 细则「路由入口矩阵」）。带词进入后是直接出结果还是只预填、等用户提交 <span class="wf-todo-tag">待定</span>（规划未写）；Search 的 params 除 q 外（platform、要排除的商品）怎么传 <span class="wf-todo-tag">待定</span>（规划未写，03 §4.4 routes.json params schema）。</li>
+      <li>粘贴入口 · <code>F-CLIP-01</code> <code>F-CLIP-02</code> · <code>BR-ID-16</code>（待决策，14_待决策汇总 BR-ID-16、G-20）· 文案键 <code>clipboard.prompt</code>「检测到商品链接，查返利？」（<code>BR-TEXT-14</code> 表 C）。iOS 提示条里是系统 UIPasteControl；Android 默认只有「粘贴查返利」按钮；鸿蒙只用 PasteButton；按端只出一种。点了才读、本地过滤，只上传识别出的链接 / 口令与标题片段（AC-S1-03）；点击后直接进入识别中（状态 15 的粘贴入口变体），读到的原文不回填搜索框。基本模式不读（<code>BR-ID-16</code> 细则），见状态 14。搜索页放不放 <span class="wf-todo-tag">待定</span>（BR-ID-16 的例子只写首页，规划未写搜索页）。
+        <br>线报素材变体 · <code>F-CLIP-04</code>：按钮「让 AI 帮我看看」，带文本进 <code>AgentChat</code>（01 §4.1 Agent 情境入口 <code>{text}</code>）。提示文案 <span class="wf-todo-tag">待定</span>（表 C 只有商品用的 clipboard.prompt）；AI 助手未开放时这个按钮怎么处理 <span class="wf-todo-tag">待定</span>（规划未写，01 §4.1 只写 Tab 换成「搜索」）；iOS 点击前只做探测、读不到内容，提示条出现时无法先判断是不是素材（见页尾缺口）。</li>
+      <li>搜索历史 · <code>F-PROD-03</code> · 本机保存最近 20 条；标题、清空方式 <span class="wf-todo-tag">待定</span>（规划未写）；输入的链接 / 口令要不要记进历史，规划未写。</li>
+      <li>热词 · <code>F-PROD-03</code> · 后台可配，随 <code>GET /v1/search/hot-words</code> 下发（04 §6.3）；标题 <span class="wf-todo-tag">待定</span>（规划未写）。关键词雷达在提交时生效，见状态 2。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 2 ============ -->
+  <section class="wf-state" aria-label="状态 2：提交与加载">
+    <div>
+      <p class="wf-state__label">2. 提交与加载<small>提交关键词、切换平台、改排序或筛选后，首屏结果返回前。命中关键词雷达时不进入这里。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar wf-anchor"><span class="wf-pin">1</span>
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">纯牛奶</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="wf-anchor">
+          <span class="wf-pin">2</span>
+          <div class="srch-platforms"><div class="wf-seg"><span class="is-active">淘宝</span><span>京东</span><span>拼多多</span></div></div>
+          <div class="srch-sort"><span class="is-active">综合</span><span>销量</span><span>券后价从低到高</span><span>返利从高到低</span></div>
+          <div class="srch-filters"><span class="wf-chip">只看有券</span><span class="wf-chip">价格区间</span></div>
+        </div>
+        <div class="wf-body">
+          <div class="wf-stack wf-anchor"><span class="wf-pin">3</span>
+            <div class="wf-card srch-skel-card"><div class="wf-skeleton srch-card__img"></div><div class="srch-skel-lines"><div class="wf-line"></div><div class="wf-line srch-w60"></div><div class="wf-line srch-w40"></div><div class="wf-line srch-w70"></div></div></div>
+            <div class="wf-card srch-skel-card"><div class="wf-skeleton srch-card__img"></div><div class="srch-skel-lines"><div class="wf-line"></div><div class="wf-line srch-w60"></div><div class="wf-line srch-w40"></div><div class="wf-line srch-w70"></div></div></div>
+            <div class="wf-card srch-skel-card"><div class="wf-skeleton srch-card__img"></div><div class="srch-skel-lines"><div class="wf-line"></div><div class="wf-line srch-w60"></div><div class="wf-line srch-w40"></div><div class="wf-line srch-w70"></div></div></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>提交 · 关键词雷达 · <code>F-PROD-03</code> · 提交的关键词命中后台配置的雷达时，按配置的 route + params 打开指定页（F-PROD-03「关键词 → 指定页」，跳转协议 <code>F-HOME-09</code>），不进入结果页；雷达随 <code>GET /v1/search/hot-words</code> 下发（04 §6.3）。匹配方式（全等 / 包含）、命中的词记不记进历史 <span class="wf-todo-tag">待定</span>（规划未写）。输入含链接或口令时走识别，见状态 15。</li>
+      <li>条件区（平台 Tab、排序、筛选）· <code>F-PROD-01</code> · 加载中关键词与已选条件保持可见（interaction-patterns §1「选中平台和条件持续可见」，本页各结果态都保留这一行）；筛选或排序一变就开新的查询会话（<code>BR-PROD-08</code>）· 路由 <code>Search</code>。</li>
+      <li>骨架卡 · 组件 <code>Skeleton</code>（03 §10.2）· 无文案。首屏目标 P95 ≤1.5 秒（01 §8）；GET 10 秒超时、自动重试 1 次（03 §4.2，TECH-20），仍失败进状态 8。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 3 ============ -->
+  <section class="wf-state" aria-label="状态 3：结果正常，淘宝">
+    <div>
+      <p class="wf-state__label">3. 结果正常 · 淘宝（默认 Tab）<small>首屏返回、有商品时。无返利商品已被服务端过滤，不会出现在这里。游客与已登录看到的一样。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar wf-anchor"><span class="wf-pin">1</span>
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">纯牛奶</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="srch-platforms wf-anchor"><span class="wf-pin">2</span><div class="wf-seg"><span class="is-active">淘宝</span><span>京东</span><span>拼多多</span></div></div>
+        <div class="srch-sort wf-anchor"><span class="wf-pin">3</span><span class="is-active">综合</span><span>销量</span><span>券后价从低到高</span><span>返利从高到低</span></div>
+        <div class="srch-filters wf-anchor"><span class="wf-pin">4</span><span class="wf-chip">只看有券</span><span class="wf-chip">价格区间</span></div>
+        <div class="wf-body">
+          <div class="wf-card srch-card wf-anchor"><span class="wf-pin">5</span>
+            <div class="wf-img srch-card__img" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-pin wf-pin--inline">6</span> 样例商品标题 A，标题最多两行，超出部分省略……</div>
+              <div class="srch-price"><span class="srch-price__label">券后</span><span class="wf-amount">¥13.45</span></div>
+              <div class="wf-caption">券前 ¥23.45 · 券 ¥10</div>
+              <div class="wf-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.56–¥1.12</span><span class="wf-caption srch-nowrap">以结算为准</span><span class="srch-i" aria-label="口径说明">i</span></div>
+              <div class="wf-row wf-row--between"><span class="wf-caption">预估返后 ¥12.89</span><span class="wf-btn srch-cta">领券购买</span></div>
+            </div>
+          </div>
+          <div class="wf-card srch-card wf-anchor"><span class="wf-pin">7</span>
+            <div class="wf-img srch-card__img" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">淘宝</span> 样例商品标题 B</div>
+              <div class="srch-price"><span class="srch-price__label">售价</span><span class="wf-amount">¥12.34</span><span class="wf-caption">规格以下单页为准</span></div>
+              <div class="wf-row"><span class="wf-caption">[无券状态的呈现]</span><span class="wf-todo-tag">待定</span></div>
+              <div class="wf-row"><span class="wf-tag wf-tag--pending">预估返 ¥0–¥0.99</span><span class="wf-caption srch-nowrap">以结算为准</span><span class="srch-i" aria-label="口径说明">i</span></div>
+              <div class="wf-row srch-row-end"><span class="wf-btn srch-cta">去购买</span></div>
+            </div>
+          </div>
+          <div class="wf-card srch-card wf-anchor"><span class="wf-pin">8</span>
+            <div class="wf-img srch-card__img" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">淘宝</span> <span class="wf-tag">预售</span> 样例商品标题 C</div>
+              <div class="srch-price"><span class="srch-price__label">售价</span><span class="wf-amount">¥99.99</span></div>
+              <div class="wf-row"><span class="wf-caption">[无券状态的呈现]</span><span class="wf-todo-tag">待定</span></div>
+              <div class="wf-caption">定金与尾款以下单页为准</div>
+              <div class="wf-row"><span class="wf-tag wf-tag--pending">预估返 ¥2.5–¥5</span><span class="wf-caption srch-nowrap">以结算为准</span><span class="srch-i" aria-label="口径说明">i</span></div>
+              <div class="wf-row wf-row--between"><span class="wf-caption">预估返后 ¥97.49</span><span class="wf-btn srch-cta">去购买</span></div>
+            </div>
+          </div>
+          <div class="srch-disclaimer wf-anchor"><span class="wf-pin">9</span>券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　以结算为准</div>
+        </div>
+        <nav class="wf-tabbar wf-anchor"><span class="wf-pin">10</span><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>搜索框 · <code>F-PROD-01</code> · 关键词保留、可清除 · 路由 <code>Search</code>。</li>
+      <li>平台 Tab · <code>F-PROD-01</code> · 默认 Tab 按 UI 稿，稿出前淘宝（TRADE-15）；只显示 <code>/v1/config.features.search_status</code> 为 on 的平台，默认平台为 off 时取第一个 on 的（<code>BR-PROD-10</code> 细则）。淘宝 Tab 能否出现取决于 CAP-TB-03（09 未判支持前开关默认 off），不写成承诺。只用文字。</li>
+      <li>排序 · <code>F-PROD-01</code> · 显示名「券后价从低到高」「返利从高到低」（<code>BR-PRICE-18</code>）；「综合」「销量」取 01 F-PROD-01 原词，文案键 <span class="wf-todo-tag">待定</span>（规划未写）。券后价与返利两种排序只排当前页（<code>BR-PRICE-15</code>，TRADE-20），翻页见状态 4；要不要提示用户 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>筛选 · <code>F-PROD-01</code> · 「只看有券」（01 F-PROD-01 原词）；价格区间（<code>BR-PRICE-15</code>，面板见状态 5），条件区上的显示名与文案键 <span class="wf-todo-tag">待定</span>（01 没给按钮名，键未建）。京东自营、百亿补贴、包邮等是 P1 候选，不画。</li>
+      <li>结果卡 · 有券有返 · <code>F-PROD-01</code> <code>F-LINK-01</code> · 主价「券后 ¥x」+ 副行「券前 ¥x · 券 ¥y」，不划线（<code>BR-PRICE-04/05</code>）；搜索来的淘宝卡按比价风险显示「预估返 ¥a–¥b」+「以结算为准」（<code>BR-PRICE-07</code>，AC-S1-01-TB）；「预估返后」按下限算（<code>BR-PRICE-09</code>）；格式 <code>BR-TEXT-10</code>。按钮取 cta.text_key：<code>btn.buy.coupon</code>「领券购买」→ <code>POST /v1/links/{link_id}/open</code>（结果处理与商品详情共用，03 §7.4；列表里的下架见状态 13）。点卡片 → <code>ProductDetail</code>（platform、product_key），返回列表时恢复阅读位置（interaction-patterns §1）。ad_label 搜索自然结果为 null，非 null 时原样做角标（<code>BR-TEXT-17</code>）。卡片布局（横向 / 网格）<span class="wf-todo-tag">待定</span>（03 §10.2 ProductCard 未指定搜索页用哪种，06 Q-E5 线框确认）。
+        <br>游客：可以搜、可以看预估返（<code>BR-ID-02</code> 能力矩阵「首页、搜索、商品详情（含预估返利）」）；点购买 → 10001「请先登录」→ <code>Login</code>，先按 <code>BR-ID-10</code> 存 pending_action，登录成功回到本页并自动继续这次购买（01 §4.2 Login 行、J1 第 2 步）。</li>
+      <li>来源文字标签 · 组件 <code>PlatformBadge</code>（03 §10.2）· 只写平台名文字，不放平台图形；对应 source（<code>BR-PRICE-16</code>）。</li>
+      <li>结果卡 · 无券有返 · 只显示「售价 ¥x」，不出现「券后」，并显示无券状态（<code>BR-PRICE-04</code>）；无券状态的呈现与文案 <span class="wf-todo-tag">待定</span>（规划没有这一状态的文案键，按 <code>BR-TEXT-12</code> 建键）。区间下限为 0 显示「预估返 ¥0–¥x」，此时不显示「预估返后」（<code>BR-PRICE-07/09</code>），所以按钮左侧留空。价格对不上具体规格时旁注 <code>spec_min_price_note</code>「规格以下单页为准」，确知最低规格价时改写「¥x 起」（<code>BR-PROD-04</code>、<code>BR-TEXT-14</code> 表 C）；按钮 <code>btn.buy</code>「去购买」。</li>
+      <li>结果卡 · 预售（无券）· <code>tag.presale</code>「预售」+ <code>presale.price_note</code>「定金与尾款以下单页为准」，按定金 + 尾款总价显示（<code>BR-PRICE-22</code>、<code>BR-TEXT-12</code> 细则）；无券状态同注释 7 <span class="wf-todo-tag">待定</span>。</li>
+      <li>口径说明 · 组件 <code>DisclaimerFooter</code> · 每屏列表底部一次全文，单卡只放 i 图标、点开看全文（<code>BR-PRICE-03</code>）；按 disclaimer_keys 顺序拼接：<code>price_basis</code> + <code>rebate_compare</code>「以结算为准」（<code>BR-PRICE-17</code>）。</li>
+      <li>底部 Tab · 01 §4.1 · 文案由 <code>/v1/config</code> 下发；AI 助手未开放时第二个 Tab 换成「搜索」。从首页进入的搜索页是否显示底部 Tab <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 4 ============ -->
+  <section class="wf-state" aria-label="状态 4：滚动加载下一页">
+    <div>
+      <p class="wf-state__label">4. 滚动加载 · 下一页 / 到底 / 翻页失败<small>结果列表滑到底部附近时。三种底部状态同一时刻只出现一种，图中并列只为对照。已加载的卡片一直保持不动。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar">
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">纯牛奶</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="srch-platforms"><div class="wf-seg"><span class="is-active">淘宝</span><span>京东</span><span>拼多多</span></div></div>
+        <div class="srch-sort"><span>综合</span><span>销量</span><span class="is-active">券后价从低到高</span><span>返利从高到低</span></div>
+        <div class="srch-filters"><span class="wf-chip">只看有券</span><span class="wf-chip">价格区间</span></div>
+        <div class="wf-body">
+          <div class="wf-stack wf-anchor"><span class="wf-pin">1</span>
+            <div class="srch-variant">（已加载的第 1 页，列表已滚动到末尾）</div>
+            <div class="wf-card srch-card">
+              <div class="wf-img srch-card__img" aria-hidden="true"></div>
+              <div class="srch-card__body">
+                <div class="srch-card__title"><span class="wf-tag wf-tag--source">淘宝</span> 样例商品标题 L（第 1 页最后一张）</div>
+                <div class="srch-price"><span class="srch-price__label">券后</span><span class="wf-amount">¥45.67</span></div>
+                <div class="wf-caption">券前 ¥50.67 · 券 ¥5</div>
+                <div class="wf-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.8–¥1.6</span><span class="wf-caption srch-nowrap">以结算为准</span><span class="srch-i" aria-label="口径说明">i</span></div>
+                <div class="wf-row wf-row--between"><span class="wf-caption">预估返后 ¥44.87</span><span class="wf-btn srch-cta">领券购买</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="srch-loadmore wf-anchor"><span class="wf-pin">2</span><span class="srch-spinner" aria-hidden="true"></span><span>（加载中提示）<span class="wf-todo-tag">待定</span></span></div>
+          <div class="srch-flow wf-anchor"><span class="wf-pin">3</span>
+            <div class="srch-variant">变体 · has_more=false 时，同一位置改为：</div>
+            <div class="srch-loadmore">（到底提示）<span class="wf-todo-tag">待定</span></div>
+          </div>
+          <div class="srch-flow wf-anchor"><span class="wf-pin">4</span>
+            <div class="srch-variant">变体 · 下一页请求失败时，同一位置改为：</div>
+            <div class="wf-row wf-row--between"><span>（翻页失败提示）<span class="wf-todo-tag">待定</span></span><span class="wf-btn srch-cta">重试</span></div>
+          </div>
+          <div class="srch-disclaimer wf-anchor"><span class="wf-pin">5</span>券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　以结算为准</div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>已加载列表 · <code>F-PROD-01</code>「分页游标」· cursor 只含 search_session_id 与 page_no（04 §6.3、<code>BR-PROD-08</code>）。下一页接在列表末尾，已加载的卡保持不动；「券后价从低到高」「返利从高到低」只在每一页内部排，跨页不保证有序（<code>BR-PRICE-15</code>），后一页可能出现更便宜的商品；同一查询会话里后续页剔除已下发过的商品（<code>BR-PROD-08</code> ②）；价格变化不回溯剔除已显示的卡（<code>BR-PRICE-15</code>）。从详情返回时恢复阅读位置（interaction-patterns §1）。</li>
+      <li>加载下一页 · 过滤无返利后不足一页时服务端最多补拉 1 页，仍不足就按实际数量返回（<code>BR-PRICE-08</code> 分页例），所以一页不满不代表到底，是否还有下一页只看 has_more。触发时机（滑到底 / 提前预取）与提示文案 <span class="wf-todo-tag">待定</span>（规划未写，BR-TEXT-14 无键）。</li>
+      <li>到底 · has_more 以上游返回为准（<code>BR-PRICE-08</code>）· 文案 <span class="wf-todo-tag">待定</span>（规划未写，BR-TEXT-14 无键）。</li>
+      <li>翻页失败 · 已加载的列表不清空、不跳到错误页，只在底部给重试；提示文案 <span class="wf-todo-tag">待定</span>（规划未写；服务端 5xxxx 时是否沿用 <code>error.50001</code>、翻页中途遇到 50304 怎么呈现，规划未写）。按钮「重试」取 <code>BR-TEXT-14</code> 表 A「其他 5xxxx → 重试」的动作名，键未建；重试用同一个游标。</li>
+      <li>口径说明 · <code>BR-PRICE-03</code> 写「每屏在列表底部显示一次全文」；连续翻页时放在每页末尾还是只放在整个列表最底 <span class="wf-todo-tag">待定</span>（规划未写），图中放在最底。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 5 ============ -->
+  <section class="wf-state" aria-label="状态 5：价格区间面板与校验错误">
+    <div>
+      <p class="wf-state__label">5. 排序与筛选 · 价格区间面板（含校验错误）<small>点价格区间筛选后。图中故意让左边一栏大于右边一栏，示范 20001 提示。面板形态是线框建议。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar">
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">纯牛奶</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="srch-platforms"><div class="wf-seg"><span class="is-active">淘宝</span><span>京东</span><span>拼多多</span></div></div>
+        <div class="srch-sort"><span class="is-active">综合</span><span>销量</span><span>券后价从低到高</span><span>返利从高到低</span></div>
+        <div class="srch-filters"><span class="wf-chip is-active">只看有券</span><span class="wf-chip is-active">价格区间</span></div>
+        <div class="wf-body srch-dim">
+          <div class="wf-card srch-card"><div class="wf-img srch-card__img"></div><div class="srch-card__body"><div class="wf-line"></div><div class="wf-line srch-w60"></div><div class="wf-line srch-w40"></div></div></div>
+          <div class="wf-card srch-card"><div class="wf-img srch-card__img"></div><div class="srch-card__body"><div class="wf-line"></div><div class="wf-line srch-w60"></div><div class="wf-line srch-w40"></div></div></div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+        <div class="wf-scrim"></div>
+        <div class="wf-sheet">
+          <div class="wf-title">（面板标题）<span class="wf-todo-tag">待定</span></div>
+          <div class="wf-anchor"><span class="wf-pin">1</span>
+            <div class="srch-field">
+              <span>¥</span><div class="couli-control srch-field--error">50</div>
+              <span>–</span>
+              <span>¥</span><div class="couli-control srch-field--error">30</div>
+            </div>
+            <div class="wf-caption">（输入框占位）<span class="wf-todo-tag">待定</span></div>
+          </div>
+          <div class="srch-error-text wf-anchor"><span class="wf-pin">2</span>填写内容有误，请检查</div>
+          <div class="wf-grid-2 wf-anchor"><span class="wf-pin">3</span>
+            <span class="wf-btn">（次按钮）<span class="wf-todo-tag">待定</span></span>
+            <span class="couli-button-primary">（主按钮）<span class="wf-todo-tag">待定</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>价格区间 · <code>F-PROD-01</code> · <code>BR-PRICE-15</code> · 与券后价比较、两端都含；以分为单位，允许 ¥0.01–¥100000，最低 ≤ 最高（相等合法）；预估返后价、素材参考价不参与筛选（<code>BR-PRICE-09/10</code>）。输入框占位 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>校验错误 · 文案键 <code>error.20001</code>「填写内容有误，请检查」，data.fields 所列字段旁标红（<code>BR-TEXT-14</code> 表 A）。客户端要不要提交前先校验，规划未写。</li>
+      <li>面板标题与按钮 · 文案 <span class="wf-todo-tag">待定</span>（规划未写，键未建，按 <code>BR-TEXT-12</code> 建键）。确认后开新的查询会话并回到加载态（<code>BR-PROD-08</code>）。「只看有券」是条件区的开关，不在面板里重复。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 6 ============ -->
+  <section class="wf-state" aria-label="状态 6：切换平台保持条件，京东">
+    <div>
+      <p class="wf-state__label">6. 切换平台 · 京东（条件保持）<small>在淘宝 Tab 已选「券后价从低到高」「只看有券」、价格区间 ¥10–¥50 后切到京东。保留哪些条件规划未写，图中按全部保留画，标待定。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar">
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">纯牛奶</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="srch-platforms wf-anchor"><span class="wf-pin">1</span><div class="wf-seg"><span>淘宝</span><span class="is-active">京东</span><span>拼多多</span></div></div>
+        <div class="wf-anchor"><span class="wf-pin">2</span>
+          <div class="srch-sort"><span>综合</span><span>销量</span><span class="is-active">券后价从低到高</span><span>返利从高到低</span></div>
+          <div class="srch-filters"><span class="wf-chip is-active">只看有券</span><span class="wf-chip is-active">（已选区间的写法）</span><span class="wf-todo-tag">待定</span></div>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card srch-card wf-anchor"><span class="wf-pin">3</span>
+            <div class="wf-img srch-card__img" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">京东</span> 样例商品标题 D</div>
+              <div class="srch-price"><span class="srch-price__label">券后</span><span class="wf-amount">¥13.45</span></div>
+              <div class="wf-caption">券前 ¥23.45 · 券 ¥10</div>
+              <div class="wf-row"><span class="wf-tag wf-tag--pending">预估返 ¥1.12</span><span class="srch-i" aria-label="口径说明">i</span></div>
+              <div class="wf-row wf-row--between"><span class="wf-caption">预估返后 ¥12.33</span><span class="wf-btn srch-cta">领券购买</span></div>
+            </div>
+          </div>
+          <div class="wf-card srch-card">
+            <div class="wf-img srch-card__img" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">京东</span> 样例商品标题 E</div>
+              <div class="srch-price"><span class="srch-price__label">券后</span><span class="wf-amount">¥21.09</span></div>
+              <div class="wf-caption">券前 ¥31.09 · 券 ¥10</div>
+              <div class="wf-row"><span class="wf-tag wf-tag--pending">预估返 ¥1.5</span><span class="srch-i" aria-label="口径说明">i</span></div>
+              <div class="wf-row wf-row--between"><span class="wf-caption">预估返后 ¥19.59</span><span class="wf-btn srch-cta">领券购买</span></div>
+            </div>
+          </div>
+          <div class="srch-disclaimer wf-anchor"><span class="wf-pin">4</span>券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　预估返利以平台结算为准，未结算或订单失效时不返</div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>平台 Tab · <code>F-PROD-01</code> · 切换后重新请求，先进状态 2；查询参数变了就是新的查询会话（<code>BR-PROD-08</code>）· 路由 <code>Search</code>。</li>
+      <li>条件保持 · 关键词、排序、「只看有券」、价格区间切平台后是否全部保留 <span class="wf-todo-tag">待定</span>（01 F-PROD-01、<code>BR-PROD-08</code> 都没写；interaction-patterns §1 只建议条件持续可见）。选了区间后筛选项上怎么写（例如本图样例 ¥10–¥50）<span class="wf-todo-tag">待定</span>（键未建，按 <code>BR-TEXT-12</code> 建键）。P1 分平台筛选上线后各平台可选筛选不同，届时再定。</li>
+      <li>京东卡 · <code>BR-PRICE-07</code>：MVP 只对淘宝显示区间，京东是单值「预估返 ¥x」；「预估返后」= 券后价 − 预估返（<code>BR-PRICE-09</code>）；「券后价从低到高」只保证当页有序（<code>BR-PRICE-15</code>）；按钮 <code>btn.buy.coupon</code>。</li>
+      <li>口径说明 · <code>price_basis</code> + <code>rebate_estimate</code>「预估返利以平台结算为准，未结算或订单失效时不返」（<code>BR-PRICE-17</code>，AC-S1-01-JD）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 7 ============ -->
+  <section class="wf-state" aria-label="状态 7：空结果">
+    <div>
+      <p class="wf-state__label">7. 空结果 · 展示该平台物料流前 10 个<small>当前平台搜不到商品时（图为带着价格区间搜不到）。物料流也取不到时只剩上半部分的无结果提示。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar">
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">样例冷门关键词</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="wf-anchor"><span class="wf-pin">1</span>
+          <div class="srch-platforms"><div class="wf-seg"><span class="is-active">淘宝</span><span>京东</span><span>拼多多</span></div></div>
+          <div class="srch-sort"><span class="is-active">综合</span><span>销量</span><span>券后价从低到高</span><span>返利从高到低</span></div>
+          <div class="srch-filters"><span class="wf-chip">只看有券</span><span class="wf-chip is-active">（已选区间的写法）</span><span class="wf-todo-tag">待定</span></div>
+        </div>
+        <div class="wf-body">
+          <div class="wf-empty wf-anchor"><span class="wf-pin">2</span>
+            <div class="wf-img" aria-hidden="true"></div>
+            <div>（无结果提示）<span class="wf-todo-tag">待定</span></div>
+          </div>
+          <div class="wf-stack wf-anchor"><span class="wf-pin">3</span>
+            <div class="srch-section-title"><span>（兜底商品区标题）<span class="wf-todo-tag">待定</span></span></div>
+            <div class="wf-card srch-card wf-anchor"><span class="wf-pin">4</span>
+              <div class="wf-img srch-card__img" aria-hidden="true"></div>
+              <div class="srch-card__body">
+                <div class="srch-card__title"><span class="wf-tag wf-tag--source">淘宝</span> 样例物料商品 F</div>
+                <div class="srch-price"><span class="srch-price__label">券后</span><span class="wf-amount">¥13.45</span></div>
+                <div class="wf-caption">券前 ¥23.45 · 券 ¥10</div>
+                <div class="wf-row"><span class="wf-tag wf-tag--pending">预估返 ¥x（单值或区间）</span><span class="wf-todo-tag">待定</span><span class="srch-i" aria-label="口径说明">i</span></div>
+                <div class="wf-row wf-row--between"><span class="wf-caption">预估返后 ¥x</span><span class="wf-btn srch-cta">领券购买</span></div>
+              </div>
+            </div>
+            <div class="wf-card srch-card"><div class="wf-img srch-card__img"></div><div class="srch-card__body"><div class="wf-line"></div><div class="wf-line srch-w60"></div><div class="wf-line srch-w40"></div></div></div>
+            <div class="srch-disclaimer wf-anchor"><span class="wf-pin">5</span>券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　（返利口径一句）<span class="wf-todo-tag">待定</span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>条件区 · <code>F-PROD-01</code> · 空结果时平台、排序、筛选照样可见，用户可以直接放宽筛选（interaction-patterns §1）；要不要另给「清除筛选」之类的入口 <span class="wf-todo-tag">待定</span>（规划未写）。图中样例：价格区间已选、搜不到结果。</li>
+      <li>无结果提示 · 组件 <code>EmptyState</code> · <code>F-PROD-04</code> · <code>BR-PRICE-15</code>「搜索无结果」· 文案 <span class="wf-todo-tag">待定</span>（规划未写：<code>BR-TEXT-14</code> 没有搜索空态的键，Agent 的 agent.degraded.empty 不适用）。与网络错误分开呈现（状态 8、9）。</li>
+      <li>兜底商品 · <code>F-PROD-04</code> · 接口 <code>fallback_items</code>：该平台首页物料流前 10 个，过滤无返利，不按类目推荐（TRADE-20，04 §6.3）。区标题 <span class="wf-todo-tag">待定</span>（规划未写）。物料流也取不到时不出这一区。兜底商品要不要受当前「只看有券」、价格区间约束 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>兜底卡 · 单卡只放 i 图标（<code>BR-PRICE-03</code>）。返利按「搜索」还是「物料流」来源判比价风险（决定淘宝卡显示区间还是单值）<span class="wf-todo-tag">待定</span>（<code>BR-PRICE-07</code> 来源判定表没有 fallback_items 这一行：搜索判 price_compare_risk，首页物料流判 normal）。ad_label 物料流为 null（<code>BR-TEXT-17</code>）。</li>
+      <li>兜底区口径说明 · <code>DisclaimerFooter</code> · 展示券后价就必须带 <code>price_basis</code>（<code>BR-PRICE-03</code>、<code>BR-PRICE-17</code>）；后面跟 <code>rebate_compare</code>「以结算为准」还是 <code>rebate_estimate</code>，随注释 4 的来源判定定 <span class="wf-todo-tag">待定</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 8 ============ -->
+  <section class="wf-state" aria-label="状态 8：网络错误">
+    <div>
+      <p class="wf-state__label">8. 网络错误<small>请求超时、断网（自动重试 1 次后仍失败），或服务端返回 5xxxx 时。条件区保留。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar">
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">纯牛奶</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="srch-platforms"><div class="wf-seg"><span class="is-active">淘宝</span><span>京东</span><span>拼多多</span></div></div>
+        <div class="srch-sort"><span class="is-active">综合</span><span>销量</span><span>券后价从低到高</span><span>返利从高到低</span></div>
+        <div class="srch-filters"><span class="wf-chip">只看有券</span><span class="wf-chip">价格区间</span></div>
+        <div class="wf-body">
+          <div class="wf-empty wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-img" aria-hidden="true"></div>
+            <div>（网络不可用时的提示）<span class="wf-todo-tag">待定</span></div>
+            <span class="couli-button-primary wf-anchor"><span class="wf-pin">2</span>重试</span>
+          </div>
+          <div class="srch-flow wf-anchor"><span class="wf-pin">3</span>
+            <div class="srch-variant">变体 · 服务端返回 5xxxx 时，同一位置改为：</div>
+            <div>出了点问题，请稍后再试（c3d4e5）</div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>网络错误 · 组件 <code>ErrorState</code>（03 §10.2）· 请求 10 秒超时、GET 自动重试 1 次仍失败或断网时（03 §4.2）。文案 <span class="wf-todo-tag">待定</span>（规划未写：<code>BR-TEXT-14</code> 只有购买用的 buy.timeout「网络不稳定，请重试」与 H5、第三方页的加载失败文案，搜索页没有对应键）。与空结果分开（interaction-patterns §1）；条件区照样可见。插画见 06 Q-E6。</li>
+      <li>重试 · 动作按 <code>BR-TEXT-14</code> 表 A「其他 5xxxx → 重试」；按钮字样取动作名，文案键未建。</li>
+      <li>服务端错误 · 文案键 <code>error.50001</code> / 其他 5xxxx「出了点问题，请稍后再试（{trace6}）」，附 trace_id 后 6 位（<code>BR-TEXT-14</code>）；图中 c3d4e5 为样例。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 9 ============ -->
+  <section class="wf-state" aria-label="状态 9：搜索暂不可用 50304">
+    <div>
+      <p class="wf-state__label">9. 搜索暂不可用（50304）<small>联盟接口故障，且没有 300 秒内的缓存可返回时。只影响这一个平台。条件区保留。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar">
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">纯牛奶</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="srch-platforms wf-anchor"><span class="wf-pin">3</span><div class="wf-seg"><span class="is-active">淘宝</span><span>京东</span><span>拼多多</span></div></div>
+        <div class="srch-sort"><span class="is-active">综合</span><span>销量</span><span>券后价从低到高</span><span>返利从高到低</span></div>
+        <div class="srch-filters"><span class="wf-chip">只看有券</span><span class="wf-chip">价格区间</span></div>
+        <div class="wf-body">
+          <div class="wf-empty wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-img" aria-hidden="true"></div>
+            <div>淘宝搜索暂不可用，请稍后再试</div>
+            <span class="couli-button-primary wf-anchor"><span class="wf-pin">2</span>重试</span>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>搜索暂不可用 · <code>F-PROD-07</code> · <code>BR-PROD-07</code> <code>BR-PRICE-11</code> · 文案键 <code>error.50304</code>「{platform_name}搜索暂不可用，请稍后再试」（包内默认「搜索暂不可用，请稍后再试」，<code>BR-TEXT-14</code> 表 A）。不拿商品池冒充搜索结果（TRADE-12）。</li>
+      <li>重试 · <code>BR-TEXT-14</code> 表 A 50304 动作「空态与重试按钮」。</li>
+      <li>其他平台 · 只影响 data.platform 这一家，其他 Tab 照常可切。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 10 ============ -->
+  <section class="wf-state" aria-label="状态 10：缓存降级">
+    <div>
+      <p class="wf-state__label">10. 缓存降级（stale）<small>联盟超时或限流，服务端返回 300 秒内的缓存并标 stale 时。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar">
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">纯牛奶</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="srch-platforms"><div class="wf-seg"><span class="is-active">淘宝</span><span>京东</span><span>拼多多</span></div></div>
+        <div class="srch-sort"><span class="is-active">综合</span><span>销量</span><span>券后价从低到高</span><span>返利从高到低</span></div>
+        <div class="srch-filters"><span class="wf-chip">只看有券</span><span class="wf-chip">价格区间</span></div>
+        <div class="wf-body">
+          <div class="wf-banner wf-banner--warning wf-anchor"><span class="wf-pin">1</span>（降级提示条文案）<span class="wf-todo-tag">待定</span></div>
+          <div class="wf-card srch-card wf-anchor"><span class="wf-pin">2</span>
+            <div class="wf-img srch-card__img" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">淘宝</span> 样例商品标题 A</div>
+              <div class="srch-price"><span class="srch-price__label">券后</span><span class="wf-amount">¥13.45</span></div>
+              <div class="wf-caption">券前 ¥23.45 · 券 ¥10</div>
+              <div class="wf-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.56–¥1.12</span><span class="wf-caption srch-nowrap">以结算为准</span><span class="srch-i" aria-label="口径说明">i</span></div>
+              <div class="wf-row wf-row--between"><span class="wf-caption">预估返后 ¥12.89</span><span class="wf-btn srch-cta">领券购买</span></div>
+            </div>
+          </div>
+          <div class="wf-card srch-card"><div class="wf-img srch-card__img"></div><div class="srch-card__body"><div class="wf-line"></div><div class="wf-line srch-w60"></div><div class="wf-line srch-w40"></div></div></div>
+          <div class="srch-disclaimer">券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　以结算为准</div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>降级提示条 · <code>F-PROD-07</code> · 结果顶部显示。规划里有两种措辞，并列请负责人定 <span class="wf-todo-tag">待定</span>：① <code>BR-PROD-07</code> 细则「熔断降级」表专门写搜索结果顶部：「价格可能已变化，下单前以平台为准」；② <code>BR-PRICE-11</code> 写详情页取价时间在 age_sec &gt; 300 或 stale=true 时追加：「价格可能已变化，以下单页为准」。两处都没有文案键，定了以后按 <code>BR-TEXT-12</code> 建键，并同步另一处。</li>
+      <li>卡片 · 金额照常显示，取价时间沿用原 quoted_at（<code>BR-PRICE-11</code>）；点购买时服务端复核（<code>BR-PRICE-13</code>），列表不回溯剔除（<code>BR-PRICE-15</code>）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 11 ============ -->
+  <section class="wf-state" aria-label="状态 11：平台搜索全部关闭">
+    <div>
+      <p class="wf-state__label">11. 平台搜索关闭（三家都关）<small>后台把三个平台的搜索开关都关掉时，搜索页只剩粘贴入口与说明；只关一家时只是那一家的 Tab 不显示。粘贴入口按端只出一种，图中并列只为对照。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar wf-anchor"><span class="wf-pin">1</span>
+          <span class="srch-back" aria-label="返回">‹</span>
+          <span class="srch-variant">（没有搜索框，也没有平台 Tab）</span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-empty wf-anchor"><span class="wf-pin">2</span>
+            <div class="wf-img" aria-hidden="true"></div>
+            <div>该平台暂不提供搜索，可以粘贴商品链接查返利</div>
+          </div>
+          <div class="wf-stack wf-anchor"><span class="wf-pin">3</span>
+            <div class="srch-variant">Android：普通按钮，点击后才读剪贴板</div>
+            <span class="couli-button-primary wf-btn--block">粘贴链接查返利</span>
+            <div class="srch-variant">鸿蒙：系统 PasteButton</div>
+            <span class="wf-btn wf-btn--block">PasteButton（系统控件）</span>
+            <div class="srch-variant">iOS：放什么、放哪</div>
+            <div class="srch-flow">（iOS 粘贴入口）<span class="wf-todo-tag">待定</span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>顶部 · <code>F-PROD-01</code> · <code>BR-PROD-10</code> 细则「按平台的搜索开关」· 关掉的平台不显示 Tab；三家都为 off 时搜索页只保留「粘贴链接查返利」的入口与说明，所以关键词搜索框也去掉（AC-S1-101）。</li>
+      <li>提示 · 文案键 <code>error.50304.search_disabled</code>「{platform_name}暂不提供搜索，可以粘贴商品链接查返利」；三家都关时用包内默认（本图），不显示重试按钮（<code>BR-TEXT-14</code> 表 B）。旧配置还显示着已关平台的 Tab、搜到 50304 search_disabled 时：显示带平台名的同一句，刷新配置并隐藏该 Tab。</li>
+      <li>粘贴入口 · 【粘贴链接查返利】（<code>BR-TEXT-14</code> 表 B 动作）· 读取方式只按 <code>BR-ID-16</code>，不新增读取时机：Android 是普通按钮、点击后才读；鸿蒙只用 PasteButton（BR-ID-16 写作「粘贴查返利」，控件文字由系统给定的选项决定）；iOS 在 BR-ID-16 里只有「回前台探测命中后的提示条 + UIPasteControl」，没有常驻入口，用自定义按钮去读会触发系统「允许粘贴」弹窗（F-CLIP-01 不允许），所以 iOS 这里放什么、放哪 <span class="wf-todo-tag">待定</span>（14_待决策汇总 BR-ID-16、G-20）。按钮名「粘贴链接查返利」与 BR-ID-16 的「粘贴查返利」不一致，要不要统一 <span class="wf-todo-tag">待定</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 12 ============ -->
+  <section class="wf-state" aria-label="状态 12：可搜不可买，拼多多">
+    <div>
+      <p class="wf-state__label">12. 可搜不可买 · 拼多多（返利即将开放）<small>某平台搜索开着、转链关着时，结果照常出卡，购买按钮按平台状态置灰。图为 not_launched；maintenance 见注释 2。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar">
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">纯牛奶</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="srch-platforms"><div class="wf-seg"><span>淘宝</span><span>京东</span><span class="is-active">拼多多</span></div></div>
+        <div class="srch-sort"><span class="is-active">综合</span><span>销量</span><span>券后价从低到高</span><span>返利从高到低</span></div>
+        <div class="srch-filters"><span class="wf-chip">只看有券</span><span class="wf-chip">价格区间</span></div>
+        <div class="wf-body">
+          <div class="wf-card srch-card">
+            <div class="wf-img srch-card__img" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">拼多多</span> 样例商品标题 G</div>
+              <div class="wf-anchor"><span class="wf-pin">1</span>
+                <div class="srch-price"><span class="srch-price__label">拼单券后</span><span class="wf-amount">¥13.45</span></div>
+                <div class="wf-caption">拼单券前 ¥23.45 · 券 ¥10</div>
+              </div>
+              <div class="wf-row wf-anchor"><span class="wf-pin">3</span><span class="wf-tag wf-tag--pending">预估返 ¥1.12</span><span class="wf-todo-tag">待定</span><span class="srch-i" aria-label="口径说明">i</span></div>
+              <div class="wf-row wf-row--between"><span class="wf-caption">预估返后 ¥12.33</span><span class="wf-btn srch-cta srch-cta--disabled wf-anchor" aria-disabled="true"><span class="wf-pin">2</span>拼多多返利即将开放</span></div>
+            </div>
+          </div>
+          <div class="wf-card srch-card">
+            <div class="wf-img srch-card__img" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">拼多多</span> 样例商品标题 H</div>
+              <div class="srch-price"><span class="srch-price__label">拼单价</span><span class="wf-amount">¥12.34</span></div>
+              <div class="wf-row"><span class="wf-caption">[无券状态的呈现]</span><span class="wf-todo-tag">待定</span></div>
+              <div class="wf-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.66</span><span class="wf-todo-tag">待定</span><span class="srch-i" aria-label="口径说明">i</span></div>
+              <div class="wf-row wf-row--between"><span class="wf-caption">预估返后 ¥11.68</span><span class="wf-btn srch-cta srch-cta--disabled" aria-disabled="true">拼多多返利即将开放</span></div>
+            </div>
+          </div>
+          <div class="srch-disclaimer">券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　预估返利以平台结算为准，未结算或订单失效时不返</div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>拼多多价格 · <code>BR-PRICE-04</code> · 有券「拼单券后 ¥x」+「拼单券前 ¥x · 券 ¥y」，无券「拼单价 ¥x」；拼多多 MVP 不出区间（<code>BR-PRICE-07</code>）。BR-PRICE-04 对 coupon_fen=0 要求显示无券状态，拼多多那句只写「拼单价 ¥x」，拼多多无券卡是否同样显示、怎么显示 <span class="wf-todo-tag">待定</span>（文案键未建，同状态 3 注释 7）。单卡 i 图标按 <code>BR-PRICE-03</code>。</li>
+      <li>购买按钮 · <code>BR-PROD-10</code> 细则（可搜不可买）· 点击前按 <code>/v1/config.features.platform_status.pdd</code>：not_launched → 按钮置灰显示 <code>platform_coming_soon</code>「{platform_name}返利即将开放」，不弹 Toast；maintenance → 按钮置灰「稍后再试」，点击时 Toast <code>error.50301.maintenance</code>「{platform_name}维护中，请稍后再试」（<code>BR-TEXT-14</code> 表 B，03 §7.4，AC-S1-15）。点击时以 open 响应为准。</li>
+      <li>返利金额 · 写着「返利即将开放」的卡上还显示不显示「预估返」「预估返后」<span class="wf-todo-tag">待定</span>（<code>BR-PROD-10</code> 细则只写「照常出卡」，规划未写）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 13 ============ -->
+  <section class="wf-state" aria-label="状态 13：列表内购买，商品已下架">
+    <div>
+      <p class="wf-state__label">13. 列表内购买 · 商品已下架（30141）<small>在结果卡上直接点购买，open 返回 30141（off_shelf）时。不外跳，这张卡原地置灰，其余卡不受影响。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar">
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">纯牛奶</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="srch-platforms"><div class="wf-seg"><span class="is-active">淘宝</span><span>京东</span><span>拼多多</span></div></div>
+        <div class="srch-sort"><span class="is-active">综合</span><span>销量</span><span>券后价从低到高</span><span>返利从高到低</span></div>
+        <div class="srch-filters"><span class="wf-chip">只看有券</span><span class="wf-chip">价格区间</span></div>
+        <div class="wf-body">
+          <div class="wf-card srch-card wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-img srch-card__img srch-dim" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title srch-dim"><span class="wf-tag wf-tag--source">淘宝</span> 样例商品标题 A</div>
+              <div class="wf-row wf-anchor"><span class="wf-pin">2</span><span class="wf-tag wf-tag--error">商品已下架</span><span class="wf-todo-tag">待定</span></div>
+              <div class="srch-dim">
+                <div class="srch-price"><span class="srch-price__label">券后</span><span class="wf-amount">¥13.45</span></div>
+                <div class="wf-caption">券前 ¥23.45 · 券 ¥10</div>
+              </div>
+              <div class="wf-row srch-row-end"><span class="wf-btn srch-cta srch-cta--disabled" aria-disabled="true">（置灰后的按钮）<span class="wf-todo-tag">待定</span></span></div>
+            </div>
+          </div>
+          <div class="wf-card srch-card">
+            <div class="wf-img srch-card__img" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">淘宝</span> 样例商品标题 M</div>
+              <div class="srch-price"><span class="srch-price__label">券后</span><span class="wf-amount">¥18.8</span></div>
+              <div class="wf-caption">券前 ¥23.8 · 券 ¥5</div>
+              <div class="wf-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.4–¥0.8</span><span class="wf-caption srch-nowrap">以结算为准</span><span class="srch-i" aria-label="口径说明">i</span></div>
+              <div class="wf-row wf-row--between"><span class="wf-caption">预估返后 ¥18.4</span><span class="wf-btn srch-cta">领券购买</span></div>
+            </div>
+          </div>
+          <div class="srch-flow wf-anchor"><span class="wf-pin">3</span>
+            <div class="srch-variant">其他 open 结果（与商品详情共用，本页不画）：</div>
+            <div>加载层 buy.opening · 券失效确认 · 价格变动确认 · 无返利确认 · 授权 · JumpTip · 外跳</div>
+          </div>
+          <div class="srch-disclaimer">券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　以结算为准</div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>下架卡 · <code>F-LINK-01</code> · 03 §7.4「30141（off_shelf）| 不外跳，卡片置灰」· availability=off_shelf；多种结果同时成立时 off_shelf 优先（03 §7.4）。置灰后按钮显示什么、还能不能点 <span class="wf-todo-tag">待定</span>（规划未写）。Agent 场景才追加「换一批」，搜索页不加。</li>
+      <li>下架提示 · 文案键 <code>error.30141</code>「商品已下架」（<code>BR-TEXT-14</code> 表 A）。用 Toast 还是像图中那样标在卡上 <span class="wf-todo-tag">待定</span>（03 §7.4 只写卡片置灰）。</li>
+      <li>其他结果 · 购买流程与商品详情共用（03 §7.4、§4.5，<code>BR-PRICE-13/14</code>），见商品详情线框；50301 见状态 12；游客与基本模式的前置步骤见状态 3 注释 5、状态 14。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 14 ============ -->
+  <section class="wf-state" aria-label="状态 14：基本模式，点购买弹隐私弹窗">
+    <div>
+      <p class="wf-state__label">14. 基本模式 · 能搜，点购买先弹隐私弹窗<small>用户拒绝隐私政策进入基本模式后打开搜索页、点【领券购买】时。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar wf-anchor"><span class="wf-pin">1</span>
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">纸巾</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="srch-platforms"><div class="wf-seg"><span class="is-active">淘宝</span><span>京东</span><span>拼多多</span></div></div>
+        <div class="srch-sort"><span class="is-active">综合</span><span>销量</span><span>券后价从低到高</span><span>返利从高到低</span></div>
+        <div class="srch-filters"><span class="wf-chip">只看有券</span><span class="wf-chip">价格区间</span></div>
+        <div class="wf-body">
+          <div class="wf-card srch-card wf-anchor"><span class="wf-pin">2</span>
+            <div class="wf-img srch-card__img" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">淘宝</span> 样例商品标题 N</div>
+              <div class="srch-price"><span class="srch-price__label">券后</span><span class="wf-amount">¥13.45</span></div>
+              <div class="wf-caption">券前 ¥23.45 · 券 ¥10</div>
+              <div class="wf-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.56–¥1.12</span><span class="wf-caption srch-nowrap">以结算为准</span><span class="srch-i" aria-label="口径说明">i</span></div>
+              <div class="wf-row wf-row--between"><span class="wf-caption">预估返后 ¥12.89</span><span class="wf-btn srch-cta">领券购买</span></div>
+            </div>
+          </div>
+          <div class="srch-disclaimer">券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　以结算为准</div>
+          <div class="srch-flow wf-anchor"><span class="wf-pin">4</span>（底部 Tab / 基本模式说明条）<span class="wf-todo-tag">待定</span></div>
+        </div>
+        <div class="wf-scrim"></div>
+        <div class="wf-dialog">
+          <div class="wf-title wf-anchor"><span class="wf-pin">3</span>（隐私弹窗标题）<span class="wf-todo-tag">待定</span></div>
+          <div class="wf-caption">（摘要：收集的信息与用途、第三方 SDK、查阅撤回注销，全文由法务提供）<span class="wf-todo-tag">待定</span></div>
+          <div class="wf-caption"><span class="wf-link">《隐私政策》</span> <span class="wf-link">《用户协议》</span></div>
+          <div class="wf-grid-2">
+            <span class="wf-btn">不同意</span>
+            <span class="couli-button-primary">同意</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>搜索框 · <code>BR-ID-11</code> · 基本模式能搜：匿名请求，不带 Authorization、X-Device-Id 与签名（BR-ID-11 匿名白名单、细则例）。不出剪贴板提示条（<code>BR-ID-16</code> 细则「基本模式不读」），链接 / 口令识别在基本模式不可用（<code>BR-ID-02</code> 能力矩阵 inputs/parse 一行 basic 为 ✖）。粘贴按钮是隐藏，还是显示但点了先弹隐私弹窗；在搜索框里提交链接时怎么提示 <span class="wf-todo-tag">待定</span>（规划未写）。· 路由 <code>Search</code>（基本模式下 Router 放行，03 §4.4）。</li>
+      <li>结果卡 · 预估返照常显示（<code>BR-ID-02</code> 能力矩阵「首页、搜索、商品详情（含预估返利）」basic 为只读）；卡片与状态 3 相同。</li>
+      <li>隐私弹窗 · 点【领券购买】→ 重新展示首启隐私弹窗，不直接拉登录（<code>BR-ID-02</code> 正文、<code>BR-ID-11</code> 细则例）。标题与摘要键 <code>privacy.first_launch.title</code> / <code>.summary</code>，全文由法务提供（<code>BR-TEXT-14</code> 表 D，06 Q-F14）；按钮 <code>privacy.btn.agree</code> / <code>.disagree</code>「同意」「不同意」（表 D 占位措辞）。同意后设备注册 → 登录，这次购买按 <code>BR-ID-10</code> 存 pending_action、前置完成后恢复；不同意按 <code>BR-ID-11</code> 处理，留在本页。</li>
+      <li>底部 · 基本模式下搜索页有没有底部 Tab、要不要显示 <code>privacy.basic_mode.notice</code> 与【开启完整功能】（<code>privacy.basic_mode.enable</code>）<span class="wf-todo-tag">待定</span>（规划未写；01 §4.2 只写 <code>BasicMode</code> 页显示该按钮）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 15 ============ -->
+  <section class="wf-state" aria-label="状态 15：识别中">
+    <div>
+      <p class="wf-state__label">15. 粘贴链接 / 口令 · 识别中<small>两个入口：用户自己把链接或口令粘进搜索框后提交（本图）；或点粘贴入口（见变体：入口本身显示处理中，读到的内容不回填搜索框）。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar wf-anchor"><span class="wf-pin">1</span>
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">（样例）用户粘进来的商品口令文本，含商品名与一段口令……</span><span class="srch-spinner" aria-label="处理中"></span></div>
+        </div>
+        <div class="wf-body">
+          <div class="wf-row srch-flow wf-anchor"><span class="wf-pin">2</span><span class="srch-spinner" aria-hidden="true"></span><span>（识别中提示）<span class="wf-todo-tag">待定</span></span></div>
+          <div class="srch-flow wf-anchor"><span class="wf-pin">3</span>
+            <div>识别成功 → 直达 <code>ProductDetail</code>（F-PROD-02）</div>
+            <div>识别失败 → 状态 16</div>
+            <div>无返利 / 金额未知 / 价格查不到 → 状态 17–19（落点 <span class="wf-todo-tag">待定</span>）</div>
+          </div>
+          <div class="srch-flow wf-anchor"><span class="wf-pin">4</span>
+            <div class="srch-variant">变体 · 点粘贴入口时：搜索框保持原样，入口本身显示处理中</div>
+            <div class="wf-row"><span class="wf-btn wf-btn--block"><span class="srch-spinner" aria-hidden="true"></span>&nbsp;粘贴查返利</span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>搜索框提交 · <code>F-PROD-02</code> · 输入含链接或口令时不走关键词搜索，调 <code>POST /v1/inputs/parse</code>（04 §6.3，剪贴板、搜索框共用）；原文保留在框内，处理期间不能重复提交（interaction-patterns §1）· 路由 <code>Search</code>。客户端按什么规则判断「含链接或口令」、请求体只放识别出的片段还是整段输入 <span class="wf-todo-tag">待定</span>（规划未写：<code>BR-ID-16</code> 与 AC-S1-03「只上传识别片段」管的是剪贴板读取）。</li>
+      <li>识别中反馈 · <code>F-CLIP-03</code> · 识别顺序：链接 → 口令解析 → 标题搜索（≥10 字）；口令解析开关关闭时 10 秒内改走标题搜索（AC-S1-08 ③）。提示文案与形式 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>识别去向 · <code>F-PROD-02</code>「直达商品详情」→ <code>ProductDetail</code>（platform、product_key），来源记为粘贴，淘宝按比价区间显示（<code>BR-PRICE-07</code>，AC-S1-02-TB）。识别为线报素材时 J2 第 3 步进 <code>AgentChat</code>（<code>F-CLIP-04</code>）——从搜索框输入时是否也转过去 <span class="wf-todo-tag">待定</span>（规划未写）。无返利、金额未知、价格查不到三种结果在哪出卡见状态 17–19。</li>
+      <li>粘贴入口变体 · <code>F-CLIP-01</code> <code>BR-ID-16</code> · 点击后才读、本地过滤，只上传识别出的链接 / 口令与标题片段（AC-S1-03）；直接进入识别中，读到的原文不回填搜索框；处理中反馈放在入口本身（interaction-patterns §1「原入口显示处理中」）。iOS 的入口是提示条里的 UIPasteControl，处理中怎么显示同样 <span class="wf-todo-tag">待定</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 16 ============ -->
+  <section class="wf-state" aria-label="状态 16：识别失败，保留原文">
+    <div>
+      <p class="wf-state__label">16. 识别失败（保留原文）<small>30132、30131 两个错误码，加 pdd.parse_failed 一种降级场景（不是错误码）。同一时刻只出现其中一种，图中并列只为对照。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar wf-anchor"><span class="wf-pin">1</span>
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">（样例）用户粘进来的商品口令文本，含商品名与一段口令……</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="wf-body">
+          <div class="wf-stack wf-anchor"><span class="wf-pin">2</span>
+            <div class="srch-variant">口令识别不了（30132）</div>
+            <div class="wf-banner wf-banner--warning">这个口令暂时识别不了</div>
+            <span class="couli-button-primary wf-btn--block">用商品名搜索</span>
+          </div>
+          <div class="wf-stack wf-anchor"><span class="wf-pin">3</span>
+            <div class="srch-variant">不支持的链接或平台（30131）</div>
+            <div class="wf-banner wf-banner--warning">暂不支持这个链接或平台</div>
+          </div>
+          <div class="wf-stack wf-anchor"><span class="wf-pin">4</span>
+            <div class="srch-variant">拼多多链接识别不到商品（降级场景，触发方式 <span class="wf-todo-tag">待定</span>）</div>
+            <div class="wf-banner wf-banner--warning">暂时无法识别这个拼多多链接</div>
+            <span class="couli-button-primary wf-btn--block">用商品名搜索</span>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>原文保留 · <code>BR-TEXT-14</code> · 从搜索框提交时，失败后框内原文不清空、可修改（interaction-patterns §1）；从粘贴入口进来时搜索框里没有原文（状态 15 注释 4），提示显示在哪 <span class="wf-todo-tag">待定</span>（规划未写）。不自动列候选卡（TRADE-07）；不把识别失败说成淘礼金已领完或权益失效（<code>BR-TEXT-15</code>，J2 第 3 步）；任何情况都不把原链接当返利链接（AC-S1-08 ④）。提示是条还是 Toast <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>口令识别不了 · <code>F-CLIP-03</code> · 文案键 <code>error.30132</code>「这个口令暂时识别不了」+ 按钮「用商品名搜索」：预填口令文本里「」内或首行的商品名，提取不到则搜索框留空（<code>BR-TEXT-14</code> 表 A，AC-S1-08 ①）。</li>
+      <li>不支持 · 文案键 <code>error.30131</code>「暂不支持这个链接或平台」，无按钮（<code>BR-TEXT-14</code> 表 A，<code>BR-PROD-10</code>，AC-S1-08 ②）。</li>
+      <li>拼多多识别不到 · 文案键 <code>pdd.parse_failed</code>「暂时无法识别这个拼多多链接」+「用商品名搜索」，预填规则同 30132（<code>BR-TEXT-14</code> 表 C「降级场景文案（非错误码）」，CAP-PDD-01）。它由什么触发（错误码加 data.reason、响应里的标记，还是客户端判断）<span class="wf-todo-tag">待定</span>（规划未写；<code>F-CLIP-03</code> 又写「识别不到具体商品时统一返回 30132」，两处要对齐）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 17 ============ -->
+  <section class="wf-state" aria-label="状态 17：识别结果，返利上限为 0">
+    <div>
+      <p class="wf-state__label">17. 识别结果 · 返利上限为 0<small>用户主动粘贴的商品 rebate_max_fen = 0（rebate_basis=no_rebate）时照常出卡。搜索结果里这类商品会被过滤。出卡阶段不转链。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar">
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">（样例）用户粘进来的商品链接</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="wf-body">
+          <div class="srch-variant wf-anchor"><span class="wf-pin">1</span>识别结果卡（在本页出卡还是直达详情）<span class="wf-todo-tag">待定</span></div>
+          <div class="wf-card srch-card">
+            <div class="wf-img srch-card__img" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">淘宝</span> 样例商品标题 J</div>
+              <div class="srch-price"><span class="srch-price__label">券后</span><span class="wf-amount">¥13.45</span></div>
+              <div class="wf-caption">券前 ¥23.45 · 券 ¥10</div>
+              <div class="wf-row wf-anchor"><span class="wf-pin">2</span><span class="wf-tag">暂无返利</span><span class="srch-i" aria-label="口径说明">i</span></div>
+              <div class="wf-row srch-row-end"><span class="wf-btn srch-cta wf-anchor"><span class="wf-pin">3</span>去购买（无返利）</span></div>
+            </div>
+          </div>
+          <div class="srch-disclaimer">券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准</div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>识别结果卡 · <code>F-CLIP-03</code>，J2 · 主动粘贴的链接即使没有返利也出卡（<code>BR-PRICE-08</code>）；出卡只登记 link_id 与报价快照、不预转链（<code>F-LINK-01</code>，04 §6.3）。在搜索页内出卡，还是按 <code>F-PROD-02</code> 直达 <code>ProductDetail</code> <span class="wf-todo-tag">待定</span>（规划未写；一次最多识别 3 个链接、逐个出卡，04 §8.5；AC-S1-02-TB 也写「出 1 张卡」），06 Q-E5 线框确认。</li>
+      <li>无返利 · 「暂无返利」（<code>BR-TEXT-10</code>、<code>BR-PRICE-08</code>），不显示「预估返」「预估返后」；价格写法同 <code>BR-PRICE-04</code>；口径说明只有 <code>price_basis</code>（<code>BR-PRICE-17</code>）。AC-S1-10 ①。</li>
+      <li>按钮 · <code>btn.buy.no_rebate</code>「去购买（无返利）」（<code>BR-TEXT-12</code>）。点了以后才转链：转链成功但佣金为 0 时用转链结果；转链失败时跳由 product_key 生成、不带推广参数的商品页；不外跳用户粘贴的原链接或口令（<code>BR-PRICE-08</code>、<code>BR-PRICE-21</code>）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 18 ============ -->
+  <section class="wf-state" aria-label="状态 18：识别结果，金额未知">
+    <div>
+      <p class="wf-state__label">18. 识别结果 · 金额未知（拼多多直链）<small>只在拼多多：合法商品链接、联盟拿不到商品信息、直链转链开关打开，三项同时满足时。开关默认关，平台能力验证通过后才开。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar">
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">（样例）用户粘进来的拼多多商品链接</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="wf-body">
+          <div class="srch-variant">识别结果卡（落点同状态 17）<span class="wf-todo-tag">待定</span></div>
+          <div class="wf-card srch-card">
+            <div class="wf-img srch-card__img wf-anchor" aria-hidden="true"><span class="wf-pin">1</span></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">拼多多</span> （标题、主图显示什么）<span class="wf-todo-tag">待定</span></div>
+              <div class="wf-row wf-anchor"><span class="wf-pin">2</span><span class="wf-tag wf-tag--pending">可返利，金额以订单为准</span></div>
+              <div class="wf-row srch-row-end"><span class="wf-btn srch-cta wf-anchor"><span class="wf-pin">3</span>去购买</span></div>
+            </div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>商品信息 · <code>BR-PRICE-08</code>（TRADE-08）· 开关 pdd.direct_convert.enabled 默认关，CAP-PDD-01 获批后才开，09 未验证前这张卡不出现。联盟拿不到商品信息时卡上标题、主图显示什么 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>金额未知 · 文案键 <code>rebate_amount_unknown</code>「可返利，金额以订单为准」，替代返利标签，不显示任何价格、「预估返」「预估返后」（<code>BR-TEXT-14</code> 表 C、<code>BR-PRICE-08</code>）；不属查返利三态（<code>BR-PRICE-21</code>）。AC-S1-02-PDD C。</li>
+      <li>按钮 · <code>btn.buy</code>「去购买」→ open 带用户参数直链转链、不复核价格（<code>BR-PRICE-08</code>、<code>BR-PRICE-13</code>）。这张卡没有 product_key，按 <code>ProductDetail</code> 的参数直达不了详情（见页尾待定项）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 19 ============ -->
+  <section class="wf-state" aria-label="状态 19：识别结果，价格查不到">
+    <div>
+      <p class="wf-state__label">19. 识别结果 · 价格查不到<small>粘贴识别到商品，但联盟价格缺失或券面额不小于售价（价格异常）时。同类商品在搜索结果里直接不出卡。</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="srch-searchbar">
+          <span class="srch-back" aria-label="返回">‹</span>
+          <div class="couli-control srch-input"><span class="srch-input__text">（样例）用户粘进来的商品链接</span><span class="srch-input__clear" aria-label="清除">×</span></div>
+        </div>
+        <div class="wf-body">
+          <div class="srch-variant">识别结果卡（落点同状态 17）<span class="wf-todo-tag">待定</span></div>
+          <div class="wf-card srch-card">
+            <div class="wf-img srch-card__img" aria-hidden="true"></div>
+            <div class="srch-card__body">
+              <div class="srch-card__title"><span class="wf-tag wf-tag--source">淘宝</span> 样例商品标题 K</div>
+              <div class="wf-muted wf-anchor"><span class="wf-pin">1</span>暂时查不到该商品价格</div>
+              <div class="wf-row srch-row-end"><span class="wf-btn srch-cta wf-anchor"><span class="wf-pin">2</span>稍后再试</span></div>
+            </div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="is-active"><i></i>首页</span><span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>价格查不到 · <code>BR-PRICE-01</code> · availability=price_unavailable：不显示任何金额，文案「暂时查不到该商品价格」（文案键未建）；搜索结果里同类商品不出卡；不属查返利三态（<code>BR-PRICE-21</code>）。AC-S1-09 ①②。</li>
+      <li>稍后再试 · 按钮「稍后再试」（<code>BR-PRICE-01</code>）；不下发 link_id，不能购买。点了是重新识别还是只收起 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="wf-foot">
+  <h2>本页覆盖的状态</h2>
+  <ol>
+    <li>输入中 · 搜索历史与热词（含进入方式、粘贴入口的三端差异与线报素材变体）</li>
+    <li>提交与加载（骨架；关键词雷达命中时不进结果页）</li>
+    <li>结果正常 · 淘宝默认 Tab（有券有返比价区间、无券有返下限 0、预售、口径说明；游客、返回恢复阅读位置）</li>
+    <li>滚动加载 · 下一页 / 到底 / 翻页失败</li>
+    <li>排序与筛选 · 价格区间面板与 20001 校验错误</li>
+    <li>切换平台保持条件 · 京东（单值预估返）</li>
+    <li>空结果 · 展示该平台物料流前 10 个（带筛选搜不到、兜底区口径说明）</li>
+    <li>网络错误（无响应 / 服务端 5xxxx）</li>
+    <li>搜索暂不可用（50304，联盟故障且无缓存）</li>
+    <li>缓存降级（stale）</li>
+    <li>平台搜索关闭（50304 search_disabled，三家都关；粘贴入口按端区分）</li>
+    <li>可搜不可买 · 拼多多（50301 not_launched，注释含 maintenance）</li>
+    <li>列表内购买 · 商品已下架（30141，卡片置灰）</li>
+    <li>基本模式 · 能搜，点购买先弹隐私弹窗</li>
+    <li>粘贴链接 / 口令 · 识别中（搜索框提交；粘贴入口变体）</li>
+    <li>识别失败 · 保留原文（30132 / 30131 两个错误码，加 pdd.parse_failed 降级）</li>
+    <li>识别结果 · 返利上限为 0</li>
+    <li>识别结果 · 金额未知（拼多多直链）</li>
+    <li>识别结果 · 价格查不到</li>
+  </ol>
+  <p class="wf-caption">没有单独画的：输入联想（规划里没有）；42901 限流（按 Retry-After 禁用触发按钮，06 Q-B4）；点购买后的加载层、复核弹窗、授权与 JumpTip（与商品详情共用，03 §7.4，见商品详情线框）；拼多多比价无返利弹窗（开关默认关，<code>BR-PRICE-08</code> 细则）；P1 分平台筛选、同款比价、降价提醒。</p>
+
+  <h2>待定项</h2>
+  <ul>
+    <li><span class="wf-todo-tag">待定</span> 搜索框占位、历史区标题与清空、热词区标题（状态 1）—— 规划未写（F-PROD-03；建键按 BR-TEXT-12）</li>
+    <li><span class="wf-todo-tag">待定</span> 带关键词进入（50302、看看相似商品、SDUI / 深链的 q）后是直接出结果还是只预填；Search 路由除 q 外的参数（平台、要排除的商品）怎么传（状态 1）—— 规划未写（03 §6.1 只有 q 的示例，BR-PRICE-08 细则，03 §4.4 routes.json）</li>
+    <li><span class="wf-todo-tag">待定</span> 粘贴入口在搜索页放不放、放哪（状态 1）—— BR-ID-16（14_待决策汇总 BR-ID-16、G-20），规划未写搜索页位置</li>
+    <li><span class="wf-todo-tag">待定</span> 线报素材提示条的文案；AI 助手未开放时「让 AI 帮我看看」怎么处理（状态 1）—— 规划未写（F-CLIP-04、01 §4.1）</li>
+    <li><span class="wf-todo-tag">待定</span> 关键词雷达的匹配方式、命中词是否记历史（状态 2）—— 规划未写（F-PROD-03）</li>
+    <li><span class="wf-todo-tag">待定</span> 无券状态怎么显示、文案键（状态 3 卡 B、卡 C；状态 12 拼多多无券卡是否同样显示）—— BR-PRICE-04 要求显示，规划未建键（按 BR-TEXT-12 建键）</li>
+    <li><span class="wf-todo-tag">待定</span> 「综合」「销量」「价格区间」文案键；券后价 / 返利排序只排当页要不要提示（状态 3）—— 规划未写（F-PROD-01、BR-PRICE-15、BR-PRICE-18）</li>
+    <li><span class="wf-todo-tag">待定</span> 搜索卡布局（横向 / 网格）（状态 3）—— 规划未写（03 §10.2 ProductCard），06 Q-E5 线框确认</li>
+    <li><span class="wf-todo-tag">待定</span> 底部 Tab 在搜索页是否显示（状态 3）—— 规划未写（01 §4.1）</li>
+    <li><span class="wf-todo-tag">待定</span> 下一页的触发时机，加载中、到底、翻页失败三句文案，翻页中途 5xxxx / 50304 的呈现；连续翻页时口径说明放哪（状态 4）—— 规划未写（F-PROD-01、BR-PRICE-03、BR-PRICE-08、BR-TEXT-14 无键）</li>
+    <li><span class="wf-todo-tag">待定</span> 价格区间面板标题、输入占位、按钮文案，选定区间后筛选项上的写法（状态 5、6、7）—— 规划未写（键未建）</li>
+    <li><span class="wf-todo-tag">待定</span> 切平台时保留哪些条件（状态 6）—— 规划未写（F-PROD-01、BR-PROD-08）</li>
+    <li><span class="wf-todo-tag">待定</span> 空结果提示与兜底商品区标题；兜底商品受不受当前筛选约束；要不要给清除筛选入口（状态 7）—— 规划未写（F-PROD-04、BR-PRICE-15）</li>
+    <li><span class="wf-todo-tag">待定</span> 兜底商品按哪种来源判比价风险，兜底区口径说明的返利那句跟着定（状态 7）—— 规划未写（BR-PRICE-07 来源判定表、BR-PRICE-17）</li>
+    <li><span class="wf-todo-tag">待定</span> 网络不可用（无响应）的提示文案（状态 8）—— 规划未写（BR-TEXT-14），插画见 06 Q-E6</li>
+    <li><span class="wf-todo-tag">待定</span> 缓存降级提示用哪句：BR-PROD-07「价格可能已变化，下单前以平台为准」还是 BR-PRICE-11「价格可能已变化，以下单页为准」，并建键（状态 10）</li>
+    <li><span class="wf-todo-tag">待定</span> 三家都关时 iOS 的粘贴入口放什么、放哪；按钮名「粘贴链接查返利」与「粘贴查返利」要不要统一（状态 11）—— BR-ID-16（14_待决策汇总 BR-ID-16、G-20）、BR-TEXT-14 表 B</li>
+    <li><span class="wf-todo-tag">待定</span> 「返利即将开放」时卡上是否显示预估返金额（状态 12）—— 规划未写（BR-PROD-10 细则）</li>
+    <li><span class="wf-todo-tag">待定</span> 列表里下架提示用 Toast 还是标在卡上，置灰后按钮显示什么（状态 13）—— 规划未写（03 §7.4 只写卡片置灰）</li>
+    <li><span class="wf-todo-tag">待定</span> 基本模式下粘贴入口是隐藏还是点了弹隐私弹窗、搜索框提交链接时怎么提示；搜索页有没有底部 Tab 与基本模式说明条（状态 14）—— 规划未写（BR-ID-02、BR-ID-11、BR-ID-16 细则、01 §4.2）；隐私弹窗全文见 06 Q-F14</li>
+    <li><span class="wf-todo-tag">待定</span> 识别中提示；搜索框按什么规则判断「含链接或口令」、请求体只放识别片段还是整段输入；从搜索框输入线报素材是否转 AgentChat（状态 15）—— 规划未写（F-CLIP-03、F-CLIP-04、F-PROD-02、J2）</li>
+    <li><span class="wf-todo-tag">待定</span> 粘贴入口识别失败时提示放哪；失败提示用条还是 Toast；pdd.parse_failed 由什么触发（状态 16）—— 规划未写（BR-TEXT-14 表 C、F-CLIP-03）</li>
+    <li><span class="wf-todo-tag">待定</span> 识别结果在搜索页出卡还是直达详情（状态 17–19）—— 规划未写（F-PROD-02 与 04 §8.5、AC-S1-02-TB 不一致），06 Q-E5 线框确认</li>
+    <li><span class="wf-todo-tag">待定</span> 金额未知卡的标题与主图（状态 18）—— 规划未写（BR-PRICE-08）</li>
+    <li><span class="wf-todo-tag">待定</span> 价格查不到卡的「稍后再试」点了做什么（状态 19）—— 规划未写（BR-PRICE-01）</li>
+  </ul>
+
+  <h2>请负责人确认</h2>
+  <ul>
+    <li>用户在搜索框里粘贴商品链接后，是直接跳到商品详情页，还是先在搜索页里出一张结果卡？有些结果（比如拼多多「金额以订单为准」那种）没有商品编号，跳不了详情页。</li>
+    <li>按价格或返利排序时，只在当前这一页里排，往下翻可能又冒出更便宜的。要不要在页面上提醒用户一句？</li>
+    <li>从淘宝切到京东时，搜索词、排序方式、「只看有券」、价格范围要不要原样带过去？图里是全部带过去。</li>
+  </ul>
+</footer>
+</body>
+</html>

@@ -1,0 +1,1205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>线框 · Agent 对话 AgentChat · v20261004</title>
+<link rel="stylesheet" href="../tokens/variables.css">
+<link rel="stylesheet" href="../tokens/foundations.css">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+/* 本页专用（只用令牌，不写新的色值） */
+.wf-phone p { margin: 0; }
+.ag-nav-side { width: 56px; flex: none; font-size: var(--font-size-footnote); font-weight: var(--font-weight-regular); }
+.ag-nav-side--right { text-align: right; }
+.ag-strip { flex: none; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2) var(--space-4); background: var(--color-background-surface); border-bottom: 1px solid var(--color-border-subtle); font-size: var(--font-size-caption); line-height: var(--font-line-height-caption); color: var(--color-text-secondary); }
+.ag-ph { display: inline-flex; align-items: center; gap: var(--space-1); padding: 0 var(--space-2); border: 1px dashed var(--color-border-control); border-radius: var(--radius-small); color: var(--color-text-secondary); font-size: var(--font-size-caption); line-height: var(--font-line-height-caption); }
+.ag-ph--block { display: flex; padding: var(--space-2) var(--space-3); }
+.ag-ai { display: flex; flex-direction: column; gap: var(--space-2); }
+.ag-text { position: relative; display: flex; flex-direction: column; gap: var(--space-1); max-width: 92%; padding: var(--space-2) var(--space-3); border-radius: var(--radius-card); background: var(--color-background-surface); }
+.ag-text .wf-line { background: var(--color-border-subtle); }
+.ag-caret { display: inline-block; width: 6px; height: 14px; background: var(--color-text-secondary); vertical-align: middle; }
+.ag-tool { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+.ag-spin { flex: none; width: 12px; height: 12px; border: 2px solid var(--color-border-control); border-top-color: var(--color-text-secondary); border-radius: var(--radius-pill); }
+.ag-dots { display: inline-flex; gap: var(--space-1); padding: var(--space-1) 0; }
+.ag-dots i { width: 6px; height: 6px; border-radius: var(--radius-pill); background: var(--color-border-control); }
+.ag-meta { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+.ag-icons { display: inline-flex; gap: var(--space-1); }
+.ag-icon { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 24px; padding: 0 var(--space-1); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-small); font-size: var(--font-size-caption); color: var(--color-text-secondary); background: var(--color-background-surface); }
+.ag-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.ag-pcard { display: grid; grid-template-columns: 72px 1fr; gap: var(--space-2) var(--space-3); }
+.ag-pcard > .wf-img { width: 72px; height: 72px; }
+.ag-pcard--lg { grid-template-columns: 96px 1fr; }
+.ag-pcard--lg > .wf-img { width: 96px; height: 96px; }
+.ag-pinfo { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.ag-ptitle { font-size: var(--font-size-footnote); line-height: var(--font-line-height-footnote); }
+.ag-tags { position: relative; display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.ag-row { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); }
+.ag-sub { font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+.ag-i { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid var(--color-border-control); border-radius: var(--radius-pill); font-size: var(--font-size-caption); color: var(--color-text-secondary); line-height: 1; }
+.ag-buyrow { position: relative; display: flex; justify-content: flex-end; }
+.ag-buy { font-size: var(--font-size-footnote); padding-inline: var(--space-3); }
+.ag-disc { position: relative; padding-top: var(--space-2); border-top: 1px solid var(--color-border-subtle); font-size: var(--font-size-caption); line-height: var(--font-line-height-caption); color: var(--color-text-secondary); }
+.ag-input { position: relative; display: flex; align-items: center; gap: var(--space-2); }
+.ag-input .couli-control { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-1); color: var(--color-text-secondary); font-size: var(--font-size-footnote); }
+.ag-send { flex: none; font-size: var(--font-size-footnote); padding-inline: var(--space-3); }
+.wf-navbar .wf-pin { top: -10px; right: -16px; }
+.ag-meta.wf-anchor, .ag-buyrow.wf-anchor, .ag-input.wf-anchor { padding-right: var(--space-5); }
+.ag-fab { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--space-16) * 2 + var(--space-6)); z-index: 1; padding: var(--space-1) var(--space-3); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-pill); background: var(--color-background-surface); box-shadow: var(--shadow-floating); font-size: var(--font-size-caption); }
+.ag-frag { padding-top: var(--space-2); border-top: 1px dashed var(--color-border-control); font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+.ag-check { flex: none; width: 18px; height: 18px; border: 1px solid var(--color-border-control); border-radius: var(--radius-small); background: var(--color-background-surface); }
+.ag-blank { flex: 1; min-height: 160px; border-radius: var(--radius-card); }
+.ag-brand { width: 48px; height: 48px; }
+.ag-brand > .wf-img { width: 48px; height: 48px; border-radius: var(--radius-card); }
+.ag-sys { position: relative; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-card); background: var(--color-background-surface); border: 1px solid var(--color-border-subtle); }
+.ag-order { display: flex; flex-direction: column; gap: var(--space-1); }
+.ag-chev { color: var(--color-text-secondary); }
+.wf-sheet .wf-stack p { font-size: var(--font-size-footnote); line-height: var(--font-line-height-footnote); }
+.wf-foot code { font-size: var(--font-size-caption); }
+.wf-toast > .wf-anchor { padding-right: var(--space-3); }
+.wf-phone > .wf-toast { z-index: 3; bottom: calc(var(--space-16) * 2 + var(--space-8)); }
+.ag-i--corner { position: absolute; top: var(--space-2); right: var(--space-2); }
+.ag-pcard .ag-ptitle { padding-right: var(--space-5); }
+.ag-disc__todo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); margin-top: var(--space-1); }
+.ag-matref { font-size: var(--font-size-caption); line-height: var(--font-line-height-caption); color: var(--color-text-secondary); }
+.ag-pcard--off { background: var(--color-background-muted); box-shadow: var(--shadow-none); color: var(--color-text-secondary); }
+.ag-pcard--off .wf-amount { color: var(--color-text-secondary); }
+.ag-rule { display: flex; flex-direction: column; gap: var(--space-1); }
+.ag-rule .wf-line { background: var(--color-border-subtle); }
+.ag-buyrow { align-items: center; gap: var(--space-2); }
+.wf-phone .wf-chips { align-items: center; }
+.ag-matref.wf-anchor, .ag-pinfo > .ag-sub.wf-anchor { padding-right: var(--space-4); }
+</style>
+</head>
+<body>
+<header class="wf-head">
+  <h1>Agent 对话 <code>AgentChat</code> · 线框 v20261004</h1>
+  <p>依据：规划 main 2d23ae7 的 01 §4.1（AI 助手 Tab、Agent 情境入口）、§4.2（AgentChat / AgentConsent / BindPhone / Help 行）、§5 J2 / J3 / J5、§6 E07 AGENT、§7.1；03 §7、§10.2；04 §8.2、§8.3、§8.5；08 BR-AI-01～24、BR-TEXT-01 / 02 / 04 / 10 / 12 / 14 / 15 / 16 / 22、BR-ID-02 / 03 / 14 / 15 / 16、BR-PRICE-03 / 04 / 05 / 07 / 08 / 09 / 10 / 14 / 16 / 17 / 21 / 22；10 AC-S1-02-PDD、AC-S1-10、AC-S1-38-TB、AC-S1-57；design/references/interaction-patterns.md §2。线框级，不是视觉稿。</p>
+  <p>示例数字一律为样例值：价格、券、预估返（如 ¥45.67、¥0.12–¥0.34）、结算月份（11 月）、缓存取价时刻（14:05）、商品标题均为虚构，不是真实报价；素材卡的「券后 ¥35.9」「素材参考价 ¥28」取自 BR-PRICE-10 例与 AC-S1-38-TB。平台只用文字标签表示来源。用户输入样例取 BR-AI-07、BR-AI-24、01 J3 / J5、AC-S1-35 的例句；粘贴的链接、口令、订单号一律不写真实内容。</p>
+  <div class="wf-legend"><span><span class="wf-pin wf-pin--inline">1</span> 编号对应右侧注释</span><span><span class="wf-todo-tag">待定</span> 规划未定，见注释里的编号</span><span><span class="ag-ph">虚线框</span> 中性占位（文案或数据未定）</span></div>
+</header>
+
+<main class="wf-states">
+
+  <!-- ============ 状态 1 ============ -->
+  <section class="wf-state" aria-label="状态 1：首次使用 AgentConsent 单独同意">
+    <div>
+      <p class="wf-state__label">1. 首次使用 · AgentConsent 单独同意<small>进入 AI 助手时接口返回 10004（consent_type=ai_third_party）才弹；游客、登录用户都适用</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-anchor ag-blank"><span class="wf-pin">5</span></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+        <div class="wf-scrim"></div>
+        <div class="wf-sheet">
+          <div class="wf-anchor wf-row"><span class="wf-pin">1</span><span class="ag-ph">弹窗标题</span><span class="wf-todo-tag">待定</span></div>
+          <div class="wf-anchor wf-stack"><span class="wf-pin">2</span>
+            <p>对话内容和搜索词将发送给阿里云通义千问</p>
+            <p class="wf-row">对话日志保存期限：<span class="ag-ph">期限</span><span class="wf-todo-tag">待定</span></p>
+            <p>请勿输入他人姓名、地址等个人信息</p>
+            <div class="wf-row"><span class="ag-ph">同意文本其余正文</span><span class="wf-todo-tag">待定</span></div>
+          </div>
+          <div class="wf-anchor wf-row"><span class="wf-pin">3</span><span class="ag-check" role="checkbox" aria-checked="false"></span><span class="ag-ph">勾选框文字</span><span class="wf-todo-tag">待定</span></div>
+          <div class="wf-anchor wf-stack"><span class="wf-pin">4</span>
+            <button class="couli-button-primary wf-btn--block" type="button">同意并使用</button>
+            <button class="wf-btn wf-btn--block" type="button">暂不使用</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>AgentConsentSheet（独立弹窗）· <code>F-PRIV-07</code> · <code>BR-ID-14</code>、<code>BR-AI-13</code> · 路由 <code>AgentConsent</code>。只在收到 10004（ai_third_party）时弹，客户端不自行判断；30501 不弹。游客同意不随登录继承，登录后再弹一次（AI-16）；同意版本 +1 时重弹。标题 <span class="wf-todo-tag">待定</span> 见 06 Q-F3。</li>
+      <li>文案要点 · <code>BR-ID-14</code>「对话内容和搜索词将发送给阿里云通义千问」+ 对话日志保存期限（期限按 <code>BR-ID-30</code>，待法务）；<code>BR-AI-14</code> 细则「请勿输入他人姓名、地址等个人信息」。全文 <span class="wf-todo-tag">待定</span> 06 Q-F3；百炼是否用于训练（06 Q-G10）要写进同意文本。</li>
+      <li>勾选框 · <code>BR-ID-14</code> 默认不勾选。勾选框文字 <span class="wf-todo-tag">待定</span>（06 Q-F3）；未勾选时【同意并使用】是否置灰：规划未写。</li>
+      <li>【同意并使用】【暂不使用】· 文案取 <code>BR-AI-13</code> 细则、03 §7.5 · 同意后重放原请求（<code>BR-ID-14</code>）；暂不使用插入 accepted=false（<code>BR-AI-13</code>）→ 状态 2。</li>
+      <li>背景不显示对话 · <code>BR-TEXT-16</code>「AgentConsent 单独同意未完成时不展示对话」· 底部 Tab 仍在，其他功能不受影响（<code>BR-ID-14</code>）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 2 ============ -->
+  <section class="wf-state" aria-label="状态 2：未同意或已撤回">
+    <div>
+      <p class="wf-state__label">2. 未同意 / 已撤回 AI 服务同意<small>点了【暂不使用】，或在设置里【撤回 AI 服务同意】后再进入本页</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side"></span></div>
+        <div class="wf-body">
+          <div class="wf-empty">
+            <div class="wf-img"></div>
+            <div class="wf-anchor wf-row"><span class="wf-pin">1</span><span class="ag-ph">未同意时的说明文字</span><span class="wf-todo-tag">待定</span></div>
+            <div class="wf-anchor"><span class="wf-pin">2</span><button class="couli-button-primary" type="button">重新同意</button></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span class="wf-anchor"><span class="wf-pin">3</span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>说明文字 · <code>F-PRIV-07</code> · <code>BR-ID-14</code>「Agent 页显示说明」· 措辞与文案键 <span class="wf-todo-tag">待定</span>（06 Q-F3；BR-TEXT-22 无对应键）。</li>
+      <li>【重新同意】· <code>BR-ID-14</code> · 点后再弹 AgentConsentSheet（状态 1）· 路由 <code>AgentConsent</code>。</li>
+      <li>其他 Tab 照常可用 · <code>BR-ID-14</code>「拒绝后 App 其他功能不受影响」。撤回入口在设置【撤回 AI 服务同意】（<code>BR-AI-13</code>、<code>F-PRIV-04</code>），撤回后已有会话不对用户展示，重新同意后可再看未过期会话。注意：<code>BR-AI-13</code> 细则写「暂不使用 → 返回上一页」，本页是 Tab 根页面，按 BR-ID-14 画成留在本页（见页尾「规划空白」）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 3 ============ -->
+  <section class="wf-state" aria-label="状态 3：空态（新对话首屏）">
+    <div>
+      <p class="wf-state__label">3. 空态 · 新对话首屏<small>已同意、当前会话没有消息；重启 App 默认进入最近一个未过期会话（BR-AI-20）</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title"><span class="wf-anchor">凑狸 AI 助手<span class="wf-pin">1</span></span></span><span class="ag-nav-side ag-nav-side--right wf-anchor wf-link">新对话<span class="wf-pin">2</span></span></div>
+        <div class="ag-strip">
+          <div class="wf-anchor"><span class="wf-pin">3</span><span class="ag-ph">模型名称与登记编号（config.agent.filing_text）</span></div>
+          <div class="wf-anchor"><span class="wf-pin">4</span>推荐商品含推广链接，购买后本平台可能获得佣金。</div>
+        </div>
+        <div class="wf-body">
+          <div class="wf-anchor ag-brand"><span class="wf-pin">5</span><div class="wf-img"></div></div>
+          <div class="wf-anchor ag-text"><span class="wf-pin">6</span>我是凑狸 AI 助手。说说想买什么，我帮你找货、查返利。</div>
+          <div class="wf-anchor wf-chips"><span class="wf-pin">7</span>
+            <span class="wf-chip">示例问题 1</span><span class="wf-chip">示例问题 2</span><span class="wf-chip">示例问题 3</span><span class="wf-chip">示例问题 4</span><span class="wf-todo-tag">待定</span>
+          </div>
+          <div class="wf-anchor"><span class="wf-pin">8</span><button class="wf-btn" type="button">粘贴链接查返利</button></div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input wf-anchor"><span class="wf-pin">9</span><div class="couli-control"><span class="ag-ph">输入框占位文字</span><span class="wf-todo-tag">待定</span></div><button class="couli-button-primary ag-send" type="button" aria-disabled="true">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active wf-anchor"><span class="wf-pin">10</span><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>页面标题 · 文案键 <code>texts.agent.name</code>「凑狸 AI 助手」（<code>BR-TEXT-16</code>，拍板第二批 AI-22）· 路由 <code>AgentChat</code>（参数 <code>context</code>）。</li>
+      <li>新对话 · <code>F-AGENT-17</code> · <code>BR-AI-20</code>：只有「当前对话」与「新对话」，不做历史会话列表、不跨会话记忆（AI-23、AI-10）。</li>
+      <li>顶部公示条 · <code>F-PRIV-07</code> · <code>BR-ID-15</code> ③、<code>BR-TEXT-16</code> 取 <code>config.agent.filing_text</code>；登记前为空，不显示占位或虚构编号。登记前 model_label「内测模型」放在哪里 <span class="wf-todo-tag">待定</span>（规划未写，BR-TEXT-16 只给取值）。</li>
+      <li>佣金披露 · <code>F-AGENT-11</code> · <code>BR-AI-10</code> 文案键 <code>agent.disclaimer.commission</code>（BR-TEXT-22，BR-TEXT-13 例外放行）· Agent 相关性卡片不标「推广」（ad_label=null，BR-TEXT-17）；是否另标「广告」见 06 Q-F7（上线检查单）。</li>
+      <li>品牌图形 · interaction-patterns §2「轻量识别元素，不占主要输入区」· 素材按 design/ 交付，不得含平台商标。</li>
+      <li>欢迎语 · 文案键 <code>agent.welcome</code>（<code>BR-TEXT-22</code>）· 简短口语、不用表情（AI-22）。</li>
+      <li>示例问题 ×4 · 01 §4.1、03 §7.5 <code>config.agent.examples</code> · <code>F-ADM-12</code> 后台可配 · 内容 <span class="wf-todo-tag">待定</span>（规划未写）；点击后直接发送还是填进输入框：规划未写。</li>
+      <li>粘贴链接查返利 · 03 §7.5 · <code>F-AGENT-01</code> · 读取方式按 <code>BR-ID-16</code>（iOS 系统粘贴控件、Android 按钮、鸿蒙 PasteButton）；一条消息最多识别 3 个链接（<code>agent.notice.link_limit</code>）。粘贴后的出卡见状态 18，线报素材见状态 19。</li>
+      <li>输入框与发送 · 03 §7.5 最多 500 字（超出服务端 20001，<code>BR-AI-23</code> ⑤）· 只渲染段落、加粗、无序列表（03 §7.3）· 占位文字 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>底部 Tab「AI 助手」· 01 §4.1 · Tab 文案图标由 <code>/v1/config</code> 下发（<code>F-CFG-01</code>）；未开放时整个 Tab 换成「搜索」，见页尾。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 4 ============ -->
+  <section class="wf-state" aria-label="状态 4：受理中">
+    <div>
+      <p class="wf-state__label">4. 受理中<small>消息已受理、还没有卡片；发送入口变为停止，防重复发送</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="wf-bubble wf-bubble--user wf-anchor"><span class="wf-pin">1</span>纯牛奶 24盒 50以内</div>
+          <div class="ag-ai">
+            <div class="ag-text wf-anchor"><span class="wf-pin">2</span><span class="ag-dots" aria-label="加载中"><i></i><i></i><i></i></span></div>
+            <div class="wf-anchor wf-stack"><span class="wf-pin">3</span>
+              <div class="ag-tool"><span class="ag-spin"></span>正在搜索淘宝</div>
+              <div class="ag-tool"><span class="ag-spin"></span>正在搜索京东</div>
+              <div class="ag-tool"><span class="ag-spin"></span>正在搜索拼多多</div>
+            </div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input wf-anchor"><span class="wf-pin">4</span><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="wf-btn ag-send" type="button">停止生成</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>用户消息 · <code>F-AGENT-03</code> · <code>BR-AI-23</code>（client_msg_id 幂等，超时重试同一编号不重复计数）· 样例取 <code>BR-AI-24</code> 例句。</li>
+      <li>中性加载 · interaction-patterns §2「受理中」· 首个事件 P95 ≤1 秒（01 §7.1）；本条等待模型累计超过 8 秒（<code>agent.model_timeout_ms</code>，<code>BR-AI-14</code>；来源附注 01 <code>F-AGENT-13</code>）转无模型降级，见状态 11。不伪造模型思考过程。</li>
+      <li>进度条目 tool.status · 03 §7.2 · <code>BR-TEXT-16</code>：display_text 只描述动作（例「正在搜索淘宝」），不含用户原文；end / failed 后折叠。display_text 模板未进 BR-TEXT-22 字典（见页尾「规划空白」）。</li>
+      <li>停止生成 · 03 §7.2、§7.5 · <code>POST /v1/agent/runs/{run_id}/cancel</code>（04 §6.5）· 进行中再发送返回 30506「上一条还在回复中」（<code>BR-TEXT-14</code>、<code>BR-AI-23</code> ⑦），发送保持禁用到本条结束。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 5 ============ -->
+  <section class="wf-state" aria-label="状态 5：部分结果逐步出卡">
+    <div>
+      <p class="wf-state__label">5. 部分结果 · 逐步出卡<small>已有卡片到达，说明文字仍在逐句出现，本条还没结束（未收到 done）</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="wf-bubble wf-bubble--user">纯牛奶 24盒 50以内</div>
+          <div class="ag-ai">
+            <div class="wf-anchor ag-tool"><span class="wf-pin">1</span><span class="ag-ph">进度条目已折叠</span></div>
+            <div class="ag-text wf-anchor"><span class="wf-pin">2</span><div class="wf-line" style="width: 100%"></div><div class="wf-row"><div class="wf-line" style="width: 120px"></div><span class="ag-caret"></span></div></div>
+            <div class="ag-list wf-anchor"><span class="wf-pin">3</span>
+              <div class="wf-card ag-pcard">
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 纯牛奶 250ml×24盒</div>
+                  <div class="ag-tags"><span class="wf-tag wf-tag--source">京东</span><span class="wf-tag wf-tag--brand">标题显示为24盒</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥45.67</span><span class="ag-sub">券前 ¥55.67 · 券 ¥10</span></div>
+                  <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥1.23</span><span class="ag-sub">预估返后 ¥44.44</span></div>
+                  <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+                </div>
+              </div>
+              <div class="wf-card ag-pcard">
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 纯牛奶 整箱装</div>
+                  <div class="ag-tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag wf-tag--pending">规格待确认</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥43.21</span><span class="ag-sub">券前 ¥48.21 · 券 ¥5</span></div>
+                  <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.12–¥0.34</span><span class="ag-sub">预估返后 ¥43.09</span></div>
+                  <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+                </div>
+              </div>
+              <div class="ag-disc wf-anchor"><span class="wf-pin">6</span>券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　预估返利以平台结算为准，未结算或订单失效时不返　以结算为准<span class="ag-disc__todo"><span class="ag-ph">卡片级佣金披露（agent.disclaimer.commission）的挂法</span><span class="wf-todo-tag">待定</span></span></div>
+            </div>
+          </div>
+        </div>
+        <span class="ag-fab wf-anchor"><span class="wf-pin">4</span>回到底部</span>
+        <div class="wf-footer">
+          <div class="ag-input wf-anchor"><span class="wf-pin">5</span><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="wf-btn ag-send" type="button">停止生成</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>已折叠的进度条目 · 03 §7.2（tool.status end 后折叠）· 折叠后显示什么：规划未写，画成占位。</li>
+      <li>说明文字逐句出现 · 03 §7.2 text.delta 按 seq 追加 · <code>BR-AI-06</code> 按句缓冲、整轮 ≤2 句，金额在文本里被替换为「见卡片」，URL 与口令片段删除 · 模型生成内容，画成灰条。</li>
+      <li>已到达的商品卡先可读 · <code>F-AGENT-03</code> · <code>BR-AI-04</code>（卡上数字只来自服务端组装）· interaction-patterns §2「卡片逐步可读，保留原阅读位置」。但 04 §8.3 的 product_list 是一张带 items[] 的卡，一轮结果是整张一次到达还是分多张 product_list 先后到达（例如按平台）<span class="wf-todo-tag">待定</span>，规划未写（见页尾「规划空白」第 2 条）；本图按「先到 2 张」示意。</li>
+      <li>回到底部 · 03 §7.5：用户未手动上滑时跟随新内容滚动；上滑后显示「回到底部」。</li>
+      <li>停止生成仍在 · 03 §7.2：done / error 到达前不显示赞踩与 AiLabel（见状态 6）。</li>
+      <li>口径说明 DisclaimerFooter · <code>BR-PRICE-03</code>（Agent 卡片流每屏列表底部一次全文）、<code>BR-PRICE-17</code>（按当屏卡片的 disclaimer_keys 合并：京东 normal 卡带 rebate_estimate，淘宝区间卡带 rebate_compare「以结算为准」）· done 之前已有卡片时也照常显示 · 单卡右上角 i 图标（BR-PRICE-03 例 3）· 卡片级佣金披露挂法 <span class="wf-todo-tag">待定</span>，全页同一占位（页尾「规划空白」第 4 条）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 6 ============ -->
+  <section class="wf-state" aria-label="状态 6：结果完整">
+    <div>
+      <p class="wf-state__label">6. 结果完整<small>收到 done；4 张卡用列表布局（≤3 张时纵向大卡，03 §7.4）</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="wf-bubble wf-bubble--user">纯牛奶 24盒 50以内</div>
+          <div class="ag-ai">
+            <div class="ag-tags wf-anchor"><span class="wf-pin">1</span><span class="ag-ph">平台</span><span class="ag-ph">预算</span><span class="ag-ph">规格</span><span class="wf-todo-tag">待定</span></div>
+            <div class="ag-text wf-anchor"><span class="wf-pin">2</span><div class="wf-line" style="width: 100%"></div><div class="wf-line" style="width: 70%"></div></div>
+            <div class="ag-list">
+              <div class="wf-card ag-pcard wf-anchor"><span class="wf-pin">3</span>
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 纯牛奶 250ml×24盒</div>
+                  <div class="ag-tags wf-anchor"><span class="wf-pin">4</span><span class="wf-tag wf-tag--source">京东</span><span class="wf-tag wf-tag--brand">标题显示为24盒</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row wf-anchor"><span class="wf-pin">5</span><span class="ag-sub">券后</span><span class="wf-amount">¥45.67</span><span class="ag-sub">券前 ¥55.67 · 券 ¥10</span></div>
+                  <div class="ag-row wf-anchor"><span class="wf-pin">6</span><span class="wf-tag wf-tag--pending">预估返 ¥1.23</span><span class="ag-sub">预估返后 ¥44.44</span></div>
+                  <div class="ag-buyrow wf-anchor"><span class="wf-pin">7</span><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+                </div>
+              </div>
+              <div class="wf-card ag-pcard">
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 纯牛奶 整箱装</div>
+                  <div class="ag-tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag wf-tag--pending">规格待确认</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥43.21</span><span class="ag-sub">券前 ¥48.21 · 券 ¥5</span></div>
+                  <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.12–¥0.34</span><span class="ag-sub">预估返后 ¥43.09</span></div>
+                  <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+                </div>
+              </div>
+              <div class="wf-card ag-pcard wf-anchor"><span class="wf-pin">11</span>
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 纯牛奶 200ml×24盒</div>
+                  <div class="ag-tags"><span class="wf-tag wf-tag--source">拼多多</span><span class="wf-tag wf-tag--brand">标题显示为24盒</span></div>
+                  <div class="ag-row"><span class="ag-sub">拼单价</span><span class="wf-amount">¥39.87</span><span class="ag-sub"><span class="ag-ph">无券状态的呈现</span><span class="wf-todo-tag">待定</span></span></div>
+                  <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.56</span><span class="ag-sub">预估返后 ¥39.31</span></div>
+                  <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">去购买</button></div>
+                </div>
+              </div>
+              <div class="wf-card ag-pcard wf-anchor"><span class="wf-pin">12</span>
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 纯牛奶 24盒 礼盒</div>
+                  <div class="ag-tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag wf-tag--brand">标题显示为24盒</span><span class="wf-tag">预售</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥44.56</span><span class="ag-sub">券前 ¥49.56 · 券 ¥5</span></div>
+                  <div class="ag-sub">定金与尾款以下单页为准</div>
+                  <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.11–¥0.22</span><span class="ag-sub">预估返后 ¥44.45</span></div>
+                  <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+                </div>
+              </div>
+              <div class="ag-disc wf-anchor"><span class="wf-pin">8</span>券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　预估返利以平台结算为准，未结算或订单失效时不返　以结算为准<span class="ag-disc__todo"><span class="ag-ph">卡片级佣金披露（agent.disclaimer.commission）的挂法</span><span class="wf-todo-tag">待定</span></span></div>
+            </div>
+            <div class="ag-meta wf-anchor"><span class="wf-pin">9</span><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+            <div class="wf-chips wf-anchor"><span class="wf-pin">10</span><span class="wf-chip">快捷追问 1</span><span class="wf-chip">快捷追问 2</span><span class="wf-chip">快捷追问 3</span><span class="wf-todo-tag">待定</span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>条件回显短标签（平台、预算、规格）· interaction-patterns §2 · <code>BR-AI-08</code>、<code>BR-AI-24</code>（检索条件不能当成商品事实标签）· 数据来源与文案 <span class="wf-todo-tag">待定</span>：04 §8 流协议没有下发本轮检索条件的字段，规划未写（页尾「规划空白」第 1 条）。</li>
+      <li>说明文字 · <code>BR-AI-06</code> 整轮 ≤2 句，金额替换为「见卡片」· <code>BR-AI-24</code> 不做逐张推荐理由（AI-08）· 模型生成，画成灰条。</li>
+      <li>商品卡 product_list · <code>F-AGENT-03</code>、<code>F-AGENT-11</code> · 布局按 card.layout 与张数（03 §7.4）· 排序默认相关性、不含佣金权重（<code>BR-AI-09</code>）· 点卡片 → 路由 <code>ProductDetail</code>。</li>
+      <li>标签行 · 来源 PlatformBadge 只用文字（03 §10.2）；条件标记 MatchBadge 取 <code>agent.match.title_shows</code>「标题显示为{spec}」/ <code>agent.match.spec_unconfirmed</code>「规格待确认」/ <code>agent.match.matched</code>「符合条件」/ <code>agent.match.relaxed</code>「已放宽条件」（<code>BR-AI-24</code>、BR-TEXT-22）；服务端标签 benefit_tags 如「有券」「预售」（04 §8.3，AI-08）。标签配色为线框示意。</li>
+      <li>价格 PriceTag · <code>BR-PRICE-04</code>、<code>BR-PRICE-05</code>：有券「券后 ¥x」+ 副行「券前 ¥x · 券 ¥y」，不划线、不用「原价」；无券「售价 ¥x」；拼多多加「拼单」· 格式 <code>BR-TEXT-10</code>（去末尾 0）。无券卡、预售卡见第 11、12 条。</li>
+      <li>返利 RebateTag · <code>BR-PRICE-07</code>：淘宝 Agent 卡按比价风险显示区间「预估返 ¥a–¥b」，京东、拼多多单值；「预估返后」<code>BR-PRICE-09</code>（rebate_min_fen &gt; 0 才显示）· 单卡 i 图标放在卡片右上角，点开看口径全文（<code>BR-PRICE-03</code> 细则例 3）· 术语按 <code>BR-TEXT-01</code>（结算前一律「预估」）。</li>
+      <li>购买按钮 · <code>F-LINK-01</code>、<code>F-AGENT-08</code> · cta 文案键 <code>btn.buy.coupon</code>「领券购买」/ <code>btn.buy</code>「去购买」/ <code>btn.buy.no_rebate</code>「去购买（无返利）」（<code>BR-PRICE-21</code>，服务端按三态下发）· 点击 → <code>POST /v1/links/{link_id}/open</code> 实时复核，价格变动、券失效弹窗与商品详情共用流程（<code>BR-PRICE-13</code>、<code>BR-PRICE-14</code>）；Agent 专属的下架置灰 +「换一批」见状态 21 · 外跳前 <code>JumpTip</code>。</li>
+      <li>口径说明 DisclaimerFooter · <code>BR-PRICE-03</code>、<code>BR-PRICE-17</code>：按当屏卡片 disclaimer_keys 合并，price_basis、rebate_estimate、rebate_compare（淘宝比价风险卡）每屏底部显示一次全文。佣金披露：页面级在顶部公示条（<code>agent.disclaimer.commission</code>，<code>BR-AI-10</code> ①「Agent 页」）；卡片级怎么挂 <span class="wf-todo-tag">待定</span>，全页卡片状态统一画成这个占位（页尾「规划空白」第 4 条）。</li>
+      <li>AI 标识与反馈 · <code>BR-TEXT-16</code> 文案键 <code>texts.ai_label</code>「内容由 AI 生成，仅供参考」（以 meta.ai_label 为准）· 赞 / 踩（<code>F-AGENT-16</code>，踩自动标 badcase）· 长按举报（<code>BR-ID-15</code> ④，处理时限见该条）。法定措辞以法务为准（BR-ID-15 待决策）。</li>
+      <li>快捷追问 suggestions ≤3 · <code>BR-AI-06</code>：由服务端从 <code>agent.suggest.&lt;intent&gt;.*</code> 选取，模型不生成；点击发送 send_text（04 §8.2）· 找货意图的文案 <span class="wf-todo-tag">待定</span>（BR-TEXT-22 只给了 no_result 三条）。</li>
+      <li>无券卡（无券有返）· <code>BR-PRICE-04</code>：拼多多无券只显示「拼单价 ¥x」，不带「券后」、不显示券前价；「并显示无券状态」的呈现方式 <span class="wf-todo-tag">待定</span>（规划未写，与首页线框同一占位）· 按钮 <code>btn.buy</code>「去购买」（<code>BR-PRICE-21</code>）· 检索时券已过期的商品也按无券出卡（<code>BR-PRICE-14</code>）。</li>
+      <li>预售卡 · <code>BR-PRICE-22</code> · 标签 <code>tag.presale</code>「预售」、价格旁说明 <code>presale.price_note</code>「定金与尾款以下单页为准」（<code>BR-TEXT-12</code> 细则）；按定金 + 尾款总价显示，不单独显示定金或尾款；预售判定字段待 CAP-TB-02 / CAP-JD-02 / CAP-PDD-02 实测。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 7 ============ -->
+  <section class="wf-state" aria-label="状态 7：同轮追问">
+    <div>
+      <p class="wf-state__label">7. 同轮追问<small>在上一轮结果上改条件（第 N 个、换平台、再便宜点、换一批）</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="ag-ph ag-ph--block wf-anchor"><span class="wf-pin">1</span>上一轮：用户消息 + 4 张商品卡（同状态 6，已滚出屏幕）</div>
+          <div class="wf-bubble wf-bubble--user wf-anchor"><span class="wf-pin">2</span>第二个换成拼多多的</div>
+          <div class="ag-ai">
+            <div class="ag-tags wf-anchor"><span class="wf-pin">3</span><span class="ag-ph">追加的条件</span><span class="wf-todo-tag">待定</span></div>
+            <div class="ag-text"><div class="wf-line" style="width: 80%"></div></div>
+            <div class="wf-card ag-pcard ag-pcard--lg wf-anchor"><span class="wf-pin">4</span>
+              <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+              <div class="ag-pinfo">
+                <div class="ag-ptitle">样例标题 纯牛奶 24盒 整箱</div>
+                <div class="ag-tags"><span class="wf-tag wf-tag--source">拼多多</span><span class="wf-tag wf-tag--brand">标题显示为24盒</span><span class="wf-tag">有券</span></div>
+                <div class="ag-row"><span class="ag-sub">拼单券后</span><span class="wf-amount">¥41.23</span><span class="ag-sub">拼单券前 ¥44.23 · 券 ¥3</span></div>
+                <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.45</span><span class="ag-sub">预估返后 ¥40.78</span></div>
+                <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+              </div>
+            </div>
+            <div class="ag-disc wf-anchor"><span class="wf-pin">7</span>券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　预估返利以平台结算为准，未结算或订单失效时不返<span class="ag-disc__todo"><span class="ag-ph">卡片级佣金披露（agent.disclaimer.commission）的挂法</span><span class="wf-todo-tag">待定</span></span></div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+          <div class="wf-bubble wf-bubble--user wf-anchor"><span class="wf-pin">5</span>再便宜点</div>
+          <div class="ag-ai">
+            <div class="wf-banner wf-banner--info wf-anchor"><span class="wf-pin">6</span>没有找到比当前结果更便宜的商品。</div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>上一轮结果留在上方 · <code>BR-AI-05</code> 服务端保存每轮结果集（agent_result_sets），card_id 会话内累计不复用 · 新结果追加在下方，不改写旧卡。</li>
+      <li>追问 · <code>F-AGENT-05</code> · <code>BR-AI-05</code>：「第 N 个」按最近结果集序号解析；「换成 X 平台」只改平台；「换一批」翻页、不与上一批重复（AC-S1-47）· 指代解析失败出 clarify：3 个快捷选项、每个槽位只追问 1 次，仍失败出 <code>agent.notice.ordinal_default</code>「已按第 1 个商品处理。」（<code>BR-AI-01</code>）· 例句取 01 J3 ③、AC-S1-35。</li>
+      <li>追加条件的回显 · interaction-patterns §2「显示用户追加的条件」· <span class="wf-todo-tag">待定</span>，同状态 6 第 1 条（04 §8 无字段）。</li>
+      <li>新结果卡 · 每张新卡有新 link_id（<code>BR-PRICE-12</code>）· 1 张时用纵向大卡（03 §7.4）· 拼多多「拼单券后」（<code>BR-PRICE-04</code>）。</li>
+      <li>「再便宜点」· <code>BR-AI-05</code>、<code>BR-PRICE-15</code>：价格上限由服务端算，模型只输出意图。</li>
+      <li>没有更便宜的 · 文案键 <code>agent.notice.no_cheaper</code>（BR-TEXT-22）· 保留原结果集、不放宽（<code>BR-AI-08</code>）。notice 卡 level 为 info / warn（04 §8.3），配色为线框示意。</li>
+      <li>口径说明 · <code>BR-PRICE-03</code>（每屏列表底部一次全文）· 本屏只有拼多多 normal 卡，disclaimer_keys = price_basis + rebate_estimate（<code>BR-PRICE-17</code>）· 卡片级佣金披露同状态 6 第 8 条 <span class="wf-todo-tag">待定</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 8 ============ -->
+  <section class="wf-state" aria-label="状态 8：条件被放宽">
+    <div>
+      <p class="wf-state__label">8. 条件被放宽<small>原条件无结果，服务端先去规格、再去价格上限（最多 2 次）后出卡</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="wf-bubble wf-bubble--user">纯牛奶 24盒 50以内</div>
+          <div class="ag-ai">
+            <div class="ag-ph ag-ph--block wf-anchor"><span class="wf-pin">1</span>原始条件摘要<span class="wf-todo-tag">待定</span></div>
+            <div class="wf-banner wf-banner--warning wf-anchor"><span class="wf-pin">2</span>已放宽规格条件。</div>
+            <div class="ag-list wf-anchor"><span class="wf-pin">4</span>
+              <div class="wf-card ag-pcard ag-pcard--lg">
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 纯牛奶 12盒</div>
+                  <div class="ag-tags wf-anchor"><span class="wf-pin">3</span><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag wf-tag--warning">已放宽条件</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥23.45</span><span class="ag-sub">券前 ¥26.45 · 券 ¥3</span></div>
+                  <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.11–¥0.31</span><span class="ag-sub">预估返后 ¥23.34</span></div>
+                  <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+                </div>
+              </div>
+              <div class="wf-card ag-pcard ag-pcard--lg">
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 纯牛奶 200ml×16盒</div>
+                  <div class="ag-tags"><span class="wf-tag wf-tag--source">京东</span><span class="wf-tag wf-tag--warning">已放宽条件</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥31.23</span><span class="ag-sub">券前 ¥36.23 · 券 ¥5</span></div>
+                  <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.89</span><span class="ag-sub">预估返后 ¥30.34</span></div>
+                  <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+                </div>
+              </div>
+              <div class="ag-disc">券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　预估返利以平台结算为准，未结算或订单失效时不返　以结算为准<span class="ag-disc__todo"><span class="ag-ph">卡片级佣金披露（agent.disclaimer.commission）的挂法</span><span class="wf-todo-tag">待定</span></span></div>
+            </div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>原始条件摘要 · interaction-patterns §2「保留原始条件摘要」· <span class="wf-todo-tag">待定</span>：数据来源与文案规划未写（同状态 6 第 1 条）。</li>
+      <li>整组放宽提示 · 文案键 <code>agent.notice.relaxed_spec</code>「已放宽规格条件。」；去价格上限时 <code>agent.notice.relaxed_price</code>「已放宽价格条件。」· <code>BR-AI-08</code>（先去规格、再去价格上限，下限保留）· <code>F-AGENT-13</code> · AC-S1-46。</li>
+      <li>逐卡「已放宽条件」· 文案键 <code>agent.match.relaxed</code> · <code>BR-AI-24</code>：放宽后才入选、且不满足原始规格或价格的卡；不得写「符合你的要求」。</li>
+      <li>不把放宽结果包装成全部满足 · interaction-patterns §2 · ≤3 张用纵向大卡（03 §7.4）· 口径说明照常每屏一次（<code>BR-PRICE-03</code>）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 9 ============ -->
+  <section class="wf-state" aria-label="状态 9：无结果">
+    <div>
+      <p class="wf-state__label">9. 无结果（含禁售拦截）<small>两次放宽后仍无结果；另一片段为查询词命中禁售清单</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="wf-bubble wf-bubble--user">纯牛奶 24盒 50以内</div>
+          <div class="ag-ai">
+            <div class="wf-banner wf-banner--info wf-anchor"><span class="wf-pin">1</span>没有找到符合条件的商品。</div>
+            <div class="wf-chips wf-anchor"><span class="wf-pin">2</span><span class="wf-chip">去掉价格条件再找</span><span class="wf-chip">只搜纯牛奶</span><span class="wf-chip">换个平台看看</span></div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+          <div class="ag-frag">片段 b · 查询词命中禁售清单</div>
+          <div class="wf-bubble wf-bubble--user"><span class="ag-ph">命中禁售清单的查询（样例略）</span></div>
+          <div class="ag-ai">
+            <div class="ag-text wf-anchor"><span class="wf-pin">3</span>这类商品不在可推荐范围内。</div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>无结果 notice · 文案键 <code>agent.notice.no_result</code>（BR-TEXT-22）· <code>BR-AI-08</code>（Agent 无结果处理的唯一维护处）· <code>F-AGENT-13</code> · 01 J3 ⑤「如实告知」· AC-S1-46。与「请求失败」分开表达（见状态 10、11、17）。</li>
+      <li>3 个快捷改写 · 文案键 <code>agent.suggest.no_result.1–3</code>「去掉价格条件再找｜只搜{q_short}｜换个平台看看」，{q_short} 样例为「纯牛奶」· 服务端下发、模型不生成（<code>BR-AI-06</code>）· 点击发送 send_text。</li>
+      <li>禁售拦截 · 文案键 <code>agent.refuse.prohibited</code> · <code>BR-AI-18</code>、<code>F-PROD-08</code>：查询词命中不检索、结果全被过滤也用这句，不放宽；计 1 条。同一样式的固定话术还有 <code>agent.refuse.out_of_scope</code>、<code>agent.refuse.advice</code>、<code>agent.refuse.unsafe</code> 等，不单独画。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 10 ============ -->
+  <section class="wf-state" aria-label="状态 10：部分平台失败">
+    <div>
+      <p class="wf-state__label">10. 部分平台失败<small>某一平台检索失败，其他平台照常出卡；片段 b 为失败平台改用缓存出卡的另一种处理</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="wf-bubble wf-bubble--user">纯牛奶 24盒 50以内</div>
+          <div class="ag-ai">
+            <div class="wf-banner wf-banner--warning wf-anchor"><span class="wf-pin">1</span>京东暂时查不到</div>
+            <div class="ag-text"><div class="wf-line" style="width: 90%"></div></div>
+            <div class="ag-list wf-anchor"><span class="wf-pin">2</span>
+              <div class="wf-card ag-pcard ag-pcard--lg">
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 纯牛奶 整箱装</div>
+                  <div class="ag-tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag wf-tag--pending">规格待确认</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥43.21</span><span class="ag-sub">券前 ¥48.21 · 券 ¥5</span></div>
+                  <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.12–¥0.34</span><span class="ag-sub">预估返后 ¥43.09</span></div>
+                  <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+                </div>
+              </div>
+              <div class="wf-card ag-pcard ag-pcard--lg">
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 纯牛奶 200ml×24盒</div>
+                  <div class="ag-tags"><span class="wf-tag wf-tag--source">拼多多</span><span class="wf-tag wf-tag--brand">标题显示为24盒</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row"><span class="ag-sub">拼单券后</span><span class="wf-amount">¥39.87</span><span class="ag-sub">拼单券前 ¥42.87 · 券 ¥3</span></div>
+                  <div class="ag-row wf-anchor"><span class="wf-pin">3</span><span class="wf-tag wf-tag--pending">预估返 ¥0.56</span><span class="ag-sub">预估返后 ¥39.31</span></div>
+                  <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+                </div>
+              </div>
+              <div class="ag-disc">券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　预估返利以平台结算为准，未结算或订单失效时不返　以结算为准<span class="ag-disc__todo"><span class="ag-ph">卡片级佣金披露（agent.disclaimer.commission）的挂法</span><span class="wf-todo-tag">待定</span></span></div>
+            </div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+          <div class="ag-frag">片段 b · 另一种处理：京东改用 5 分钟内缓存出卡（与片段 a 二选一，<span class="wf-todo-tag">待定</span>）</div>
+          <div class="wf-card ag-pcard wf-anchor"><span class="wf-pin">4</span>
+            <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+            <div class="ag-pinfo">
+              <div class="ag-ptitle">样例标题 纯牛奶 250ml×24盒</div>
+              <div class="ag-tags"><span class="wf-tag wf-tag--source">京东</span><span class="wf-tag wf-tag--brand">标题显示为24盒</span><span class="wf-tag">有券</span></div>
+              <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥45.67</span><span class="ag-sub">券前 ¥55.67 · 券 ¥10</span></div>
+              <div class="ag-sub">价格更新于 14:05</div>
+              <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥1.23</span><span class="ag-sub">预估返后 ¥44.44</span></div>
+              <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>单平台失败提示 · <code>BR-TEXT-14</code> 表 C「{platform_name}暂时查不到」· <code>F-AGENT-13</code>「单平台失败其余照常」· 用 tool.status failed 条目还是 notice 卡承载 <span class="wf-todo-tag">待定</span>（规划未写）。与「没有匹配」（状态 9）分开。</li>
+      <li>其他平台照常出卡 · <code>BR-AI-04</code> 异常例 · 失败平台也可能改用 5 分钟内缓存出卡，此时卡上显示「价格更新于 hh:mm」（距出卡 &gt;60 秒时）；两种处理何时用哪种 <span class="wf-todo-tag">待定</span>（BR-AI-04 写成二选一，见页尾「规划空白」第 9 条）。</li>
+      <li>金额照常只在卡片上 · <code>BR-AI-04</code>、<code>BR-PRICE-16</code> · 必需字段任一取不到（null）该商品不出卡，不用 0 或过期缓存补位。</li>
+      <li>缓存出卡 · <code>BR-AI-04</code> 细则「搜索缓存」②：命中缓存时 quoted_at 沿用原始上游取数时间，距出卡 &gt;60 秒时卡上显示「价格更新于 hh:mm」（时间格式 <code>BR-TEXT-11</code>，04 §8.3 <code>quoted_at</code> / <code>stale</code> / <code>age_sec</code>）；缓存年龄超过 <code>agent.search_cache_ttl_s</code>（300 秒）的不出卡 · 用了缓存就不再显示「京东暂时查不到」· 这句没有字典键、在卡上的位置规划未写 <span class="wf-todo-tag">待定</span>；失败平台到底用不用缓存仍是第 2 条的待定项。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 11 ============ -->
+  <section class="wf-state" aria-label="状态 11：模型降级">
+    <div>
+      <p class="wf-state__label">11. 模型降级<small>主、备模型都失败、本条等待模型累计超过 8 秒（agent.model_timeout_ms）或当日预算用完：按关键词普通搜索出卡；片段 b 为搜索也失败</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="wf-bubble wf-bubble--user">纯牛奶 24盒 50以内</div>
+          <div class="ag-ai">
+            <div class="ag-text wf-anchor"><span class="wf-pin">1</span>先按关键词为你找到这些商品，详情见卡片。</div>
+            <div class="ag-list wf-anchor"><span class="wf-pin">2</span>
+              <div class="wf-card ag-pcard">
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 纯牛奶 250ml×24盒</div>
+                  <div class="ag-tags"><span class="wf-tag wf-tag--source">京东</span><span class="ag-ph">条件标记</span><span class="wf-todo-tag">待定</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥45.67</span><span class="ag-sub">券前 ¥55.67 · 券 ¥10</span></div>
+                  <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥1.23</span><span class="ag-sub">预估返后 ¥44.44</span></div>
+                  <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+                </div>
+              </div>
+              <div class="wf-card ag-pcard">
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 纯牛奶 24盒 整箱</div>
+                  <div class="ag-tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="ag-ph">条件标记</span><span class="wf-todo-tag">待定</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥43.21</span><span class="ag-sub">券前 ¥48.21 · 券 ¥5</span></div>
+                  <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.12–¥0.34</span><span class="ag-sub">预估返后 ¥43.09</span></div>
+                  <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+                </div>
+              </div>
+              <div class="ag-disc wf-anchor"><span class="wf-pin">5</span>券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　预估返利以平台结算为准，未结算或订单失效时不返　以结算为准<span class="ag-disc__todo"><span class="ag-ph">卡片级佣金披露（agent.disclaimer.commission）的挂法</span><span class="wf-todo-tag">待定</span></span></div>
+            </div>
+            <div class="ag-meta wf-anchor"><span class="wf-pin">3</span><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+          <div class="ag-frag">片段 b · 关键词搜索在全部平台也失败（error 50302）</div>
+          <div class="wf-bubble wf-bubble--user">纯牛奶 24盒 50以内</div>
+          <div class="ag-sys wf-anchor"><span class="wf-pin">4</span>
+            <span>AI 暂不可用，可以先用搜索找货</span>
+            <div class="wf-row"><button class="wf-btn" type="button"><span class="ag-ph">按钮 → Search</span></button><span class="wf-todo-tag">待定</span></div>
+          </div>
+          <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>降级固定话术 · 文案键 <code>agent.degraded</code>（BR-TEXT-22）· <code>BR-AI-14</code> 无模型降级、<code>BR-AI-16</code> 预算用完同此（拍板第二批 AI-05）· <code>F-AGENT-13</code> · AC-S1-57 ①；关键词搜索无结果用 <code>agent.degraded.empty</code>「没找到相关商品，换个关键词试试。」</li>
+      <li>降级出的商品卡 · 卡片数字与普通搜索一致（AC-S1-57）· 降级不抽取价格与规格条件（<code>BR-AI-14</code>），卡上条件标记显示什么 <span class="wf-todo-tag">待定</span>（页尾「规划空白」第 3 条，照 BR-AI-24 会显示「符合条件」，与未校验的事实不符）。</li>
+      <li>不显示错误提示 · <code>BR-TEXT-22</code> 例「不出现错误提示」· 不返回错误码，finish_reason=fallback / budget；照常计 1 条（<code>BR-AI-15</code>）· AI 标识照常。</li>
+      <li>搜索也失败 · error 50302 · <code>BR-TEXT-14</code>「AI 暂不可用，可以先用搜索找货」· 跳路由 <code>Search</code> 并预填关键词（<code>BR-AI-14</code>、<code>BR-TEXT-14</code>：data.fallback 带 q）· 注意 04 §8.2 的 fallback 示例和 AC-S1-57 ② 写的是页面标识 search_page，关键词放哪个字段对不上 <span class="wf-todo-tag">待定</span>（页尾「规划空白」第 11 条）· 按钮文字 <span class="wf-todo-tag">待定</span>（BR-TEXT-14 只写动作）；是否改为自动跳转：规划未写 · error 是终止事件，下面照常显示 AiLabel 与赞踩（03 §7.2「done / error 收到后显示」）。</li>
+      <li>口径说明 · <code>BR-PRICE-03</code>：降级卡与普通卡一样每屏底部一次全文（京东 rebate_estimate + 淘宝 rebate_compare，<code>BR-PRICE-17</code>）· 卡片级佣金披露同状态 6 第 8 条 <span class="wf-todo-tag">待定</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 12 ============ -->
+  <section class="wf-state" aria-label="状态 12：游客档额度">
+    <div>
+      <p class="wf-state__label">12. 游客 · 游客档额度（已登录未绑手机同档）<small>登记编号填好、全量开放后。本图画的是游客：可找货看卡，购买要先登录；已登录未绑手机的用户额度同档，但可直接购买，也不会出现「登录查看返利」（BR-ID-03、BR-AI-11）</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="wf-row wf-anchor"><span class="wf-pin">1</span><span class="ag-ph">今日剩余次数提示</span><span class="wf-todo-tag">待定</span></div>
+          <div class="wf-bubble wf-bubble--user">纸巾 30以内</div>
+          <div class="ag-ai">
+            <div class="ag-text"><div class="wf-line" style="width: 85%"></div></div>
+            <div class="ag-list">
+              <div class="wf-card ag-pcard ag-pcard--lg">
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 抽纸 整箱</div>
+                  <div class="ag-tags wf-anchor"><span class="wf-pin">2</span><span class="wf-tag wf-tag--source">京东</span><span class="wf-tag wf-tag--brand">符合条件</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥26.78</span><span class="ag-sub">券前 ¥29.78 · 券 ¥3</span></div>
+                  <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.67</span><span class="ag-sub">预估返后 ¥26.11</span></div>
+                  <div class="ag-buyrow wf-anchor"><span class="wf-pin">3</span><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+                </div>
+              </div>
+              <div class="wf-card ag-pcard ag-pcard--lg wf-anchor"><span class="wf-pin">4</span>
+                <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+                <div class="ag-pinfo">
+                  <div class="ag-ptitle">样例标题 抽纸 多包装</div>
+                  <div class="ag-tags"><span class="wf-tag wf-tag--source">拼多多</span><span class="wf-tag wf-tag--brand">符合条件</span><span class="wf-tag">有券</span></div>
+                  <div class="ag-row"><span class="ag-sub">拼单券后</span><span class="wf-amount">¥18.76</span><span class="ag-sub">拼单券前 ¥20.76 · 券 ¥2</span></div>
+                  <div class="ag-row"><span class="wf-tag">登录查看返利</span></div>
+                  <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">登录查看返利</button></div>
+                </div>
+              </div>
+              <div class="ag-disc wf-anchor"><span class="wf-pin">6</span>券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　预估返利以平台结算为准，未结算或订单失效时不返<span class="ag-disc__todo"><span class="ag-ph">卡片级佣金披露（agent.disclaimer.commission）的挂法</span><span class="wf-todo-tag">待定</span></span></div>
+            </div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+        </div>
+        <span class="wf-toast"><span class="wf-anchor">请先登录<span class="wf-pin">5</span></span></span>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>游客档额度 · <code>F-AGENT-14</code> · <code>BR-ID-03</code>：游客与已登录未绑手机同档，按设备（device_hash）与 IP 计；额度数值只在 <code>BR-AI-15</code> 维护 · 是否在页面显示剩余次数（done.quota_left）<span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>未给规格时的条件标记 · 文案键 <code>agent.match.matched</code>「符合条件」（<code>BR-AI-24</code>：只表示价格、平台、权益条件经服务端校验满足）· 例句取 BR-AI-24「纸巾 30 以内」。</li>
+      <li>游客点购买 · <code>BR-AI-11</code>、<code>BR-ID-02</code>：返回 10001「请先登录」（<code>BR-TEXT-14</code>）→ 路由 <code>Login</code>，登录成功后在 pending_action 有效期内恢复同一 link_id（<code>BR-ATTR-05</code>）；过期只回到对话页并提示「请重新点击购买」（BR-AI-11 细则）。已登录未绑手机可直接购买。</li>
+      <li>登录查看返利（条件项，开关 <code>agent.guest_login_to_view.&lt;platform&gt;</code> 默认关）· <code>F-AGENT-08</code> · <code>BR-AI-11</code>、<code>BR-TEXT-14</code> 表 C <code>rebate_login_to_view</code>：替代返利标签，按钮同文案，不显示返利数值与预估返后 · AC-S1-58 · <strong>只对游客卡出现</strong>（BR-AI-11「游客卡按平台开关…改为登录查看返利」）；已登录未绑手机的用户照常显示预估返、可直接购买（BR-AI-11 身份表、<code>BR-ID-02</code>）。拿不到佣金率的平台以 09 实测为准，不画成承诺。</li>
+      <li>请先登录 · <code>BR-TEXT-14</code> error.10001 · 法务若要求收紧：<code>agent.guest_daily_quota=0</code> 时游客整页调用返回 10001，<code>agent.require_phone=true</code> 时未绑手机返回 10005（<code>BR-ID-03</code>），不另画。</li>
+      <li>口径说明 · <code>BR-PRICE-03</code> 每屏一次 · 京东 normal 卡带 rebate_estimate；login_required 卡不显示返利，只带 price_basis（<code>BR-PRICE-17</code>）· 卡片级佣金披露同状态 6 第 8 条 <span class="wf-todo-tag">待定</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 13 ============ -->
+  <section class="wf-state" aria-label="状态 13：额度用尽">
+    <div>
+      <p class="wf-state__label">13. 额度用尽 → 登录 / 绑手机引导<small>当日额度用完，再发消息返回 30502；该条不受理、不计数</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="ag-ph ag-ph--block">之前的对话（当天已用完游客档额度）</div>
+          <div class="ag-frag">片段 a · 游客（data.next=login）</div>
+          <div class="wf-bubble wf-bubble--user"><span class="ag-ph">用户新发的消息</span></div>
+          <div class="ag-sys wf-anchor"><span class="wf-pin">1</span>
+            <span>今日 AI 次数已用完，明天恢复，可以先用搜索找货</span>
+            <div class="wf-row wf-anchor"><span class="wf-pin">2</span><button class="couli-button-primary" type="button"><span>按钮 → Login</span></button><span class="wf-todo-tag">待定</span></div>
+            <div class="wf-row wf-anchor"><span class="wf-pin">3</span><button class="wf-btn" type="button"><span class="ag-ph">按钮 → Search</span></button><span class="wf-todo-tag">待定</span></div>
+          </div>
+          <div class="ag-frag">片段 b · 已登录未绑手机（data.next=bind_phone）</div>
+          <div class="ag-sys wf-anchor"><span class="wf-pin">4</span>
+            <span>今日 AI 次数已用完，明天恢复，可以先用搜索找货</span>
+            <div class="wf-row"><button class="couli-button-primary" type="button"><span>按钮 → BindPhone</span></button><span class="wf-todo-tag">待定</span></div>
+            <div class="wf-row"><button class="wf-btn" type="button"><span class="ag-ph">按钮 → Search</span></button><span class="wf-todo-tag">待定</span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input wf-anchor"><span class="wf-pin">5</span><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>额度用尽提示 · <code>BR-TEXT-14</code> error.30502 · <code>BR-AI-15</code>（data.reset_at 给出恢复时刻）· <code>F-AGENT-14</code> · 不是 AI 回复，不带 AI 标识与赞踩。</li>
+      <li>登录引导 · <code>BR-AI-15</code> data.next=login → 路由 <code>Login</code> · 按钮文字 <span class="wf-todo-tag">待定</span>（规划未写）。注意：游客只登录不绑手机仍在游客档、仍 30502（<code>BR-ID-03</code>），文案不能暗示「登录就能多用」（页尾「规划空白」第 6 条）。</li>
+      <li>去搜索 · <code>BR-TEXT-14</code> 30502 动作「跳搜索」· 路由 <code>Search</code> · 按钮文字 <span class="wf-todo-tag">待定</span>。</li>
+      <li>绑手机引导 · data.next=bind_phone → 路由 <code>BindPhone</code>（01 §4.2 BindPhone 行「Agent 超额度时引导」、<code>F-ACC-02</code>）· 绑手机后转会员档按 user_id 重新计数（<code>BR-AI-15</code>）· 已绑手机 data.next=none，只给去搜索。</li>
+      <li>输入框 · 额度用尽后是否置灰或给提示 <span class="wf-todo-tag">待定</span>（规划未写）；分钟限流超限另返回 42901「操作太频繁，请稍后再试」，按 Retry-After 禁用发送（<code>BR-TEXT-14</code>），不另画。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 14 ============ -->
+  <section class="wf-state" aria-label="状态 14：Agent 查订单要绑手机">
+    <div>
+      <p class="wf-state__label">14. 查订单要绑手机（游客要登录）<small>订单类工具只给已绑手机用户；本条照常计 1 条，以 auth_required 结束</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="ag-frag">片段 a · 已登录未绑手机</div>
+          <div class="wf-bubble wf-bubble--user">我昨天买的牛奶返了吗</div>
+          <div class="ag-ai">
+            <div class="ag-text wf-anchor"><span class="wf-pin">1</span>绑定手机号后才能查订单，点下方按钮去绑定。</div>
+            <div class="wf-card wf-anchor wf-stack"><span class="wf-pin">2</span>
+              <span class="wf-caption">需要授权卡（reason=bind_phone）</span>
+              <div class="wf-row"><button class="couli-button-primary" type="button"><span>按钮 → BindPhone</span></button><span class="wf-todo-tag">待定</span></div>
+            </div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+          <div class="ag-frag">片段 b · 游客</div>
+          <div class="wf-bubble wf-bubble--user">我昨天买的牛奶返了吗</div>
+          <div class="ag-ai">
+            <div class="ag-text wf-anchor"><span class="wf-pin">3</span>登录后才能查你的订单，点下方按钮登录。</div>
+            <div class="wf-card wf-stack">
+              <span class="wf-caption">需要授权卡（reason=login）</span>
+              <div class="wf-row"><button class="couli-button-primary" type="button"><span>按钮 → Login</span></button><span class="wf-todo-tag">待定</span></div>
+            </div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>需绑手机话术 · 文案键 <code>agent.need_phone</code>（BR-TEXT-22）· <code>BR-AI-01</code>（订单类工具只下发给已绑手机主体）、<code>BR-ID-02</code>「Agent 查订单工具 ✖→绑手机」· <code>F-AGENT-06</code> · 例句取 01 J5 ①。</li>
+      <li>auth_required 卡 · 04 §8.3（reason=bind_phone）· 按钮 → 路由 <code>BindPhone</code>，完成后恢复（<code>BR-ID-10</code>）· 卡内标题与按钮文字 <span class="wf-todo-tag">待定</span>（规划未写，BR-TEXT-22 只有正文）· 该条计 1 条配额、done.finish_reason=auth_required，不返回错误码。</li>
+      <li>游客变体 · 文案键 <code>agent.need_login</code> · auth_required（reason=login）→ 路由 <code>Login</code> · 按钮文字同上 <span class="wf-todo-tag">待定</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 15 ============ -->
+  <section class="wf-state" aria-label="状态 15：已绑手机查订单">
+    <div>
+      <p class="wf-state__label">15. 已绑手机查订单 · 订单卡、找回草稿、0 笔订单<small>T5：文本一律用服务端模板，订单结论只在卡片里</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="wf-bubble wf-bubble--user">我昨天买的牛奶返了吗</div>
+          <div class="ag-ai">
+            <div class="ag-text wf-anchor"><span class="wf-pin">1</span>已收货，等待联盟结算，预计结算月份见卡片。</div>
+            <div class="wf-card wf-anchor ag-pcard"><span class="wf-pin">2</span>
+              <div class="wf-img"></div>
+              <div class="ag-order">
+                <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">京东</span><span class="ag-chev">›</span></div>
+                <div class="ag-ptitle">样例标题 纯牛奶 250ml×24盒</div>
+                <div class="wf-row"><span class="wf-tag wf-tag--pending">已收货，等待联盟结算</span></div>
+                <div class="ag-row"><span>预估返 <span class="wf-amount">¥1.23</span></span><span class="ag-sub">预计 11 月结算</span></div>
+              </div>
+            </div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+          <div class="ag-frag">片段 b · 按订单号在本人名下查不到</div>
+          <div class="wf-bubble wf-bubble--user"><span class="ag-ph">用户发来的订单号（样例略）</span></div>
+          <div class="ag-ai">
+            <div class="ag-text wf-anchor"><span class="wf-pin">3</span>未找到这笔订单的返利记录，详情见卡片。</div>
+            <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">4</span>
+              <div class="wf-row"><span class="wf-tag wf-tag--source">京东</span><span class="ag-ph">订单号（回显）</span></div>
+              <div class="wf-row"><span class="ag-ph">本人点击时间列表</span><span class="wf-todo-tag">待定</span></div>
+              <button class="couli-button-primary wf-btn--block" type="button">提交找回</button>
+            </div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+          <div class="ag-frag">片段 c · 按时间或关键词查到 0 笔订单</div>
+          <div class="wf-bubble wf-bubble--user">我上周买的纸巾返了吗</div>
+          <div class="ag-ai">
+            <div class="ag-text">没有找到符合条件的订单，可到订单页查看，或提交找回。</div>
+            <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">5</span>
+              <span class="wf-caption">客服卡（handoff）</span>
+              <div class="wf-row"><span class="ag-ph">卡内说明（data.summary）</span><span class="wf-todo-tag">待定</span></div>
+              <div class="wf-row"><button class="wf-btn" type="button"><span class="ag-ph">按钮 → 企业微信客服</span></button><span class="wf-todo-tag">待定</span></div>
+            </div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>订单模板文本 · <code>BR-AI-07</code>：调用过订单类工具时模型文本不下发 · 文案键 <code>order_status.WAITING.summary</code>（BR-TEXT-22）· <code>F-AGENT-06</code> · 多笔用 <code>order_list.summary</code>，0 笔用 <code>order_list.empty</code> + 客服卡。</li>
+      <li>order_status 卡 · 04 §8.3 · 状态文案「已收货，等待联盟结算」与金额行「预估返 ¥x」按 <code>BR-TEXT-02</code>；「预计 {月份} 结算」只在 WAITING 且月份非空时显示（<code>BR-TEXT-04</code>，不写天数）；术语 <code>BR-TEXT-01</code>（结算前不说「已到账」）· 卡上不含订单号 · 点卡 → 路由 <code>OrderDetail</code>（03 §7.4）。状态标签配色为线框示意（等待语义，不用成功色）。</li>
+      <li>查不到 · 文案键 <code>order_reason.NOT_TRACKED.summary</code> · <code>BR-AI-07</code> 判定规则 3：不区分订单不存在、未归属、他人或本人分享单，一律同一响应。</li>
+      <li>找回草稿 claim_draft · <code>BR-AI-01</code>：只回显平台 + 订单号 + 本人点击时间，不说订单是否存在 · 【提交找回】用户点击后 <code>POST /v1/orders/claims</code>（B 级）· 字段标签文字 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>0 笔订单 · 文案键 <code>order_list.empty</code>（BR-TEXT-22）· <code>BR-AI-07</code> 细则：出 1 张 handoff 卡、不出 order_status 卡 · <code>F-AGENT-06</code>、<code>F-AGENT-07</code> · handoff 卡（04 §8.3 <code>entry</code>、<code>summary</code>）点按钮打开企业微信客服（03 §7.4，B 级「打开客服」BR-AI-01）· 卡内说明与按钮文字 <span class="wf-todo-tag">待定</span>（规划未写，BR-TEXT-22 无键）· 文本里提到的「订单页」「提交找回」没有对应按钮，是否加入口：规划未写。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 16 ============ -->
+  <section class="wf-state" aria-label="状态 16：情境入口带 context 进入">
+    <div>
+      <p class="wf-state__label">16. 情境入口 · 带 context 打开<small>样例为商品详情「问问 AI」带 product_key 进入，自动发送首条消息</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title"><span class="wf-anchor">凑狸 AI 助手<span class="wf-pin">3</span></span></span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="wf-bubble wf-bubble--user wf-anchor"><span class="wf-pin">1</span><span class="ag-ph">自动发送的首条消息</span><span class="wf-todo-tag">待定</span></div>
+          <div class="ag-ai">
+            <div class="ag-text"><div class="wf-line" style="width: 75%"></div></div>
+            <div class="wf-card ag-pcard ag-pcard--lg wf-anchor"><span class="wf-pin">2</span>
+              <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+              <div class="ag-pinfo">
+                <div class="ag-ptitle">样例标题 详情页里的那件商品</div>
+                <div class="ag-tags"><span class="wf-tag wf-tag--source">京东</span><span class="wf-tag">有券</span></div>
+                <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥12.34</span><span class="ag-sub">券前 ¥22.34 · 券 ¥10</span></div>
+                <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.56</span><span class="ag-sub">预估返后 ¥11.78</span></div>
+                <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+              </div>
+            </div>
+            <div class="ag-disc">券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　预估返利以平台结算为准，未结算或订单失效时不返<span class="ag-disc__todo"><span class="ag-ph">卡片级佣金披露（agent.disclaimer.commission）的挂法</span><span class="wf-todo-tag">待定</span></span></div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>自动发送的首条消息 · 03 §7.5「带 context 打开时自动发送首条消息」· <code>BR-AI-01</code> 边界：算用户点击触发，计 1 条配额 · 气泡里显示什么（商品摘要还是一句话）<span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>情境商品卡 · <code>BR-AI-05</code>：context.product_key 由服务端校验格式并重新取数出卡，模型不能改 · 卡型（rebate_quote 大卡还是单张 product_list）规划未写明，画成单张大卡；不显示条件标记（用户没给条件）。</li>
+      <li>情境入口与打开方式 · 01 §4.1：商品详情「问问 AI」→ {product_key}；剪贴板提示条「让 AI 帮我看看」→ {text}（<code>F-CLIP-04</code>）；订单详情「问问 AI」→ {order_id}（AI-09，「为什么没返利？」在详情页直接显示、不进 AI）· AgentChat 不接受外部深链（<code>BR-ID-10</code> 路由入口矩阵）；强更检查未知时不自动发送 context（12 §6.4）· 从其他页带 context 打开时是切到 AI 助手 Tab 还是压栈打开、接在当前会话后还是新开会话 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 17 ============ -->
+  <section class="wf-state" aria-label="状态 17：连接与会话异常">
+    <div>
+      <p class="wf-state__label">17. 连接与会话异常<small>四个片段：断线、单轮到时、会话结束、进行中被关闭</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="ag-frag">片段 a · 30 秒无任何事件</div>
+          <div class="wf-bubble wf-bubble--user">纯牛奶 24盒 50以内</div>
+          <div class="ag-text"><div class="wf-line" style="width: 60%"></div></div>
+          <div class="wf-banner wf-banner--error wf-anchor wf-row wf-row--between"><span class="wf-pin">1</span><span>连接中断</span><button class="wf-btn" type="button">重试</button></div>
+          <div class="ag-frag">片段 b · 单轮到时</div>
+          <div class="ag-text wf-anchor"><span class="wf-pin">2</span>这次回复超时了，可以再问一次。</div>
+          <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          <div class="ag-frag">片段 c · 会话过期或轮数到上限（30504）</div>
+          <div class="wf-banner wf-banner--info wf-anchor wf-row wf-row--between"><span class="wf-pin">3</span><span>这个对话已结束，请新建对话</span><button class="wf-btn" type="button">新对话</button></div>
+          <div class="ag-frag">片段 d · 进行中 AI 助手被关闭（30501）</div>
+          <div class="wf-banner wf-banner--error wf-anchor"><span class="wf-pin">4</span>AI 助手暂未开放</div>
+          <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>断线 · 03 §7.2：30 秒无任何事件（含心跳）视为断线，显示「连接中断」与【重试】；重试先用会话历史接口拉回已完成的回复（MVP 不做事件续传，04 §6.5）· 文案 <code>BR-TEXT-14</code> 表 C「Agent SSE 断线」。</li>
+      <li>单轮到时 · 文案键 <code>agent.timeout</code>（BR-TEXT-22）· <code>BR-AI-14</code>：受理后到单轮时限即结束，已下发的卡片保留，未下发文本丢弃；没出卡的退还 1 条（<code>BR-AI-15</code>）· done（finish_reason=timeout）是终止事件，照常显示 AiLabel 与赞踩（03 §7.2）。</li>
+      <li>会话结束 · error 30504「这个对话已结束，请新建对话」（<code>BR-TEXT-14</code>）· <code>BR-AI-20</code>：会话过期后历史只读；<code>BR-AI-15</code>：单会话轮数到上限（reason=round_limit）· 按钮用「新对话」（<code>F-AGENT-17</code>），动作新建会话。</li>
+      <li>进行中被关闭 · error 30501「AI 助手暂未开放」（<code>BR-TEXT-14</code>）· <code>BR-AI-12</code>：agent.enabled 关闭后进行中的本条以 30501 结束、未出卡的退还 1 条 · 之后入口隐藏，见页尾。撤回同意导致的终止返回 10004，回到状态 2 · 流内的 error 30501 是终止事件，按 03 §7.2 照常显示 AiLabel 与赞踩；片段 a 断线没有终止事件、片段 c 的 30504 在发送时就被拒（未开流），都不显示。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 18 ============ -->
+  <section class="wf-state" aria-label="状态 18：粘贴链接或口令查返利">
+    <div>
+      <p class="wf-state__label">18. 粘贴链接 / 口令查返利（T1）<small>在对话里粘贴商品链接或口令：纯代码识别后每个链接出 1 张 rebate_quote 大卡；用户主动粘贴的，没有返利也照常出卡</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="ag-frag">片段 a · 粘贴淘宝链接，有券有返</div>
+          <div class="wf-bubble wf-bubble--user wf-anchor"><span class="wf-pin">1</span><span class="ag-ph">粘贴的淘宝商品链接（样例略）</span></div>
+          <div class="ag-ai">
+            <div class="ag-text"><div class="wf-line" style="width: 70%"></div></div>
+            <div class="wf-card ag-pcard ag-pcard--lg wf-anchor"><span class="wf-pin">2</span>
+              <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+              <div class="ag-pinfo">
+                <div class="ag-ptitle">样例标题 洗衣液 2kg</div>
+                <div class="ag-tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag">有券</span></div>
+                <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥23.45</span><span class="ag-sub">券前 ¥28.45 · 券 ¥5</span></div>
+                <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.12–¥0.34</span><span class="ag-sub">预估返后 ¥23.33</span></div>
+                <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">领券购买</button></div>
+              </div>
+            </div>
+            <div class="ag-disc wf-anchor"><span class="wf-pin">3</span>券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　以结算为准<span class="ag-disc__todo"><span class="ag-ph">卡片级佣金披露（agent.disclaimer.commission）的挂法</span><span class="wf-todo-tag">待定</span></span></div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+          <div class="ag-frag">片段 b · 粘贴的链接没有返利</div>
+          <div class="wf-bubble wf-bubble--user"><span class="ag-ph">粘贴的京东商品链接（样例略）</span></div>
+          <div class="ag-ai">
+            <div class="wf-card ag-pcard ag-pcard--lg wf-anchor"><span class="wf-pin">4</span>
+              <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+              <div class="ag-pinfo">
+                <div class="ag-ptitle">样例标题 保温杯 500ml</div>
+                <div class="ag-tags"><span class="wf-tag wf-tag--source">京东</span><span class="wf-tag">有券</span></div>
+                <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥12.34</span><span class="ag-sub">券前 ¥15.34 · 券 ¥3</span></div>
+                <div class="ag-row"><span class="ag-sub">暂无返利</span></div>
+                <div class="ag-buyrow"><button class="wf-btn ag-buy" type="button">去购买（无返利）</button></div>
+              </div>
+            </div>
+            <div class="ag-disc">券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准<span class="ag-disc__todo"><span class="ag-ph">卡片级佣金披露（agent.disclaimer.commission）的挂法</span><span class="wf-todo-tag">待定</span></span></div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+          <div class="ag-frag">片段 c · 粘贴拼多多链接，联盟拿不到商品信息（条件项，开关默认关）</div>
+          <div class="wf-bubble wf-bubble--user"><span class="ag-ph">粘贴的拼多多商品链接（样例略）</span></div>
+          <div class="ag-ai">
+            <div class="wf-card ag-pcard ag-pcard--lg wf-anchor"><span class="wf-pin">5</span>
+              <div class="wf-img"></div>
+              <div class="ag-pinfo">
+                <div class="ag-ptitle"><span class="ag-ph">标题与图片显示什么</span><span class="wf-todo-tag">待定</span></div>
+                <div class="ag-tags"><span class="wf-tag wf-tag--source">拼多多</span></div>
+                <div class="ag-row"><span class="wf-tag wf-tag--pending">可返利，金额以订单为准</span></div>
+                <div class="ag-buyrow"><button class="couli-button-primary ag-buy" type="button">去购买</button></div>
+              </div>
+            </div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+          <div class="ag-frag">片段 d · 一条消息里超过 3 个链接</div>
+          <div class="wf-bubble wf-bubble--user"><span class="ag-ph">一次粘贴的 4 个链接（样例略）</span></div>
+          <div class="ag-ai">
+            <div class="ag-ph ag-ph--block">前 3 个链接各出 1 张卡（同片段 a，略）</div>
+            <div class="wf-banner wf-banner--info wf-anchor"><span class="wf-pin">6</span>一次最多识别 3 个链接。</div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>粘贴的链接或口令 · <code>F-AGENT-01</code>（01 §6 E07 T1）· <code>BR-AI-01</code>：<code>parse_input</code>（纯代码，模型不可见）→ <code>resolve_link</code> → <code>get_rebate_quote</code>；链接按出现顺序去重后取前 3 个、逐个出卡（04 §8.5，与 <code>POST /v1/inputs/parse</code> 共用识别）· 粘贴方式见状态 3 第 8 条（<code>BR-ID-16</code>）· 无模型降级时链接照常出卡（<code>BR-AI-14</code>）· 首张卡 P95 ≤2.5 秒（AF-01）。</li>
+      <li>rebate_quote 单商品大卡 · 03 §7.4、04 §8.3（单个 product_card + material）· 价格按 <code>BR-PRICE-04</code>；粘贴入口的淘宝卡按比价风险显示区间（<code>BR-PRICE-07</code>：entry_source=parse）· 03 §7.4 的 rebate_quote 不列条件标记，本稿不画（见页尾「规划空白」第 16 条）· 出卡只登记 link_id 与报价快照、不预转链，点按钮才走 <code>POST /v1/links/{link_id}/open</code>（<code>BR-AI-01</code>、AC-S1-02-TB）· 样例为有券有返，按钮 <code>btn.buy.coupon</code>。</li>
+      <li>口径说明 · <code>BR-PRICE-03</code> 每屏一次 · 淘宝比价风险卡 disclaimer_keys = price_basis + rebate_compare「以结算为准」（<code>BR-PRICE-17</code>）· 卡片级佣金披露同状态 6 第 8 条 <span class="wf-todo-tag">待定</span>。</li>
+      <li>无返利照常出卡 · <code>BR-PRICE-08</code>：用户主动粘贴的链接或口令即使无返利也照常出卡，显示「暂无返利」（<code>BR-TEXT-10</code> 零值，键名未取，<code>BR-TEXT-12</code> 细则），按钮 <code>btn.buy.no_rebate</code>「去购买（无返利）」；不显示预估返与预估返后（<code>BR-PRICE-09</code>）· disclaimer_keys 只有 price_basis（<code>BR-PRICE-17</code> 例）· 按钮目标：转链成功佣金为 0 用转链结果，转链失败跳由 product_key 生成、不带推广参数的商品页；不外跳用户粘贴的原链接（AC-S1-10）· Agent 检索结果里同样的商品会被过滤掉，只有粘贴才出这种卡。按钮配色为线框示意。</li>
+      <li>拼多多金额未知 · <code>BR-PRICE-08</code> 拼多多直链（拍板第二批 TRADE-08）：合法拼多多链接、联盟拿不到商品信息、且 <code>pdd.direct_convert.enabled</code> 打开（默认关，CAP-PDD-01 获批后才开）三项同时满足才出这张卡 —— 条件项，不是对用户的承诺 · 文案 <code>rebate_amount_unknown</code>「可返利，金额以订单为准」（<code>BR-TEXT-14</code> 表 C），不显示任何价格与返利金额，按钮 <code>btn.buy</code>「去购买」（<code>BR-PRICE-21</code>）· 点击经 open 直链转链、不复核价格（AC-S1-02-PDD C）· 开关关闭时按 <code>BR-PROD-03</code> 报错、不出卡 · 拿不到商品信息时卡上标题与图片显示什么 <span class="wf-todo-tag">待定</span>（规划未写）。</li>
+      <li>超过 3 个链接 · 文案键 <code>agent.notice.link_limit</code>（BR-TEXT-22）· <code>BR-AI-01</code>：第 4 个起不处理，出 notice · 另：口令识别不了时，普通粘贴入口是 30132「这个口令暂时识别不了」+ 按钮「用商品名搜索」（<code>BR-TEXT-14</code>、AC-S1-08）；在对话流里用 notice、error 还是按 01 J2 ③ 改用素材标题与规格搜索，04 §8.2 没写 <span class="wf-todo-tag">待定</span>（页尾「规划空白」第 14 条）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 19 ============ -->
+  <section class="wf-state" aria-label="状态 19：线报素材查返利">
+    <div>
+      <p class="wf-state__label">19. 线报素材查返利 · 素材参考价与淘礼金如实告知<small>用户发来带价格和条件的线报素材（或识别到素材后进入本页）：出 rebate_quote 卡，多一行素材参考价；首版淘礼金按 unknown 展示</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="wf-bubble wf-bubble--user wf-anchor"><span class="wf-pin">1</span><span class="ag-ph">线报素材原文：商品标题 +「券后 28，需 88VIP + 淘金币 + 淘礼金限量」+ 口令（样例略）</span></div>
+          <div class="ag-ai">
+            <div class="ag-text"><div class="wf-line" style="width: 65%"></div></div>
+            <div class="wf-card ag-pcard ag-pcard--lg wf-anchor"><span class="wf-pin">2</span>
+              <div class="wf-img"></div><span class="ag-i ag-i--corner" aria-label="口径说明">i</span>
+              <div class="ag-pinfo">
+                <div class="ag-ptitle">样例标题 纯牛奶 24盒</div>
+                <div class="ag-tags"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-tag">有券</span></div>
+                <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥35.9</span><span class="ag-sub">券前 ¥40.9 · 券 ¥5</span></div>
+                <div class="ag-matref wf-anchor"><span class="wf-pin">3</span>素材参考价 ¥28（需 88VIP + 淘金币 + 淘礼金，仅供参考，以下单页为准）</div>
+                <div class="ag-row"><span class="wf-tag wf-tag--pending">预估返 ¥0.12–¥0.34</span><span class="ag-sub">预估返后 ¥35.78</span></div>
+                <div class="ag-sub wf-anchor"><span class="wf-pin">4</span>这条素材里的淘礼金通过本 App 购买可能领不到；本 App 预估返 ¥0.12–¥0.34</div>
+                <div class="ag-buyrow wf-anchor"><span class="wf-pin">5</span><span class="wf-todo-tag">待定</span><button class="couli-button-primary ag-buy" type="button">去购买</button></div>
+              </div>
+            </div>
+            <div class="ag-disc wf-anchor"><span class="wf-pin">6</span>券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准　以结算为准<span class="ag-disc__todo"><span class="ag-ph">material_ref 文案</span><span class="wf-todo-tag">待定</span></span><span class="ag-disc__todo"><span class="ag-ph">卡片级佣金披露（agent.disclaimer.commission）的挂法</span><span class="wf-todo-tag">待定</span></span></div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>线报素材 · <code>F-AGENT-02</code> · 01 J2 ③「识别到线报素材时进入 AgentChat」· 素材里链接、口令以外的部分按不可信文本处理，文案中的价格只作 material.claimed_price_fen（04 §8.5、<code>BR-AI-05</code>）· 黑话归一（如「叠桃䘳币」「88会员拍下」→ taojinbi、88vip，AC-S1-40，词典后台可增补）· 从剪贴板或搜索框识别到素材后怎样打开本页，同状态 16 第 3 条 <span class="wf-todo-tag">待定</span>。</li>
+      <li>素材 rebate_quote 卡 · 03 §7.4、04 §8.3（product_card + material + tlj_kind）· 主价仍是联盟接口的券后价（<code>BR-PRICE-10</code>），淘宝粘贴入口按比价风险显示区间（<code>BR-PRICE-07</code>）· 无「淘礼金」标签（<code>BR-TEXT-15</code> 判定 3′）· 「领淘礼金并购买」和淘礼金标签首版不接入（D7、<code>BR-AI-17</code>），不画 · 样例数字取 AC-S1-38-TB。</li>
+      <li>素材参考价 · <code>BR-PRICE-10</code>：第二行「素材参考价 ¥x（需 &lt;conditions&gt;，仅供参考，以下单页为准）」，条件由 conditions[] 拼接；不写入券后价与预估返后，不参与筛选、排序和「价格已变动」判定；解析不出、≤0 或 conditions 为空时不显示这一行；开关 <code>material_ref.enabled</code>（默认开，法务意见出来后可关）。</li>
+      <li>淘礼金如实告知 · <code>BR-TEXT-15</code> 判定 3′（验证前所有素材按 unknown）：「这条素材里的淘礼金通过本 App 购买可能领不到；本 App 预估返 {rebate}」；该商品无返利时按判定 4「…；该商品暂无返利」· 素材淘礼金一律转链，不提供「复制原口令」（D20、<code>BR-ATTR-24</code>）· 口令解析失败不能说成淘礼金已领完（01 J2 ③），流内呈现同状态 18 第 6 条 <span class="wf-todo-tag">待定</span>。</li>
+      <li>购买按钮 · <code>BR-TEXT-15</code> 判定 3′ 与 AC-S1-38-TB 写「去购买」；但这张卡有券有返，按 <code>BR-PRICE-21</code> 三态应为 <code>btn.buy.coupon</code>「领券购买」，两处不一致 <span class="wf-todo-tag">待定</span>（页尾「规划空白」第 12 条）；本稿按 AC 画 · 实际文案由服务端 cta.text_key 下发。</li>
+      <li>口径说明 · <code>BR-PRICE-17</code>：素材卡 disclaimer_keys 末尾加 material_ref（淘宝比价风险卡为 price_basis + rebate_compare + material_ref）· material_ref 的默认文案 BR-PRICE-17 没给 <span class="wf-todo-tag">待定</span>（页尾「规划空白」第 13 条）· 卡片级佣金披露同状态 6 第 8 条 <span class="wf-todo-tag">待定</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 20 ============ -->
+  <section class="wf-state" aria-label="状态 20：澄清追问、规则答疑与转人工">
+    <div>
+      <p class="wf-state__label">20. 澄清追问 · 规则答疑 · 转人工<small>三个片段：指代解析不了时 clarify；问规则命中出 rule_ref 卡（T6）；规则库查不到出客服卡</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="ag-frag">片段 a · 指代解析不了（上一轮只有 4 张卡）</div>
+          <div class="ag-ph ag-ph--block">上一轮：4 张商品卡（同状态 6，已滚出屏幕）</div>
+          <div class="wf-bubble wf-bubble--user">第五个换成京东的</div>
+          <div class="ag-ai">
+            <div class="ag-text wf-anchor"><span class="wf-pin">1</span><span class="wf-row"><span class="ag-ph">追问的问题</span><span class="wf-todo-tag">待定</span></span></div>
+            <div class="wf-chips wf-anchor"><span class="wf-pin">2</span><span class="wf-chip">选项 1</span><span class="wf-chip">选项 2</span><span class="wf-chip">选项 3</span><span class="wf-todo-tag">待定</span></div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+          <div class="ag-frag">片段 b · 问规则，规则库命中</div>
+          <div class="wf-bubble wf-bubble--user">提现最低多少</div>
+          <div class="ag-ai">
+            <div class="ag-text wf-anchor"><span class="wf-pin">3</span>规则见下方卡片。</div>
+            <div class="wf-card ag-rule wf-anchor"><span class="wf-pin">4</span>
+              <span class="ag-ptitle">样例规则标题</span>
+              <div class="wf-line" style="width: 100%"></div>
+              <div class="wf-line" style="width: 92%"></div>
+              <div class="wf-line" style="width: 60%"></div>
+              <div class="wf-row"><button class="wf-btn" type="button"><span class="ag-ph">查看完整规则 → Help</span></button><span class="wf-todo-tag">待定</span></div>
+            </div>
+            <div class="ag-ph ag-ph--block">命中多条时最多 3 张，同样式（略）</div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+          <div class="ag-frag">片段 c · 规则库没有命中</div>
+          <div class="wf-bubble wf-bubble--user">你们和别家比怎么样</div>
+          <div class="ag-ai">
+            <div class="ag-text wf-anchor"><span class="wf-pin">5</span>没有找到相关规则，可以联系客服确认。</div>
+            <div class="wf-card wf-stack wf-anchor"><span class="wf-pin">6</span>
+              <span class="wf-caption">客服卡（handoff）</span>
+              <div class="wf-row"><span class="ag-ph">卡内说明（data.summary）</span><span class="wf-todo-tag">待定</span></div>
+              <div class="wf-row"><button class="wf-btn" type="button"><span class="ag-ph">按钮 → 企业微信客服</span></button><span class="wf-todo-tag">待定</span></div>
+            </div>
+            <div class="ag-meta"><span>内容由 AI 生成，仅供参考</span><span class="ag-icons"><span class="ag-icon">赞</span><span class="ag-icon">踩</span></span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>澄清追问 clarify · <code>F-AGENT-05</code> · <code>BR-AI-01</code>「追问 clarify」：不是工具，模型输出 agent_intent=clarify，服务端出 3 个快捷选项 · 触发例：「第 N 个」超出最近结果集张数（<code>BR-AI-05</code>）；Agent 链路价格条件校验失败也出 clarify、不返回 20001（<code>BR-AI-08</code>）· 问题文字由模型生成还是固定话术，BR-TEXT-22 无键 <span class="wf-todo-tag">待定</span>（页尾「规划空白」第 15 条）。</li>
+      <li>3 个快捷选项 · <code>BR-AI-01</code>：同一结果集链上的同一槽位（指代 / 价格 / 平台）最多追问 1 次；回答后仍解析不了：指代类按第 1 张处理并出 <code>agent.notice.ordinal_default</code>「已按第 1 个商品处理。」，价格类丢弃该条件并出 <code>agent.notice.price_unrecognized</code>「未识别价格条件，已按其他条件查找。」· 选项文字、用 suggestions 事件（04 §8.2 <code>{text, send_text}</code>）还是 notice 的 actions 下发 <span class="wf-todo-tag">待定</span>（规划未写，第 15 条）。</li>
+      <li>规则命中 · 文案键 <code>agent.rule.found</code>（BR-TEXT-22）· <code>BR-AI-07</code>：本条调用过 search_rules 时模型文本不下发，规则原文只在 rule_ref 卡 · <code>F-AGENT-07</code>（T6）· 答复口径 <code>BR-TEXT-18</code> · 例句取 BR-AI-07 例。</li>
+      <li>rule_ref 卡 · 04 §8.3（chunk_id、title、excerpt 为发布版原文 ≤200 字、published_version、action）· <code>BR-AI-07</code>：相似度 ≥ <code>agent.rag.min_score</code> 的前 3 条都出卡，不判断是否含数字（金额只在卡片显示，<code>BR-AI-06</code>）· 按钮打开帮助中心文章 → 路由 <code>Help</code> · 按钮文字：03 §7.4 交互列写「查看完整规则」，没有用【】标成按钮名、字典无键 <span class="wf-todo-tag">待定</span>；published_version 是否显示：规划未写。</li>
+      <li>规则未命中 · 文案键 <code>agent.rule.not_found</code>（BR-TEXT-22）· <code>BR-AI-07</code> 例「你们和别家比怎么样」→ handoff 卡。</li>
+      <li>handoff 客服卡 · 04 §8.3（entry、summary）· 03 §7.4「打开企业微信客服」· B 级：用户点了才打开（<code>BR-AI-01</code>）· 卡内说明与按钮文字 <span class="wf-todo-tag">待定</span>（规划未写，BR-TEXT-22 无键）· 与状态 15 片段 c（0 笔订单）是同一种卡。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 状态 21 ============ -->
+  <section class="wf-state" aria-label="状态 21：点购买后下架或券失效">
+    <div>
+      <p class="wf-state__label">21. 点购买后下架 / 券失效 · Agent 专属「换一批」<small>点卡片购买按钮，links/open 复核发现下架（30141）或券失效；价格变动、券失效确认弹窗与商品详情共用，不在本页画</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar"><span class="ag-nav-side"></span><span class="wf-navbar__title">凑狸 AI 助手</span><span class="ag-nav-side ag-nav-side--right wf-link">新对话</span></div>
+        <div class="ag-strip"><span class="ag-ph">filing_text 公示</span><span>推荐商品含推广链接，购买后本平台可能获得佣金。</span></div>
+        <div class="wf-body">
+          <div class="ag-frag">片段 a · 下架（30141）</div>
+          <div class="ag-ph ag-ph--block">本轮其余卡片（同状态 6，略）</div>
+          <div class="wf-card ag-pcard ag-pcard--off wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-img"></div>
+            <div class="ag-pinfo">
+              <div class="ag-ptitle">样例标题 纯牛奶 250ml×24盒</div>
+              <div class="ag-tags"><span class="wf-tag wf-tag--source">京东</span></div>
+              <div class="ag-row"><span class="ag-sub">券后</span><span class="wf-amount">¥45.67</span></div>
+              <div class="ag-row"><span class="wf-tag wf-tag--error">商品已下架</span></div>
+              <div class="ag-buyrow"><span class="wf-todo-tag">待定</span><button class="wf-btn ag-buy" type="button" aria-disabled="true">领券购买</button></div>
+            </div>
+          </div>
+          <div class="wf-chips wf-anchor"><span class="wf-pin">2</span><span class="wf-chip">换一批</span><span class="wf-todo-tag">待定</span></div>
+          <div class="ag-frag">片段 b · 券失效（availability=coupon_gone）</div>
+          <div class="ag-ph ag-ph--block">券失效确认弹窗「券已失效：¥旧 → ¥新，继续购买？」（与商品详情共用，略）</div>
+          <div class="wf-row wf-anchor"><span class="wf-pin">3</span><span class="ag-ph">「这个券已领完」的载体</span><span class="wf-todo-tag">待定</span><span class="wf-chip">换一批</span></div>
+        </div>
+        <div class="wf-footer">
+          <div class="ag-input"><div class="couli-control"><span class="ag-ph">输入框</span></div><button class="couli-button-primary ag-send" type="button">发送</button></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="is-active"><i></i>AI 助手</span><span><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>下架置灰 · 03 §7.4 open 响应表 30141「不外跳，卡片置灰；Agent 场景追加「换一批」」· <code>BR-PRICE-14</code>（availability=off_shelf）· 文案 <code>BR-TEXT-14</code> error.30141「商品已下架」· off_shelf 卡不属于三态、不显示三态标签（<code>BR-PRICE-21</code>）· 置灰后保留哪些字段、购买按钮是禁用还是隐藏 <span class="wf-todo-tag">待定</span>（规划未写，03 §10.2 BuyButton 有禁用态）；本图按「整卡置灰 + 商品已下架 + 按钮禁用」示意。</li>
+      <li>换一批 · 03 §7.4、<code>BR-PRICE-14</code>「Agent 场景追加」· 点后按 <code>BR-AI-05</code>「换一批」翻页（page+1），不与上一批重复（AC-S1-47）· 以快捷项发送一条「换一批」消息（会计 1 条配额）还是卡内动作、放在卡下还是 notice 的 actions：规划未写 <span class="wf-todo-tag">待定</span>。</li>
+      <li>券失效 · <code>BR-PRICE-14</code>：不论价差都弹「券已失效：¥旧 → ¥新，继续购买？」（与商品详情共用，<code>BR-PRICE-13</code>）；Agent 场景追加「这个券已领完」并提供「换一批」· 这句放在 notice 卡还是卡片上、文案键 <span class="wf-todo-tag">待定</span>（BR-TEXT-22 无键）· 多种情况同时成立时 off_shelf &gt; coupon_gone &gt; price_changed（03 §7.4）。</li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="wf-foot">
+  <h2>本页覆盖的状态</h2>
+  <ol>
+    <li>首次使用 · AgentConsent 单独同意（状态 1）</li>
+    <li>未同意 / 已撤回 AI 服务同意（状态 2，BR-ID-14 要求的拒绝后页面）</li>
+    <li>空态 · 新对话首屏：欢迎语、4 个示例问题、粘贴链接查返利（状态 3）</li>
+    <li>受理中（状态 4）</li>
+    <li>部分结果 · 逐步出卡，含已到卡片的口径说明（状态 5）</li>
+    <li>结果完整：条件回显、商品卡（有券、无券、预售）、条件标记、价格与返利、右上角 i 图标、口径说明、AI 标识、快捷追问（状态 6）</li>
+    <li>同轮追问：换平台、再便宜点（状态 7）</li>
+    <li>条件被放宽（状态 8）</li>
+    <li>无结果，含禁售拦截（状态 9）</li>
+    <li>部分平台失败，含失败平台改用缓存出卡、显示「价格更新于 hh:mm」的另一种处理（状态 10）</li>
+    <li>模型降级，含搜索也失败的 50302（状态 11）</li>
+    <li>游客 · 游客档额度（已登录未绑手机同档），含只对游客出现的「登录查看返利」条件项（状态 12）</li>
+    <li>额度用尽 → 登录 / 绑手机引导（状态 13）</li>
+    <li>Agent 查订单要绑手机，游客要登录（状态 14）</li>
+    <li>已绑手机查订单：订单卡、找回草稿、0 笔订单转客服（状态 15，F-AGENT-06）</li>
+    <li>情境入口带 context 打开（状态 16）</li>
+    <li>连接与会话异常：断线、单轮到时、会话结束、进行中被关闭（状态 17）</li>
+    <li>粘贴链接 / 口令查返利 T1：有券有返、无返利照常出卡、拼多多金额未知（条件项）、超过 3 个链接（状态 18，F-AGENT-01）</li>
+    <li>线报素材查返利：素材参考价、淘礼金 unknown 如实告知（状态 19，F-AGENT-02）</li>
+    <li>澄清追问 clarify、规则答疑 rule_ref、规则未命中转客服 handoff（状态 20，F-AGENT-05、F-AGENT-07）</li>
+    <li>点购买后下架置灰 +「换一批」、券失效后的 Agent 追加提示（状态 21）</li>
+    <li><strong>Agent 未开放（本页不可达，不画手机）</strong>：登记编号取得前只对内部测试名单开放（<code>BR-AI-12</code>），名单外与 <code>agent.enabled=off</code> 时服务端下发 <code>agent.entry.visible=false</code>，底部 Tab「AI 助手」替换为「搜索」（01 §4.1，D16，AI-06），本页没有入口；接口返回 30501「AI 助手暂未开放」，动作「入口隐藏或置灰」（<code>BR-TEXT-14</code>）。首页「问 AI」、商品详情与订单详情「问问 AI」、剪贴板「让 AI 帮我看看」这些入口是隐藏还是置灰 <span class="wf-todo-tag">待定</span>（BR-TEXT-14 写的是二选一）。AgentChat 本来就不接受外部深链（BR-ID-10）。</li>
+  </ol>
+  <p class="wf-caption">未单独画（与已画状态同一样式）：拒答类固定话术（agent.refuse.out_of_scope / advice / unsafe / safety_unavailable / output_blocked / safety_timeout，同状态 9 片段 b）、比较类提示 agent.notice.title_based、平台搜索关闭的 agent.notice.search_disabled、价格条件追问后仍解析不了的 agent.notice.price_unrecognized、订单超过上限的 agent.notice.more_orders、按单号查询超限的 agent.order.lookup_limited（都是 notice 或模板文本，同状态 7、9 的样式）；点击购买后的价格变动、券失效、返利变 0 确认弹窗与 open 的其他响应（与商品详情共用流程，规划/03 §7.4，Agent 专属部分见状态 21）。淘礼金首版不接入（D7），只有 agent.notice.tlj_taobao_only 与 BR-TEXT-15 判定 6 的「暂无淘礼金活动」提示，没有可点的领取按钮；同款比价、截图找同款、降价提醒（P1）不出现在本页。</p>
+
+  <h2>待定项</h2>
+  <ul>
+    <li><span class="wf-todo-tag">待定</span> AgentConsent 标题、同意文本全文、勾选框文字、对话日志保存期限 —— 06 Q-F3（法务）；期限见 BR-ID-30（14_待决策汇总 BR-ID-30）；百炼是否用于训练写进同意文本 —— 06 Q-G10</li>
+    <li><span class="wf-todo-tag">待定</span> 未勾选时【同意并使用】是否置灰 —— 规划未写（BR-ID-14）</li>
+    <li><span class="wf-todo-tag">待定</span> 未同意页的说明文字与文案键 —— 06 Q-F3；BR-TEXT-22 无对应键</li>
+    <li><span class="wf-todo-tag">待定</span> 登记前 model_label「内测模型」显示位置；filing_text 的内容 —— 规划未写（BR-TEXT-16 只给取值）；登记编号见 06 Q-C7、Q-G9</li>
+    <li><span class="wf-todo-tag">待定</span> 4 个示例问题的内容，点了是直接发送还是填入输入框 —— 规划未写（config.agent.examples，F-ADM-12 后台配置）</li>
+    <li><span class="wf-todo-tag">待定</span> 输入框占位文字 —— 规划未写（BR-TEXT-22 无对应键）</li>
+    <li><span class="wf-todo-tag">待定</span> 条件回显短标签与原始条件摘要的数据来源与文案 —— 规划未写（04 §8 流协议无字段，见下方「规划空白」第 1 条）</li>
+    <li><span class="wf-todo-tag">待定</span> 找货意图的快捷追问 suggestions 文案（agent.suggest.&lt;intent&gt;.*）—— 规划未写（BR-TEXT-22 只有 agent.suggest.no_result.1–3）</li>
+    <li><span class="wf-todo-tag">待定</span> 逐步出卡的粒度、tool.status 折叠后的显示 —— 规划未写（见「规划空白」第 2 条）</li>
+    <li><span class="wf-todo-tag">待定</span> 卡片级佣金披露的挂法（全页卡片状态统一画成口径说明里的同一个占位）—— 规划未写（见「规划空白」第 4 条）；是否另标「广告」—— 06 Q-F7（上线检查单）</li>
+    <li><span class="wf-todo-tag">待定</span> 无券卡「并显示无券状态」的呈现方式 —— 规划未写（BR-PRICE-04 只写要显示，与首页线框同一待定）</li>
+    <li><span class="wf-todo-tag">待定</span> 单平台失败提示的载体、失败平台是否改用 5 分钟缓存出卡 —— 规划未写（BR-AI-04 二选一，见「规划空白」第 9 条）；缓存卡「价格更新于 hh:mm」没有字典键、在卡上的位置未写</li>
+    <li><span class="wf-todo-tag">待定</span> 无模型降级时卡片的条件标记 —— 规划未写（见「规划空白」第 3 条）</li>
+    <li><span class="wf-todo-tag">待定</span> 50302 的「去搜索」按钮文字、是否自动跳转 —— 规划未写（BR-TEXT-14 只写动作）；data.fallback 是页面标识还是关键词 —— 见「规划空白」第 11 条</li>
+    <li><span class="wf-todo-tag">待定</span> 游客页面是否显示今日剩余次数（done.quota_left）—— 规划未写</li>
+    <li><span class="wf-todo-tag">待定</span> 30502 的登录 / 绑手机 / 去搜索按钮文字与组合、额度用尽后输入框状态 —— 规划未写（BR-TEXT-14 30502、BR-AI-15 data.next）</li>
+    <li><span class="wf-todo-tag">待定</span> auth_required 卡（login / bind_phone）的标题与按钮文字 —— 规划未写（BR-TEXT-22 只有正文）</li>
+    <li><span class="wf-todo-tag">待定</span> claim_draft 卡的字段标签文字 —— 规划未写</li>
+    <li><span class="wf-todo-tag">待定</span> handoff 客服卡的说明与按钮文字；0 笔订单文本里提到的「订单页」「提交找回」要不要给入口 —— 规划未写（BR-TEXT-22 无键，BR-AI-07 只定出 1 张 handoff 卡）</li>
+    <li><span class="wf-todo-tag">待定</span> rule_ref 卡的按钮文字（03 §7.4 交互列写「查看完整规则」，未标【】、字典无键）、published_version 是否显示 —— 规划未写</li>
+    <li><span class="wf-todo-tag">待定</span> clarify 的问题文字、3 个选项文字和下发载体 —— 规划未写（见「规划空白」第 15 条）</li>
+    <li><span class="wf-todo-tag">待定</span> 拼多多 amount_unknown 卡拿不到商品信息时的标题与图片 —— 规划未写（BR-PRICE-08 只写不显示价格与返利）</li>
+    <li><span class="wf-todo-tag">待定</span> 素材卡的购买按钮是「去购买」还是「领券购买」—— 见「规划空白」第 12 条；material_ref 的默认文案 —— 见第 13 条</li>
+    <li><span class="wf-todo-tag">待定</span> 对话里口令识别不了（30132）的呈现 —— 见「规划空白」第 14 条</li>
+    <li><span class="wf-todo-tag">待定</span> 下架卡置灰后保留哪些字段、购买按钮禁用还是隐藏；「换一批」用快捷项发消息还是卡内动作；券失效后「这个券已领完」放在哪里、文案键 —— 规划未写（03 §7.4、BR-PRICE-14 只写「追加」）</li>
+    <li><span class="wf-todo-tag">待定</span> 情境入口自动发送的首条消息显示什么、情境卡卡型、带 context 打开是切 Tab 还是压栈、是否接在当前会话 —— 规划未写</li>
+    <li><span class="wf-todo-tag">待定</span> Agent 未开放时首页「问 AI」等入口隐藏还是置灰 —— 规划未写（BR-TEXT-14 30501 二选一）</li>
+    <li><span class="wf-todo-tag">待定</span> 全部 Agent 固定话术（BR-TEXT-22）为代理起草，待负责人过目 —— 14_待决策汇总 BR-TEXT-22</li>
+    <li><span class="wf-todo-tag">待定</span> AI 标识的法定措辞与位置 —— 14_待决策汇总 BR-ID-15（法务）</li>
+  </ul>
+
+  <h2>规划空白或矛盾（画图时发现）</h2>
+  <ol>
+    <li>条件回显没有数据：interaction-patterns §2 要求回显平台、预算、规格，放宽时保留原始条件摘要；但 04 §8.2 / §8.3 的流事件和卡片里没有本轮检索条件（agent_result_sets 只在服务端，02 §9.2）。</li>
+    <li>逐步出卡与合并排序：interaction-patterns §2 要求「部分结果已返回」时卡片逐步可读；但 04 §8.3 的 product_list 是一张带 items[] 的卡，BR-AI-09 又要求跨平台按名次交错合并排序（须等各平台都返回）；一轮结果是一张 product_list 一次到达，还是分多张（例如按平台）先后到达，没写。</li>
+    <li>降级卡的条件标记：BR-AI-14 降级时不抽取价格与规格条件，BR-AI-24 未给规格的 matched 卡显示「符合条件」，照此降级卡会把未校验的商品标成「符合条件」。</li>
+    <li>卡片级佣金披露：BR-AI-10、BR-AI-04 细则、03 §7.4 写每张 product_card 用 disclaimer_key（单值）展示佣金披露；BR-PRICE-17 已改成 disclaimer_keys[]，取值只有 price_basis / rebate_estimate / rebate_compare / material_ref，没有佣金披露。</li>
+    <li>拒绝同意后的去向：BR-AI-13 细则写「暂不使用 → 返回上一页」，BR-ID-14 写「Agent 页显示说明与【重新同意】」；AgentChat 是 Tab 根页面，没有上一页。本稿按 BR-ID-14 画。</li>
+    <li>额度用尽的引导：BR-TEXT-14 的 30502 动作只写「跳搜索」，BR-AI-15 的 data.next 给 login / bind_phone，01 BindPhone 行与 F-ACC-02 写「超额度时引导绑手机」；且游客按 next=login 只登录不绑手机仍在游客档、仍 30502（BR-ID-03、BR-AI-15）。</li>
+    <li>按钮与标题文案缺键：auth_required 卡、30502 引导、50302 去搜索、AgentConsent 标题与勾选、未同意页说明、claim_draft 字段、handoff 卡、rule_ref 按钮、clarify 问题与选项、输入框占位、找货 suggestions、缓存卡「价格更新于 hh:mm」、券失效后的「这个券已领完」都没有字典键；「暂无返利」也还没取键名（BR-TEXT-12 细则已登记）。</li>
+    <li>tool.status 文案：BR-TEXT-16 例「正在搜索淘宝」，04 §8.2 例「正在查询京东商品」，措辞不一，display_text 模板也没进 BR-TEXT-22。</li>
+    <li>单平台失败：BR-AI-04 写「卡片不出（或用 5 分钟内缓存并显示更新时间）」，没定何时用哪种；提示用 tool.status failed 还是 notice 也没定。</li>
+    <li>情境入口：AgentChat 是 Tab，从商品详情、订单详情、剪贴板带 context 打开时怎样进入页面、接在哪个会话后面没写（01 J2 ③ 识别到线报素材时进入 AgentChat 也一样）。</li>
+    <li>50302 的 fallback 字段：04 §8.2 error.fallback 的示例取值是页面标识「search_page」，10 AC-S1-57 ② 也断言 data.fallback=search_page；BR-AI-14 细则与 BR-TEXT-14 表 A 写的是 data.fallback 带关键词 q、客户端跳搜索页预填。是页面标识还是关键词、关键词放在哪个字段，四处要统一。</li>
+    <li>素材卡的购买按钮：BR-TEXT-15 判定 3′ 与 10 AC-S1-38-TB 写「去购买」，但样例卡是有券有返（券后 ¥35.9、有预估返），按 BR-PRICE-21 三态应为「领券购买」。是素材卡一律「去购买」，还是按三态，没统一。</li>
+    <li>material_ref 没有默认文案：BR-PRICE-10、BR-PRICE-17 规定素材卡 disclaimer_keys 加 material_ref，但 BR-PRICE-17 只给了 price_basis、rebate_estimate、rebate_compare 的默认文案，BR-TEXT 里也查不到 material_ref 的措辞。</li>
+    <li>对话里口令识别不了：普通粘贴入口是 30132「这个口令暂时识别不了」+「用商品名搜索」（BR-TEXT-14、AC-S1-08、02 §14）；01 J2 ③ 说素材口令解析失败可用素材标题和规格搜索；Agent 走 SSE，04 §8.2 / §8.3 没写这类识别失败用 notice、error 还是直接改走搜索。</li>
+    <li>clarify 的呈现：BR-AI-01 只写「服务端出 3 个快捷选项」，问题文字由谁出（模型还是固定话术）、选项文字从哪来、用 suggestions 事件还是 notice 的 actions 下发，04 §8.2 / §8.3 与 BR-TEXT-22 都没写。</li>
+    <li>rebate_quote 卡要不要条件标记：BR-AI-24 写「每张 product_card 带 match_tag」，照此粘贴链接出的卡（用户没给任何条件）会显示「符合条件」；03 §7.4 只给 product_list 列了 match_tag，rebate_quote 没列。本稿按 03 不画。</li>
+  </ol>
+
+  <h2>请负责人确认</h2>
+  <ul>
+    <li>第一次打开 AI 助手，会先弹窗问「同意把对话内容发给阿里云通义千问吗」，默认不打勾。用户点「暂不使用」后，这一页只留一句说明和一个【重新同意】按钮，App 其他地方照常用。这样可以吗？</li>
+    <li>游客当天的 AI 次数用完后，我们提示「今日 AI 次数已用完，明天恢复，可以先用搜索找货」，下面放两个按钮：一个带去登录（已登录但没绑手机的，带去绑手机），一个带去搜索。要提醒：只登录不绑手机，次数不会变多，绑了手机才多。您希望直接引导绑手机，还是先登录再绑？按钮上的字也请您定。</li>
+    <li>AI 回复上方要不要用几个小标签显示它听懂的条件（比如「京东」「50 元以内」「24 盒」），放宽条件时也能看到原来要求的是什么？现在后台还没把这些条件发给手机，要做的话需要补一个字段。</li>
+  </ul>
+</footer>
+</body>
+</html>

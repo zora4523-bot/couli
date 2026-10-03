@@ -1,0 +1,1822 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>线框 · 订单 OrderList · v20261004</title>
+<link rel="stylesheet" href="../tokens/variables.css">
+<link rel="stylesheet" href="../tokens/foundations.css">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+/* 本页专用：导航栏两侧、订单项、时间线、小眼睛按钮、置灰入口。颜色、字号、间距、圆角只用令牌。 */
+.o-nav-side { width: 112px; flex: none; font-size: var(--font-size-caption); font-weight: var(--font-weight-regular); }
+.o-nav-side--end { text-align: right; }
+.o-search { width: 100%; }
+.o-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.o-eye { display: inline-flex; align-items: center; justify-content: center; color: var(--color-text-secondary); border-radius: var(--radius-pill); }
+.o-item { display: flex; flex-direction: column; gap: var(--space-2); }
+.o-main { display: flex; gap: var(--space-3); align-items: flex-start; }
+.o-thumb { width: 64px; height: 64px; }
+.o-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.o-title { font-size: var(--font-size-footnote); font-weight: var(--font-weight-medium); }
+.o-meta { font-size: var(--font-size-caption); color: var(--color-text-secondary); word-break: break-all; }
+.o-money { font-size: var(--font-size-caption); color: var(--color-text-secondary); white-space: nowrap; }
+.o-label { font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+.o-status { display: flex; flex-direction: column; gap: var(--space-1); }
+.o-pin-left { right: auto; left: -8px; }
+.o-pending { border: 1px dashed var(--color-border-control); }
+.o-close { display: inline-flex; align-items: center; justify-content: center; color: var(--color-text-secondary); font-size: var(--font-size-body); }
+.o-end { text-align: center; padding: var(--space-3) 0; }
+.o-tl { list-style: none; margin: 0; padding: 0; }
+.o-tl li { position: relative; padding: 0 0 var(--space-3) var(--space-5); }
+.o-tl li:last-child { padding-bottom: 0; }
+.o-tl li::before { content: ""; position: absolute; left: 0; top: var(--space-1); width: 10px; height: 10px; border-radius: var(--radius-pill); background: var(--color-text-secondary); }
+.o-tl li::after { content: ""; position: absolute; left: 4px; top: var(--space-4); bottom: 0; width: 2px; background: var(--color-border-subtle); }
+.o-tl li:last-child::after { display: none; }
+.o-tl .is-current::before { background: var(--color-brand-primary); }
+.o-tl .is-todo { color: var(--color-text-secondary); }
+.o-tl .is-todo::before { background: var(--color-border-control); }
+.o-tl small { display: block; font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+.o-actions { display: flex; gap: var(--space-2); }
+.o-actions > * { flex: 1; }
+.o-nowrap { white-space: nowrap; flex: none; }
+.o-disabled, .wf-link.o-disabled { color: var(--color-text-secondary); opacity: 0.5; }
+.o-w-half { width: 50%; }
+.o-w-third { width: 33%; }
+</style>
+</head>
+<body>
+<header class="wf-head">
+  <h1>订单 <code>OrderList</code>（含 <code>OrderDetail</code>） · 线框 v20261004</h1>
+  <p>依据：规划 main 2d23ae7 的 01 §4.1 订单行与 Agent 情境入口、§4.2 OrderList / OrderDetail / FindOrder / Appeal / Ledger 行、§5 J4 J5、§6 E09 ORD、E10 SET、F-CFG-08；04 §6.4 订单接口、§10 开关表；08 12_TEXT（BR-TEXT-01～05、10～14）、06_FUND（BR-FUND-04、BR-FUND-08、BR-FUND-17）、04_ATTR（BR-ATTR-10、BR-ATTR-17、BR-ATTR-21）、10_ID（BR-ID-02、BR-ID-13、BR-ID-30、BR-ID-36）；10 AC-S1-24、25、27、44、84、103～106、AC-S2-03、AC-S2-12-TB；design/references/interaction-patterns.md §3；03 §10。线框级，不是视觉稿。</p>
+  <p>示例数字、商品名、订单号、日期都是样例值（以 2026-10-04 为「今天」），不是生产数据；订单号的格式与脱敏写法按 BR-TEXT-02 细则「订单号的显示」，各样例单号互不相同。平台来源只用文字标签，不画任何平台标志。</p>
+  <div class="wf-legend">
+    <span><span class="wf-pin wf-pin--inline">1</span> 编号对应右侧注释</span>
+    <span><span class="wf-todo-tag">待定</span> 规划未定，见注释里的编号</span>
+    <span><span class="o-label">［区块名］</span> 方括号里是区块说明，不是界面文案</span>
+    <span><span class="wf-tag wf-tag--pending">预估类</span><span class="wf-tag wf-tag--success">已结算</span><span class="wf-tag">失效 / 无返利 / 未知</span><span class="wf-tag wf-tag--warning">扣回</span> 状态色只作辅助，配色待 UI 稿</span>
+  </div>
+</header>
+
+<main class="wf-states">
+
+  <!-- ============ 1. 列表 · 自购 · 正常态 ============ -->
+  <section class="wf-state" aria-label="状态 1：列表正常态（自购，全部分组）">
+    <div>
+      <p class="wf-state__label">1. 列表 · 自购 · 正常态（全部）<small>已登录，自购子 Tab、分组「全部」，按付款时间倒序；含未知状态编码的一单</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side o-nav-side--end wf-anchor"><span class="wf-link">未跟单？去找回</span><span class="wf-pin o-pin-left">1</span></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-anchor"><span class="wf-pin">2</span>
+            <div class="wf-seg"><span class="is-active">自购</span><span>分享</span></div>
+          </div>
+          <div class="wf-anchor"><span class="wf-pin">3</span>
+            <input class="couli-control o-search" type="search" placeholder="搜订单号或商品名" aria-label="搜索订单">
+          </div>
+          <div class="wf-anchor"><span class="wf-pin">4</span>
+            <div class="wf-chips"><span class="wf-chip is-active">全部</span><span class="wf-chip">预估中</span><span class="wf-chip">已结算</span><span class="wf-chip">无返利</span></div>
+          </div>
+          <div class="o-toolbar">
+            <div class="wf-row wf-anchor"><span class="wf-chip">平台 ▾</span><span class="wf-chip">月份 ▾</span><span class="wf-pin">5</span></div>
+            <span class="o-eye couli-touch-target wf-anchor" role="button" aria-label="隐藏金额">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+              <span class="wf-pin">6</span>
+            </span>
+          </div>
+
+          <!-- 订单项 A：PAID（比价风险，区间） -->
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-caption wf-anchor">今天 09:05<span class="wf-pin o-pin-left">10</span></span></div>
+            <div class="o-main wf-anchor"><span class="wf-pin o-pin-left">7</span>
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 A：纯牛奶 250ml×12 盒</div>
+                <div class="o-meta">实付金额 ¥45.6 · 件数 2</div>
+                <div class="o-meta wf-anchor">订单号 3712345678901234567 <span class="wf-link">复制</span> <span class="wf-todo-tag">待定</span><span class="wf-pin o-pin-left">8</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between wf-anchor"><span class="wf-tag wf-tag--pending">已付款，返利待确认</span><span class="o-money">预估返 <span class="wf-amount">¥1.23–¥2.34</span></span><span class="wf-pin o-pin-left">9</span></div>
+          </div>
+
+          <!-- 订单项 B：DEPOSIT_PAID 预售 -->
+          <div class="wf-card o-item wf-anchor"><span class="wf-pin">11</span>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-caption">10-01</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 B：预售电饭煲 4L</div>
+                <div class="o-meta">已付定金 ¥30 · 件数 1</div>
+                <div class="o-meta">订单号 3798765432109876543 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row"><span class="wf-tag wf-tag--pending">已付定金</span></div>
+          </div>
+
+          <!-- 订单项 M：未知状态编码 -->
+          <div class="wf-card o-item wf-anchor"><span class="wf-pin">14</span>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">京东</span><span class="wf-caption">09-25</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 M：收纳盒 3 个装</div>
+                <div class="o-meta">实付金额 ¥19.9 · 件数 1</div>
+                <div class="o-meta">订单号 309999999999 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row"><span class="wf-tag">状态更新中</span></div>
+          </div>
+
+          <!-- 订单项 C：WAITING -->
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">京东</span><span class="wf-caption">09-20</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 C：洗衣液 3kg</div>
+                <div class="o-meta">实付金额 ¥39.9 · 件数 1</div>
+                <div class="o-meta">订单号 305678901234 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--pending">已收货，等待联盟结算</span><span class="o-money">预估返 <span class="wf-amount">¥4.5</span></span></div>
+            <div class="wf-caption wf-anchor">预计 10 月结算<span class="wf-pin">12</span></div>
+          </div>
+
+          <!-- 订单项 D：CREDITED -->
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">拼多多</span><span class="wf-caption">08-03</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 D：抽纸 24 包</div>
+                <div class="o-meta">实付金额 ¥12.34 · 件数 1</div>
+                <div class="o-meta">订单号 260803-123456789012345 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--success">已结算</span><span class="o-money">实返 <span class="wf-amount">¥0.56</span></span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span class="wf-anchor"><i></i>AI 助手<span class="wf-pin">13</span></span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>常驻找回入口 · <code>F-ORD-09</code> · <code>BR-ATTR-17</code>（文案「未跟单？去找回」取 BR-ATTR-17 正文） · 路由 <code>FindOrder</code>（H5）。01 §4.1 写作「找回订单」，以 08 为准。<span class="wf-todo">待定：常驻时放哪、什么样式（规划未写）</span>；<code>claims.enabled=off</code> 时置灰，见状态 6。用户键不可用的平台另有降级文案 <code>claim_required</code>「{platform_name}返利需下单后提交订单号认领」（BR-TEXT-14 表 C，动作「走找回」），出不出现取决于 CAP-*-05 实测，未验证前不画成对用户的承诺；<span class="wf-todo">待定：它在订单页放哪（规划未写）</span>。</li>
+      <li>子 Tab「自购」「分享」 · <code>F-ORD-04</code> · <code>BR-TEXT-02</code>（scope=self / share） · 01 §4.1。<span class="wf-todo">待定：默认落在哪个子 Tab（规划未写，本稿按自购）</span>。</li>
+      <li>搜索框 · <code>F-ORD-15</code> · 键 <code>order_list.search.placeholder</code>「搜订单号或商品名」。自购单输入与父单号或子单号完全相同才按单号命中，否则按标题包含匹配（BR-TEXT-02 细则「订单的检索范围与分享单的投影」）。</li>
+      <li>状态分组 · <code>F-ORD-15</code> · 键 <code>order_status_group.all / .estimating / .credited / .no_rebate</code>「全部｜预估中｜已结算｜无返利」，默认「全部」；各组包含哪些状态只按 BR-TEXT-02 细则「订单列表的状态分组与查找」（「无返利」分组见状态 3）；不得改成「待结算」「结算中」（BR-TEXT-13）。</li>
+      <li>平台、月份筛选 · <code>F-ORD-15</code> · 键 <code>order_list.filter.platform / .filter.month</code>「平台｜月份」。平台单选、只作用于当前子 Tab；月份按付款时间（+08:00）年月，只能选可查范围以内（BR-ID-30 细则「订单类记录」）；条件可叠加，切子 Tab 时分组回「全部」、其余清空。下拉面板样式由 UI 稿定。</li>
+      <li>金额隐藏开关（小眼睛） · 功能对照 G-64 · <code>BR-TEXT-10</code> 细则「金额隐藏」 · 无障碍标签 <code>amount_mask.hide</code>「隐藏金额」。可选功能，UI 稿采用才做（AC-S1-105）。<span class="wf-todo">待定：放在订单页哪里（规划未写，06 Q-E5 关键页确认）</span>。</li>
+      <li>订单项·商品信息 · <code>F-ORD-07</code> · 01 §4.2 OrderList（拍板第二批 TRADE-06：商品图、实付金额、件数）；平台来源用文字标签（03 §10.2 <code>PlatformBadge</code>）；点整项进 <code>OrderDetail</code>。<span class="wf-todo">待定：「实付金额」「件数」两处的显示标签没有文案键（规划未写）</span>。</li>
+      <li>订单号 · <code>BR-TEXT-02</code> 细则「订单号的显示」（负责人 2026-10-03，拍板第三批 §2）：自购单显示完整 <code>order_no</code>，可复制。<span class="wf-todo">待定：「复制」按钮文字与复制后的提示没有文案键（BR-TEXT-14 表 C 未列）</span>。</li>
+      <li>状态文案 + 金额行 · <code>F-ORD-07</code> · <code>BR-TEXT-02</code> 映射表（字典 <code>order_status.&lt;display_status&gt;</code>）、<code>BR-TEXT-01</code> 术语（结算前「预估返」，结算后「已结算 / 实返」）、<code>BR-TEXT-10</code>（区间用「–」连接）。样例 A 是比价风险单，所以显示区间（BR-TEXT-03），详情见状态 15。<span class="wf-todo">待定（规划同步缺陷）：04 §6.4 <code>GET /v1/orders</code> 的列表项只列了 <code>est_rebate_fen</code>，没有 <code>rebate_min_fen / rebate_max_fen</code>、<code>actual_fen</code>、<code>clawback_fen</code>、<code>expected_credit_period</code>；本稿按 08 BR-TEXT-02（列表与详情同一映射，影响面列了这些字段）画区间、实返、扣回与预计月份，04 的列表投影待补</span>。</li>
+      <li>付款时间 · <code>BR-TEXT-11</code>（列表：今天 HH:mm / 昨天 HH:mm / MM-DD / YYYY-MM-DD）；列表按付款时间倒序（TRADE-06）。<span class="wf-todo">待定：01 的字段清单没列时间，列表是否显示（规划未写）</span>。</li>
+      <li>预售单项 · <code>BR-TEXT-02</code> 细则「预售单的付款金额」 · 键 <code>order_list.deposit_amount</code>「已付定金 {amount}」代替实付金额；状态「已付定金」不显示返利金额；平台不返回定金金额时不显示金额（定稿等 CAP-TB-07、CAP-JD-07、CAP-PDD-07）。</li>
+      <li>预计结算月份 · <code>BR-TEXT-04</code>「预计 {credit_period} 结算」：只在「已收货，等待联盟结算」且 <code>expected_credit_period</code> 非空时显示；同年写「10 月」、跨年写「2027 年 1 月」，客户端不推算。</li>
+      <li>底部 Tab · 01 §4.1。<code>agent.enabled</code> 关闭时「AI 助手」换成「搜索」。</li>
+      <li>未知状态编码 · <code>BR-TEXT-02</code>（未知编码一律显示 <code>order_status.UNKNOWN</code>「状态更新中」，金额行不显示，不显示编码原文；BR-TEXT-12「未知编码」） · AC-S1-27 ③。只出现在「全部」分组（BR-TEXT-02 细则）。附加说明「请稍后查看」放详情，见状态 28。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 2. 列表 · 分享子 Tab ============ -->
+  <section class="wf-state" aria-label="状态 2：分享子 Tab（脱敏订单号）">
+    <div>
+      <p class="wf-state__label">2. 列表 · 分享子 Tab<small>本人分享的商品被别人买下的订单；订单号脱敏、不可复制</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side o-nav-side--end"><span class="wf-link">未跟单？去找回</span></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-seg"><span>自购</span><span class="is-active">分享</span></div>
+          </div>
+          <div class="wf-anchor"><span class="wf-pin">2</span>
+            <input class="couli-control o-search" type="search" placeholder="搜商品名" aria-label="搜索分享订单">
+          </div>
+          <div class="wf-chips"><span class="wf-chip is-active">全部</span><span class="wf-chip">预估中</span><span class="wf-chip">已结算</span><span class="wf-chip">无返利</span></div>
+          <div class="o-toolbar">
+            <div class="wf-row"><span class="wf-chip">平台 ▾</span><span class="wf-chip">月份 ▾</span></div>
+            <span class="o-eye couli-touch-target" role="button" aria-label="隐藏金额">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </span>
+          </div>
+
+          <!-- 分享单 E：商品一致 -->
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-caption">昨天 21:40</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 E：保温杯 500ml</div>
+                <div class="o-meta">实付金额 ¥59 · 件数 1</div>
+                <div class="o-meta wf-anchor">订单号 3756****12<span class="wf-pin">3</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between wf-anchor"><span class="wf-tag wf-tag--pending">已付款，返利待确认</span><span class="o-money">预估推广收益 <span class="wf-amount">¥1.2</span></span><span class="wf-pin">4</span></div>
+          </div>
+
+          <!-- 分享单：好友买了其他商品 -->
+          <div class="wf-card o-item wf-anchor"><span class="wf-pin">5</span>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">拼多多</span><span class="wf-caption">09-27</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图位置占位（不显示好友买的商品）"></div>
+              <div class="o-info">
+                <div class="o-title">好友购买的其他商品</div>
+                <div class="o-meta">实付金额 ¥26.8 · 件数 2</div>
+                <div class="o-meta">订单号 2609****18</div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--pending">已收货，等待联盟结算</span><span class="o-money">预估推广收益 <span class="wf-amount">¥0.8</span></span></div>
+            <div class="wf-caption">预计 10 月结算</div>
+          </div>
+
+          <!-- 分享单 F：已结算 -->
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">京东</span><span class="wf-caption">08-15</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 F：数据线 1m</div>
+                <div class="o-meta">实付金额 ¥9.9 · 件数 1</div>
+                <div class="o-meta">订单号 3081****56</div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--success">已结算</span><span class="o-money">推广收益 <span class="wf-amount">¥0.35</span></span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>分享子 Tab · <code>F-ORD-04</code> · <code>BR-TEXT-02</code>（scope=share：只列本人分享单；直推、间推分佣订单不进订单列表，只在余额流水显示，BR-TEXT-19）。切到本 Tab 时分组回「全部」、其余条件清空。<span class="wf-todo">待定：分享是 M-公开功能（01 E13），内测期商品详情隐藏【分享】（TRADE-21），本 Tab 内测期是否隐藏（规划未写）</span>。</li>
+      <li>搜索框 · <code>F-ORD-15</code> · 键 <code>order_list.search.placeholder_share</code>「搜商品名」：分享单只按标题匹配，完整单号、脱敏号、单号片段都搜不到（BR-TEXT-02 细则「订单的检索范围与分享单的投影」）；搜不到的样子见状态 12。</li>
+      <li>脱敏订单号 · <code>BR-TEXT-02</code> 细则「订单号的显示」 · 只显示服务端给的 <code>masked_order_no</code>（≥10 位留前 4 位与末 2 位，中间换成 4 个「*」）；没有复制按钮，长按也不出复制菜单；不展示买家任何信息（BR-ATTR-10）。三笔样例单号与自购单互不相同。</li>
+      <li>金额行 · <code>BR-TEXT-01</code>、<code>BR-TEXT-02</code>：分享单结算前「预估推广收益 ¥x」，已结算「推广收益 ¥y」。</li>
+      <li>好友买的其他商品 · <code>BR-TEXT-02</code> 细则「订单的检索范围与分享单的投影」 · 键 <code>order_list.other_product</code>「好友购买的其他商品」代替标题；服务端不下发标题、商品图、SKU 与 product_key。实付金额与件数照常显示（<code>BR-ATTR-10</code>：分享者看到的订单信息含实付金额、件数）。<span class="wf-todo">待定：商品图位置放什么（本稿画空占位，规划未写，UI 稿定）</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 3. 列表 · 「无返利」分组 ============ -->
+  <section class="wf-state" aria-label="状态 3：列表「无返利」分组">
+    <div>
+      <p class="wf-state__label">3. 列表 · 自购 ·「无返利」分组<small>选中「无返利」；成员是本单无返利、已失效、已扣回三种（AC-S1-103 ①）</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side o-nav-side--end"><span class="wf-link">未跟单？去找回</span></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-seg"><span class="is-active">自购</span><span>分享</span></div>
+          <input class="couli-control o-search" type="search" placeholder="搜订单号或商品名" aria-label="搜索订单">
+          <div class="wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-chips"><span class="wf-chip">全部</span><span class="wf-chip">预估中</span><span class="wf-chip">已结算</span><span class="wf-chip is-active">无返利</span></div>
+          </div>
+
+          <!-- 订单项 L：NO_REBATE -->
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">拼多多</span><span class="wf-caption">10-02</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 L：手机壳</div>
+                <div class="o-meta">实付金额 ¥15.9 · 件数 1</div>
+                <div class="o-meta">订单号 261002-987654321098765 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-anchor"><span class="wf-tag">本单无返利</span><span class="wf-pin">5</span></div>
+          </div>
+
+          <!-- 订单项 I：INVALID -->
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-caption">09-30</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 I：运动鞋</div>
+                <div class="o-meta">实付金额 ¥199 · 件数 1</div>
+                <div class="o-meta">订单号 3722222222222222222 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between wf-anchor"><span class="wf-tag">已失效</span><span class="o-money">返利 <span class="wf-amount">¥0</span></span><span class="wf-pin o-pin-left">2</span></div>
+            <div class="wf-caption wf-anchor">订单已退款或取消 <span class="wf-todo-tag">待定</span><span class="wf-pin">3</span></div>
+          </div>
+
+          <!-- 订单项 J：CLAWED_BACK -->
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">京东</span><span class="wf-caption">08-05</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 J：蓝牙耳机</div>
+                <div class="o-meta">实付金额 ¥89 · 件数 1</div>
+                <div class="o-meta">订单号 306666666666 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between wf-anchor"><span class="wf-tag wf-tag--warning">已扣回</span><span class="o-money">扣回 <span class="wf-amount">-¥3.2</span></span><span class="wf-pin o-pin-left">4</span></div>
+            <div class="wf-caption">订单已退款或取消 <span class="wf-todo-tag">待定</span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>「无返利」分组 · <code>F-ORD-15</code> · 键 <code>order_status_group.no_rebate</code>；成员只有 NO_REBATE、INVALID、CLAWED_BACK（BR-TEXT-02 细则「订单列表的状态分组与查找」），各单状态文案仍按映射表（AC-S1-103 ①）；按付款时间倒序。</li>
+      <li>已失效 · <code>F-ORD-07</code> · <code>BR-TEXT-02</code>（<code>order_status.INVALID</code>「已失效」，金额行「返利 ¥0」） · AC-S1-27 ①。</li>
+      <li>原因标题 · <code>BR-TEXT-05</code>（<code>order_reason.REFUND.title</code>「订单已退款或取消」）。<span class="wf-todo">待定：列表显示附加说明到哪一级。04 §6.4 列表项带 <code>reason</code>，AC-S1-27 ① 把「列表与详情」一起断言「原因标题与说明」，BR-TEXT-02 映射表没分列表与详情（规划未写）；本稿列表只显示原因标题一行，说明（desc）与按钮只在详情（状态 23～26）</span>。</li>
+      <li>已扣回 · <code>F-SET-04</code> · <code>BR-TEXT-02</code>（<code>order_status.CLAWED_BACK</code>「已扣回」，「扣回 -¥z」，负号在 ¥ 前，BR-TEXT-10）；原因标题同 ③，待定。</li>
+      <li>本单无返利 · <code>BR-TEXT-02</code>（<code>order_status.NO_REBATE</code>「本单无返利」，不显示金额） · AC-S1-24 ③。比价说明只在详情，见状态 27。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 4. 外跳返回 ≥30 分钟：待跟单卡 + 找回置顶 ============ -->
+  <section class="wf-state" aria-label="状态 4：外跳返回 30 分钟以后，待跟单卡与找回入口置顶">
+    <div>
+      <p class="wf-state__label">4. 列表 · 外跳 ≥30 分钟（待跟单卡、找回置顶）<small>外跳 ≥30 分钟且 ≤72 小时，期间没有新订单归属到本人；通知权限还没决定过</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-banner wf-banner--warning wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-row wf-row--between"><span>未跟单？去找回</span><span>›</span></div>
+          </div>
+          <div class="wf-card o-pending wf-anchor o-item"><span class="wf-pin">2</span>
+            <div class="wf-row wf-row--between">
+              <span class="wf-title">订单同步中</span>
+              <span class="o-close couli-touch-target wf-anchor" role="button" aria-label="关闭（无障碍标签待定）">×<span class="wf-pin o-pin-left">5</span></span>
+            </div>
+            <div class="wf-caption">在淘宝下单后，订单通常会在一段时间内同步到这里，同步可能有延迟</div>
+            <div class="wf-anchor"><span class="wf-link">未跟单？去找回</span><span class="wf-pin">3</span></div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between wf-anchor"><span class="wf-caption">开启通知，跟单成功、返利结算和提现到账时会及时提醒你</span><span class="wf-btn o-nowrap">开启通知</span><span class="wf-pin o-pin-left">4</span></div>
+          </div>
+          <div class="wf-seg"><span class="is-active">自购</span><span>分享</span></div>
+          <input class="couli-control o-search" type="search" placeholder="搜订单号或商品名" aria-label="搜索订单">
+          <div class="wf-chips"><span class="wf-chip is-active">全部</span><span class="wf-chip">预估中</span><span class="wf-chip">已结算</span><span class="wf-chip">无返利</span></div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">京东</span><span class="wf-caption">09-20</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 C：洗衣液 3kg</div>
+                <div class="o-meta">实付金额 ¥39.9 · 件数 1</div>
+                <div class="o-meta">订单号 305678901234 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--pending">已收货，等待联盟结算</span><span class="o-money">预估返 <span class="wf-amount">¥4.5</span></span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>找回入口置顶 · <code>F-ORD-09</code> · <code>BR-ATTR-17</code>：最近一次外跳 ≥30 分钟且 ≤72 小时、之后没有新订单归属到本人时，常驻入口置顶（AC-S1-25 ②）；文案同状态 1 的 ①，路由 <code>FindOrder</code>。<span class="wf-todo">待定：置顶和常驻在样式、位置上怎么区分（规划未写）</span>。</li>
+      <li>待跟单卡 · <code>BR-ATTR-21</code> · 键 <code>pending_track_card</code>「订单同步中｜在{platform_name}下单后，订单通常会在一段时间内同步到这里，同步可能有延迟」（BR-TEXT-14 表 C）；数据取 <code>GET /v1/orders/pending-tracks</code>，显示、消失、是否出找回入口都由服务端算；每个平台最多 1 张。CAP-*-07 实测前不写分钟数。卡片放订单页是按 AC-S1-25 与文案「同步到这里」画的，<span class="wf-todo">待定：规划没写明卡片在哪个页面（14_待决策汇总 G-05 行，运营确认）</span>。</li>
+      <li>卡内找回入口 · <code>BR-ATTR-21</code>（<code>show_claim_entry=true</code> 时出现，外跳 30 分钟以后） · 文案「未跟单？去找回」→ <code>FindOrder</code>。不到 30 分钟的样子见状态 5。<span class="wf-todo">待定：与 ① 同时出现时是否合并成一个（规划未写）</span>。</li>
+      <li>卡内通知行 · <code>F-MSG-07</code> · <code>BR-ID-13</code> 细则「通知权限的申请时机」 · 键 <code>perm.push.card_hint</code> / <code>perm.push.cta</code>（BR-TEXT-14 表 D）。只在已登录、系统通知权限还没决定过时出现；用户点【开启通知】才弹系统授权框，不点不弹；点过之后不论选了什么都不再出现，系统默认允许通知的设备也不出现（AC-S1-84；按功能对照 Q-21 默认 A，待负责人确认）。不带这一行的卡见状态 5。</li>
+      <li>关闭卡片 · <code>BR-ATTR-21</code> · <code>POST /v1/orders/pending-tracks/{link_id}/dismiss</code>（带卡片的 <code>attempt_id</code>，只关这一次尝试）。<span class="wf-todo">待定：关闭按钮的无障碍标签没有文案键（BR-TEXT-14 未列）</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 5. 刚返回（不到 30 分钟） ============ -->
+  <section class="wf-state" aria-label="状态 5：刚外跳返回，不到 30 分钟">
+    <div>
+      <p class="wf-state__label">5. 列表 · 刚返回（不到 30 分钟）<small>外跳后刚回到 App；show_claim_entry=false；本样例的通知权限已经决定过</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side o-nav-side--end wf-anchor"><span class="wf-link">未跟单？去找回</span><span class="wf-pin o-pin-left">2</span></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-pending wf-anchor o-item"><span class="wf-pin">1</span>
+            <div class="wf-row wf-row--between">
+              <span class="wf-title">订单同步中</span>
+              <span class="o-close couli-touch-target" role="button" aria-label="关闭（无障碍标签待定）">×</span>
+            </div>
+            <div class="wf-caption">在淘宝下单后，订单通常会在一段时间内同步到这里，同步可能有延迟</div>
+          </div>
+          <div class="wf-seg"><span class="is-active">自购</span><span>分享</span></div>
+          <input class="couli-control o-search" type="search" placeholder="搜订单号或商品名" aria-label="搜索订单">
+          <div class="wf-chips"><span class="wf-chip is-active">全部</span><span class="wf-chip">预估中</span><span class="wf-chip">已结算</span><span class="wf-chip">无返利</span></div>
+          <div class="o-label">［订单列表同状态 1，略］</div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>待跟单卡（刚返回） · <code>BR-ATTR-21</code> · 键 <code>pending_track_card</code>：外跳回来就出现（AC-S1-25 ①）。不到 30 分钟时接口 <code>show_claim_entry=false</code>，卡内没有「未跟单？去找回」（BR-ATTR-21 例：外跳 10:00，10:30 起才出）。本样例的用户已经决定过通知权限，所以卡内也没有通知行（BR-ID-13 细则；AC-S1-84 ⑤）。两个条件互不相关、各自判断：不到 30 分钟而权限没决定过时，卡内有通知行、没有找回入口。</li>
+      <li>找回入口 · <code>BR-ATTR-17</code>：外跳不到 30 分钟，入口只常驻、不置顶（AC-S1-25 ②：29 分钟不置顶）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 6. 找回功能关闭 ============ -->
+  <section class="wf-state" aria-label="状态 6：找回功能关闭，入口置灰">
+    <div>
+      <p class="wf-state__label">6. 列表 · 找回功能关闭（入口置灰）<small>运营关闭 claims.enabled（如客服积压）；默认开</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side o-nav-side--end wf-anchor"><span class="wf-link o-disabled" role="button" aria-disabled="true">未跟单？去找回</span><span class="wf-pin o-pin-left">1</span></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-seg"><span class="is-active">自购</span><span>分享</span></div>
+          <input class="couli-control o-search" type="search" placeholder="搜订单号或商品名" aria-label="搜索订单">
+          <div class="wf-chips"><span class="wf-chip is-active">全部</span><span class="wf-chip">预估中</span><span class="wf-chip">已结算</span><span class="wf-chip">无返利</span></div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">京东</span><span class="wf-caption">09-20</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 C：洗衣液 3kg</div>
+                <div class="o-meta">实付金额 ¥39.9 · 件数 1</div>
+                <div class="o-meta">订单号 305678901234 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--pending">已收货，等待联盟结算</span><span class="o-money">预估返 <span class="wf-amount">¥4.5</span></span></div>
+          </div>
+          <div class="o-label">［……］</div>
+        </div>
+        <div class="wf-toast wf-anchor">找回功能暂时关闭，请稍后再试 <span class="wf-todo-tag">待定</span><span class="wf-pin">2</span></div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>找回入口置灰 · <code>F-ORD-09</code> · <code>BR-ATTR-17</code> ⓪（<code>claims.enabled=off</code> → 30206，「客户端找回入口置灰」） · <code>BR-TEXT-14</code> 表 A 30206 动作「找回入口置灰」；04 §10 开关表 <code>claims.enabled</code> 默认 on。待跟单卡与空态里的找回入口同样置灰。<span class="wf-todo">待定：客户端怎样提前知道开关已关（04 §10 只写提交返回 30206，/v1/config 未列这个字段；规划未写）</span>。</li>
+      <li>提示 · 键 <code>error.30206</code>「找回功能暂时关闭，请稍后再试」（BR-TEXT-14 表 A）。<span class="wf-todo">待定：点置灰的入口时是否弹这句（规划只写置灰；本稿用 30206 的文案画成轻提示）</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 7. 金额隐藏已打开 ============ -->
+  <section class="wf-state" aria-label="状态 7：金额隐藏已打开">
+    <div>
+      <p class="wf-state__label">7. 列表 · 金额隐藏已打开<small>可选功能，UI 稿采用才做（G-64）</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side o-nav-side--end"><span class="wf-link">未跟单？去找回</span></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-seg"><span class="is-active">自购</span><span>分享</span></div>
+          <div class="o-toolbar">
+            <div class="wf-row"><span class="wf-chip">平台 ▾</span><span class="wf-chip">月份 ▾</span></div>
+            <span class="o-eye couli-touch-target wf-anchor" role="button" aria-label="显示金额">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 20L20 4" stroke="currentColor" stroke-width="1.6"/></svg>
+              <span class="wf-pin">1</span>
+            </span>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-caption">今天 09:05</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 A：纯牛奶 250ml×12 盒</div>
+                <div class="o-meta wf-anchor">实付金额 ［¥45.6 或 ****］ · 件数 2 <span class="wf-todo-tag">待定</span><span class="wf-pin">3</span></div>
+                <div class="o-meta">订单号 3712345678901234567 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between wf-anchor"><span class="wf-tag wf-tag--pending">已付款，返利待确认</span><span class="o-money">预估返 <span class="wf-amount">****</span></span><span class="wf-pin">2</span></div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">拼多多</span><span class="wf-caption">08-03</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 D：抽纸 24 包</div>
+                <div class="o-meta">实付金额 ［¥12.34 或 ****］ · 件数 1</div>
+                <div class="o-meta">订单号 260803-123456789012345 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--success">已结算</span><span class="o-money">实返 <span class="wf-amount">****</span></span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>小眼睛已打开 · 功能对照 G-64 · <code>BR-TEXT-10</code> 细则「金额隐藏」 · 无障碍标签变为 <code>amount_mask.show</code>「显示金额」。开关是本机偏好，不上传、不改接口；「我的」、钱包、订单列表与详情共用；换账号沿用，卸载即清（AC-S1-105）。</li>
+      <li>金额显示「****」 · <code>BR-TEXT-10</code>：订单的预估返、实返、推广收益、扣回金额都换成固定的「****」，不带「¥」、位数与正负号；推送、站内信与 H5 页面不受影响。</li>
+      <li>实付金额 · <code>BR-TEXT-10</code> 细则写明「实付金额是否一起隐藏由 UI 稿定」。<span class="wf-todo">待定：实付金额藏不藏（UI 稿定，06 Q-E5）</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 8. 查询范围受限 ============ -->
+  <section class="wf-state" aria-label="状态 8：查询范围受限时列表底部提示">
+    <div>
+      <p class="wf-state__label">8. 列表 · 查询范围受限（滑到底）<small>只在后台设了可查月数、服务端返回 earliest_visible_date 时出现；默认不限制、不出现</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side o-nav-side--end"><span class="wf-link">未跟单？去找回</span></span>
+        </div>
+        <div class="wf-body">
+          <div class="o-toolbar">
+            <div class="wf-row wf-anchor"><span class="wf-chip">平台 ▾</span><span class="wf-chip is-active">月份 ▾</span><span class="wf-pin">3</span></div>
+          </div>
+          <div class="o-label">［……上方订单略……］</div>
+          <div class="wf-card o-item wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-caption">2025-10-06</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 G：雨伞</div>
+                <div class="o-meta">实付金额 ¥25 · 件数 1</div>
+                <div class="o-meta">订单号 3700000000000000001 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--success">已结算</span><span class="o-money">实返 <span class="wf-amount">¥0.78</span></span></div>
+          </div>
+          <div class="wf-caption o-end wf-anchor">只显示 2025-10-01 之后的订单，更早的订单请联系客服<span class="wf-pin">2</span></div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>列表末尾 · 按付款时间倒序（TRADE-06）；可查范围以外的订单不删除，只是不列出（BR-ID-30 细则「订单类记录」）；从推送或站内信打开范围外订单的详情时返回 30701，见状态 33。</li>
+      <li>查询范围提示 · <code>BR-ID-30</code> 细则「订单类记录」（功能对照 Q-19 默认，待负责人、法务与财务确认） · 键 <code>order_list.history_hint</code>「只显示 {date} 之后的订单，更早的订单请联系客服」，{date} 按 BR-TEXT-11 纯日期格式；样例按 <code>order.user_query_months=12</code>、今天 2026-10-04 推得 2025-10-01。默认 0（不限制）时不显示。<span class="wf-todo">待定：「联系客服」是否做成可点入口（规划未写）</span>。</li>
+      <li>月份筛选 · <code>BR-TEXT-02</code> 细则：只能选可查范围以内的月份（不早于 earliest_visible_date 所在月）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 9. 游客引导登录 ============ -->
+  <section class="wf-state" aria-label="状态 9：游客引导登录">
+    <div>
+      <p class="wf-state__label">9. 游客 · 引导登录<small>未登录点「订单」Tab；查订单、找回都要登录（BR-ID-02）</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title wf-anchor">订单<span class="wf-pin">1</span></span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-empty">
+            <div class="wf-img" aria-label="插图占位"></div>
+            <div class="wf-anchor">［引导登录说明］ <span class="wf-todo-tag">待定</span><span class="wf-pin">2</span></div>
+            <div class="wf-anchor"><button class="couli-button-primary" type="button">登录</button><span class="wf-pin">3</span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>导航栏 · 01 §4.1（订单 Tab 游客「引导登录」）。<span class="wf-todo">待定：游客态显示不显示子 Tab 与找回入口（找回需要登录，BR-ID-02；规划未写）</span>。</li>
+      <li>引导登录说明 · 01 §4.1 · 03 §10.2 <code>EmptyState</code>。<span class="wf-todo">待定：说明文案没有文案键（BR-TEXT-14 未列，规划未写）</span>。</li>
+      <li>【登录】 · <code>BR-ID-02</code>（查订单最低身份为登录，否则 10001）、<code>BR-ID-10</code> · 路由 <code>Login</code>（按钮文字用 01 §4.2 的页面名）；登录成功回到本页。基本模式（未同意隐私）下点击先重新展示隐私弹窗，不直接拉登录（BR-ID-02 正文）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 10. 列表 · 加载 ============ -->
+  <section class="wf-state" aria-label="状态 10：列表加载中">
+    <div>
+      <p class="wf-state__label">10. 列表 · 加载中<small>首次进入或切换子 Tab、分组、筛选后，接口未返回</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side o-nav-side--end"><span class="wf-link">未跟单？去找回</span></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-stack wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-seg"><span class="is-active">自购</span><span>分享</span></div>
+            <input class="couli-control o-search" type="search" placeholder="搜订单号或商品名" aria-label="搜索订单">
+            <div class="wf-chips"><span class="wf-chip is-active">全部</span><span class="wf-chip">预估中</span><span class="wf-chip">已结算</span><span class="wf-chip">无返利</span></div>
+          </div>
+          <div class="wf-stack wf-anchor"><span class="wf-pin">2</span>
+            <div class="wf-card o-item">
+              <div class="o-main"><div class="wf-skeleton o-thumb"></div><div class="o-info"><div class="wf-line"></div><div class="wf-line"></div><div class="wf-line"></div></div></div>
+              <div class="wf-line"></div>
+            </div>
+            <div class="wf-card o-item">
+              <div class="o-main"><div class="wf-skeleton o-thumb"></div><div class="o-info"><div class="wf-line"></div><div class="wf-line"></div><div class="wf-line"></div></div></div>
+              <div class="wf-line"></div>
+            </div>
+            <div class="wf-card o-item">
+              <div class="o-main"><div class="wf-skeleton o-thumb"></div><div class="o-info"><div class="wf-line"></div><div class="wf-line"></div><div class="wf-line"></div></div></div>
+              <div class="wf-line"></div>
+            </div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>顶部控件 · 本稿加载时照常显示子 Tab、搜索与分组，只把列表区换成骨架（03 §3.2 <code>UiState</code> loading）。</li>
+      <li>骨架屏 · 03 §10.2 <code>Skeleton</code> · 不带文案。请求 10 秒超时，读接口自动重试 1 次（01 F-CFG-08，拍板第二批 TECH-20，03 §4.2）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 11. 空态 ============ -->
+  <section class="wf-state" aria-label="状态 11：空态">
+    <div>
+      <p class="wf-state__label">11. 列表 · 空态<small>当前子 Tab 与分组下没有订单；保留找回与继续浏览</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side o-nav-side--end"><span class="wf-link">未跟单？去找回</span></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-seg"><span class="is-active">自购</span><span>分享</span></div>
+          <div class="wf-anchor"><span class="wf-pin">4</span>
+            <input class="couli-control o-search" type="search" placeholder="搜订单号或商品名" aria-label="搜索订单">
+          </div>
+          <div class="wf-chips"><span class="wf-chip is-active">全部</span><span class="wf-chip">预估中</span><span class="wf-chip">已结算</span><span class="wf-chip">无返利</span></div>
+          <div class="wf-empty">
+            <div class="wf-img" aria-label="插图占位"></div>
+            <div class="wf-anchor">［空态说明］ <span class="wf-todo-tag">待定</span><span class="wf-pin">1</span></div>
+            <div class="wf-stack">
+              <span class="wf-btn wf-anchor">未跟单？去找回<span class="wf-pin">2</span></span>
+              <span class="wf-btn wf-anchor">［继续浏览］ <span class="wf-todo-tag">待定</span><span class="wf-pin">3</span></span>
+            </div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>空态说明 · 03 §10.2 <code>EmptyState</code> · interaction-patterns §3（空态要说明当前分组没有记录）。<span class="wf-todo">待定：空态文案没有文案键（BR-TEXT-14 未列；BR-TEXT-22 的 <code>order_list.empty</code> 只用于 AI 助手）</span>。</li>
+      <li>找回入口 · <code>F-ORD-09</code> · <code>BR-ATTR-17</code>「未跟单？去找回」 · 路由 <code>FindOrder</code>（J5 第 2 步）；找回关闭时同样置灰（状态 6）。</li>
+      <li>继续浏览 · interaction-patterns §3（空态保留继续浏览入口）。<span class="wf-todo">待定：按钮文字与去向（本稿设想回 <code>Home</code>，规划未写）</span>。</li>
+      <li>搜索、筛选无结果 · 另画为状态 12。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 12. 搜索无结果（分享子 Tab） ============ -->
+  <section class="wf-state" aria-label="状态 12：分享子 Tab 搜索无结果">
+    <div>
+      <p class="wf-state__label">12. 列表 · 分享子 Tab 搜索无结果<small>在分享子 Tab 输入完整订单号；分享单不按单号匹配，返回空结果</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side o-nav-side--end"><span class="wf-link">未跟单？去找回</span></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-seg"><span>自购</span><span class="is-active">分享</span></div>
+          <div class="wf-anchor"><span class="wf-pin">1</span>
+            <input class="couli-control o-search" type="search" placeholder="搜商品名" value="3756789012345678912" aria-label="搜索分享订单">
+          </div>
+          <div class="wf-chips"><span class="wf-chip is-active">全部</span><span class="wf-chip">预估中</span><span class="wf-chip">已结算</span><span class="wf-chip">无返利</span></div>
+          <div class="wf-empty">
+            <div class="wf-img" aria-label="插图占位"></div>
+            <div class="wf-anchor">［搜索无结果说明］ <span class="wf-todo-tag">待定</span><span class="wf-pin">2</span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>分享子 Tab 搜单号 · <code>F-ORD-15</code> · <code>BR-TEXT-02</code> 细则「订单的检索范围与分享单的投影」：分享单不参与任何按单号的匹配（完整单号、脱敏号、单号片段都不命中），好友买的其他商品也不按真实标题匹配；结果与不存在的单号完全相同，订单列表返回空结果（AC-S1-103 ④、AC-S1-106 ①）。样例单号是状态 2 分享单 E 的完整单号（界面上本来看不到，假设用户从别处得知）。</li>
+      <li>无结果说明 · 03 §10.2 <code>EmptyState</code>。说明里不得出现能区分原因的话（如「这是分享单」），「查不到与不存在不区分」。<span class="wf-todo">待定：搜索或筛选无结果的文案键（BR-TEXT-14 未列；是否与状态 11 的空态共用、要不要放找回入口，规划未写）</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 13. 列表 · 加载失败 · 无缓存 ============ -->
+  <section class="wf-state" aria-label="状态 13：列表加载失败重试（无缓存）">
+    <div>
+      <p class="wf-state__label">13. 列表 · 加载失败（无上次数据）<small>请求失败且本机没有上次成功的数据</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side o-nav-side--end"><span class="wf-link">未跟单？去找回</span></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-seg"><span class="is-active">自购</span><span>分享</span></div>
+          <div class="wf-empty">
+            <div class="wf-img" aria-label="插图占位"></div>
+            <div class="wf-anchor">出了点问题，请稍后再试（a1b2c3）<span class="wf-pin">1</span></div>
+            <div class="wf-anchor"><button class="couli-button-primary" type="button">重试</button><span class="wf-pin">2</span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>错误说明 · 03 §10.2 <code>ErrorState</code> · <code>BR-TEXT-14</code> 表 A「其他 5xxxx」：「出了点问题，请稍后再试（{trace6}）」，附 trace_id 后 6 位（样例 a1b2c3）；变量缺失时用包内默认「出了点问题，请稍后再试」。<span class="wf-todo">待定：断网（拿不到错误码）且没有上次数据时的文案（BR-TEXT-14 未列）</span>。</li>
+      <li>【重试】 · <code>BR-TEXT-14</code> 表 A 动作「重试」 · 03 §3.2 Action <code>.retry</code>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 14. 列表 · 加载失败 · 有缓存 ============ -->
+  <section class="wf-state" aria-label="状态 14：列表加载失败（显示上次数据）">
+    <div>
+      <p class="wf-state__label">14. 列表 · 加载失败（显示上次数据）<small>请求失败但本机有上次成功的数据（TECH-20）</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side"></span>
+          <span class="wf-navbar__title">订单</span>
+          <span class="o-nav-side o-nav-side--end"><span class="wf-link">未跟单？去找回</span></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-banner wf-banner--info wf-anchor">网络不可用，以下为 今天 09:05 的数据<span class="wf-pin">1</span></div>
+          <div class="wf-seg"><span class="is-active">自购</span><span>分享</span></div>
+          <div class="wf-card o-item wf-anchor"><span class="wf-pin">2</span>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-caption">今天 09:05</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 A：纯牛奶 250ml×12 盒</div>
+                <div class="o-meta">实付金额 ¥45.6 · 件数 2</div>
+                <div class="o-meta">订单号 3712345678901234567 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--pending">已付款，返利待确认</span><span class="o-money">预估返 <span class="wf-amount">¥1.23–¥2.34</span></span></div>
+          </div>
+        </div>
+        <nav class="wf-tabbar"><span><i></i>首页</span><span><i></i>AI 助手</span><span class="is-active"><i></i>订单</span><span><i></i>我的</span></nav>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>上次数据提示条 · 01 F-CFG-08（TECH-20） · 键 <code>net.stale_data</code>「网络不可用，以下为 {time} 的数据」（BR-TEXT-14 表 C），{time} 按 BR-TEXT-11。03 §4.2 写的是「更新于 HH:mm」，与 08 不一致，本稿以 08 为准。<span class="wf-todo">待定：提示条要不要带重试按钮（BR-TEXT-14 该行没写动作）</span>。</li>
+      <li>上次成功的数据 · 照常显示。点进详情按详情页自己的加载规则处理：请求失败时显示状态 32 的失败重试。规划只写了订单列表与钱包显示上次数据（01 F-CFG-08、<code>net.stale_data</code>），<span class="wf-todo">待定：订单详情是否也缓存上次数据（规划未写）</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 15. 详情 · 已付款（比价风险） ============ -->
+  <section class="wf-state" aria-label="状态 15：订单详情·已付款（比价风险）">
+    <div>
+      <p class="wf-state__label">15. 详情 · 已付款（比价风险）<small>display_status=PAID 且 rebate_basis=price_compare_risk；即列表样例 A</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">已付款，返利待确认</span>
+            <div class="o-money">预估返 <span class="wf-amount wf-amount--lg">¥1.23–¥2.34</span></div>
+            <div class="wf-row wf-row--between wf-anchor">
+              <span class="wf-caption">如被判定为比价订单，返利按较低金额计算</span>
+              <span class="wf-link o-nowrap wf-anchor">查看说明<span class="wf-pin">3</span></span>
+              <span class="wf-pin o-pin-left">2</span>
+            </div>
+            <div class="wf-caption wf-anchor">确认收货后随联盟月度结算入账<span class="wf-pin">4</span></div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 A：纯牛奶 250ml×12 盒</div>
+                <div class="o-meta">实付金额 ¥45.6 · 件数 2</div>
+                <div class="o-meta">订单号 3712345678901234567 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">5</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li class="is-current">付款<small>2026-10-04 09:05</small></li>
+              <li class="is-todo">收货</li>
+              <li class="is-todo">联盟结算</li>
+              <li class="is-todo">已结算</li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">6</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>F-ORD-07</code> · <code>BR-TEXT-02</code>（<code>order_status.PAID</code>「已付款，返利待确认」，金额行「预估返 ¥a–¥b」）· <code>BR-TEXT-10</code> 区间写法。PAID 没有状态固有按钮，不出底部按钮栏。</li>
+      <li>比价风险提示 · <code>BR-TEXT-03</code>「比价风险」（PAID 且 rebate_basis=price_compare_risk：金额显示区间，hint「如被判定为比价订单，返利按较低金额计算」），紧挨金额（interaction-patterns §3）。与入账前部分退款同时出现时，部分退款行在上（BR-TEXT-03 优先级第 3 条；部分退款行见状态 17）。<span class="wf-todo">待定：BR-TEXT-12 把这句叫「order_status.PAID.hint 的比价变体」，它是替换 ④ 还是与 ④ 并列，规划没写清；本稿按映射表 PAID 行「；」并列画两行</span>。</li>
+      <li>「查看说明」 · <code>F-ORD-11</code> · <code>BR-TEXT-03</code>「比价说明入口」②：打开 <code>/v1/config.help_links.price_compare</code> 配置的帮助文章；没配置时不显示；不占底部按钮名额。</li>
+      <li>入账时点说明 · <code>BR-TEXT-04</code>（PAID 只显示「确认收货后随联盟月度结算入账」，不写天数与日期）；<code>credit.enabled.&lt;platform&gt;=off</code>（04 §10 默认 off）时不显示。样例按已打开画。</li>
+      <li>时间线 · <code>BR-TEXT-02</code> 细则「时间线」：PAID 时没有预计结算月份（BR-FUND-04 ⑪），结算节点只显示「联盟结算」；未发生的节点置灰。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 16. 详情 · 预估中（WAITING） ============ -->
+  <section class="wf-state" aria-label="状态 16：订单详情·已收货等待联盟结算">
+    <div>
+      <p class="wf-state__label">16. 详情 · 已收货，等待联盟结算<small>display_status=WAITING；详情页各公共模块在本状态注释里写全</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title wf-anchor">订单详情<span class="wf-pin">1</span></span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card wf-anchor o-status"><span class="wf-pin">2</span>
+            <div class="wf-row wf-row--between">
+              <span class="wf-title">已收货，等待联盟结算</span>
+              <span class="o-eye couli-touch-target wf-anchor" role="button" aria-label="隐藏金额">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                <span class="wf-pin o-pin-left">3</span>
+              </span>
+            </div>
+            <div class="o-money">预估返 <span class="wf-amount wf-amount--lg">¥4.5</span></div>
+            <div class="wf-caption">预计 10 月结算</div>
+          </div>
+          <div class="wf-card o-item wf-anchor"><span class="wf-pin">4</span>
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">京东</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 C：洗衣液 3kg</div>
+                <div class="o-meta">实付金额 ¥39.9 · 件数 1</div>
+                <div class="o-meta wf-anchor">订单号 305678901234 <span class="wf-link">复制</span><span class="wf-pin o-pin-left">5</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">6</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li>付款<small>2026-09-20 14:03</small></li>
+              <li>收货<small>2026-09-28 10:12</small></li>
+              <li class="is-current">预计 10 月结算</li>
+              <li class="is-todo">已结算</li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">7</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>导航栏 · 路由 <code>OrderDetail</code> · 页面名「订单详情」（01 §4.2）。</li>
+      <li>当前状态区 · <code>F-ORD-07</code> · <code>BR-TEXT-02</code>（<code>order_status.WAITING</code>「已收货，等待联盟结算」，金额行「预估返 ¥x」）、<code>BR-TEXT-04</code>（「预计 {credit_period} 结算」，null 时不显示）；状态在前、时间线在后（interaction-patterns §3）。WAITING 没有状态固有按钮，所以不出底部按钮栏。同属「预估中」的其他状态：已付款见状态 15，入账前部分退款见状态 17，售后处理中见状态 18，入账核对中见状态 19，已付定金见状态 20。</li>
+      <li>金额隐藏开关 · 功能对照 G-64 · <code>BR-TEXT-10</code> 细则。<span class="wf-todo">待定：放在详情页哪里（UI 稿定，06 Q-E5）</span>。</li>
+      <li>商品信息区 +「查看商品」 · <code>F-ORD-16</code> · 键 <code>order_detail.view_product</code>「查看商品」 · 路由 <code>ProductDetail</code>。只在本人自购单或商品一致的分享单、且 <code>product_key</code> 非空时出现；进去后购买是一次新的点击与新的归因（BR-TEXT-02 细则、BR-ATTR-05、BR-ATTR-08，AC-S1-104）；不占底部按钮名额。</li>
+      <li>订单号 · <code>BR-TEXT-02</code> 细则「订单号的显示」：自购单完整、可复制；分享单只显示脱敏号、不可复制（状态 29、30）。复制按钮文字同状态 1 ⑧，待定。</li>
+      <li>时间线 · <code>BR-TEXT-02</code> 细则「时间线」：付款 → 收货 → 预计 {月份} 结算 → 已结算，未发生的节点置灰；月份为空时结算节点只显示「联盟结算」；时间按 <code>BR-TEXT-11</code>「YYYY-MM-DD HH:mm」。</li>
+      <li>「问问 AI」 · 01 §4.1 Agent 情境入口（订单详情页内「问问 AI」→ <code>{order_id}</code>，拍板第二批 AI-09） · 路由 <code>AgentChat</code>。01 没有按状态限制，本稿所有正常显示的详情状态都放；加载中、失败、30701 不放。<code>agent.enabled</code> 关闭时不显示；Agent 查订单要绑手机（BR-ID-02，10005 → <code>BindPhone</code>）；自动发首条消息、计 1 次额度（BR-AI-01 细则）。<span class="wf-todo">待定：入口文字只有 01 原文、没有文案键（规划未写）</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 17. 详情 · 入账前部分退款 ============ -->
+  <section class="wf-state" aria-label="状态 17：订单详情·入账前部分退款">
+    <div>
+      <p class="wf-state__label">17. 详情 · 入账前部分退款（叠加行）<small>display_status=WAITING，2 件退了 1 件，refunded_quantity &gt; 0</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">已收货，等待联盟结算</span>
+            <div class="o-money">预估返 <span class="wf-amount wf-amount--lg">¥2.25</span></div>
+            <div class="wf-caption wf-anchor">部分退款，返利按剩余金额计算：预估返 ¥4.5 → ¥2.25<span class="wf-pin o-pin-left">2</span></div>
+            <div class="wf-caption">预计 10 月结算</div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 N：袜子 2 双</div>
+                <div class="o-meta">实付金额 ¥30 · 件数 2</div>
+                <div class="o-meta">订单号 3744444444444444444 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">3</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li>付款<small>2026-09-18 20:30</small></li>
+              <li>收货<small>2026-09-24 11:00</small></li>
+              <li class="is-current">预计 10 月结算</li>
+              <li class="is-todo">已结算</li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">4</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>BR-TEXT-02</code>（WAITING；金额行是当前预估 <code>est_rebate_fen</code>） · <code>BR-TEXT-04</code> 月份。部分退款不改 rebate_status（BR-TEXT-02「边界」）。</li>
+      <li>部分退款叠加行 · <code>BR-TEXT-03</code>「部分退款（入账前）」：rebate_status ∈ {ESTIMATED, WAITING} 且 refunded_quantity &gt; 0 时叠加「部分退款，返利按剩余金额计算：预估返 ¥{initial} → ¥{current}」；入账前只有部分退款显示变化，其他预估波动不显示。PAID 单同时有比价风险行时，本行在上（BR-TEXT-03 优先级第 3 条）。<span class="wf-todo">待定：本行与「预计…结算」行的上下顺序；首次预估为区间时 {initial} 取上限（BR-TEXT-03），{current} 写区间还是单值；部分退款后「实付金额」「件数」显示原值还是剩余值（规划未写）</span>。</li>
+      <li>时间线 · 入账前的部分退款不加节点（BR-TEXT-02 细则「时间线」只为 CREDITED_PART_CLAWED 追加「部分扣回」，入账后的样子见状态 22）。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 18. 详情 · 售后处理中 ============ -->
+  <section class="wf-state" aria-label="状态 18：订单详情·售后处理中">
+    <div>
+      <p class="wf-state__label">18. 详情 · 售后处理中，入账暂停<small>display_status=RIGHTS_PENDING（rights_pending=true）</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">售后处理中，入账暂停</span>
+            <div class="o-money">预估返 <span class="wf-amount wf-amount--lg">¥6.6</span></div>
+            <div class="wf-caption wf-anchor">售后结束后随联盟结算入账<span class="wf-pin o-pin-left">2</span></div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">京东</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 O：台灯</div>
+                <div class="o-meta">实付金额 ¥66 · 件数 1</div>
+                <div class="o-meta">订单号 307777777777 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">3</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li>付款<small>2026-09-10 19:20</small></li>
+              <li class="is-current">收货<small>2026-09-15 08:40</small></li>
+              <li class="is-todo">联盟结算</li>
+              <li class="is-todo">已结算</li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">4</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>F-ORD-07</code> · <code>BR-TEXT-02</code>（<code>order_status.RIGHTS_PENDING</code>「售后处理中，入账暂停」，金额行「预估返 ¥x」） · <code>BR-TEXT-03</code>「维权中」 · AC-S2-03。没有状态固有按钮。</li>
+      <li>附加说明 · <code>BR-TEXT-03</code> hint「售后结束后随联盟结算入账」；不显示预计结算月份（BR-TEXT-03、BR-TEXT-04）。</li>
+      <li>时间线 · 维权期间 <code>expected_credit_period</code> 为 null（BR-FUND-04 ⑪），结算节点只显示「联盟结算」（BR-TEXT-02 细则「时间线」）。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 19. 详情 · 入账核对中 ============ -->
+  <section class="wf-state" aria-label="状态 19：订单详情·入账核对中">
+    <div>
+      <p class="wf-state__label">19. 详情 · 入账核对中<small>display_status=REVIEWING（hold）或 CREDITING（入账延迟），两者文案相同</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">入账核对中</span>
+            <div class="o-money">预估返 <span class="wf-amount wf-amount--lg">¥2.8</span></div>
+            <div class="wf-caption wf-anchor">如有疑问请联系客服 <span class="wf-todo-tag">待定</span><span class="wf-pin">2</span></div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 P：插线板</div>
+                <div class="o-meta">实付金额 ¥35 · 件数 1</div>
+                <div class="o-meta">订单号 3755555555555555555 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">3</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li>付款<small>2026-08-20 10:00</small></li>
+              <li class="is-current">收货<small>2026-08-26 15:30</small></li>
+              <li class="is-todo">联盟结算</li>
+              <li class="is-todo">已结算</li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">4</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>F-ORD-07</code> · <code>BR-TEXT-02</code>（<code>order_status.REVIEWING</code> 与 <code>.CREDITING</code> 都是「入账核对中」，金额行「预估返 ¥x」） · <code>BR-TEXT-03</code> hold、入账延迟两行：不显示 hold 原因与预计结算月份，风控 hold 原因不得透出。REVIEWING 还包括已入账、但查看者本人份额暂缓的单（BR-TEXT-02 映射表）。没有状态固有按钮。</li>
+      <li>附加说明 · <code>BR-TEXT-03</code> hint「如有疑问请联系客服」。<span class="wf-todo">待定：这句里的「联系客服」是否做成可点入口（规划未写；状态固有按钮为「—」，本稿不出底部按钮）</span>。</li>
+      <li>时间线 · 不显示月份（BR-TEXT-04），结算节点只显示「联盟结算」（BR-TEXT-02 细则「时间线」）。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 20. 详情 · 预售单 ============ -->
+  <section class="wf-state" aria-label="状态 20：订单详情·预售单">
+    <div>
+      <p class="wf-state__label">20. 详情 · 预售单（已付定金）<small>display_status=DEPOSIT_PAID；尾款付清后按普通订单显示</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">已付定金</span>
+            <div class="wf-caption">尾款付清后计算返利</div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 B：预售电饭煲 4L</div>
+                <div class="o-meta wf-anchor">已付定金 ¥30 · 件数 1<span class="wf-pin">2</span></div>
+                <div class="o-meta">订单号 3798765432109876543 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">3</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li class="is-current">付定金<small>2026-10-01 20:00</small></li>
+              <li class="is-todo">付尾款</li>
+              <li class="is-todo">收货</li>
+              <li class="is-todo">联盟结算</li>
+              <li class="is-todo">已结算</li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">4</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>F-ORD-07</code> · <code>BR-TEXT-02</code>（<code>order_status.DEPOSIT_PAID</code>「已付定金」，不显示返利金额，附说明「尾款付清后计算返利」）；该阶段不推送跟单通知（BR-TEXT-09，AC-S2-12-TB）。没有状态固有按钮。</li>
+      <li>定金金额 · <code>BR-TEXT-02</code> 细则「预售单的付款金额」 · 键 <code>order_list.deposit_amount</code>「已付定金 {amount}」代替实付金额；平台不返回定金金额时不显示金额，不把预售总价当已付（定稿等 CAP-TB-07、CAP-JD-07、CAP-PDD-07 实测）。</li>
+      <li>时间线 · <code>BR-TEXT-02</code> 细则「时间线」 · 键 <code>order_timeline.deposit_paid</code>「付定金 {time}」放最前，原「付款」改为 <code>order_timeline.final_paid</code>「付尾款 {time}」；平台不返回定金时间时只显示「付定金」。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 21. 详情 · 已结算 ============ -->
+  <section class="wf-state" aria-label="状态 21：订单详情·已结算">
+    <div>
+      <p class="wf-state__label">21. 详情 · 已结算（带差额行）<small>display_status=CREDITED；实返与首次预估差 ≥1 分时叠加差额行</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">已结算</span>
+            <div class="o-money">实返 <span class="wf-amount wf-amount--lg">¥3.2</span></div>
+            <div class="wf-row wf-row--between wf-anchor">
+              <span class="wf-caption">比预估少 ¥1.3：比价订单</span>
+              <span class="wf-link o-nowrap wf-anchor">查看说明<span class="wf-pin">3</span></span>
+              <span class="wf-pin o-pin-left">2</span>
+            </div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 H：电动牙刷</div>
+                <div class="o-meta">实付金额 ¥129 · 件数 1</div>
+                <div class="o-meta">订单号 3711111111111111111 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">4</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li>付款<small>2026-08-03 20:15</small></li>
+              <li>收货<small>2026-08-09 09:30</small></li>
+              <li>［联盟结算］ <span class="wf-todo-tag">待定</span></li>
+              <li class="is-current">已结算<small>2026-09-25 10:00</small></li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">6</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="wf-anchor"><button class="couli-button-primary wf-btn--block" type="button">去提现</button><span class="wf-pin">5</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>F-ORD-07</code> · <code>BR-TEXT-02</code>（<code>order_status.CREDITED</code>「已结算」，金额行「实返 ¥y」，含结算补差） · <code>BR-TEXT-01</code>（已结算 = 联盟结算并经后台核对、按月结批次计入可提现余额）。</li>
+      <li>差额行 · <code>BR-TEXT-03</code>：已结算且 |差额| ≥ 1 分时显示「比预估少 ¥{diff}：{reason.title}」或「比预估多 …」；原因取最近一次 diff 类原因码，样例为 <code>PRICE_COMPARE</code>「比价订单」（BR-TEXT-05），数字取 BR-TEXT-03 例 2。差额紧挨金额（interaction-patterns §3）。</li>
+      <li>「查看说明」 · <code>F-ORD-11</code> · <code>BR-TEXT-03</code>「比价说明入口」①：打开 <code>/v1/config.help_links.price_compare</code> 配置的帮助文章；没配置时不显示；不占底部按钮名额。</li>
+      <li>时间线 · <code>BR-TEXT-02</code> 细则「时间线」。<span class="wf-todo">待定：结算以后，原「预计 {月份} 结算」节点写什么（BR-TEXT-04 规定结算后不显示月份，时间线没写替代文字；本稿暂按月份为空时的写法「联盟结算」占位）</span>。状态 22、25、26 同此。</li>
+      <li>【去提现】 · <code>BR-TEXT-02</code> 状态固有按钮（CREDITED、CREDITED_PART_CLAWED） · 路由 <code>Withdraw</code>（不带参数，BR-WDR-01 细则）。底部最多 2 个按钮；有 reason.action 时它是主按钮（按钮合并的样子见状态 26）。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 22. 详情 · 部分扣回 ============ -->
+  <section class="wf-state" aria-label="状态 22：订单详情·已结算（部分扣回）">
+    <div>
+      <p class="wf-state__label">22. 详情 · 已结算（部分扣回）<small>display_status=CREDITED_PART_CLAWED；结算后部分退款</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">已结算（部分扣回 ¥4）</span>
+            <div class="o-money">实返 <span class="wf-amount wf-amount--lg">¥4</span></div>
+            <div class="wf-caption wf-anchor">比预估少 ¥4：部分退款<span class="wf-pin o-pin-left">2</span></div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 K：毛巾 2 条装</div>
+                <div class="o-meta">实付金额 ¥40 · 件数 2</div>
+                <div class="o-meta">订单号 3733333333333333333 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">3</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li>付款<small>2026-08-06 08:00</small></li>
+              <li>收货<small>2026-08-10 19:00</small></li>
+              <li>［联盟结算］ <span class="wf-todo-tag">待定</span></li>
+              <li>已结算<small>2026-09-25 10:00</small></li>
+              <li class="is-current">部分扣回<small>2026-09-30 11:45</small></li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">5</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="wf-anchor"><button class="couli-button-primary wf-btn--block" type="button">去提现</button><span class="wf-pin">4</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>BR-TEXT-02</code>（<code>order_status.CREDITED_PART_CLAWED</code>「已结算（部分扣回 {z}）」，金额行「实返 ¥y」） · <code>BR-FUND-08</code>（写 CLAWBACK，sub_type=PART_REFUND；C-16 已确认）。样例取 BR-TEXT-03 例 3。</li>
+      <li>差额行 · <code>BR-TEXT-03</code>：入账后部分退款不另起一行，只显示差额行，原因 PART_REFUND「部分退款」（优先级第 2 条）。</li>
+      <li>时间线 · <code>BR-TEXT-02</code> 细则：追加「部分扣回 {time}」节点。结算节点写法同状态 21 ④，待定。</li>
+      <li>【去提现】 · <code>BR-TEXT-02</code> 状态固有按钮 · 路由 <code>Withdraw</code>。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 23. 详情 · 已失效（REFUND） ============ -->
+  <section class="wf-state" aria-label="状态 23：订单详情·已失效（退款）">
+    <div>
+      <p class="wf-state__label">23. 详情 · 已失效（看原因）<small>display_status=INVALID，原因码 REFUND（AC-S1-44 的样例）；即列表样例 I</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">已失效</span>
+            <div class="o-money">返利 <span class="wf-amount wf-amount--lg">¥0</span></div>
+          </div>
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">2</span>
+            <span class="wf-title">为什么没返利？</span>
+            <div>订单已退款或取消</div>
+            <div class="wf-caption">退款或取消后平台不再支付返利</div>
+            <div class="wf-divider"></div>
+            <div class="wf-row wf-row--between wf-anchor"><span class="o-label">［额外帮助］</span><span class="wf-link">问问 AI ›</span><span class="wf-pin o-pin-left">3</span></div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 I：运动鞋</div>
+                <div class="o-meta">实付金额 ¥199 · 件数 1</div>
+                <div class="o-meta">订单号 3722222222222222222 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">4</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li>付款<small>2026-09-30 21:40</small></li>
+              <li class="is-todo">收货</li>
+              <li class="is-todo">联盟结算</li>
+              <li class="is-todo">已结算</li>
+              <li class="is-current">失效<small>2026-10-02 08:15</small></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>F-ORD-07</code> · <code>BR-TEXT-02</code>（<code>order_status.INVALID</code>「已失效」，金额行「返利 ¥0」）。该单在列表归「无返利」组（状态 3）。</li>
+      <li>「为什么没返利？」 · 01 §4.1、§5 J5 第 1 步（拍板第二批 AI-09） · 页内直接显示 <code>GET /v1/orders/{order_id}</code> 的原因：<code>order_reason.REFUND.title</code>「订单已退款或取消」+ <code>.desc</code>「退款或取消后平台不再支付返利」（BR-TEXT-05）；不进 AI、不扣次数；可找回为「否」，不显示找回入口（AC-S1-44）。REFUND 没有 action，所以底部不出按钮；BLACKLIST 给【去申诉】（状态 24），PUNISH、OTHER、COMMISSION_ZERO 给【联系客服】（状态 26），作主按钮（BR-TEXT-02、BR-TEXT-05）。<span class="wf-todo">待定：这个标题在哪些状态出现、默认展开还是点开、文案键（规划未写；它与映射表「附加说明」里的原因如何并存也未写）</span>。</li>
+      <li>「问问 AI」 · interaction-patterns §3：AI 是额外帮助入口，不作为看原因的门槛。其余同状态 16 ⑦。</li>
+      <li>时间线 · <code>BR-TEXT-02</code> 细则：INVALID 追加「失效 {time}」节点，未发生的节点置灰；此单月份为空，结算节点按「联盟结算」写。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 24. 详情 · 已失效（BLACKLIST，去申诉） ============ -->
+  <section class="wf-state" aria-label="状态 24：订单详情·已失效（未通过安全校验，去申诉）">
+    <div>
+      <p class="wf-state__label">24. 详情 · 已失效 + 【去申诉】<small>display_status=INVALID，原因码 BLACKLIST，action=[APPEAL]</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">已失效</span>
+            <div class="o-money">返利 <span class="wf-amount wf-amount--lg">¥0</span></div>
+          </div>
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">2</span>
+            <span class="wf-title">为什么没返利？</span>
+            <div>订单未通过安全校验</div>
+            <div class="wf-caption">如有疑问可提交申诉</div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 Q：护手霜 3 支装</div>
+                <div class="o-meta">实付金额 ¥29.9 · 件数 1</div>
+                <div class="o-meta">订单号 3766666666666666666 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">3</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li>付款<small>2026-09-28 13:10</small></li>
+              <li class="is-todo">收货</li>
+              <li class="is-todo">联盟结算</li>
+              <li class="is-todo">已结算</li>
+              <li class="is-current">失效<small>2026-09-29 09:00</small></li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">4</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="wf-anchor"><button class="couli-button-primary wf-btn--block" type="button">去申诉</button><span class="wf-pin">5</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>F-ORD-07</code> · <code>BR-TEXT-02</code>（INVALID「已失效｜返利 ¥0」） · AC-S1-27 ①。</li>
+      <li>原因 · <code>BR-TEXT-05</code> BLACKLIST：<code>order_reason.BLACKLIST.title</code>「订单未通过安全校验」+ <code>.desc</code>「如有疑问可提交申诉」；可找回「否」，不显示找回入口；不得说明命中哪条风控规则（BR-TEXT-05「边界」）。「为什么没返利？」标题同状态 23 ②，待定。</li>
+      <li>时间线 · <code>BR-TEXT-02</code> 细则：追加「失效 {time}」，未发生的节点置灰。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦。</li>
+      <li>【去申诉】 · <code>BR-TEXT-02</code> 按钮合并（状态固有按钮 + reason.action，最多 2 个，reason.action 为主按钮）：INVALID 没有固有按钮，只剩 reason.action APPEAL 的【去申诉】 · 路由 <code>Appeal</code>（01 §4.2；BR-ID-36）。订单申诉只标记该订单申诉中，不改账户状态、不卡提现（拍板第二批 OPS-07）。<span class="wf-todo">待定：详情接口返回 <code>appeal_pending=true</code>（04 §6.4）时页面显示什么、【去申诉】是隐藏还是改成看进度——BR-TEXT 没有「订单申诉中」的文案键，BR-ID-36 例只写「该订单显示申诉中」（规划未写）</span>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 25. 详情 · 已扣回（REFUND） ============ -->
+  <section class="wf-state" aria-label="状态 25：订单详情·已扣回（结算后退款）">
+    <div>
+      <p class="wf-state__label">25. 详情 · 已扣回（结算后退款）<small>display_status=CLAWED_BACK，原因 REFUND；结算后失效，余额已扣减；即列表样例 J</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">已扣回</span>
+            <div class="o-money">扣回 <span class="wf-amount wf-amount--lg">-¥3.2</span></div>
+          </div>
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">2</span>
+            <div>订单已退款或取消</div>
+            <div class="wf-caption">退款或取消后平台不再支付返利</div>
+            <div class="wf-caption">已从余额扣除</div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">京东</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 J：蓝牙耳机</div>
+                <div class="o-meta">实付金额 ¥89 · 件数 1</div>
+                <div class="o-meta">订单号 306666666666 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">3</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li>付款<small>2026-08-05 12:00</small></li>
+              <li>收货<small>2026-08-12 18:30</small></li>
+              <li>［联盟结算］ <span class="wf-todo-tag">待定</span></li>
+              <li>已结算<small>2026-09-25 10:00</small></li>
+              <li class="is-current">扣回<small>2026-10-01 16:20</small></li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">5</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="wf-anchor"><button class="couli-button-primary wf-btn--block" type="button">查看流水</button><span class="wf-pin">4</span></div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>F-SET-04</code> · <code>BR-TEXT-02</code>（<code>order_status.CLAWED_BACK</code>「已扣回」，金额行「扣回 -¥z」，负号在 ¥ 前，BR-TEXT-10） · <code>BR-TEXT-01</code>（已扣回 = 结算后失效，余额已被扣减，可能变负）· <code>BR-FUND-08</code>。</li>
+      <li>原因 +「已从余额扣除」 · <code>BR-TEXT-02</code> 附加说明 · <code>BR-TEXT-05</code>：结算后退款映射为 REFUND；售后维权成功时为 RIGHTS「发起售后维权，返利取消」+「售后成功后平台不再支付这笔返利」。</li>
+      <li>时间线 · <code>BR-TEXT-02</code> 细则：追加「扣回 {time}」节点。结算节点写法同状态 21 ④，待定。</li>
+      <li>【查看流水】 · <code>BR-TEXT-02</code> 状态固有按钮 · 路由 <code>Ledger</code>（H5，BR-TEXT-19）。REFUND 没有 reason.action，只有这一个按钮；有 reason.action 时它退为次按钮，见状态 26。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 26. 详情 · 已扣回（PUNISH，联系客服 + 查看流水） ============ -->
+  <section class="wf-state" aria-label="状态 26：订单详情·已扣回（联盟判定违规，联系客服与查看流水）">
+    <div>
+      <p class="wf-state__label">26. 详情 · 已扣回 + 两个按钮<small>display_status=CLAWED_BACK，reason=PUNISH、reason_sub=FAKE_TRADE，action=[CONTACT_CS]</small></p>
+      <div class="wf-phone">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">已扣回</span>
+            <div class="o-money">扣回 <span class="wf-amount wf-amount--lg">-¥3.2</span></div>
+          </div>
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">2</span>
+            <div>订单被联盟判定违规：平台判定为异常交易</div>
+            <div class="wf-caption">已从余额扣除</div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">京东</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 R：充电宝 10000mAh</div>
+                <div class="o-meta">实付金额 ¥79 · 件数 1</div>
+                <div class="o-meta">订单号 308888888888 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">3</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li>付款<small>2026-08-08 22:05</small></li>
+              <li>收货<small>2026-08-11 17:40</small></li>
+              <li>［联盟结算］ <span class="wf-todo-tag">待定</span></li>
+              <li>已结算<small>2026-09-25 10:00</small></li>
+              <li class="is-current">扣回<small>2026-10-03 14:00</small></li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">4</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+        <div class="wf-footer">
+          <div class="o-actions">
+            <span class="wf-btn wf-anchor">查看流水<span class="wf-pin">6</span></span>
+            <span class="wf-anchor"><button class="couli-button-primary wf-btn--block" type="button">联系客服</button><span class="wf-pin">5</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>F-SET-04</code> · <code>BR-TEXT-02</code>（CLAWED_BACK「已扣回｜扣回 -¥z」）；样例取 BR-TEXT-05 例与 BR-TEXT-02 例（(SETTLED, CLAWED_BACK) + PUNISH）。</li>
+      <li>原因 · <code>BR-TEXT-05</code>：reason_sub 存在时显示「{title}：{sub.desc}」——<code>order_reason.PUNISH.title</code>「订单被联盟判定违规」+ <code>order_reason_sub.FAKE_TRADE.desc</code>「平台判定为异常交易」，不暴露联盟术语；后接「已从余额扣除」（BR-TEXT-02 附加说明）。AC-S1-27 ①。</li>
+      <li>时间线 · 追加「扣回 {time}」；结算节点写法同状态 21 ④，待定。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦。</li>
+      <li>【联系客服】（主按钮） · <code>BR-TEXT-02</code> 按钮合并：状态固有【查看流水】+ reason.action【联系客服】，最多 2 个，reason.action 为主按钮（BR-TEXT-05 例）。去向：客服会话页（BR-TEXT-05 action <code>CONTACT_CS</code>）；未装微信时按 BR-TEXT-14 表 C <code>cs.wechat_unavailable</code>。<span class="wf-todo">待定：01 §4.2 没有客服会话页的路由名（规划未写）</span>。</li>
+      <li>【查看流水】（次按钮） · 状态固有按钮 · 路由 <code>Ledger</code>（H5）。两个按钮的左右位置按 UI 稿。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 27. 详情 · 本单无返利（比价） ============ -->
+  <section class="wf-state" aria-label="状态 27：订单详情·本单无返利（比价订单）">
+    <div>
+      <p class="wf-state__label">27. 详情 · 本单无返利（比价订单）<small>display_status=NO_REBATE 且 is_price_compare=true；条件项，见注释 ②；即列表样例 L</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">本单无返利</span>
+            <div class="wf-row wf-row--between wf-anchor">
+              <span class="wf-caption">这笔订单被平台判为比价订单，没有返利</span>
+              <span class="wf-link o-nowrap">查看说明</span>
+              <span class="wf-pin o-pin-left">2</span>
+            </div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">拼多多</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 L：手机壳</div>
+                <div class="o-meta">实付金额 ¥15.9 · 件数 1</div>
+                <div class="o-meta">订单号 261002-987654321098765 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">3</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li class="is-current">付款<small>2026-10-02 16:25</small></li>
+              <li class="is-todo">收货</li>
+              <li class="is-todo">联盟结算</li>
+              <li class="is-todo">已结算</li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">4</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>F-ORD-07</code> · <code>BR-TEXT-02</code>（<code>order_status.NO_REBATE</code>「本单无返利」，不显示金额；没有状态固有按钮） · AC-S1-24 ③。is_price_compare 不为 true 时附加说明为「—」，只剩状态文案。NO_REBATE 没有 void 原因码，不出「为什么没返利？」区。</li>
+      <li>比价无返利说明 · <code>BR-TEXT-03</code>「比价无返利」：is_price_compare=true 时 hint 用 <code>order.price_compare.hint</code>「这笔订单被平台判为比价订单，没有返利」；行尾「查看说明」（比价说明入口 ③，没配置帮助文章时不显示，不占按钮位）。条件项：is_price_compare 的判定待 CAP-TB-04、CAP-PDD-04 验证（BR-CALC-16），没验证通过的平台该值为空，这一行不出现。</li>
+      <li>时间线 · <code>BR-TEXT-02</code> 细则：未发生的节点置灰；月份为空时结算节点只显示「联盟结算」。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 28. 详情 · 状态更新中（未知编码） ============ -->
+  <section class="wf-state" aria-label="状态 28：订单详情·状态更新中（未知编码）">
+    <div>
+      <p class="wf-state__label">28. 详情 · 状态更新中（未知编码）<small>服务端返回客户端不认识的 display_status；即列表样例 M</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">状态更新中</span>
+            <div class="wf-caption">请稍后查看</div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">京东</span><span class="wf-link">查看商品 ›</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 M：收纳盒 3 个装</div>
+                <div class="o-meta">实付金额 ¥19.9 · 件数 1</div>
+                <div class="o-meta">订单号 309999999999 <span class="wf-link">复制</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">2</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li>付款<small>2026-09-25 18:00</small></li>
+              <li class="is-todo">［其余节点］ <span class="wf-todo-tag">待定</span></li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">3</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>BR-TEXT-02</code>（未知状态编码一律显示 <code>order_status.UNKNOWN</code>「状态更新中」，附加说明「请稍后查看」；金额行不显示；不得显示编码原文） · BR-TEXT-12「未知编码」 · AC-S1-27 ③。没有按钮。</li>
+      <li>时间线 · 显示接口 <code>timeline[]</code> 里已发生的节点。<span class="wf-todo">待定：未知编码时其余节点画不画、怎样置灰（规划未写）</span>。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 29. 详情 · 分享单（商品一致） ============ -->
+  <section class="wf-state" aria-label="状态 29：订单详情·分享单（商品与分享一致）">
+    <div>
+      <p class="wf-state__label">29. 详情 · 分享单（商品与分享一致）<small>scope=share、is_other_product=false；即分享列表样例 E</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">已付款，返利待确认</span>
+            <div class="o-money">预估推广收益 <span class="wf-amount wf-amount--lg">¥1.2</span></div>
+            <div class="wf-caption">确认收货后随联盟月度结算入账</div>
+          </div>
+          <div class="wf-card o-item">
+            <div class="wf-row wf-row--between"><span class="wf-tag wf-tag--source">淘宝</span><span class="wf-link wf-anchor">查看商品 ›<span class="wf-pin">2</span></span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图"></div>
+              <div class="o-info">
+                <div class="o-title">样例商品 E：保温杯 500ml</div>
+                <div class="o-meta">实付金额 ¥59 · 件数 1</div>
+                <div class="o-meta wf-anchor">订单号 3756****12<span class="wf-pin">3</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">4</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li class="is-current">付款<small>2026-10-03 21:40</small></li>
+              <li class="is-todo">收货</li>
+              <li class="is-todo">联盟结算</li>
+              <li class="is-todo">已结算</li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">5</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · <code>BR-TEXT-02</code>：分享单状态文案同自购单，金额行用「预估推广收益 ¥x」/「推广收益 ¥y」（BR-TEXT-01）；PAID 的入账时点说明同状态 15 ④；不展示买家任何信息（BR-ATTR-10）。</li>
+      <li>「查看商品」 · <code>F-ORD-16</code> · 键 <code>order_detail.view_product</code>：商品与分享时一致（is_other_product=false）且 product_key 非空才显示；进去后购买按自购处理、是新的归因（AC-S1-104 ② O9）。</li>
+      <li>脱敏订单号 · <code>BR-TEXT-02</code> 细则「订单号的显示」：只显示 <code>masked_order_no</code>，没有复制按钮，长按不出复制菜单；分享单的接口响应里没有完整单号。</li>
+      <li>时间线 · 同自购单（BR-TEXT-02 细则「时间线」）。</li>
+      <li>「问问 AI」 · 同状态 16 ⑦；AI 助手查分享单也只拿到同一份投影（BR-TEXT-02 细则「订单的检索范围与分享单的投影」，AC-S1-106）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 30. 详情 · 分享单（好友购买的其他商品） ============ -->
+  <section class="wf-state" aria-label="状态 30：订单详情·分享单（好友购买的其他商品）">
+    <div>
+      <p class="wf-state__label">30. 详情 · 分享单（好友购买的其他商品）<small>scope=share、is_other_product=true；即分享列表第 2 笔</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-card o-status wf-anchor"><span class="wf-pin">1</span>
+            <span class="wf-title">已收货，等待联盟结算</span>
+            <div class="o-money">预估推广收益 <span class="wf-amount wf-amount--lg">¥0.8</span></div>
+            <div class="wf-caption">预计 10 月结算</div>
+          </div>
+          <div class="wf-card o-item wf-anchor"><span class="wf-pin">2</span>
+            <div class="wf-row"><span class="wf-tag wf-tag--source">拼多多</span></div>
+            <div class="o-main">
+              <div class="wf-img o-thumb" aria-label="商品图位置占位（不显示好友买的商品）"></div>
+              <div class="o-info">
+                <div class="o-title">好友购买的其他商品</div>
+                <div class="o-meta">实付金额 ¥26.8 · 件数 2</div>
+                <div class="o-meta">订单号 2609****18</div>
+                <div><span class="wf-todo-tag">待定</span> <span class="o-label">［商品图位］</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">3</span>
+            <div class="o-label">［时间线］</div>
+            <ol class="o-tl">
+              <li>付款<small>2026-09-27 15:10</small></li>
+              <li>收货<small>2026-09-29 12:00</small></li>
+              <li class="is-current">预计 10 月结算</li>
+              <li class="is-todo">已结算</li>
+            </ol>
+          </div>
+          <div class="wf-card wf-anchor"><span class="wf-pin">4</span>
+            <div class="wf-row wf-row--between"><span class="o-label">［情境入口］</span><span class="wf-link">问问 AI ›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>当前状态区 · 同状态 29 ①（WAITING + 预计结算月份，BR-TEXT-04）。</li>
+      <li>好友购买的其他商品 · 键 <code>order_list.other_product</code>（BR-TEXT-14 表 C，列表、详情、AI 卡片共用） · <code>BR-TEXT-02</code> 细则「订单的检索范围与分享单的投影」：is_other_product=true 时服务端不下发标题、商品图、SKU 与 product_key，没有「查看商品」，页面不露出好友买的商品（AC-S1-104 ② O10）；实付金额与件数照常显示（BR-ATTR-10）；订单号只有脱敏号、不可复制。<span class="wf-todo">待定：商品图位置放什么（规划未写，UI 稿定）</span>。</li>
+      <li>时间线 · 同自购单。</li>
+      <li>「问问 AI」 · 同状态 29 ⑤。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 31. 详情 · 加载中 ============ -->
+  <section class="wf-state" aria-label="状态 31：订单详情·加载中">
+    <div>
+      <p class="wf-state__label">31. 详情 · 加载中<small>从列表、推送或站内信进入，接口未返回</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-stack wf-anchor"><span class="wf-pin">1</span>
+            <div class="wf-card o-status">
+              <div class="wf-line o-w-half"></div>
+              <div class="wf-line o-w-third"></div>
+              <div class="wf-line"></div>
+            </div>
+            <div class="wf-card o-item">
+              <div class="o-main"><div class="wf-skeleton o-thumb"></div><div class="o-info"><div class="wf-line"></div><div class="wf-line"></div><div class="wf-line"></div></div></div>
+            </div>
+            <div class="wf-card o-status">
+              <div class="wf-line o-w-third"></div>
+              <div class="wf-line o-w-half"></div>
+              <div class="wf-line o-w-half"></div>
+              <div class="wf-line o-w-third"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>骨架屏 · 03 §10.2 <code>Skeleton</code> · 不带文案；顺序同正常态（状态区、商品区、时间线）。请求 10 秒超时，读接口自动重试 1 次（01 F-CFG-08，03 §4.2）。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 32. 详情 · 加载失败 ============ -->
+  <section class="wf-state" aria-label="状态 32：订单详情·加载失败">
+    <div>
+      <p class="wf-state__label">32. 详情 · 加载失败<small>请求失败（5xxxx 或断网）</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-empty">
+            <div class="wf-img" aria-label="插图占位"></div>
+            <div class="wf-anchor">出了点问题，请稍后再试（d4e5f6）<span class="wf-pin">1</span></div>
+            <div class="wf-anchor"><button class="couli-button-primary" type="button">重试</button><span class="wf-pin">2</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>错误说明 · 03 §10.2 <code>ErrorState</code> · <code>BR-TEXT-14</code> 表 A「其他 5xxxx」：「出了点问题，请稍后再试（{trace6}）」（样例 d4e5f6）。断网（拿不到错误码）时的文案同状态 13 ①，待定；详情是否显示上次数据同状态 14 ②，待定。</li>
+      <li>【重试】 · <code>BR-TEXT-14</code> 表 A 动作「重试」 · 03 §3.2 Action <code>.retry</code>。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 33. 详情 · 超出可查范围（30701） ============ -->
+  <section class="wf-state" aria-label="状态 33：订单详情·超出可查范围（30701）">
+    <div>
+      <p class="wf-state__label">33. 详情 · 超出可查范围（30701）<small>后台设了可查月数；从推送或站内信打开范围以外的订单</small></p>
+      <div class="wf-phone wf-phone--short">
+        <div class="wf-statusbar"><span>9:41</span><span>信号 电量</span></div>
+        <div class="wf-navbar">
+          <span class="o-nav-side">‹</span>
+          <span class="wf-navbar__title">订单详情</span>
+          <span class="o-nav-side"></span>
+        </div>
+        <div class="wf-body">
+          <div class="wf-empty">
+            <div class="wf-img" aria-label="插图占位"></div>
+            <div class="wf-anchor">内容不存在或已下线<span class="wf-pin">1</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="wf-notes">
+      <li>空态 · 04 §6.4（只返回可查范围内的订单，「超出范围的订单详情返回 30701」） · 键 <code>error.30701</code>「内容不存在或已下线」，动作「显示空态」（BR-TEXT-14 表 A） · <code>BR-ID-30</code> 细则「订单类记录」。只留导航栏返回，不加其他按钮（规划没写别的动作）。默认不限制范围时不会出现。</li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="wf-foot">
+  <h2>本页覆盖的状态</h2>
+  <ol>
+    <li>列表 · 自购 · 正常态（全部；含预售单项、预计结算月份、未知编码「状态更新中」）</li>
+    <li>列表 · 分享子 Tab（脱敏订单号、好友购买的其他商品显示实付金额与件数）</li>
+    <li>列表 · 「无返利」分组（本单无返利、已失效、已扣回三笔）</li>
+    <li>列表 · 外跳 ≥30 分钟（待跟单卡带找回入口与通知行、找回入口置顶）</li>
+    <li>列表 · 刚返回不到 30 分钟（待跟单卡无找回入口；通知权限已决定过，无通知行）</li>
+    <li>列表 · 找回功能关闭（入口置灰、30206 提示）</li>
+    <li>列表 · 金额隐藏已打开（可选功能）</li>
+    <li>列表 · 查询范围受限时底部提示</li>
+    <li>游客 · 引导登录</li>
+    <li>列表 · 加载中</li>
+    <li>列表 · 空态（保留找回与继续浏览）</li>
+    <li>列表 · 分享子 Tab 搜索无结果</li>
+    <li>列表 · 加载失败（无上次数据，重试）</li>
+    <li>列表 · 加载失败（显示上次数据）</li>
+    <li>详情 · 已付款（比价风险区间、提示与「查看说明」、入账时点说明）</li>
+    <li>详情 · 已收货，等待联盟结算（详情公共模块）</li>
+    <li>详情 · 入账前部分退款（叠加行）</li>
+    <li>详情 · 售后处理中，入账暂停</li>
+    <li>详情 · 入账核对中</li>
+    <li>详情 · 预售单（已付定金、「付定金」节点）</li>
+    <li>详情 · 已结算（差额行与「查看说明」、【去提现】）</li>
+    <li>详情 · 已结算（部分扣回）</li>
+    <li>详情 · 已失效（REFUND，「为什么没返利？」页内显示原因）</li>
+    <li>详情 · 已失效 + 【去申诉】（BLACKLIST）</li>
+    <li>详情 · 已扣回（REFUND，【查看流水】）</li>
+    <li>详情 · 已扣回 + 【联系客服】（主）+【查看流水】（PUNISH / FAKE_TRADE）</li>
+    <li>详情 · 本单无返利（比价订单说明与「查看说明」，条件项）</li>
+    <li>详情 · 状态更新中（未知编码）</li>
+    <li>详情 · 分享单（商品一致：查看商品、脱敏单号、预估推广收益）</li>
+    <li>详情 · 分享单（好友购买的其他商品：无商品图与查看商品）</li>
+    <li>详情 · 加载中</li>
+    <li>详情 · 加载失败（重试）</li>
+    <li>详情 · 超出可查范围（30701 空态）</li>
+  </ol>
+
+  <h2>待定项</h2>
+  <ul>
+    <li><span class="wf-todo-tag">待定</span> 找回入口常驻时放在哪、什么样式，置顶时怎样区分；01 §4.1 叫「找回订单」，BR-ATTR-17 叫「未跟单？去找回」（本稿用后者）。去 08 BR-ATTR-17（14_待决策汇总 BR-ATTR-17 行，负责人）与 UI 稿（06 Q-E5）定。</li>
+    <li><span class="wf-todo-tag">待定</span> 找回功能关闭（<code>claims.enabled=off</code>）时客户端怎样提前得知（04 §10 只写提交返回 30206，/v1/config 未列）；点置灰入口时是否弹 <code>error.30206</code>。规划未写（BR-ATTR-17 ⓪、BR-TEXT-14 表 A 30206）。</li>
+    <li><span class="wf-todo-tag">待定</span> 降级文案 <code>claim_required</code>「{platform_name}返利需下单后提交订单号认领」在订单页放在哪、什么时候出。BR-TEXT-14 表 C 只写「订单页与商品卡」「走找回」；是否出现取决于 09 CAP-TB-05 / CAP-JD-05 / CAP-PDD-05 的用户键实测，实测前不画成承诺。规划未写位置。</li>
+    <li><span class="wf-todo-tag">待定</span> 待跟单卡出现在哪个页面；与置顶找回入口同时出现时是否合并；关闭按钮的无障碍标签。去 BR-ATTR-21 与 BR-TEXT-14 表 C 定（14_待决策汇总 G-05 行，运营确认）。</li>
+    <li><span class="wf-todo-tag">待定</span> 订单号「复制」按钮文字与复制后提示；「实付金额」「件数」的显示标签。规划未写，需在 BR-TEXT-14 表 C 补文案键。</li>
+    <li><span class="wf-todo-tag">待定</span> 列表是否显示付款时间。规划未写（01 §4.2 字段清单未列，BR-TEXT-11 影响面含 OrderList）。</li>
+    <li><span class="wf-todo-tag">待定</span> 列表行显示附加说明到哪一级（INVALID、CLAWED_BACK 的原因标题是否进列表，说明与比价提示是否只在详情）。04 §6.4 列表项带 reason，AC-S1-27 ① 把列表与详情一起断言，BR-TEXT-02 没分；本稿列表只显示原因标题一行。规划未写。</li>
+    <li><span class="wf-todo-tag">待定</span> 规划同步缺陷：04 §6.4 <code>GET /v1/orders</code> 列表项缺 <code>rebate_min_fen / rebate_max_fen</code>、<code>actual_fen</code>、<code>clawback_fen</code>、<code>expected_credit_period</code>（BR-TEXT-02 影响面与例子要求列表显示区间、实返、扣回与预计月份）。以 08 为准补 04，本稿按 08 画。</li>
+    <li><span class="wf-todo-tag">待定</span> 默认子 Tab。规划未写。</li>
+    <li><span class="wf-todo-tag">待定</span> 金额隐藏开关在列表与详情的位置；实付金额是否一起隐藏。BR-TEXT-10 细则「金额隐藏」写明由 UI 稿定（06 Q-E5）。</li>
+    <li><span class="wf-todo-tag">待定</span> 分享单里「好友购买的其他商品」的商品图位置放什么（实付金额与件数按 BR-ATTR-10 照常显示，不再待定）。规划未写，UI 稿定。</li>
+    <li><span class="wf-todo-tag">待定</span> 内测期是否显示「分享」子 Tab。规划未写（01 E13 分享为 M-公开，TRADE-21 内测隐藏【分享】）。</li>
+    <li><span class="wf-todo-tag">待定</span> 查询范围提示里的「联系客服」是否可点。规划未写（BR-TEXT-14 表 C <code>order_list.history_hint</code>；可查范围默认按功能对照 Q-19，见 06「功能对照待确认」）。</li>
+    <li><span class="wf-todo-tag">待定</span> 游客态的引导说明文案，以及是否显示子 Tab 与找回入口。规划未写（01 §4.1 只写「引导登录」）。</li>
+    <li><span class="wf-todo-tag">待定</span> 空态说明文案、「继续浏览」按钮文字与去向；搜索或筛选无结果的文案键、是否与空态共用、要不要放找回入口。规划未写（BR-TEXT-14 未列，interaction-patterns §3）。</li>
+    <li><span class="wf-todo-tag">待定</span> 断网且没有上次数据时的错误文案（列表与详情）；显示上次数据时是否带重试按钮；订单详情是否也缓存上次数据。规划未写（BR-TEXT-14 表 A、表 C <code>net.stale_data</code>，01 F-CFG-08 只写订单与钱包）。</li>
+    <li><span class="wf-todo-tag">待定</span> 「为什么没返利？」在哪些状态出现、是否默认展开、文案键，以及与映射表「附加说明」里的原因如何并存。规划未写（01 §4.1 AI-09，BR-TEXT-02、BR-TEXT-05）。</li>
+    <li><span class="wf-todo-tag">待定</span> 「问问 AI」的文案键。规划未写（01 §4.1 Agent 情境入口只有原文；01 没有按状态限制，本稿所有正常显示的详情状态都放）。</li>
+    <li><span class="wf-todo-tag">待定</span> 结算以后时间线里「预计 {月份} 结算」节点写什么。规划未写（BR-TEXT-02 细则「时间线」与 BR-TEXT-04 之间的空白）。</li>
+    <li><span class="wf-todo-tag">待定</span> PAID 比价风险提示与入账时点说明是并列两行还是替换（BR-TEXT-12 称其为「order_status.PAID.hint 的比价变体」，BR-TEXT-03 称「叠加」）。规划没写清。</li>
+    <li><span class="wf-todo-tag">待定</span> 入账前部分退款叠加行与「预计…结算」行的上下顺序；区间预估遇部分退款时 {current} 的写法；部分退款后实付金额、件数显示原值还是剩余值。规划未写（BR-TEXT-03 只定了部分退款行在比价风险行之上）。</li>
+    <li><span class="wf-todo-tag">待定</span> 「入账核对中」的「如有疑问请联系客服」是否可点；【联系客服】（CONTACT_CS「客服会话页」）的路由名。规划未写（BR-TEXT-03、BR-TEXT-05；01 §4.2 无对应路由）。</li>
+    <li><span class="wf-todo-tag">待定</span> 订单申诉中：详情接口 <code>appeal_pending=true</code> 时页面显示什么，【去申诉】是否隐藏或改为查看进度。BR-TEXT 无「订单申诉中」文案键；04 §6.4 有字段，BR-ID-36 例只写「该订单显示申诉中」。规划未写。</li>
+    <li><span class="wf-todo-tag">待定</span> 未知编码时详情时间线其余节点是否显示、怎样置灰。规划未写（BR-TEXT-02 只定状态文案）。</li>
+    <li><span class="wf-todo-tag">待定</span> 状态标签的配色。待 UI 稿（06 Q-E5）；订单文案映射本身仍是默认假设（14_待决策汇总 BR-TEXT-02、BR-TEXT-03、BR-TEXT-05 行）。</li>
+  </ul>
+
+  <h2>请负责人确认</h2>
+  <ul>
+    <li>订单页上的「找回」入口，规划里有两个叫法：「找回订单」和「未跟单？去找回」。稿子先用了后者，您看用哪个？另外，刚从淘宝等平台买完回来半小时后，页面顶部会同时出现「订单同步中」卡片和醒目的找回提示，两个要不要合成一个？</li>
+    <li>点小眼睛隐藏金额后，订单里的返利金额都变成「****」。买东西实际付的钱要不要也一起藏起来？</li>
+    <li>用户对一笔「订单未通过安全校验」的失效订单点了【去申诉】之后，订单详情要不要显示「申诉中」？那时【去申诉】按钮还留不留？规划只说这笔订单会被标记为申诉中，没写页面怎么显示。</li>
+  </ul>
+</footer>
+</body>
+</html>
