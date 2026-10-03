@@ -20,6 +20,8 @@
 
 2026-10-03 功能对照补缺第 4 批（docs/changes/20261003-功能对照补缺.md「第 4 批」，功能对照 G-35～G-65）：逐条改动在各条细则里注「2026-10-03，功能对照 G-xx」，各条状态不变，不新增 BR-TEXT 条目。BR-TEXT-01 细则（不显示累计收益）、BR-TEXT-02 正文影响面与细则（订单分组与查找、订单号显示、查看商品、预售节点与金额）、BR-TEXT-10 细则（金额隐藏）、BR-TEXT-18 细则（累计收益的答复、三个常见问题）、BR-TEXT-20 细则（分享文案不带邀请码）；BR-TEXT-14 表 A 30153 与 50304 两行、表 B 新增 50304.search_disabled、表 C 新增购买加载、百川不可用、授权管理、订单分组与筛选、预售、查看商品、金额隐藏各键；BR-TEXT-22 新增 agent.notice.search_disabled。 第 1 轮评审后（同一变更记录 4.8，按编排会话裁定）：BR-TEXT-02 细则新增「订单的检索范围与分享单的投影」（订单列表、订单详情与 AI 助手共用的唯一维护处），「订单列表的状态分组与查找」的搜索一项与「share 单」一段改为引用；BR-TEXT-14 表 C 加 order_list.other_product。状态不变，不新增条目。
 
+2026-10-03 资金规则对齐（docs/changes/20261003-资金规则对齐.md，负责人批准）：BR-TEXT-02 映射表的阅读列随 BR-FUND-17 第 3 行与「查看者本人份额暂缓」同步；BR-TEXT-02、BR-TEXT-19 的 C-16 改为已确认（决-04）。文案与条目状态不变。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -145,6 +147,7 @@
   - 本条映射表原 WAITING_SETTLE 行：「WAITING，入账基数低于 settle.daily_min_fen 且结算额未记录 → 已收货，等待联盟结算后入账」（月结口径下停用，BR-FUND-17 第 11 行；拍板第二批 FUND-01）
   - 本条 2026-09-30 月结初稿文案：WAITING hint「预计随 {platform_name} {credit_period} 联盟结算后入账」、时间线「预计随 {platform_name} {credit_period} 联盟结算」（credit_period 为确认收货月）（负责人 2026-09-30 补充，变更记录 §10：改为预计结算月份「预计 {credit_period} 结算」）
   - PRD v2.1 §9.3：「PRESALE_DEPOSIT、RIGHTS_PROTECTING、PLATFORM_SETTLED 状态名」（分别映射 platform_status=DEPOSIT_PAID、display_status=RIGHTS_PENDING、platform_status=SETTLED；原映射「DEPOSIT_PAID、RECEIVED+维权提示、SETTLED」按 C-01 改写）
+  - 本条映射表「对应双状态」列 2026-10-03 前写法：REVIEWING「ESTIMATED 或 WAITING，hold=true」；NO_REBATE「或 CREDITED 且无入账凭证（B_credit=0）」（随 BR-FUND-17 第 3 行改按 booked_base_fen 判定、补「查看者本人份额暂缓」说明同步；只改阅读列，文案不变）（2026-10-03 资金规则对齐（负责人批准），方案 §6.6，同-13）
 - 来源：规划/04 §2.3、§4.1、§8.3；规划/01 §5 J4、J7 第 5 条、J8、F-ORD-07；PRD修订_后端功能规划 2.5、3.2；PRD v2.1 §9.3；docs/changes/20260930-拍板第一批.md §3（C-02、D11 行）；docs/changes/20260930-拍板第一批.md §10（负责人 2026-09-30 补充）；docs/changes/20261001-拍板第二批.md（OPS-01、AI-02）
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
@@ -157,8 +160,8 @@
 | WAITING | (RECEIVED 或 SETTLED, WAITING) | 已收货，等待联盟结算 | 预估返 ¥x | 预计 {credit_period} 结算（BR-TEXT-04；credit_period 为预计结算月份，expected_credit_period 为 null 时不显示） | — |
 | CREDITING | WAITING，该平台 credit.enabled=off 或 credit_overdue=true（BR-FUND-17 第 10、12 行，BR-FUND-04 ⑪；原按 expected_credit_date 早于今天） | 入账核对中 | 预估返 ¥x | 如有疑问请联系客服（BR-TEXT-03） | — |
 | RIGHTS_PENDING | ESTIMATED 或 WAITING，rights_pending=true | 售后处理中，入账暂停 | 预估返 ¥x | 售后结束后随联盟结算入账（BR-TEXT-03） | — |
-| REVIEWING | ESTIMATED 或 WAITING，hold=true | 入账核对中 | 预估返 ¥x | 如有疑问请联系客服；不显示 hold 原因与预计结算月份（BR-TEXT-03） | — |
-| NO_REBATE | ESTIMATED / WAITING 且 B_est=0，或 CREDITED 且无入账凭证（B_credit=0） | 本单无返利 | 不显示金额 | —（被平台判为比价订单时显示比价说明，BR-TEXT-03「比价无返利」，2026-10-03） | — |
+| REVIEWING | ESTIMATED 或 WAITING，hold=true；或 CREDITED 而查看者本人在该单的份额暂缓、尚未入账（BR-FUND-17 派生表下方「查看者本人份额暂缓」，2026-10-03） | 入账核对中 | 预估返 ¥x | 如有疑问请联系客服；不显示 hold 原因与预计结算月份（BR-TEXT-03） | — |
+| NO_REBATE | ESTIMATED / WAITING 且 B_est=0，或 CREDITED 且 booked_base_fen = 0（BR-FUND-17 第 3 行） | 本单无返利 | 不显示金额 | —（被平台判为比价订单时显示比价说明，BR-TEXT-03「比价无返利」，2026-10-03） | — |
 | CREDITED | (RECEIVED 或 SETTLED, CREDITED)，无 CLAWBACK | 已结算 | 实返 ¥y（含结算补差） | 差额行（BR-TEXT-03） | 去提现 |
 | CREDITED_PART_CLAWED | CREDITED 且存在 CLAWBACK（部分扣回，含入账后部分退款） | 已结算（部分扣回 {z}） | 实返 ¥y | 差额行（BR-TEXT-03） | 去提现 |
 | INVALID | (任意, VOID) | 已失效 | 返利 ¥0 | 原因标题 + 说明（BR-TEXT-05，仅 void 类） | —（按钮只来自 reason.action，如 BLACKLIST→去申诉，PUNISH/OTHER→联系客服） |
@@ -217,7 +220,7 @@
 
 **边界**：部分退款不改变 rebate_status（BR-FUND-01 R7 / R9），入账前只改金额与差额行，入账后写 CLAWBACK（sub_type=PART_REFUND）使 display_status 变为 CREDITED_PART_CLAWED；hold、维权中不是 rebate_status，而是 display_status 的派生条件（REVIEWING、RIGHTS_PENDING），提示文案按 BR-TEXT-03。
 
-按 C-01 默认处理，已由负责人确认 2026-09-30；入账后部分退款按 C-16 默认处理，待财务确认。
+按 C-01 默认处理，已由负责人确认 2026-09-30；入账后部分退款按 C-16，已由负责人 2026-10-03 确认默认（资金规则对齐决-04）。
 
 需同步修改的规划文档（2026-09-30 C-02 / D11 改写，未同步）：规划/01 §5 J4「已收货，等待入账（附预计入账日）→ 已入账」改为「已收货，等待联盟结算（附预计入账周期）→ 已结算」；规划/04 §2.3 `display_status` 行说明「订单侧一律「入账」口径，BR-TEXT-01 方案 A」改为按 BR-TEXT-01 C-02 口径；/v1/dict 字典键 order_status.PAID（hint）、.WAITING、.CREDITED、.CREDITED_PART_CLAWED、.RIGHTS_PENDING（hint）文案（契约建立时写入 contracts/texts.default.json）；规划/04 §6.4 `GET /v1/orders/{order_id}` 与 §8.3 `order_status` 卡片的 `expected_credit_date` 字段（改为 expected_credit_period、credit_overdue，BR-FUND-04 ⑪）；规划/03 §7.4 order_status 卡片「预计入账日（expected_credit_date）」；规划/10 §3.4 状态覆盖表 WAITING、CREDITED 行对应用例与 AC-S2-01-TB / -JD、AC-S2-09、AC-S2-12-TB 中的文案断言。。2026-09-30 补充（变更记录 §10，预计结算月份）：/v1/dict order_status.WAITING hint 与时间线节点文案改为「预计 {credit_period} 结算」；规划/01 §5 J4「附预计入账日」改为「附预计结算月份」；规划/10 AC-S2-01-TB / -JD、AC-S2-12-TB 中 WAITING 文案断言改为「预计 11 月结算」一类（已 grep 核对上述位置仍为旧写法）
 
@@ -1019,7 +1022,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 上级视角的名称、说明与日期粒度只在本条维护（拍板第二批 OPS-18：「邀请分佣入账」+ 说明「邀请好友订单」、日期只到日，更难反推好友下单时间）；BR-INV-17 原写「邀请好友购物分佣」、时间到分钟，已改为引用本条。
 
-入账后部分退款写 CLAWBACK（sub_type=PART_REFUND），不写负向 SETTLE_ADJUST；按 C-16 默认处理，待财务确认。名称「部分退款扣回」的字典 key 为 ledger_type.CLAWBACK.name_part_refund。
+入账后部分退款写 CLAWBACK（sub_type=PART_REFUND），不写负向 SETTLE_ADJUST；C-16 已由负责人 2026-10-03 确认默认（资金规则对齐决-04）。名称「部分退款扣回」的字典 key 为 ledger_type.CLAWBACK.name_part_refund。
 
 列表范围按 BR-FUND-15：用户余额流水只展示 available 子户分录，外加每张打款成功提现单 1 条 WITHDRAW_PAID 汇总条目（名称「提现到账」，含实际到账、代扣个税、手续费明细，不改可提现余额、不带 balance_after）；WITHDRAW_FEE、TAX_WITHHOLD 不单独成行，名称键保留供汇总条目明细使用；本条只维护名称与明细文案。按 C-26 默认处理，待财务确认。
 
