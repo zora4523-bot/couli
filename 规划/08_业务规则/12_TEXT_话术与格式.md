@@ -14,7 +14,7 @@
 
 2026-10-03 功能对照补缺第 1 批（docs/changes/20261003-功能对照补缺.md；「功能对照 G-xx」是该批缺口清单的编号，与 规划/10 §6.1 的 G-xx 不是同一套）：BR-TEXT-14 表 A 新增 20004、50305 两行，表 B 新增 20004.identity_mismatch、30104.credential_invalid，表 C 新增第三方页容器、App 内链接落地页、分享页打开方式与邀请码提醒的文案键。BR-TEXT-14 状态不变。
 
-2026-10-03 功能对照补缺第 2 批（同一变更记录的「第 2 批」，功能对照 G-09～G-21）：逐条改动在各条细则里注「2026-10-03，功能对照 G-xx」，各条状态不变。本批不新增 BR-TEXT 条目。同日按评审补文案键 external_page.download_unsupported，改 10004、claim.guide.window、earnings.metric.credited.hint 等行的说明（变更记录 §2.8）；第 2 轮评审后补 pending_confirm.\* 各键，改表 A 的 10001、10004、10005、30304 行。
+2026-10-03 功能对照补缺第 2 批（同一变更记录的「第 2 批」，功能对照 G-09～G-21）：逐条改动在各条细则里注「2026-10-03，功能对照 G-xx」，各条状态不变。本批不新增 BR-TEXT 条目。同日按评审补文案键 external_page.download_unsupported，改 10004、claim.guide.window、earnings.metric.credited.hint 等行的说明（变更记录 §2.8）；第 2 轮评审后补 pending_confirm.\* 各键，改表 A 的 10001、10004、10005、30304 行；第 3 轮评审后表 A 加 20903，表 C 加放弃上一笔的各键（pending_confirm.withdraw.abandon、pending_confirm.abandon、pending_confirm.abandon.confirm、pending_confirm.abandoned、pending_confirm.abandon_busy、pending_confirm.already_done）与 pending_confirm.cannot_confirm，删去随本机有效期取消的 pending_confirm.expired（变更记录 §2.8 第 3 轮第 1、2 条）。
 
 ### 12.1 规则一览
 
@@ -586,6 +586,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 20004（新增，2026-10-03 功能对照 G-04；13 §13.11 登记） | 授权未完成，请重新授权 | 同左 | 第三方登录或第三方重新授权的凭证或授权尝试无效、已过期或已使用（BR-ID-04、BR-ID-08），对外不区分具体原因；回到登录页或二次验证面板，由用户重新发起第三方授权，不自动重放；data.reason=identity_mismatch 取表 B 子键 |
 | 20901 | 请求内容有变化，请重新提交 | 同左 | 生成新幂等键，由用户重新提交 |
 | 20902 | 状态已变化，请刷新后重试 | 同左 | 刷新详情 |
+| 20903（新增，2026-10-03 第 2 批第 3 轮评审后；13 §13.11 登记） | 上一次提交已放弃，没有被处理 | 同左 | 结束该键的待确认状态，恢复提交入口，由用户重新提交（新幂等键）；不重放（BR-ID-10 细则「敏感操作的幂等键」） |
 | 30101 | 购买前需完成淘宝授权，用于识别你的订单 | 同左 | AuthSheet |
 | 30102 | 淘宝授权已失效，请重新授权 | 同左 | AuthSheet |
 | 30103 | 当前淘宝账号暂不能获得返利，请联系客服 | 同左 | 【仍去购买（无返利）】【联系客服】 |
@@ -726,8 +727,13 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 待确认·收款账号 pending_confirm.payout_account.desc / .action | 上一次提交的收款账号 {payout_account} 还没有收到结果，请先确认 / 确认上一次提交 | {payout_account} 取本机未决记录的脱敏摘要；包内默认：上一次提交还没有收到结果，请先确认 |
 | 待确认·换手机号 pending_confirm.phone_change.desc / .action | 上一次提交的新手机号 {phone} 还没有收到结果，请先确认 / 确认上一次提交 | {phone} 为脱敏后的新手机号；包内默认同上 |
 | 待确认·注销 pending_confirm.deletion.desc / .action | 上一次提交的注销申请还没有收到结果，请先确认 / 确认上一次提交 | — |
-| 待确认·暂时确认不了 pending_confirm.retry_later | 暂时无法确认，请稍后再试 | 确认时得到 40901、42901、5xxxx 或没有响应，保持待确认状态 |
-| 待确认·已过期 pending_confirm.expired | 上一次提交已超过确认时间，结果以下方记录为准 | 未决记录过期后显示，同时展示重新拉取的现状（提现记录与钱包汇总等），拉取成功后恢复提交入口 |
+| 待确认·暂时确认不了 pending_confirm.retry_later | 暂时无法确认，请稍后再试 | 确认或放弃时得到 42901、5xxxx 或没有响应，确认时得到 40901，保持待确认状态（第 3 轮评审后补放弃） |
+| 待确认·按原内容确认不了 pending_confirm.cannot_confirm | 按上一次的内容暂时确认不了，可以稍后再试，或放弃后重新提交 | 确认时得到 20903 以外的 2xxxx（例如收款方式已关闭的 20001、换手机号验证码已失效的 20003），键不结束，保持待确认状态，不在表单字段旁标红（BR-ID-10 细则「敏感操作的幂等键」，2026-10-03 第 3 轮评审补） |
+| 待确认·放弃按钮 pending_confirm.withdraw.abandon / pending_confirm.abandon | 放弃上一笔提现 / 放弃上一次提交 | 前者用于 Withdraw，后者用于收款账号、换手机号、注销三个发起页；与确认按钮并列，都由用户点击（第 3 轮评审补） |
+| 待确认·放弃二次确认 pending_confirm.abandon.confirm / .ok / .cancel | 放弃后，上一次提交如果还没有被处理，以后也不会再被处理；如果已经处理完，会显示处理结果 / 确定放弃 / 再想想 | 点放弃按钮后弹出；点【确定放弃】才调作废接口（第 3 轮评审补） |
+| 待确认·已放弃 pending_confirm.abandoned | 上一次提交已放弃，可以重新提交 | 作废接口返回已作废后显示，同时删除未决记录、恢复提交入口；确认得到 20903 时用表 A 的 error.20903（第 3 轮评审补） |
+| 待确认·放弃时正在处理 pending_confirm.abandon_busy | 上一次提交正在处理，暂时不能放弃，请稍后再试 | 作废接口返回 40901 时显示，保持待确认状态（第 3 轮评审补） |
+| 待确认·放弃时已处理完 pending_confirm.already_done | 上一次提交已经处理完成 | 作废接口返回原结果（outcome=completed）时显示，随后按原结果展示（提现单、换绑结果或原结果的错误文案），删除未决记录、恢复提交入口（第 3 轮评审补） |
 | App 内链接落地页·分享者本人提示 link_landing.owner_hint | 这是你分享的商品，自己购买按自购返利计算 | 只在 `GET /v1/links/{link_id}` 返回 viewer_is_sharer=true 时显示；不显示金额（BR-ATTR-11，2026-10-03 功能对照 G-03） |
 | App 内链接落地页·链接失效 link_landing.invalid | 链接已失效 | 30144 时显示空态与按钮【去搜索】，不自动重试（BR-ATTR-05 细则） |
 | 分享中间页按钮 share_page.open_in_app | 在 App 中打开 | App 外浏览器里显示；微信内不显示；`open_in_app_url` 为 null 时不显示；文案不得带返利、红包等利益表述（BR-ATTR-05 细则，规划/09 CAP-X-03） |
