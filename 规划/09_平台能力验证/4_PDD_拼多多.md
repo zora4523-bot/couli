@@ -46,7 +46,7 @@
 步骤：
 1. 人：挑 20 个商品（多规格、有券、无券、百亿补贴、已下架、售罄各 ≥3 个；有预售商品时另加 ≥2 个）。
 2. 代理：写 `tools/probe/pdd/pdd02_quote.ts`，对每个商品调 goods.detail 与 goods.search(goods_sign_list)，记录全部价格、券、活动字段；按候选公式算券后价。
-3. 人：用拼多多买家测试号从我方单人团转链打开，进入下单确认页（不付款），截图记录默认规格实付价、运费、券抵扣与补贴显示。
+3. 人：用拼多多买家测试号从我方单人团转链打开，进入下单确认页（不付款），截图记录默认规格实付价、运费、券抵扣与补贴显示。转链的拼团方式固定取单人团（自购与分享相同、不开放给用户设置，参数名与取值按官方文档写进 `specs/union/pdd.md`；2026-10-03，功能对照 G-48，BR-PRICE-02 细则）；通过条件加一条：默认规格的实付单价等于卡片拼单价（min_group_price），不一致时再用多人团各转一次做对照，记录两种落地页的价格差。
 4. 响应脱敏存 `fixtures/union-recordings/pdd/cap-pdd-02/<goods>.json`，截图存 `evidence/capabilities/CAP-PDD-02/screens/`（打码账号信息）。
 
 **CAP-PDD-03**
@@ -76,16 +76,18 @@
 - 订单里的 custom_parameters 是否原样返回（含 app / sc / sid 等自定义 key）。
 - 解除备案机制（我方不提供用户自助换绑，绑定只在注销时释放，拍板第二批 §8 ADD-01）；注销用户的备案如何处理。
 - 花卷云"回收模式"是否可能动到新 App 的 PID；PID 数量配额是否与花卷云共享。
+- 一跳授权（2026-10-03，功能对照 G-54）：自购时能否用「授权完直接进商品详情」的一跳链接（生成参数以官方接口文档为准），它与现行两跳（授权完回到本 App，再点一次购买）相比，订单的 custom_parameters 与归因是否一致、用户少点一次对转化的影响；授权链接返回的各形态（拉起 App 的链接、网页链接）哪些可用，按 BR-ATTR-27 定首选与备选。
 
 步骤：
 1. 人（W0）：在多多进宝为新 App 建 App 类型媒体，创建 self_buy / share / agent / query 推广位（06 Q-C18），用 pid.mediaid.bind 绑定新媒体；把新 PID 填入花卷云"不入库的 PID"并截图（V-04）；准备 3 个拼多多买家测试号（X 已在优券汇备案，Y、Z 未备案）。
 2. 代理：写 `tools/probe/pdd/pdd05_authority.ts`，矩阵测试：用 `{"uid":"nU1"}` 在 self_buy 位备案后，分别用 `{"uid":"nU1","sid":"abc"}`、`{"app":"n","uid":"U1","sc":"share"}`、同 uid 换 share 位查询 member.authority.query，记录 bind。
 3. 人：买家 X 在新 App 完成备案，再分别在两边查询 bind；X 先点优券汇链接、再点新 App 链接下单 1 笔，顺序反过来再下 1 笔；Z 未备案，打开 Y 的分享链接经分享授权中间页下单 1 笔，记录 Z 授权后 member.authority.query 的 bind 落在哪个 uid 下；Y 点击新 App 链接后分别在 D+1、D+3、D+7 各下 1 单（点击有效期，受 §0.2 硬规则 5 限额约束）。
 4. 代理拉订单，比对 p_id、custom_parameters、order_status、promotion_amount；人在花卷云后台确认这些订单未入优券汇账。响应脱敏存 `fixtures/union-recordings/pdd/cap-pdd-05/`。
+5. （2026-10-03，功能对照 G-54）人：未备案的买家测试号用一跳授权链接完成授权并下单 1 笔，另一个未备案测试号走两跳下单 1 笔（受 §0.2 硬规则 5 限额约束）；代理拉订单比对两笔的 custom_parameters 与归因结果，记录授权后 member.authority.query 的 bind 是否立即为已授权。一跳可行时回写 BR-ID-22 细则；回到前台后仍由服务端复查授权状态，不信客户端的回跳结果。
 
 **CAP-PDD-06**
 
-未知项：各形态链接（长链、短链、schema、ShortLink）有效期；goods_sign_list 单次批量上限；未备案时调用是否报错，还是正常返回但订单无归因；custom_parameters 超过 64 字节时报错还是截断；短链在微信单聊、群聊内能否直接打开；同一用户重复转链同一商品是否返回相同链接（影响缓存）。
+未知项：（转链的拼团方式固定为单人团，见 CAP-PDD-02 步骤 3，2026-10-03 功能对照 G-48）各形态链接（长链、短链、schema、ShortLink）有效期；goods_sign_list 单次批量上限；未备案时调用是否报错，还是正常返回但订单无归因；custom_parameters 超过 64 字节时报错还是截断；短链在微信单聊、群聊内能否直接打开；同一用户重复转链同一商品是否返回相同链接（影响缓存）。
 
 步骤：
 1. 代理写 `tools/probe/pdd/pdd06_convert.ts`：对 10 个商品各生成全部形态（schema、short、mobile_short、we_app、short_link），批量数从 1、5、10、20 递增找上限，另测一次 65 字节 custom_parameters；响应脱敏存 `fixtures/union-recordings/pdd/cap-pdd-06/`。
