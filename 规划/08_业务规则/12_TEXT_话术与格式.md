@@ -16,7 +16,7 @@
 
 2026-10-03 功能对照补缺第 2 批（同一变更记录的「第 2 批」，功能对照 G-09～G-21）：逐条改动在各条细则里注「2026-10-03，功能对照 G-xx」，各条状态不变。本批不新增 BR-TEXT 条目。
 
-2026-10-03 功能对照补缺第 3 批（同一变更记录的「第 3 批」，功能对照 G-22～G-34）：BR-TEXT-13 新增榜单类词「高佣」「收益榜」（G-34，按功能对照 Q-27 默认 A）并补首页公告条不做收益播报的说明（G-33）；BR-TEXT-14 表 A 新增 10405（G-24），表 C 新增未安装微信时的三个键（G-31），新增表 D「隐私与权限文案」（G-25、G-26、G-28，文案由法务定稿）；BR-TEXT-17 细则新增「联盟物料频道」（G-34）。各条状态不变，本批不新增 BR-TEXT 条目。
+2026-10-03 功能对照补缺第 3 批（同一变更记录的「第 3 批」，功能对照 G-22～G-34）：BR-TEXT-13 新增榜单类词「高佣」「收益榜」（G-34，按功能对照 Q-27 默认 A）并补首页公告条不做收益播报的说明（G-33）；BR-TEXT-14 表 A 新增 10405（G-24），表 C 新增未安装微信时的三个键与两个按钮键（G-31）、更新提示的两个按钮键（G-24），新增表 D「隐私与权限文案」（G-25、G-26、G-28，文案由法务定稿）；BR-TEXT-17 细则新增「联盟物料频道」（G-34）。各条状态不变，本批不新增 BR-TEXT 条目。
 
 ### 12.1 规则一览
 
@@ -518,7 +518,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 来源：规划/03 §4.5、§10.3；规划/04 §5、§10.1；规划/01 F-CFG-02、F-CFG-06；PRD修订_后端功能规划 2.13；PRD v2.1 §6
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
-- key 命名：`order_status.<display_status>.label|hint`（CODE 为 BR-FUND-17 派生的 display_status）、`order_reason.<CODE>.title|desc|action`、`order_reason_sub.<SUB>.desc`、`claim_reject_reason.<CODE>.title`、`withdrawal_status.<CODE>.label|hint`、`withdraw_reject_reason.<CODE>`、`withdraw_fail_reason.<CODE>`、`ledger_type.<CODE>.name|hint`、`error.<code>`、`risk_msg.<code>`、`tlj.*`、`btn.buy.coupon`（领券购买）、`btn.buy`（去购买）、`btn.buy.no_rebate`（去购买（无返利））、`tag.rebate`（预估返）、`tag.presale`（预售）、`presale.price_note`、`auth_tips.<platform>`、`jump_tip`、`ai_label`、`pending_track_card.title|desc`（BR-TEXT-14，G-05）、`clipboard.prompt`（BR-TEXT-14，G-20）、`clipboard.invite_prompt`（BR-TEXT-14，OPS-06）、`agent.*` 与 `*.summary`（BR-TEXT-22）、`risk_reason.<category>` 与账号类站内信模板（BR-TEXT-23）、`privacy.*` 与 `perm.<type>.*`（BR-TEXT-14 表 D，2026-10-03）。
+- key 命名：`order_status.<display_status>.label|hint`（CODE 为 BR-FUND-17 派生的 display_status）、`order_reason.<CODE>.title|desc|action`、`order_reason_sub.<SUB>.desc`、`claim_reject_reason.<CODE>.title`、`withdrawal_status.<CODE>.label|hint`、`withdraw_reject_reason.<CODE>`、`withdraw_fail_reason.<CODE>`、`ledger_type.<CODE>.name|hint`、`error.<code>`、`risk_msg.<code>`、`tlj.*`、`btn.buy.coupon`（领券购买）、`btn.buy`（去购买）、`btn.buy.no_rebate`（去购买（无返利））、`tag.rebate`（预估返）、`tag.presale`（预售）、`presale.price_note`、`auth_tips.<platform>`、`jump_tip`、`ai_label`、`pending_track_card.title|desc`（BR-TEXT-14，G-05）、`clipboard.prompt`（BR-TEXT-14，G-20）、`clipboard.invite_prompt`（BR-TEXT-14，OPS-06）、`agent.*` 与 `*.summary`（BR-TEXT-22）、`risk_reason.<category>` 与账号类站内信模板（BR-TEXT-23）、`privacy.*` 与 `perm.<type>.*`（BR-TEXT-14 表 D，2026-10-03）、`app_update.*` 与 `cs.*`（BR-TEXT-14 表 C，2026-10-03）。
 - 购买按钮（拍板第二批 TRADE-21）：服务端在卡片 cta.text_key 下发，客户端不判断：有券（coupon_fen > 0）→ `btn.buy.coupon`「领券购买」；无券 → `btn.buy`「去购买」；用户选择或只能无返利购买时 → `btn.buy.no_rebate`「去购买（无返利）」。错误弹窗里的次按钮仍为「仍去购买（无返利）」（BR-TEXT-14）。淘礼金卡按钮按 BR-TEXT-15。
 - 预售（拍板第二批 TRADE-10）：预售商品卡与详情显示标签 `tag.presale`「预售」，价格按定金 + 尾款总价显示（口径见 BR-PRICE），价格旁附 `presale.price_note`「定金与尾款以下单页为准」。
 - 未知编码：显示 `<enum>.UNKNOWN`（订单「状态更新中」、提现「处理中」）。
@@ -583,7 +583,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 10402 | — | — | 重新注册设备后重放 1 次；仍失败按「其他 5xxxx」 |
 | 10403 | 请在 App 内操作 | 同左 | 不跳登录 |
 | 10404 | 登录已过期，请重新登录 | 同左 | 清会话，跳 Login |
-| 10405（新增，2026-10-03 功能对照 G-24；13 §13.11 登记） | 当前版本过低，请更新后继续使用 | 同左 | 进入 ForceUpdate 全屏拦截页（规划/03 §4.1）：标题与说明优先用版本检查接口返回的 update_title、update_notes，本文案作兜底；按钮跳应用商店；不重放原请求（BR-ID-01 细则「最低支持版本的接口层拦截」） |
+| 10405（新增，2026-10-03 功能对照 G-24；13 §13.11 登记） | 当前版本过低，请更新后继续使用 | 同左 | 进入 ForceUpdate 全屏拦截页（规划/03 §4.1）：标题与说明优先用版本检查接口返回的 update_title、update_notes，本文案作兜底；按钮（app_update.go_store）跳应用商店；不重放原请求（BR-ID-01 细则「最低支持版本的接口层拦截」） |
 | 20001 | 填写内容有误，请检查 | 同左 | data.fields 所列字段旁标红 |
 | 20002 | 验证码错误，请重新输入 | 同左 | — |
 | 20003 | 验证码已失效，请重新获取 | 同左 | — |
@@ -735,6 +735,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 微信登录拉不起 login.wechat_unavailable | 未安装微信，请使用其他方式登录 | 检测为未安装时不显示微信登录按钮；本提示只在检测结果未知、点击后拉不起微信时出现，登录页保留其他登录方式（BR-ID-04 细则「未安装微信时」，2026-10-03 功能对照 G-31） |
 | 微信分享不可用 share.wechat_unavailable | 未安装微信，可以复制后分享 | 未安装时分享面板不列微信渠道，保留复制、保存海报与系统分享；H5 指定微信渠道而本机没有微信时提示一次（BR-ID-04 细则） |
 | 客服入口·未安装微信 cs.wechat_unavailable | 未安装微信，无法直接打开客服。可以复制客服链接，在装有微信的设备上打开 | 按钮【复制客服链接】【去帮助中心】；不直接打开客服链接（BR-ID-04 细则） |
+| 客服入口·未安装微信的按钮 cs.copy_link / cs.go_help | 复制客服链接｜去帮助中心 | 只在上一行的提示里出现；复制的是 /v1/config kf 里的客服链接 |
+| 更新提示的按钮 app_update.go_store / app_update.later | 去更新｜暂不更新 | 【去更新】跳应用商店，强更页（ForceUpdate）只有这一个按钮；【暂不更新】只出现在可关闭的更新提示里，记录方式见 规划/03 §4.1（2026-10-03 功能对照 G-24）。标题与说明取版本检查接口的 update_title、update_notes，没有时用 error.10405 |
 | 比价无返利弹窗 no_rebate.price_compare.confirm | 这件商品这次被判为比价，没有返利 | 只在 open 响应 no_rebate_cause=price_compare 时出现，代替「该商品当前暂无返利，继续购买？」；按钮【看看相似商品】（no_rebate.price_compare.similar）【仍去购买（无返利）】，可关闭；不显示任何返利金额，不写「过几小时再买」之类的建议（BR-PRICE-08 细则「无返利原因」，2026-10-03 功能对照 G-09；开关默认关） |
 | 比价无返利卡片原因行 no_rebate.price_compare | 这次被判为比价，没有返利 | 卡片按 open 响应换成无返利态后显示在返利位置，旁边保留文字入口【看看相似商品】；其他无返利情形仍显示「暂无返利」 |
 | 相似商品入口 no_rebate.price_compare.similar | 看看相似商品 | 进入搜索页，平台同原商品，搜索词取卡片标题，去掉原商品（BR-PRICE-08 细则） |
@@ -749,10 +751,11 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 | 键 | 用在哪里 | 要点或占位措辞 | 说明 |
 | --- | --- | --- | --- |
-| privacy.first_launch.title / .summary | 首启隐私弹窗的标题与摘要 | 要点：收集哪些个人信息、各自的用途；接入了哪些第三方 SDK；用户可以查阅、撤回同意、注销；《隐私政策》《用户协议》链接。全文由法务提供 | 按钮固定为【同意】【不同意】（BR-ID-11）；同意前显示，只能取包内默认或已缓存的配置 |
-| privacy.second_notice.body | 点【不同意】后的二次说明 | 要点：不同意时只能用基本模式浏览，不能登录、不能获得返利；之后可以随时开启完整功能。全文由法务提供 | 按钮【同意】【仍不同意】；Android、鸿蒙可另给【退出 App】，iOS 不提供（BR-ID-11） |
+| privacy.first_launch.title / .summary | 首启隐私弹窗的标题与摘要 | 要点：收集哪些个人信息、各自的用途；接入了哪些第三方 SDK；用户可以查阅、撤回同意、注销；《隐私政策》《用户协议》链接。全文由法务提供 | 按钮固定为【同意】【不同意】（BR-ID-11；键见下文 privacy.btn.\*）；同意前显示，只能取包内默认或已缓存的配置 |
+| privacy.second_notice.body | 点【不同意】后的二次说明 | 要点：不同意时只能用基本模式浏览，不能登录、不能获得返利；之后可以随时开启完整功能。全文由法务提供 | 按钮【同意】【仍不同意】；Android、鸿蒙可另给【退出 App】，iOS 不提供（BR-ID-11；键见 privacy.btn.\*） |
+| privacy.btn.agree / .disagree / .still_disagree / .exit_app | 首启弹窗与二次说明的按钮 | 同意｜不同意｜仍不同意｜退出 App | 按钮的含义与出现位置按 BR-ID-11，不因文案调整而改变；.exit_app 只在 Android、鸿蒙出现 |
 | privacy.basic_mode.notice / .enable | 基本模式页的说明与按钮 | 当前为基本模式，只能浏览。开启完整功能后可以登录、查返利｜开启完整功能 | 点按钮重新展示首启弹窗（BR-ID-02、BR-ID-11） |
-| privacy.withdraw.confirm.title / .body | 隐私中心【撤回同意】的确认框 | 撤回同意｜撤回后本机会退出登录并进入基本模式，只能浏览。账号和数据不会删除；要删除请使用账号注销 | 按钮【确认撤回】【取消】；规则见 BR-ID-13 |
+| privacy.withdraw.confirm.title / .body | 隐私中心【撤回同意】的确认框 | 撤回同意｜撤回后本机会退出登录并进入基本模式，只能浏览。账号和数据不会删除；要删除请使用账号注销 | 按钮【确认撤回】【取消】（键 privacy.withdraw.confirm.ok / .cancel）；规则见 BR-ID-13 |
 | perm.push.card_hint / perm.push.cta | 待跟单卡里的通知说明行与按钮 | 开启通知，跟单成功、返利结算和提现到账时会及时提醒你｜开启通知 | 出现条件与时机见 BR-ID-13 细则「通知权限的申请时机」（功能对照 G-25；按功能对照 Q-21 默认 A，待负责人确认）；不写「开启后才有返利」之类的话，不承诺通知的具体时限；经桥方法申请通知权限时，用途说明同用 card_hint 这一句 |
 | perm.push.guide_bar | 「我的」页的通知引导条 | 通知没有开启，跟单和提现到账的消息可能收不到。去开启 | 可关闭；点击跳到系统里本 App 的通知设置（BR-ID-13 细则） |
 | perm.push.denied_forever | 通知权限已被拒绝、系统不再询问时的引导 | 通知权限已关闭，可以在系统设置中开启 | 配【去设置】 |
@@ -786,7 +789,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 2026-10-03 功能对照补缺第 1 批新增（代理按 13 §13.11 的分配规则取号，已同步 13 §13.11 与 规划/04 §7）：20004「第三方授权凭证无效」、50305「第三方登录服务暂不可用」，子键 20004.identity_mismatch、30104.credential_invalid；表 C 新增的文案为代理起草的默认措辞，可在字典中改，不改用途。
 
-2026-10-03 功能对照补缺第 3 批新增（docs/changes/20261003-功能对照补缺.md「第 3 批」；代理按 13 §13.11 的分配规则取号，已同步 13 §13.11 与 规划/04 §7）：10405「客户端版本低于最低支持版本」（功能对照 G-24）。表 C 新增未安装微信时登录、分享、客服的三个文案键（功能对照 G-31），为代理起草的默认措辞，可在字典中改，不改用途。新增表 D「隐私与权限文案」（功能对照 G-26），键名与用途已定，文案由法务定稿（规划/06 Q-F14）。
+2026-10-03 功能对照补缺第 3 批新增（docs/changes/20261003-功能对照补缺.md「第 3 批」；代理按 13 §13.11 的分配规则取号，已同步 13 §13.11 与 规划/04 §7）：10405「客户端版本低于最低支持版本」（功能对照 G-24）。表 C 新增未安装微信时登录、分享、客服的三个文案键与客服提示里的两个按钮键（功能对照 G-31）、更新提示的两个按钮键（功能对照 G-24），为代理起草的默认措辞，可在字典中改，不改用途。新增表 D「隐私与权限文案」（功能对照 G-26），键名与用途已定，文案由法务定稿（规划/06 Q-F14）。
 
 按 C-03 默认处理，待负责人确认。新增码 30415、50304 与 20001.nickname_sensitive、30411.mergeable 子键（2026-10-01 拍板第二批 OPS-13、TRADE-12、OPS-04），以及 30416（§8 ADD-07）与 30101 / 30102 的 auth_unavailable 子键（§8 ADD-02；文案与按钮按 §8 ADD-08 改为「淘宝暂时无法下单，请稍后再试」、只给【知道了】）需同步 13 §13.11 与 规划/04 §7；码号与枚举改名（admin_unbind → admin_disable 等）由代理自定，负责人 2026-10-01 接受。
 
@@ -862,6 +865,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - **联盟物料频道**（2026-10-03，功能对照 G-34；按功能对照 Q-27 默认 A 写，待负责人确认，规划/06「功能对照待确认」；docs/changes/20261003-功能对照补缺.md「第 3 批」）：联盟物料信息流不标「推广」，前提是它的排序与平台能拿多少佣金无关。
   - 适用范围：首页 `feed_infinite`、`product_scroll`、`product_grid` 的 `union_material` 数据源；P1 的榜单页、品牌页立项时同样适用。
   - 可选频道：只用按销量、热度或「猜你喜欢」这类方式排序的频道。可选频道登记在频道白名单 `specs/material-channels.yaml`（平台、频道标识、排序依据、是否可选）；后台的数据源选项只列白名单内可选的频道，服务端保存首页配置时再校验一次，不在白名单的返回 20001。
+  - 取数时再查一次：服务端每次为数据源取物料之前都核对白名单，频道不在白名单或已标为不可选的，不取这个数据源，对应区块按没有数据处理（首页的空态与兜底规则不变）并告警。白名单变更时，后台列出仍引用被移出频道的已发布配置，由运营改配置；保存时的校验管不到之后的白名单变更，所以取数时这一道不能省。
   - 不进白名单：平台文档写明按佣金或收益排序、或带佣金权重的频道与排序参数（各平台的高佣榜、收益榜一类）。排序依据说不清的频道，在 规划/09 CAP-TB-10、CAP-JD-10、CAP-PDD-10 逐个记下「是否含佣金权重」之前也不进白名单。
   - 本系统在物料的合并与混排层不加佣金或返利权重（Agent 的同类要求见 BR-AI-09）。
   - 确实要用按佣金排序的频道时：须负责人决定（功能对照 Q-27 改选 B，或逐个频道放行）；放行的数据源，其卡片一律下发 ad_label=「推广」，并在模块标题处说明排序依据，说明文案由法务定稿后写入本条。在此之前白名单里没有这类频道，后台选不到。
