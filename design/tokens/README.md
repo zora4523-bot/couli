@@ -1,6 +1,6 @@
 # 凑狸设计令牌
 
-版本：2026-10-01 / project baseline v0.2.0。现有设计值作为项目当前采用基线；这次接入整理不改变数值，也不代表原生或真机验收完成。根配置入口见 [brand.config.json](../../brand.config.json)，完整维护与接入流程见 [品牌接入](../../docs/brand-integration.md)。语义说明见 [品牌色](../colors/colors.md)；覆盖规划/03 §10.1 的颜色、六级字号、间距、圆角与阴影，并补充焦点、主按钮状态及触控命中区。
+版本：2026-10-04 / project baseline v0.3.0。2026-10-04 按设计方向第三轮改 App 页面底并新增后台页面底、图片占位、返利强调（`color.rebate.*`）与来源描边令牌（[变更记录](../../docs/changes/20261004-设计方向第三轮.md) §1）；不代表原生或真机验收完成。根配置入口见 [brand.config.json](../../brand.config.json)，完整维护与接入流程见 [品牌接入](../../docs/brand-integration.md)。语义说明见 [品牌色](../colors/colors.md)；覆盖规划/03 §10.1 的颜色、六级字号、间距、圆角与阴影，并补充焦点、主按钮状态及触控命中区。
 
 ## 文件与主题
 
@@ -21,7 +21,7 @@ python3 scripts/sync-brand.py --check
 
 ## JSON 结构与转换约定
 
-本版共 80 个令牌叶节点，与 CSS 自定义属性一一对应。根节点含 `schemaVersion`、`metadata`、`tokens`；令牌叶节点统一为 `{ "type": "…", "value": …, "description": "…" }`。这是内部交换格式，不声明已经完整实现 DTCG 标准，也没有尚不存在的远程 `$schema` 依赖。所有值均已展开，不需要引用解析器。
+本版共 87 个令牌叶节点，与 CSS 自定义属性一一对应。根节点含 `schemaVersion`、`metadata`、`tokens`；令牌叶节点统一为 `{ "type": "…", "value": …, "description": "…" }`。这是内部交换格式，不声明已经完整实现 DTCG 标准，也没有尚不存在的远程 `$schema` 依赖。所有值均已展开，不需要引用解析器。
 
 | `type` | `value` 结构 | 平台消费方式 |
 | --- | --- | --- |
@@ -83,10 +83,10 @@ python3 scripts/sync-brand.py --check
 
 `.couli-button-primary` 提供正常、按下、禁用和 `:focus-visible`。原生 `<button disabled>` 可直接禁用；若自定义控件使用 `aria-disabled="true"`，仍须在业务代码中阻止激活，CSS 不会替它禁用行为。加载态应保留尺寸、可读文字与忙碌语义；具体文案由页面规则决定。
 
-JSON、CSS 只定义视觉与基础交互，不实现登录、授权、价格计算或购买行为。平台来源使用 `color.source.*` 中性色；此版不引入任何商家品牌色。
+JSON、CSS 只定义视觉与基础交互，不实现登录、授权、价格计算或购买行为。平台来源使用 `color.source.*`（白底、浅描边、中性文字）；此版不引入任何商家品牌色。返利金额与其标签用 `color.rebate.*`，价格仍用 `color.price.text`，状态标签仍用 `color.status.*`。
 
 ## 验收与来源
 
 颜色对比度公式与全部关键组合见 [品牌色 §3](../colors/colors.md#3-对比度实测)。尤其主色 `#C44820` 在暖米白上只有 4.41:1，普通链接与强调文字须使用 `color.text.link` / `color.brand.emphasis`，不能直接复用主色。必要控件边界使用 `color.border.control`；浅分隔线只能装饰。
 
-遵循 [Apple HIG · Color](https://developer.apple.com/design/human-interface-guidelines/color) 和 [Apple HIG · Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility) 的语义用色、对比、非颜色线索及适应用户需求原则（核对日期：2026-10-01）。本版已校验 80 个令牌的 JSON 解析与 CSS 值一致性，以及指定实色组合的对比度；价格 / 白底为 15.28:1，待定状态为 5.33:1，错误状态为 5.64:1。`forced-colors` 中按钮、输入框与焦点线使用系统颜色，但代码回退不能视为已经通过高对比测试。实现必须验证系统强制配色、增强对比、200% 文字放大、灰度与色觉障碍状态辨识；三端 Dynamic Type、屏幕阅读器、触控、焦点及真实素材叠加效果仍需在实现和真机上验证。
+遵循 [Apple HIG · Color](https://developer.apple.com/design/human-interface-guidelines/color) 和 [Apple HIG · Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility) 的语义用色、对比、非颜色线索及适应用户需求原则（核对日期：2026-10-01）。本版已校验 87 个令牌的 JSON 解析与 CSS 值一致性，以及指定实色组合的对比度；价格 / 白底为 15.28:1，待定状态为 5.33:1，错误状态为 5.64:1。`forced-colors` 中按钮、输入框与焦点线使用系统颜色，但代码回退不能视为已经通过高对比测试。实现必须验证系统强制配色、增强对比、200% 文字放大、灰度与色觉障碍状态辨识；三端 Dynamic Type、屏幕阅读器、触控、焦点及真实素材叠加效果仍需在实现和真机上验证。
