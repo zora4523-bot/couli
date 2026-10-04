@@ -9,13 +9,13 @@ window.COULI_BRAND = Object.freeze({
   },
   "metadata": {
     "name": "凑狸",
-    "version": "0.2.0",
-    "date": "2026-10-01",
+    "version": "0.3.0",
+    "date": "2026-10-04",
     "status": "project baseline",
     "theme": "light",
     "darkThemePhase": "P1",
     "colorSpace": "sRGB",
-    "description": "当前项目使用的品牌与界面基线；已应用于根目录品牌配置、交付素材与品牌预览，不代表原生接入、Icon Composer 或真机验收完成。App 图标外观变体独立于 UI 主题。",
+    "description": "当前项目使用的品牌与界面基线；2026-10-04 按设计方向第三轮调整 App 页面底、返利强调、平台来源标签与图片占位（docs/changes/20261004-设计方向第三轮.md）。已应用于根目录品牌配置、交付素材与品牌预览，不代表原生接入、Icon Composer 或真机验收完成。App 图标外观变体独立于 UI 主题。",
     "cssFontBase": 16,
     "sources": [
       "https://developer.apple.com/design/human-interface-guidelines/color",
@@ -56,12 +56,22 @@ window.COULI_BRAND = Object.freeze({
     "canvas": {
       "token": "color.background.canvas",
       "cssVariable": "--color-background-canvas",
+      "value": "#F2EEE6"
+    },
+    "adminCanvas": {
+      "token": "color.background.admin-canvas",
+      "cssVariable": "--color-background-admin-canvas",
       "value": "#F6F3ED"
     },
     "surface": {
       "token": "color.background.surface",
       "cssVariable": "--color-background-surface",
       "value": "#FFFFFF"
+    },
+    "imagePlaceholder": {
+      "token": "color.background.placeholder",
+      "cssVariable": "--color-background-placeholder",
+      "value": "#E9E2D9"
     },
     "textPrimary": {
       "token": "color.text.primary",
@@ -82,6 +92,41 @@ window.COULI_BRAND = Object.freeze({
       "token": "color.price.text",
       "cssVariable": "--color-price-text",
       "value": "#28251F"
+    },
+    "rebateText": {
+      "token": "color.rebate.text",
+      "cssVariable": "--color-rebate-text",
+      "value": "#A83B1F"
+    },
+    "rebateBackground": {
+      "token": "color.rebate.background",
+      "cssVariable": "--color-rebate-background",
+      "value": "#FBEFE8"
+    },
+    "rebateSolidBackground": {
+      "token": "color.rebate.solid.background",
+      "cssVariable": "--color-rebate-solid-background",
+      "value": "#C44820"
+    },
+    "rebateSolidText": {
+      "token": "color.rebate.solid.text",
+      "cssVariable": "--color-rebate-solid-text",
+      "value": "#FFFFFF"
+    },
+    "sourceText": {
+      "token": "color.source.text",
+      "cssVariable": "--color-source-text",
+      "value": "#655E57"
+    },
+    "sourceBackground": {
+      "token": "color.source.background",
+      "cssVariable": "--color-source-background",
+      "value": "#FFFFFF"
+    },
+    "sourceBorder": {
+      "token": "color.source.border",
+      "cssVariable": "--color-source-border",
+      "value": "#E4DED5"
     },
     "pendingText": {
       "token": "color.status.pending.text",

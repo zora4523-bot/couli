@@ -2,13 +2,13 @@
   "schemaVersion": "couli.tokens.v1",
   "metadata": {
     "name": "凑狸",
-    "version": "0.2.0",
-    "date": "2026-10-01",
+    "version": "0.3.0",
+    "date": "2026-10-04",
     "status": "project baseline",
     "theme": "light",
     "darkThemePhase": "P1",
     "colorSpace": "sRGB",
-    "description": "当前项目使用的品牌与界面基线；已应用于根目录品牌配置、交付素材与品牌预览，不代表原生接入、Icon Composer 或真机验收完成。App 图标外观变体独立于 UI 主题。",
+    "description": "当前项目使用的品牌与界面基线；2026-10-04 按设计方向第三轮调整 App 页面底、返利强调、平台来源标签与图片占位（docs/changes/20261004-设计方向第三轮.md）。已应用于根目录品牌配置、交付素材与品牌预览，不代表原生接入、Icon Composer 或真机验收完成。App 图标外观变体独立于 UI 主题。",
     "cssFontBase": 16,
     "sources": [
       "https://developer.apple.com/design/human-interface-guidelines/color",
@@ -42,8 +42,13 @@
       "background": {
         "canvas": {
           "type": "color",
+          "value": "#F2EEE6",
+          "description": "App 页面背景（暖米白）；2026-10-04 由 #F6F3ED 调整，管理后台用 admin-canvas"
+        },
+        "admin-canvas": {
+          "type": "color",
           "value": "#F6F3ED",
-          "description": "暖米白页面背景"
+          "description": "管理后台页面背景，保留第二版暖米白"
         },
         "surface": {
           "type": "color",
@@ -54,6 +59,11 @@
           "type": "color",
           "value": "#EFEAE2",
           "description": "次要分组背景"
+        },
+        "placeholder": {
+          "type": "color",
+          "value": "#E9E2D9",
+          "description": "商品图与配图位的占位底；真实素材容器另加 border.subtle 描边，不承载文字"
         }
       },
       "text": {
@@ -82,7 +92,31 @@
         "text": {
           "type": "color",
           "value": "#28251F",
-          "description": "墨棕价格数值，靠字号和字重突出；不代表返利状态，预估金额沿用中性文字与明确标签"
+          "description": "墨棕价格数值（券后价、售价），靠字号和字重突出；不代表返利状态，返利金额与标签用 color.rebate.*"
+        }
+      },
+      "rebate": {
+        "text": {
+          "type": "color",
+          "value": "#A83B1F",
+          "description": "返利金额与其标签词（预估返、推广收益）的强调文字，用于白底、米白底与 rebate.background 上"
+        },
+        "background": {
+          "type": "color",
+          "value": "#FBEFE8",
+          "description": "返利标签浅底，配 rebate.text 与钟表图形；不表示已结算"
+        },
+        "solid": {
+          "background": {
+            "type": "color",
+            "value": "#C44820",
+            "description": "狸橙实底（钱包主卡等），只承载白字；24 以上大字或实底卡片使用，不做渐变或整屏色块"
+          },
+          "text": {
+            "type": "color",
+            "value": "#FFFFFF",
+            "description": "狸橙实底上的白字，含金额大字与卡内次要文字，不用半透明白"
+          }
         }
       },
       "status": {
@@ -90,12 +124,12 @@
           "text": {
             "type": "color",
             "value": "#655E57",
-            "description": "预估或等待结算的中性文字和图标，须配明确状态词及钟表等进行中图形"
+            "description": "「预估中」「等待结算」等状态标签的中性文字和图标，须配明确状态词及钟表等进行中图形；返利金额本身用 color.rebate.*"
           },
           "background": {
             "type": "color",
             "value": "#EFEAE2",
-            "description": "预估或等待结算的中性浅底；不能配完成对勾"
+            "description": "「预估中」「等待结算」状态标签的中性浅底；不能配完成对勾"
           }
         },
         "success": {
@@ -162,8 +196,13 @@
         },
         "background": {
           "type": "color",
-          "value": "#EFEAE2",
-          "description": "平台来源中性浅底"
+          "value": "#FFFFFF",
+          "description": "平台来源标签白底，配 source.border 描边"
+        },
+        "border": {
+          "type": "color",
+          "value": "#E4DED5",
+          "description": "平台来源标签 1 单位描边；装饰性，来源含义由文字承担"
         }
       },
       "button": {
