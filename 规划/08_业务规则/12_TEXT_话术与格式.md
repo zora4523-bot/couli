@@ -24,6 +24,8 @@
 
 2026-10-03 功能对照补缺第 5 批（同一变更记录的「第 5 批」，功能对照 G-66～G-96）：BR-TEXT-13 正文与细则写明匹配前的归一化（G-95）；BR-TEXT-12 细则新增「资金术语键」（G-76，单设后台权限点是代理补全的默认，待负责人确认）；BR-TEXT-01 细则补提现关闭时的钱包文案与资金术语键指针（G-73、G-76）；BR-TEXT-18 细则补提现对账的答复（G-70）；BR-TEXT-19 细则补「变动后余额」（G-75，按 BR-FUND-15，没有采用清单「一律不显示」的建议）；BR-TEXT-14 表 C 新增提现详情、提现页、分享面板、第三方页容器加载失败、设置页清除缓存、关于页诊断信息、余额流水变动后余额的文案键，表 D 新增隐私中心系统权限的文案键。各条状态不变，没有新增条目与错误码。同日按第 1 轮评审修改（变更记录 5.9）：BR-TEXT-12 细则「资金术语键」改为认定规则加完整清单（补 `tag.rebate`、返利位与无返利文案、资金类通知模板，机器可读清单 `specs/fund-term-keys.yaml`）；BR-TEXT-09 细则加改措辞的权限一句；BR-TEXT-13 正文与「归一化」加去掉默认可忽略字符一步与 U+034F、U+FE0F 的向量，新增「首页公告条的关闭与内容版本」；BR-TEXT-14 表 C 新增 withdraw.estimate.calculating。各条状态不变，没有新增条目与错误码。 第 2 轮评审后（变更记录 5.10）：BR-TEXT-12 细则「资金术语键」补齐无返利的错误文案、找回与风控提示、淘礼金与授权说明、账号类资金通知与还没有取键名的资金文案，`specs/fund-term-keys.yaml` 改为「资金术语」「普通」两段、每个键与模板都要归类，写入口共用一个键级检查；BR-TEXT-23、BR-TEXT-14 各加一句指针；BR-TEXT-13 正文与「归一化」再去组合附加符（Mn、Me），补 U+0301、U+20DD、U+0332 的向量；BR-TEXT-14 表 C 新增 app_update.unavailable、app_update.official_site、app_update.retry。各条状态不变，没有新增条目与错误码。 2026-10-04 并入第 4 批后（变更记录 5.8）：BR-TEXT-12 细则「资金术语键」补归第 4 批新增的文案键（`order_status_group.`、`order_list.deposit_amount` 归资金术语，其余归普通）。 第 3 轮评审后（变更记录 5.11）：BR-TEXT-13 正文与「归一化」再去间距组合附加符（Mc），补 U+093E、U+0BBE 的向量与一条带 Mc、应当放行的文案；BR-TEXT-14 表 C 删去 app_update.official_site。各条状态不变，没有新增条目与错误码。
 
+2026-10-04 设计稿第二批拍板（docs/changes/20261004-设计稿第二批拍板.md，负责人 2026-10-04 确认）：BR-TEXT-01 术语表「实际到账」行、钱包汇总口径与细则「取代」——提现单在审核中、打款中时金额标签用「预计到账」，已到账才用「实际到账」（§1），BR-TEXT-14 表 C 新增 withdraw_detail.net.expected / .actual；BR-TEXT-23 细则——申诉页、申诉进度与封禁 / 冻结说明页不显示处理时限（§2），钱包「提现已暂停」提示可点进 RiskNotice 的冻结态（§4）；BR-TEXT-14 表 D 撤回同意确认框的按钮主次（§6）、表 A 30416 行的进页提示（§7）、表 C 分享中间页按钮主次（§8）。各条状态不变，没有新增条目与错误码。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -73,6 +75,7 @@
   - 参考_花卷云功能查漏底稿 §12：「预估（付款）→预估结算→确认收货→已返现，另有未结算」
   - PRD v2.1 §9.3：「credit_status：ESTIMATED → HOLDING → CREDITED → REVERSED」
   - 本条 2026-10-01 写法：「「预估推广收益」指 PROMO 账户…；「预估收益」只作不区分账户时的合计称呼」「钱包汇总口径 SELF / PROMO 每账户分别返回；SELF 显示「预估返」，PROMO 显示「预估推广收益」」（单一余额，拍板第二批 §8 ADD-06）
+  - 本条 2026-10-04 前写法：「提现记录中逐单展示「实际到账 {net}」」（不分状态；审核中、打款中改标「预计到账」，负责人 2026-10-04 确认，docs/changes/20261004-设计稿第二批拍板.md §1）
 - 来源：规划/04 §1 术语表、§2.3、§2.4、§3.2 account_balances、§4.2 W4–W8；规划/01 §1、§5 J4/J6/J7、F-WDR-01、F-WDR-09、F-MSG-02；规划/02 §5.2；PRD修订_后端功能规划 2.16、3.2；PRD v2.1 §9.3；参考_花卷云功能查漏底稿 §12、§16 #33；README §1.2；docs/changes/20260930-拍板第一批.md §3（C-02、BR-TEXT-01 行；D11、BR-FUND-04 行）；docs/changes/20260930-拍板第一批.md §10（负责人 2026-09-30 补充）；docs/changes/20261001-拍板第二批.md（OPS-01、§8 ADD-06）
 - 需同步修改的规划文档：6 处（计数仅作记录，落点见 README §0.6）
 
@@ -91,7 +94,7 @@
 | 冻结中 | 提现单处于 PENDING_REVIEW / APPROVED / PAYING 的金额（PAYING 为冻结内的在途，不另设余额字段） | frozen_fen | 冻结 | 否 |
 | 已到账 | **仅提现**：支付宝确认成功或人工补录流水号 | PAID_API / PAID_MANUAL；流水 WITHDRAW_PAID「提现到账」 | 已提现 | — |
 | 已提现 | Σ 已到账提现单 amount_fen（申请额，含代扣税费） | withdrawals.amount_fen | 已提现 | — |
-| 实际到账 | 单笔提现打入收款账户的金额 | net_fen = amount_fen − fee_fen − tax_fen | 实付 | — |
+| 实际到账 | 单笔提现打入收款账户的金额；只用于已到账（PAID_API、PAID_MANUAL）的提现单，审核中、打款中的单同一金额标「预计到账」（负责人 2026-10-04 确认，docs/changes/20261004-设计稿第二批拍板.md §1） | net_fen = amount_fen − fee_fen − tax_fen | 实付 | — |
 | 跟单成功 | 订单已同步入库且归到该用户（user_id 非空）、platform_status 首次 ∈ {PAID, RECEIVED, SETTLED} 且 B_est > 0 | BR-FUND-01 R2；BR-FUND-17 | 已归因 | 否 |
 | 已失效 | 结算前失效，预估作废，余额未变 | rebate_status=VOID（display_status=INVALID） | 失效 | — |
 | 已扣回 | 结算后失效，余额已被扣减（可致负） | rebate_status=CLAWED_BACK；流水 CLAWBACK。部分扣回时 rebate_status 仍为 CREDITED，display_status=CREDITED_PART_CLAWED | 扣回 | — |
@@ -109,7 +112,7 @@
 - 风控冻结（risk_state=frozen）与提现冻结记录（withdraw_holds，BR-WDR-05）不改变余额、不计入冻结中，只在钱包顶部显示「提现已暂停：{reason}」；reason 取字典 risk_msg.&lt;code> 文案（BR-TEXT-14），不得写风控规则细节；下发字段由 BR-WDR-05 定义。
 - 预估：显示「预估收益 ¥{estimated_total_fen}」；预估合计 estimated_total_fen = 该用户全部受益角色结算前份额（BR-FUND-18：estimated_fen + pending_credit_fen，不含定金阶段与未归因订单），由服务端返回合计值，客户端不相加；注「按联盟最新预估计算，以联盟结算金额为准」。
 - 预估下附进度行（只作说明，不是独立状态）：「其中已收货 ¥{pending_credit_fen}」；服务端返回 next_credit_period 时附「预计 {月份} 结算」（取值按 BR-FUND-18 与 BR-FUND-04 ⑪），credit_overdue=true 时附「入账核对中」，未返回时不显示月份；pending_credit_paused_fen > 0 时另附「其中 ¥{pending_credit_paused_fen} 暂缓入账」，不说明是维权还是 hold。保留「其中已收货」分项的理由：告诉用户哪部分会进入下一次联盟月结，金额名仍为「预估」。
-- 已提现 ¥{withdrawn_fen}（BR-FUND-18：Σ 该用户 PAID_API / PAID_MANUAL 提现单 amount_fen）；提现记录中逐单展示「实际到账 {net}」。
+- 已提现 ¥{withdrawn_fen}（BR-FUND-18：Σ 该用户 PAID_API / PAID_MANUAL 提现单 amount_fen）；提现记录中逐单展示到账金额 {net}：已到账的单标「实际到账」，审核中、打款中的单标「预计到账」（负责人 2026-10-04 确认，docs/changes/20261004-设计稿第二批拍板.md §1；键见 BR-TEXT-14 表 C withdraw_detail.net.*）。
 - 不显示累计收益（2026-10-03，功能对照 G-37；按功能对照 Q-11 默认 B，负责人 2026-10-03 未回答、按现状，`docs/changes/20261003-拍板第三批.md` §4）：钱包不显示「累计已到账收益」「累计收益」「历史总收益」一类的累计总额，也不为此加字段（BR-FUND-18 不变）。用户问到时客服按 BR-TEXT-18 细则的统一答复回答。负责人改选显示时，口径要另写进 08 资金主题（只计返利、分享、邀请分佣的入账以及售后扣回与结算补差，不计坏账核销；人工调账计不计由负责人定），再加字段与词条，不能直接拿后台月末核对的累计入账净额（BR-FUND-23 的 X1，含坏账核销）当用户收益。
 
 例：用户 A 有 3 笔自购订单：(PAID, ESTIMATED) 预估 ¥2.5、(RECEIVED, WAITING) 预估 ¥4（淘宝订单 10 月确认收货，联盟尚未返回结算时间，expected_credit_period=2026-11）、(RECEIVED, CREDITED) ¥6；无提现。接口返回 withdrawable_fen=600、estimated_total_fen=650、pending_credit_fen=400、estimated_fen=250、next_credit_period=2026-11、withdrawn_fen=0 → 钱包显示「可提现余额 ¥6｜预估收益 ¥6.5（其中已收货 ¥4，预计 11 月结算）｜已提现 ¥0」。用户问「返利到账了吗」，客服回答：「¥6 已结算，可提现；另有预估收益 ¥6.5，其中已收货的 ¥4 预计 11 月结算，¥2.5 待确认收货」。
@@ -698,7 +701,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 30413 | 未满 18 周岁，暂不开放邀请与分享 | 同左 | 隐藏邀请与分享赚入口 |
 | 30414 | 暂不支持自助更换手机号，请联系客服 | 同左 | — |
 | 30415（新增，代理自定、负责人 2026-10-01 接受；13 §13.11 登记） | 本月昵称修改次数已用完，下月可再修改 | 同左 | —（BR-ID-39） |
-| 30416（新增，拍板第二批 §8 ADD-07；13 §13.11 登记） | 账户有待扣回金额 {amount}，抵扣回正后才能注销 | 账户有待扣回金额，抵扣回正后才能注销 | {amount} 取 data.amount_fen，按 BR-TEXT-10 格式化；注销页展示该提示与【联系客服】，不进入冷静期（BR-ID-27） |
+| 30416（新增，拍板第二批 §8 ADD-07；13 §13.11 登记） | 账户有待扣回金额 {amount}，抵扣回正后才能注销 | 账户有待扣回金额，抵扣回正后才能注销 | {amount} 取 data.amount_fen，按 BR-TEXT-10 格式化；注销页展示该提示与【联系客服】，不进入冷静期（BR-ID-27）；进注销页时余额已为负，同一句直接显示、申请按钮置灰，{amount} 取钱包汇总的 negative_fen（BR-ID-27 细则，负责人 2026-10-04 确认，docs/changes/20261004-设计稿第二批拍板.md §7） |
 | 30501 | AI 助手暂未开放 | 同左 | 入口隐藏或置灰 |
 | 30502 | 今日 AI 次数已用完，明天恢复，可以先用搜索找货 | 同左 | 跳搜索 |
 | 30503 | 暂不支持这类内容 | 同左 | — |
@@ -809,9 +812,9 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 待确认·放弃时已处理完 pending_confirm.already_done | 上一次提交已经处理完成 | 作废接口返回原结果（outcome=completed）时显示，随后按原结果展示（提现单、换绑结果或原结果的错误文案），删除未决记录、恢复提交入口（第 3 轮评审补） |
 | App 内链接落地页·分享者本人提示 link_landing.owner_hint | 这是你分享的商品，自己购买按自购返利计算 | 只在 `GET /v1/links/{link_id}` 返回 viewer_is_sharer=true 时显示；不显示金额（BR-ATTR-11，2026-10-03 功能对照 G-03） |
 | App 内链接落地页·链接失效 link_landing.invalid | 链接已失效 | 30144 时显示空态与按钮【去搜索】，不自动重试（BR-ATTR-05 细则） |
-| 分享中间页按钮 share_page.open_in_app | 在 App 中打开 | App 外浏览器里显示；微信内不显示；`open_in_app_url` 为 null 时不显示；文案不得带返利、红包等利益表述（BR-ATTR-05 细则，规划/09 CAP-X-03） |
+| 分享中间页按钮 share_page.open_in_app | 在 App 中打开 | App 外浏览器里显示；与【复制淘口令】同时显示时为次按钮（见 share_page.copy_tpwd 行）；微信内不显示；`open_in_app_url` 为 null 时不显示；文案不得带返利、红包等利益表述（BR-ATTR-05 细则，规划/09 CAP-X-03） |
 | 分享中间页·微信内引导 share_page.open_in_browser_hint | 请点右上角，选择在浏览器打开 | 只在微信内显示，代替【在 App 中打开】与【复制淘口令】（规划/03 §8.3） |
-| 分享中间页按钮 share_page.copy_tpwd | 复制淘口令 | 只在接口响应带 `tpwd_ticket` 时显示（微信内不显示）；点击时才取口令并写入剪贴板，成功后提示「已复制淘口令」（share_page.copy_tpwd.done）（BR-ATTR-10 细则，2026-10-03） |
+| 分享中间页按钮 share_page.copy_tpwd | 复制淘口令 | 只在接口响应带 `tpwd_ticket` 时显示（微信内不显示）；点击时才取口令并写入剪贴板，成功后提示「已复制淘口令」（share_page.copy_tpwd.done）（BR-ATTR-10 细则，2026-10-03）；与【在 App 中打开】同时显示时本按钮为主按钮、【在 App 中打开】为次按钮（负责人 2026-10-04 确认，docs/changes/20261004-设计稿第二批拍板.md §8） |
 | 下载引导页按钮 download_guide.download / download_guide.reopen | 下载 App｜已安装，重新打开 | 非分享链接的深链没有拉起 App 时显示的静态页；【已安装，重新打开】重新访问原深链；页面不展示任何链接内容（BR-ATTR-05 细则，2026-10-03） |
 | 第三方新号绑手机引导 invite.bind_phone_guide.title / .body | 绑定手机号｜绑定手机号后，可在期限内填写邀请码。已用手机号注册过的，绑定同一个手机号、符合条件时可把当前登录方式并入原账号 | 按钮【去绑定】【暂不】；出现条件按 BR-INV-03 细则（2026-10-03 功能对照 G-05）；并号条件只按 BR-ID-06，文案不写天数（BR-TEXT-13） |
 | 第三方新号绑手机引导·购买前版本 invite.bind_phone_guide.body_before_buy | 绑定手机号后，可在期限内填写邀请码。已用手机号注册过的，绑定同一个手机号、符合条件时可把当前登录方式并入原账号。下单后将不能再填写邀请码，也不能并入原账号 | 登录由点击购买触发时用这一版，按钮同上；【暂不】后继续本次购买（BR-INV-03 细则） |
@@ -843,6 +846,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 找回指引·付款日期 claim.guide.paid_date | 请填写付款成功的日期；预售订单填付定金的日期 | 付款日期输入框下方 |
 | 找回指引·期限 claim.guide.window | 付款后 {claim_window_days} 天内可以申请找回 | {claim_window_days} 取 `/v1/config` 的 `claim.window_days`（服务端由 claim.window_hours 向下取整到天派生，BR-ATTR-17 细则「找回页的填写指引」）；为 null 时整句不显示（BR-TEXT-12），不写死天数（BR-TEXT-13）；帮助文章里不写期限数字 |
 | 找回指引·核对提示 claim.guide.caution | 填错会占用今天的找回次数，请核对后再提交 | 提交按钮上方；不写具体次数 |
+| 提现记录与详情·到账金额 withdraw_detail.net.expected / withdraw_detail.net.actual | 预计到账 {net}｜实际到账 {net} | 审核中、打款中（PENDING_REVIEW、APPROVED、PAYING）的单用前一句，已到账（PAID_API、PAID_MANUAL）的单用后一句，列表与详情同一规则；{net} 取接口的 net_fen，按 BR-TEXT-10 格式化；未通过、打款未成功的单不用这两个键（BR-TEXT-01 术语表，负责人 2026-10-04 确认，docs/changes/20261004-设计稿第二批拍板.md §1）；在 `withdraw_detail.` 前缀内，归资金术语（BR-TEXT-12 细则） |
 | 提现详情·交易流水号 withdraw_detail.trade_no / .copy / .copied | 交易流水号｜复制｜已复制交易流水号 | 只在提现详情、PAID_API 或 PAID_MANUAL 且有 channel_order_id 时显示，旁边是【复制】按钮，复制成功后提示第三句；列表不显示；不写「可在支付宝账单中查到」（BR-WDR-25 细则「交易流水号」，2026-10-03 功能对照 G-70） |
 | 提现页·页头 withdraw.balance_line / withdraw.remaining_counts | 可提现余额 {amount}｜今日还可提 {daily} 次，本月还可提 {monthly} 次 | {amount} 取 rules 的 withdrawable_fen，按 BR-TEXT-10 格式化；次数取 rules 的今日与本月剩余次数（BR-WDR-04 细则「提现页的金额输入与提交后去向」，2026-10-03 功能对照 G-72，下同） |
 | 提现页·本次上限 withdraw.max_line | 本次最多可提 {amount} | 只在 max_withdrawable_fen 小于可提现余额时显示在输入框下方 |
@@ -866,7 +870,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | privacy.second_notice.body | 点【不同意】后的二次说明 | 要点：不同意时只能用基本模式浏览，不能登录、不能获得返利；之后可以随时开启完整功能。全文由法务提供 | 按钮【同意】【仍不同意】；Android、鸿蒙可另给【退出 App】，iOS 不提供（BR-ID-11；键见 privacy.btn.\*） |
 | privacy.btn.agree / .disagree / .still_disagree / .exit_app | 首启弹窗与二次说明的按钮 | 同意｜不同意｜仍不同意｜退出 App | 按钮的含义与出现位置按 BR-ID-11，不因文案调整而改变；.exit_app 只在 Android、鸿蒙出现 |
 | privacy.basic_mode.notice / .enable | 基本模式页的说明与按钮 | 当前为基本模式，只能浏览。开启完整功能后可以登录、查返利｜开启完整功能 | 点按钮重新展示首启弹窗（BR-ID-02、BR-ID-11） |
-| privacy.withdraw.confirm.title / .body | 隐私中心【撤回同意】的确认框 | 撤回同意｜撤回后本机会退出登录并进入基本模式，只能浏览。账号和数据不会删除；要删除请使用账号注销 | 按钮【确认撤回】【取消】（键 privacy.withdraw.confirm.ok / .cancel）；规则见 BR-ID-13 |
+| privacy.withdraw.confirm.title / .body | 隐私中心【撤回同意】的确认框 | 撤回同意｜撤回后本机会退出登录并进入基本模式，只能浏览。账号和数据不会删除；要删除请使用账号注销 | 按钮【确认撤回】【取消】（键 privacy.withdraw.confirm.ok / .cancel），【取消】为主按钮、【确认撤回】为次按钮（负责人 2026-10-04 确认，docs/changes/20261004-设计稿第二批拍板.md §6）；规则见 BR-ID-13 |
 | perm.push.card_hint / perm.push.cta | 待跟单卡里的通知说明行与按钮 | 开启通知，跟单成功、返利结算和提现到账时会及时提醒你｜开启通知 | 出现条件与时机见 BR-ID-13 细则「通知权限的申请时机」（功能对照 G-25；按功能对照 Q-21 默认 A，待负责人确认）；不写「开启后才有返利」之类的话，不承诺通知的具体时限。card_hint 同时是通知权限的用途说明键：权限申请组件申请 push 时（含经桥方法申请）取这一句，不另设 perm.push.purpose（规划/03 §4.9 的映射） |
 | perm.push.guide_bar | 「我的」页的通知引导条 | 通知没有开启，跟单和提现到账的消息可能收不到。去开启 | 可关闭；点击跳到系统里本 App 的通知设置（BR-ID-13 细则） |
 | perm.push.denied_forever | 通知权限已被拒绝、系统不再询问时的引导 | 通知权限已关闭，可以在系统设置中开启 | 配【去设置】 |
@@ -1224,7 +1228,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 - {frozen_until}、{cancel_deadline} 按 BR-TEXT-11 未来时间格式；{reason_category} 取上表文案；{amount} 按 BR-TEXT-10 格式化（待扣回金额）。
 - 改措辞的权限（第 2 轮评审后补，功能对照 G-76）：RISK_STATE_CHANGED、APPEAL_RESULT、DELETION_PROGRESS 三个模板（含全部变体）与原因类别 `risk_reason.<category>` 都是资金术语——提现暂停与恢复、返利恢复、待扣回金额——改措辞须有后台权限点 `content.fund_terms` 并每次二次验证（BR-TEXT-12 细则「资金术语键」），只有 `content.article` 的账号改不了；变量与含义照旧不能改。
-- 封禁期间用户只能调 10006 白名单接口（BR-ID-31），banned 通知在解封后可见；封禁说明页显示「账号已被限制使用」、原因类别与【申诉】入口，申诉进度与结果在说明页经申诉接口查看。冻结只影响提现，钱包顶部提示按 BR-TEXT-01（「提现已暂停：{reason}」）；risk_state=frozen 时 {reason} 显示本条原因类别文案，有到期时间时附「，预计 {frozen_until} 恢复」。
+- 封禁期间用户只能调 10006 白名单接口（BR-ID-31），banned 通知在解封后可见；封禁说明页显示「账号已被限制使用」、原因类别与【申诉】入口，申诉进度与结果在说明页经申诉接口查看。冻结只影响提现，钱包顶部提示按 BR-TEXT-01（「提现已暂停：{reason}」）；risk_state=frozen 时 {reason} 显示本条原因类别文案，有到期时间时附「，预计 {frozen_until} 恢复」。账户被风控冻结（risk_state=frozen）时，这条提示可以点击，进入 `RiskNotice` 的冻结态说明页（原因类别、有到期时间时的到期时间、申诉入口；封禁态与冻结态是同一页的两种状态，负责人 2026-10-04 确认，docs/changes/20261004-设计稿第二批拍板.md §4）；提现冻结记录（BR-WDR-05）等其他原因的提现暂停提示不在本句范围。
+- 不向用户显示申诉处理时限（负责人 2026-10-04 确认，docs/changes/20261004-设计稿第二批拍板.md §2）：申诉提交页、申诉进度（含处理中）与封禁 / 冻结说明页不显示申诉的处理时限或截止时刻，只说明会尽快处理、结果通过站内消息（APPEAL_RESULT）通知；BR-ID-36 的结案时限与 appeals.deadline_at 只作内部时限与超时告警，不变。冻结说明页的冻结到期时间（frozen_until）不是处理时限，照常显示。
 - 注销进入 processing 后账号不能登录（BR-ID-27），不再发 DELETION_PROGRESS；进度只在注销进度页查询。
 - 例：风控冻结用户并设 frozen_until=2026-11-30 00:00、类别 abnormal_trade → 站内信「你的账户提现已暂停至 11-30 00:00，原因：异常交易。如有疑问，可在帮助中心提交申诉。」；到期恢复后另发「你的账户提现已恢复。」。
 
