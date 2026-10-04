@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 仓库性质
 
-这是返利 App「凑狸」（iOS / Android / 鸿蒙三端原生壳 + 共用 H5 + Agent 找货）的**规划与设计仓库**，尚无正式 App / 后端工程。当前包含中文 Markdown 规划、`design/` 品牌素材与静态交互预览，以及 `scripts/sync-brand.py` 品牌生成 / 校验工具；命令和入口见根目录 `README.md`。
+这是返利 App「凑狸」（iOS / Android / 鸿蒙三端原生壳 + 共用 H5 + Agent 找货）的**规划与设计仓库**。后端工程已在独立的 `rebate-platform` 仓库开始开发；本仓库包含中文 Markdown 规划、`design/` 品牌素材与静态交互预览，以及 `scripts/sync-brand.py` 品牌生成 / 校验工具；命令和入口见根目录 `README.md`。
 
 - 仓库是**公开**的（GitHub `zora4523-bot/couli`）。不要放未公开方案、商标申请材料、合同、密钥或真实个人信息。
 - `.gitignore` 排除了花卷云原始资料（`01_开发文档与前端能力 (1).md`、`02_服务端接口明细 (1).md`、`后台功能明细.zip`），它们只留在本地，不要提交。
@@ -13,9 +13,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 与负责人沟通（回复、总结、提问）一律用中文。
 - 改变已确认决定或资金口径的变更记录放在 `docs/changes/<YYYYMMDD>-<主题>.md`（00 §8），写明内容、涉及的 BR、受影响的页面与接口、验收与恢复方式，再同步到各规划文档。
 
-规划中的代码仓库是另外的 `rebate-platform/`（pnpm workspace + Turborepo：`apps/api` NestJS 模块化单体、`apps/h5`、`apps/admin`、`packages/domain`、`packages/money`、`contracts/`；技术栈见 ADR-0001：PostgreSQL + Kysely + SQL 迁移 + pg-boss），外加三个原生仓库。结构见 `规划/02_系统架构.md` 的仓库目录章节和 `规划/03_前端架构.md` §2–§3。那些目录现在都**还没建**，缺少它们不阻塞规划工作。
+代码仓库是另外的 `rebate-platform/`（pnpm workspace + Turborepo；技术栈见 ADR-0001：PostgreSQL + Kysely + SQL 迁移 + pg-boss）。目标结构包括 `apps/api` NestJS 模块化单体、`apps/h5`、`apps/admin`、`packages/domain`、`packages/money`、`contracts/`，外加三个原生仓库；结构见 `规划/02_系统架构.md` 和 `规划/03_前端架构.md` §2–§3。目标目录和契约声明不等于已实现；当前进度须核对代码远端主干、实际工作树、台账、在途状态与 CI，不能据旧说明判断工程不存在，也不能只读一个落后的本地 main。
 
-代码仓库 `rebate-platform` 建好后：字段、枚举、错误码、表结构的形状以 `contracts/` 与 `db/schema.sql` 为准（04 改为指针，08 仍管取值）；编排会话从 `rebate-platform` 启动，本仓库的会话只维护规划文档；记忆文件只记偏好和指针，不记会变的状态（规划/11 §2.2、§5）。
+代码仓库 `rebate-platform` 中：字段、枚举、错误码、表结构的形状以 `contracts/` 与 `db/schema.sql` 为准（04 管规划形状与指针，08 仍管取值）；编排会话从 `rebate-platform` 启动，本仓库的会话只维护规划文档；记忆文件只记偏好和指针，不记会变的状态（规划/11 §2.2、§5）。按 `规划/05` §0.1 的依赖顺序推进，具体任务由工程台账判定。
 
 ## 文档体系（先读 `规划/00_总览与决策.md`）
 
