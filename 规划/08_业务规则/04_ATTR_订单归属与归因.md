@@ -24,6 +24,8 @@
 
 2026-10-03 资金规则对齐（docs/changes/20261003-资金规则对齐.md，负责人批准）：BR-ATTR-01 写明判定先于写库、P15 同状态不算表外事件、倒退报文整条不落库（决-12 A）；BR-ATTR-01 ⑥ 与 BR-ATTR-20 ③ 随决-07 A 改为找回不受理 VOID 订单。条目状态不变；旧写法登记在各条细则「取代」。
 
+2026-10-04 后台设计稿拍板（docs/changes/20261004-后台设计稿拍板.md）：BR-ATTR-20 细则例子里的改归属原因去掉工单号（客服工单已取消，§2）。后台订单详情另有按状态推导的「已锁定」标记，与本主题的归属锁定（orders.locked，界面叫「归属已锁定」）是两回事，见 BR-FUND-01 细则「订单锁定（展示标记）」（§7）。推广位的后台操作补权限点 union.pid（规划/04 §11，§4），BR-ATTR-02 的要求不变。规则与状态不变。
+
 ### 4.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -559,7 +561,7 @@ C-05 已由负责人决定（拍板第二批 §8 ADD-01）：一次绑定永久�
 
 **并发例**：客服点“通过”的同时，同步 worker 按参数把 S1 归给了 V。两边争同一把锁：同步先拿到锁 → 写 V；客服事务随后拿到锁，重读到 user_id=V → 子项 rejected(NOT_IN_POOL)，不生成第二份快照。
 
-**例**：super 把已归属 A 的订单 S2（platform_status=PAID，rebate_status=ESTIMATED）改给 B，原因“A 与 B 为同一人换号，工单 #123”，超管 step-up 确认 → A 的预估分录、A 上级的分佣、平台留存全部红冲，B 生成新快照（B 与 B 上级的等级取 S2 paid_at 时刻），S2 锁定，两个状态都不变。
+**例**：super 把已归属 A 的订单 S2（platform_status=PAID，rebate_status=ESTIMATED）改给 B，原因“A 与 B 为同一人换号，客服已核实”，超管 step-up 确认 → A 的预估分录、A 上级的分佣、平台留存全部红冲，B 生成新快照（B 与 B 上级的等级取 S2 paid_at 时刻），S2 锁定，两个状态都不变。
 
 **并发冲突例**：管理员甲打开 S2 详情时 user_id=A、locked=false，提交改派时带 expected_user_id=A、expected_locked=false；提交前另一笔改派已把 S2 改给 C 并锁定 → 重读 user_id=C、locked=true，与期望不符 → 返回 20902（data.resource=order_attribution），后台提示刷新，不做任何修改。
 
