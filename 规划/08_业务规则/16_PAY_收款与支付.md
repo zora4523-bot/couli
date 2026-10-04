@@ -13,13 +13,13 @@
 | 编号 | 规则 | 状态 | 影响面 |
 | --- | --- | --- | --- |
 | BR-PAY-01 | **范围、入口与开关**<br>支付基础设施提供两种收款渠道：微信支付的 APP 支付（`wechat_pay`）与支付宝的 App 支付（`alipay`）（负责人 2026-10-04）。三端都接入调起能力，鸿蒙与安卓同步（负责人 2026-10-04）；某个业务类型在哪些端可售由该业务类型登记，iOS 上可售的范围受苹果审核规则约束（BR-PAY-09 ③）。<br>① 支付单必须指向一个已登记的业务类型（`biz_type`）和它的业务对象（`biz_ref`）；金额、标题只由服务端按业务类型的定价给出，客户端不能上送金额。本主题建立时没有登记任何业务类型。<br>② 入口：创建支付单与取调起参数只能由原生 App 发起，须 access_token 有效、请求签名通过、带 `Idempotency-Key`；H5、JSBridge、Agent 不得调用，Agent 不得代用户下单或付款。<br>③ 不得用返利余额付款或抵扣（BR-FUND-13）；支付模块不读写用户余额。<br>④ 开关：总开关 `pay.enabled` 默认 off；渠道开关 `pay.channel_enabled.<pay_channel>` 默认 off；业务类型的可售端 `pay.biz.<biz_type>.platforms`。任一不满足 → 30901，`data.reason` ∈ {pay_disabled, channel_disabled, platform_not_allowed, biz_not_sellable}。开关关闭只影响新下单：已有待支付单照常接收通知、查询和关单，已支付单的退款与对账不受影响。开关由超管或有权限点的账号修改，step-up、写审计。 | 已确认 | 模块 payment；`POST /v1/pay/orders`；配置 pay.enabled、pay.channel_enabled.&lt;pay_channel>、pay.biz.&lt;biz_type>.platforms；业务类型登记表；错误码 30901；bridge.schema.json 与 Agent 工具注册表的 CI 检查；AC-S2-82 |
-| BR-PAY-02 | **支付单、单号与状态机**<br>支付单状态只有 3 个：PENDING（待支付）、PAID（已支付）、CLOSED（已关闭）。PAID、CLOSED 为终态。迁移只有：PO1 创建 → PENDING；PO2 PENDING → PAID（只凭 BR-PAY-04 判定的支付成功）；PO3 PENDING → CLOSED（BR-PAY-05）。每次迁移用状态 CAS，影响 0 行即并发冲突，不写分录、不触发业务，接口返回 20902（`data.resource=pay_order`）。<br>商户单号 `out_trade_no` 在创建时生成：只含 ASCII 字母与数字、长度 ≤32、全局唯一、不含用户信息，创建后不得修改；`(app_id, out_trade_no)` 唯一。金额 `amount_fen` 为正整数（分），创建后不得修改；向渠道传元为单位的金额时由分做定点换算，不经过浮点数。<br>一张支付单只对应一个渠道，创建时选定。同一业务对象同一时刻至多有一张 PENDING 支付单：已有 PENDING 单时再次下单 → 同渠道返回原单，换渠道须先把原单关闭成功（BR-PAY-05）；该业务对象已有 PAID 单 → 30902。幂等沿用 `idempotency_keys`，规则同 BR-WDR-07 的幂等段。 | 默认假设 | pay_orders（out_trade_no 唯一与禁止 UPDATE、amount_fen、pay_channel、biz_type、biz_ref、status、expire_at、paid_at、channel_trade_no）；部分唯一索引（biz_type, biz_ref）WHERE status=PENDING；specs/state-machines/pay-order.yaml；错误码 20902、30902 |
-| BR-PAY-03 | **下单与调起**<br>服务端向渠道下单并生成调起参数；签名只在服务端做，商户私钥与应用私钥不得出现在客户端，也不得由服务端下发。调起参数只返回给支付单本人的原生 App，不写日志。支付时限 `pay.order_ttl_minutes`（默认 15）写入 expire_at，并传给渠道作为订单的支付截止时间。渠道下单失败或超时 → 50306，支付单保持 PENDING，可用同一单号重新取调起参数。客户端只通过渠道官方 SDK 调起，不拼接跳转链接；本机没有安装对应 App 时，是否仍显示该渠道按 BR-PAY-09 ④ 验证结果定，验证前不显示。 | 默认假设 | PayChannel 接口与 WechatPayChannel、AlipayPayChannel 适配器（与打款的 PayoutChannel 无关）；`POST /v1/pay/orders` 响应的调起参数；配置 pay.order_ttl_minutes；三端微信 OpenSDK 与支付宝 SDK；错误码 50306 |
-| BR-PAY-04 | **支付结果判定**<br>支付成功只认两种来源：渠道发来并通过验签的支付通知；服务端主动查询的结果。客户端 SDK 带回的结果只用来决定界面显示与触发一次查询，不作为依据。<br>判定为成功前必须逐项核对：验签通过；通知或查询里的应用标识、商户标识是我方的；商户单号对应一张我方支付单；金额等于该单 amount_fen；渠道状态属于 `pay.<pay_channel>.success_states` 清单。任一项不符 → 不迁移，记录并告警。<br>核对通过后在同一事务内：PO2（CAS）、写收款分录（BR-PAY-07）、入队业务类型的开通任务（提交后执行）。同一通知重复到达、通知与查询同时到达，只生效一次。通知原文只插入留存；对渠道的成功应答在事务提交之后才返回。<br>没有收到通知时按 `pay.query_schedule` 查询（默认：客户端返回时立即一次，之后在创建后 10 秒、30 秒、1 分、3 分、10 分各一次，到 expire_at 再一次）。 | 默认假设 | 通知入口 `POST /notify/pay/wechat`、`POST /notify/pay/alipay`；pay_notifications（只插入、按渠道通知标识去重）；pay_query_attempts；配置 pay.query_schedule、pay.&lt;pay_channel>.success_states；事件 pay.order.paid；告警规则；AC-S2-82 |
-| BR-PAY-05 | **关单**<br>PENDING 单在以下情况关闭：到 expire_at 仍未支付；用户在 App 里取消；换渠道。关闭前必须先在渠道侧处理：先查询，渠道显示已支付 → 走 PO2，不关闭；否则调渠道的关单接口，渠道确认已关闭（或确认该单在渠道侧不存在）后才做 PO3。渠道结果未知时保持 PENDING，继续按查询节奏处理，超过 expire_at 后 `pay.close_wait_minutes`（默认 60）仍未明确 → 告警并转人工。CLOSED 的单不得再变为 PAID；对账发现 CLOSED 单在渠道侧有收款的，生成差错单，由有权限的账号原路退款（BR-PAY-06、BR-PAY-07）。 | 默认假设 | 关单任务；`POST /v1/pay/orders/{id}/cancel`；配置 pay.close_wait_minutes；差错单；告警规则 |
-| BR-PAY-06 | **退款**<br>支付基础设施只提供后台发起的原路退款：由超管或被勾选退款权限点的账号操作，step-up、写审计，必须选原因码。用户侧能否申请退款、什么条件下退，由各业务类型的规则定义。<br>每次退款一张退款单，状态 PROCESSING、SUCCESS、FAILED；退款单号 `out_refund_no` 创建时生成、唯一、不得修改。同一支付单可多次部分退款，已成功与处理中的退款合计不得超过 amount_fen（在锁内校验）。只有 PAID 的支付单可以退款，支付单状态不因退款改变，另记 `refunded_fen`。<br>退款结果只认验签通过的退款通知或主动查询。结果未知时只查询；是否可以用同一退款单号重新提交，在 BR-PAY-09 验证之前不允许。退款成功时在同一事务内写退款分录并入队业务类型的回收任务。 | 默认假设 | pay_refunds（out_refund_no 唯一、amount_fen、reason_code、status、operator）；pay_orders.refunded_fen；后台退款接口与页面；权限点 pay.refund；事件 pay.refund.succeeded；字典 pay_refund_reason |
-| BR-PAY-07 | **账务隔离与对账**<br>收款的钱是平台自己的资金，不进用户余额：支付模块不得产生任何 USER_BALANCE 分录，不参与分佣、月结、提现的任何计算。<br>分录：PO2 时写 借 `CASH_PAY:{pay_channel}` / 贷 `PAY_RECEIPTS:{biz_type}`，金额 amount_fen；退款成功时写相反方向的分录；渠道手续费在对账时按账单记 借 `PAY_CHANNEL_FEE` / 贷 `CASH_PAY:{pay_channel}`。收入何时确认、怎么分期由财务定，不在本条。<br>每日 T+1 用渠道的交易账单按 out_trade_no、out_refund_no 逐笔核对金额与状态：渠道有而我方没有或不是 PAID、我方 PAID 而渠道没有、金额不一致、退款不一致，都生成差错单并告警；已是终态的支付单不改状态，更正经差错单处理。 | 默认假设 | 科目 CASH_PAY:{pay_channel}、PAY_RECEIPTS:{biz_type}、PAY_CHANNEL_FEE；ledger_invariants.sql（支付分录不含 USER_BALANCE）；对账任务与差错单；后台 支付单查询与对账页 |
-| BR-PAY-08 | **密钥、商户号与通知入口**<br>① 收款用的商户号、应用与提现打款用的分开（默认做法，待负责人确认，变更记录会-06）：收款密钥只给 API 服务里的 payment 模块读，打款密钥仍只有 payout 进程能读（BR-WDR-13），两边互相读不到。<br>② 收款密钥（微信支付商户 API 证书私钥、APIv3 密钥、微信支付公钥；支付宝应用私钥、支付宝公钥或证书）只存 KMS；非 prod 环境只能用沙箱或测试商户。<br>③ 通知入口是公网可达的固定地址，不带登录态，只凭验签判断真伪；验签失败、应用或商户标识不符的请求一律拒绝并计数告警；通知入口限流，不返回任何业务信息。<br>④ 调起参数、通知原文里的个人信息不进日志；支付单接口不返回渠道侧的用户标识。 | 默认假设 | KMS 密钥与可读进程表（规划/02 §12.6）；通知入口的网关配置与限流；日志脱敏规则；规划/06 Q-C29、Q-C30 |
+| BR-PAY-02 | **支付单、单号与状态机**<br>支付单状态只有 3 个：PENDING（待支付）、PAID（已支付）、CLOSED（已关闭）。PAID、CLOSED 为终态。迁移只有：PO1 创建 → PENDING；PO2 PENDING → PAID（只凭 BR-PAY-04 判定的支付成功）；PO3 PENDING → CLOSED（BR-PAY-05）。每次迁移用状态 CAS，影响 0 行即并发冲突，不写分录、不触发业务，接口返回 20902（`data.resource=pay_order`）。<br>商户单号 `out_trade_no` 在创建时生成：只含 ASCII 字母与数字、长度 ≤32、全局唯一、不含用户信息，创建后不得修改；`(app_id, out_trade_no)` 唯一。金额 `amount_fen` 为正整数（分），创建后不得修改；向渠道传元为单位的金额时由分做定点换算，不经过浮点数。<br>一张支付单只对应一个渠道，创建时选定。同一业务对象至多有一张未关闭（PENDING 或 PAID）的支付单，由数据库唯一约束保证：已有 PENDING 单时再次下单 → 同渠道返回原单，换渠道须先把原单关闭成功（BR-PAY-05）；该业务对象已有 PAID 单 → 30902。创建、换渠道、PO2、PO3 都先取业务对象级的锁（按 app_id、biz_type、biz_ref），拿到锁后重新读取该业务对象的支付单再判断。一个业务对象只对应一次购买；再买一次是新的业务对象。幂等沿用 `idempotency_keys`，规则同 BR-WDR-07 的幂等段。 | 默认假设 | pay_orders（out_trade_no 唯一与禁止 UPDATE、amount_fen、pay_channel、biz_type、biz_ref、status、expire_at、paid_at、channel_trade_no）；部分唯一索引（app_id, biz_type, biz_ref）WHERE status IN (PENDING, PAID)；业务对象级锁；pay_orders.launch_issued_at、closing、needs_manual；specs/state-machines/pay-order.yaml；错误码 20902、30902 |
+| BR-PAY-03 | **下单与调起**<br>服务端向渠道下单并生成调起参数；签名只在服务端做，商户私钥与应用私钥不得出现在客户端，也不得由服务端下发。调起参数只返回给支付单本人的原生 App，不写日志。支付时限 `pay.order_ttl_minutes`（默认 15）写入 expire_at，并传给渠道作为订单的支付截止时间。渠道下单失败或超时 → 50306，支付单保持 PENDING，可用同一单号重新取调起参数。每次向客户端返回调起参数都记 launch_issued_at；调起参数里带的支付截止时间不得晚于 expire_at；支付单进入关单流程（closing=true）后不再返回调起参数，取参数与关单在同一把业务对象级锁内互斥。客户端只通过渠道官方 SDK 调起，不拼接跳转链接；本机没有安装对应 App 时，是否仍显示该渠道按 BR-PAY-09 ④ 验证结果定，验证前不显示。 | 默认假设 | PayChannel 接口与 WechatPayChannel、AlipayPayChannel 适配器（与打款的 PayoutChannel 无关）；`POST /v1/pay/orders` 响应的调起参数；配置 pay.order_ttl_minutes；三端微信 OpenSDK 与支付宝 SDK；错误码 50306 |
+| BR-PAY-04 | **支付结果判定**<br>支付成功只认两种来源：渠道发来并通过验签的支付通知；服务端主动查询的结果。客户端 SDK 带回的结果只用来决定界面显示与触发一次查询，不作为依据。<br>判定为成功前必须逐项核对：验签通过；通知或查询里的应用标识、商户标识是我方的；商户单号对应一张我方支付单；金额等于该单 amount_fen；渠道状态属于 `pay.<pay_channel>.success_states` 清单。任一项不符 → 不迁移，记录并告警。<br>核对通过后在同一事务内：PO2（CAS）、写收款分录（BR-PAY-07）、入队业务类型的开通任务（提交后执行）。同一通知重复到达、通知与查询同时到达，只生效一次。通知原文只插入留存；对渠道怎么应答见细则「通知应答」。支付单已是 CLOSED 而通知验签与金额核对都通过的，不迁移，登记为异常收款（BR-PAY-05）。<br>没有收到通知时按 `pay.query_schedule` 查询（默认：客户端返回时立即一次，之后在创建后 10 秒、30 秒、1 分、3 分、10 分各一次，到 expire_at 再一次；过了 expire_at 之后的节奏见 BR-PAY-05）。查询与关单任务都是持久化的队列任务，不依赖进程不重启，也不依赖用户再次打开页面。 | 默认假设 | 通知入口 `POST /notify/pay/wechat`、`POST /notify/pay/alipay`；pay_notifications（只插入、按渠道通知标识去重）；pay_query_attempts；配置 pay.query_schedule、pay.&lt;pay_channel>.success_states；事件 pay.order.paid；告警规则；AC-S2-82 |
+| BR-PAY-05 | **关单、过期处理与异常收款**<br>PENDING 单在以下情况进入关单流程（置 closing=true）：到 expire_at 仍未支付；用户在 App 里取消；换渠道。<br>① 从来没有向渠道下过单、也没有向客户端返回过调起参数（launch_issued_at 为空且没有任何下单尝试记录）的单，可以直接 PO3。<br>② 其余的单（已下单、已返回过调起参数，或下单结果未知）必须先查询：渠道显示已支付 → 走 PO2，不关闭；否则调渠道的关单接口，只有渠道明确返回「已关闭」才做 PO3。渠道返回「单据不存在」不等于已关闭：要等过了 expire_at 再加 `pay.close_grace_minutes`（默认 10），并且再次查询仍是不存在，才做 PO3。在此之前支付单保持 PENDING，业务对象不释放，不能换渠道重新下单。<br>③ 过了 expire_at 之后每 `pay.close_retry_minutes`（默认 5）分钟重做一次 ② 的查询与关单；到 expire_at + `pay.close_wait_minutes`（默认 60）仍没有结果 → 置 needs_manual=true、告警、停止自动处理，由有处置权限的账号在后台【立即查询】后按渠道结果结束：已支付 → PO2；已关闭，或符合 ② 的不存在条件 → PO3；操作需 step-up、写审计，凭证为查询响应。<br>④ 异常收款：CLOSED 的单不得再变为 PAID。通知、查询或对账证明渠道侧对一张 CLOSED 的单、或对一个找不到我方支付单的商户单号有收款时，登记一条异常收款（渠道、渠道交易号、商户单号、金额、证据），写异常收款分录（BR-PAY-07），不触发任何业务开通，告警并生成差错单；这笔钱只能经 BR-PAY-06 对该异常收款原路退回。 | 默认假设 | 关单任务与过期重试任务（持久化）；`POST /v1/pay/orders/{id}/cancel`；pay_orders.closing、needs_manual；pay_anomalies（异常收款）；配置 pay.close_grace_minutes、pay.close_retry_minutes、pay.close_wait_minutes；后台 支付单处置；权限点 pay.resolve；差错单；告警规则 |
+| BR-PAY-06 | **退款**<br>支付基础设施只提供后台发起的原路退款：由超管或被勾选退款权限点的账号操作，step-up、写审计，必须选原因码。用户侧能否申请退款、什么条件下退，由各业务类型的规则定义。<br>① 退款对象是一张 PAID 的支付单，或一条异常收款（BR-PAY-05 ④）。每次退款一张退款单，状态 PROCESSING、SUCCESS、FAILED；退款金额为正整数（分）。<br>② 幂等：后台退款请求必须带 `Idempotency-Key`；同一个键、同一请求体只对应一张退款单和一个 `out_refund_no`，重复提交返回原结果，同键不同请求体 → 20901。幂等记录、退款单、退款额度的占用在同一事务提交。`out_refund_no` 创建时生成、唯一、不得修改。<br>③ 额度：先取业务对象级的锁，再校验「已成功 + 处理中」的退款合计加本次不超过可退金额（支付单为 amount_fen，异常收款为其收款金额）。支付单状态不因退款改变，另记 refunded_fen。<br>④ 结果判定：只认验签通过的退款通知或主动查询，两者走同一个处理器。判定前逐项核对：应用与商户标识是我方的；退款单号对应一张我方退款单；原支付的商户单号或渠道交易号与该退款单的对象一致；渠道与退款单一致；退款金额等于退款单金额；渠道状态属于 `pay.<pay_channel>.refund_success_states`（→ SUCCESS）或 `pay.<pay_channel>.refund_fail_states`（→ FAILED）。任一项不符或状态不在清单内 → 不迁移、继续占用额度、记录并告警。<br>⑤ SUCCESS 时在同一事务内：退款单状态 CAS、更新 refunded_fen、写一张退款凭证（BR-PAY-07）、入队业务类型的回收任务。FAILED 时释放占用的额度。结果未知时只查询；是否可以用同一退款单号重新提交，在 BR-PAY-09 验证之前不允许。 | 默认假设 | pay_refunds（target 为 pay_order 或 pay_anomaly、out_refund_no 唯一、amount_fen、reason_code、status、operator）；pay_orders.refunded_fen；后台退款接口（Idempotency-Key）与页面；权限点 pay.refund；配置 pay.&lt;pay_channel>.refund_success_states、refund_fail_states；事件 pay.refund.succeeded；字典 pay_refund_reason；错误码 20901、20902（`data.resource=pay_refund`） |
+| BR-PAY-07 | **账务隔离与对账**<br>收款的钱是平台自己的资金，不进用户余额：支付模块不得产生任何 USER_BALANCE 分录，不参与分佣、月结、提现的任何计算。<br>分录（凭证类型取 `pay_ledger_type`，只用于平台科目，不属于用户流水的 13 种 ledger_type，不出现在任何用户流水接口，BR-FUND-15 不变）：<br>- PAY_RECEIPT：PO2 时写，借 `CASH_PAY:{pay_channel}` / 贷 `PAY_RECEIPTS:{biz_type}`，金额 amount_fen；每张支付单至多一张（凭证唯一键：类型 + 支付单）。<br>- PAY_REFUND：退款单 SUCCESS 时写，方向相反，金额为该退款单金额；每张退款单至多一张。<br>- PAY_ANOMALY：登记异常收款时写，借 `CASH_PAY:{pay_channel}` / 贷 `PAY_SUSPENSE`（待退的异常收款）；对异常收款的退款成功时写相反方向；每条异常收款的收款凭证至多一张。<br>- PAY_FEE：对账时按账单记渠道手续费，借 `PAY_CHANNEL_FEE` / 贷 `CASH_PAY:{pay_channel}`，按（渠道、账单日）一张。<br>收入何时确认、怎么分期由财务定，不在本条。<br>每日 T+1 用渠道的交易账单按 out_trade_no、out_refund_no 逐笔核对金额与状态：渠道有而我方没有或不是 PAID、我方 PAID 而渠道没有、金额不一致、退款不一致，都生成差错单并告警；已是终态的支付单不改状态，更正经差错单处理。收款差错单的来源记为 R4（收款对账），类型为 pay_mismatch 或 pay_anomaly，处置只有三种：补做查询后按 BR-PAY-04 / 05 正常结束、登记异常收款并退款、经核实后人工关闭；不得套用提现差错（R2）的做法，不冻结用户提现，不做用户余额调账。 | 默认假设 | 科目 CASH_PAY:{pay_channel}、PAY_RECEIPTS:{biz_type}、PAY_SUSPENSE、PAY_CHANNEL_FEE；pay_ledger_type（PAY_RECEIPT、PAY_REFUND、PAY_ANOMALY、PAY_FEE）与凭证唯一键；recon_diffs 的 source R4 与 type pay_mismatch、pay_anomaly；ledger_invariants.sql（支付分录不含 USER_BALANCE）；对账任务与差错单；后台 支付单查询与对账页 |
+| BR-PAY-08 | **密钥、商户号与通知入口**<br>① 收款与提现打款在资金账户和密钥上分开（默认做法，待负责人确认，变更记录会-06）。微信：凑狸只有一个移动应用 AppID，登录、分享、收款、提现确认收款共用它；分开的是商户号——收款用一个商户号，打款（商家转账）用另一个商户号，两个商户号都绑定这个 AppID，各有各的证书与密钥。支付宝：收款用一个开放平台应用（签约 APP 支付），打款用另一个应用（签约商家转账），各有各的应用私钥。收款密钥只给 API 服务里的 payment 模块读，打款密钥仍只有 payout 进程能读（BR-WDR-13），两边互相读不到。<br>② 收款密钥（微信支付商户 API 证书私钥、APIv3 密钥、微信支付公钥；支付宝应用私钥、支付宝公钥或证书）只存 KMS；非 prod 环境只能用沙箱或测试商户。<br>③ 通知入口是公网可达的固定地址，不带登录态，只凭验签判断真伪；验签失败、应用或商户标识不符的请求一律拒绝并计数告警；通知入口限流，不返回任何业务信息。<br>④ 调起参数、通知原文里的个人信息不进日志；支付单接口不返回渠道侧的用户标识。 | 默认假设 | KMS 密钥与可读进程表（规划/02 §12.6）；通知入口的网关配置与限流；日志脱敏规则；规划/06 Q-C29、Q-C30 |
 | BR-PAY-09 | **渠道与商店政策待验证**<br>以下各项在实测或拿到书面答复并登记到 规划/09 之前不得写成事实，相关配置按保守默认运行（`pay.enabled`、两个渠道开关都为 off）：<br>① 微信 APP 支付（CAP-X-16）：下单、调起、通知验签与解密、查询、关单、退款、交易账单在我方商户号上跑通；通知的重试规则；各状态的含义；退款用同一退款单号重提的语义；费率与结算周期。<br>② 支付宝 App 支付（CAP-X-17）：同上各项；另含应用签约条件（文档要求应用有明确的经营内容和价格信息）、通知的应答格式与重试间隔。<br>③ 商店政策（CAP-X-12）：苹果审核指南 3.1.1 要求 App 内解锁功能使用 App 内购买，iOS 上哪些业务类型可以用这两种渠道收款由各业务类型立项时对照确认；华为应用市场与各安卓商店对虚拟商品支付方式的要求还没有读到原文。鸿蒙与安卓同步是负责人的决定，上架前仍须对照审核要求确认，被拒时按业务类型的可售端配置下线，不改本条。<br>④ 三端调起：各端最低 SDK 与渠道 App 版本、未安装渠道 App 时的表现、取消与失败的返回值。 | 待验证 | 规划/09 CAP-X-16（V-43）、CAP-X-17（V-44）、CAP-X-12；配置 pay.enabled、pay.channel_enabled.&lt;pay_channel>、pay.&lt;pay_channel>.success_states；specs/wechat-pay-error-map.csv、specs/alipay-pay-error-map.csv |
 
 ### 16.2 细则
@@ -34,6 +34,7 @@
 - 来源：docs/changes/20261004-会员购买与微信支付评估.md §9；BR-FUND-13；BR-WDR-01（只限原生 App 的同一原则）
 
 - 业务类型登记的内容：编码、定价来源（服务端）、可售端、开通任务与回收任务的处理者、是否允许用户侧申请退款。登记是代码与配置的一部分，新增业务类型要有自己的规则条目，不能只加配置。
+- 业务类型的接入要求（第 2 轮评审后补）：开通与回收任务按业务对象串行执行；每次执行都按这个业务对象当前的支付与退款事实（是否 PAID、已退金额）重新算出应有的权益，再把实际权益改成这个结果，不按「收到开通就加、收到回收就减」处理。这样旧的开通任务在退款完成之后重试，算出来的仍是退款后的结果，不会把权益再发一遍。
 - 非生产环境有一个测试业务类型，只用于联调与验收，生产环境不登记。
 - 会员订阅还没有立项：它卖什么权益、是否影响返利比例，要先处理与 BR-INV-12、BR-INV-20「不得收取会员费」一句的关系（见变更记录 §1.1），本主题不预设。
 - 例：总开关为 off 时调用下单接口 → 30901 reason=pay_disabled。业务类型只允许安卓与鸿蒙可售，iOS 端下单 → 30901 reason=platform_not_allowed，iOS 端也不显示入口。
@@ -75,31 +76,40 @@
 - 金额核对用渠道返回的订单总金额对比 amount_fen，换算同样不经过浮点数。
 - 支付宝文档里「交易完成」是支付成功之后的后续状态：先收到它而我方仍是 PENDING 时是否按成功处理，等实测后再进清单，之前按不成功处理并告警。
 - 开通任务失败不回滚支付结果：支付单保持 PAID，开通任务重试，持续失败告警；用户已付款而权益未到的处理由业务类型的规则定义。
-- 例：通知金额与支付单金额不一致 → 不迁移，告警，通知入口照常应答以免渠道重复投递同一条异常通知（应答与否的取舍待实测后定，默认不应答成功）。
+- 通知应答（应答格式按各渠道的要求；20902 只用于我方的业务接口，不用于通知入口）：
+
+  | 情况 | 我方处理 | 对渠道的应答 |
+  | --- | --- | --- |
+  | 核对通过，首次处理 | 同一事务内迁移、记账、入队开通 | 事务提交后应答成功 |
+  | 核对通过，该单已处理过（重复通知，或查询已先处理） | 不重复处理 | 应答成功 |
+  | 核对通过，但支付单已 CLOSED | 登记异常收款（BR-PAY-05 ④） | 登记的事务提交后应答成功 |
+  | 验签失败，或应用、商户标识不是我方的 | 拒绝，只计数告警，不留业务痕迹 | 不应答成功 |
+  | 验签通过，但商户单号找不到、金额不符或状态不在清单内 | 留存原文、告警，不迁移 | 不应答成功（渠道按它的规则重发，每次都留存；告警按单去重） |
+  | 处理中出错或事务失败 | 回滚 | 不应答成功 |
 
 #### BR-PAY-05 细则 · 关单
 
 - 状态：默认假设
-- 默认值：`pay.close_wait_minutes`=60。
+- 默认值：`pay.close_grace_minutes`=10；`pay.close_retry_minutes`=5；`pay.close_wait_minutes`=60。
 - 决策人：代理（负责人知悉）
 - 依赖平台能力：CAP-X-16、CAP-X-17（关单接口与关单后还能否被支付）
 - 取代：无
 - 来源：两个渠道的官方接入文档
 
-- 「先查后关」是为了不出现我方已关闭、用户却付了款的情况；即使如此仍可能出现的差错由对账兜底。
+- 「先查后关」是为了不出现我方已关闭、用户却付了款的情况。「单据不存在」不能当作已关闭：下单请求可能还在途中，支付宝的调起串是在我方服务端签出来的，用户提交之前渠道侧并没有这张单（官方文档写法，未实测）；所以要等调起参数自带的截止时间过去之后再确认一次。即使如此仍可能出现的差错，由异常收款与对账兜底。
 - 用户取消只在 PENDING 时可用，结果同上。
 
 #### BR-PAY-06 细则 · 退款
 
 - 状态：默认假设
-- 默认值：原因码 `pay_refund_reason` 初始含 USER_REQUEST、DUPLICATE_PAYMENT、RECON_DIFF、OTHER。
+- 默认值：原因码 `pay_refund_reason` 初始含 USER_REQUEST、DUPLICATE_PAYMENT、ANOMALY_RECEIPT、RECON_DIFF、OTHER；`pay.<pay_channel>.refund_success_states` 验证前只含官方文档写明的退款成功状态，`refund_fail_states` 验证前为空（退款失败在实测留样前按未知处理、继续占额）。
 - 决策人：负责人（用户侧退款规则随业务类型立项时定）；财务
 - 依赖平台能力：CAP-X-16、CAP-X-17（退款时限、同一退款单号重提的语义、退款通知）
 - 取代：无
 - 来源：两个渠道的官方接入文档
 
 - 文档写的可退款期限：微信为支付成功后 1 年内，支付宝默认为交易后 12 个月内；支付宝文档写退款时服务费不退回。都未实测。
-- 退款金额在锁内校验：先锁支付单行，再算已成功与处理中的退款合计。
+- 例：¥100 的单申请退 ¥10，响应丢失后操作人再点一次 → 同一个幂等键，返回原退款单，不会生成第二张。
 
 #### BR-PAY-07 细则 · 账务隔离与对账
 
@@ -110,7 +120,7 @@
 - 取代：无
 - 来源：BR-FUND-13、BR-FUND-14（用户余额的性质与不变量）；BR-WDR-23（对账差错处理的同一做法）
 
-- 不变量：带支付单或退款单引用的凭证里不得出现 USER_BALANCE 科目；每张 PAID 支付单恰有一张收款凭证；每张 SUCCESS 退款单恰有一张退款凭证。
+- 不变量：带支付单、退款单或异常收款引用的凭证里不得出现 USER_BALANCE 科目；每张 PAID 支付单恰有一张 PAY_RECEIPT 凭证；每张 SUCCESS 退款单恰有一张 PAY_REFUND（或对异常收款的反向 PAY_ANOMALY）凭证；PAY_SUSPENSE 的余额等于未退完的异常收款合计。
 - `CASH_PAY:{pay_channel}` 与提现用的 CASH_ALIPAY、CASH_WECHAT 是不同的科目，即使以后负责人选择收款与打款共用商户号也分开记。
 
 #### BR-PAY-08 细则 · 密钥、商户号与通知入口
