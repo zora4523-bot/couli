@@ -32,6 +32,8 @@
 
 2026-10-05 负责人补充决定（docs/changes/20261004-设计方向第三轮.md §7 A）：BR-TEXT-13 细则「虚拟数据」补一句（热销榜原样展示接口返回的销量不属于虚拟数据），BR-TEXT-17 细则「联盟物料频道」补一句（热销榜名次按频道返回顺序、不重排）。
 
+2026-10-05 分享赚与范围调整（docs/changes/20261005-分享赚与范围调整.md，负责人 2026-10-05 确认）：BR-TEXT-14 表 B 新增 20001.favorites_full、50304.rank_unavailable，表 C 新增分享页、分享赚入口页、收藏、热销榜、价格走势的文案键登记位（§1、§3，键名与措辞为代理补全的默认，待负责人确认），`share.est_promo`、`share_hub.rule_note` 归入 BR-TEXT-12 细则「资金术语键」单列；表 E「客服代办核验文案」随 BR-ID-41 作废（§2）；BR-TEXT-20 细则新增「分享页文案」（§1，代理补全的默认，待负责人确认）。BR-TEXT-13 只加指针，禁用词表不变。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -583,7 +585,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
   - 认定规则：字典、`config.texts` 的键与通知模板（notify-templates）里，满足下列任一条的都是资金术语键：① 文案说的是金额或提现处在什么状态——预估、结算（入账）、扣回、失效、冻结、提现（含提现暂停与恢复）、到账、退回余额、余额为负（待抵扣）；② 文案说有没有返利或推广收益、为什么变了或为什么没有（订单原因码、找回结果、差额行、比价无返利，以及「暂不支持返利」「无法获得返利」「返利已停用」「返利即将开放」这类说法）；③ 显示在返利金额的位置，或代替返利金额标签（RebateTag 及替代它的文案）；④ 模板变量里有按 BR-TEXT-10 格式化的金额（如 {amount}、{rebate}、{rebate_sum}、{sum}、{promo_sum}、{net}、{fee}、{tax}、{max}）；⑤ 文案用到 BR-TEXT-01 术语对照表「用户词」一列的任一个词。认定只看文案说的是什么，不看有没有变量、用没用术语表里的词：「京东这个商品暂不支持返利」「你的账户提现已暂停」既没有金额变量，也不含术语表里的完整词，照样是资金术语键（第 2 轮评审后补）。拿不准的按资金术语键处理。
   - 完整清单（2026-10-03；新增键按上面的规则归类，归入后在这里补一项；第 2 轮评审后逐条核对 BR-TEXT-14 表 A～C、BR-TEXT-15、BR-TEXT-22、BR-TEXT-23 与各条正文里已有的文案后补齐）：
     - 前缀（键名以它开头的全部键）：`order_status.`、`order_reason.`、`order_reason_sub.`、`withdrawal_status.`、`withdraw_reject_reason.`、`withdraw_fail_reason.`、`ledger_type.`、`ledger.`、`earnings.`、`wallet.`、`withdraw.`、`withdraw_detail.`、`pending_confirm.withdraw.`，以及 `error.303`（提现错误文案，含 `error.303xx.<reason>` 子键）。订单详情的差额行与时间线、钱包页与收益看板的金额标签以后建键时，分别用 `order_status.`、`wallet.`、`earnings.` 前缀，落在本范围里。第 2 轮评审后补：`error.302`（找回结果，含 `error.302xx.<reason>` 子键：找不回就拿不到这笔订单的返利）、`claim_reject_reason.`（找回驳回原因，渲染进 CLAIM_RESULT）、`risk_msg.`（风控提示，提现被拦与钱包「提现已暂停」的原因取它）、`risk_reason.`（风控原因类别，用在冻结通知与提现暂停提示里）、`tlj.`（淘礼金卡，含「本 App 预估返 {rebate}」「该商品暂无返利」）、`auth_tips.`（授权说明，讲授权后才能识别订单、拿到返利）。2026-10-04 并入第 4 批后补：`order_status_group.`（订单列表的状态分组：预估中、已结算、无返利）。
-    - 单列的键：`tag.rebate`（预估返）、`btn.buy.rebate_suffix`（2026-10-04 设计方向第三轮，带 {amount}，按 ③④ 归入）、`rebate_amount_unknown`、`rebate_login_to_view`、`no_rebate_hint`、`platform_no_rebate`、`no_rebate.price_compare`、`no_rebate.price_compare.confirm`、`order.price_compare.hint`、`btn.buy.no_rebate`、`error.30412`（有进行中的提现）、`error.30416`（有待扣回金额）。第 2 轮评审后补：`error.30103`、`error.30121`、`error.30151`、`error.30153`（这一次或这个账号拿不到返利、返利已停用）、`error.44001`（风控拦截的兜底文案，拦的是提现时说的就是钱提不了）、`error.50301.not_launched` 与同一句的 `platform_coming_soon`（返利即将开放，即现在没有）、`claim_required`（返利要下单后认领）、`external_page.product_unresolved`（这个商品查不了返利）、`link_landing.owner_hint`（自己买按自购返利算）、`jump_tip`（含 `jump_tip.<platform>`，讲怎样下单才不丢返利）。2026-10-04 并入第 4 批后补：`order_list.deposit_amount`（「已付定金 {amount}」，带按 BR-TEXT-10 格式化的金额，按 ④ 归入）；订单时间线里的预计结算、已结算、失效与扣回节点建键时同样归资金术语（键名用 `order_status.` 前缀，或在本项补列），只说付款事件的 `order_timeline.deposit_paid`、`order_timeline.final_paid` 归普通。
+    - 单列的键：`tag.rebate`（预估返）、`btn.buy.rebate_suffix`（2026-10-04 设计方向第三轮，带 {amount}，按 ③④ 归入）、`share.est_promo`、`share_hub.rule_note`（2026-10-05 分享页，说的是推广收益，按 ② 归入，docs/changes/20261005-分享赚与范围调整.md §1）、`rebate_amount_unknown`、`rebate_login_to_view`、`no_rebate_hint`、`platform_no_rebate`、`no_rebate.price_compare`、`no_rebate.price_compare.confirm`、`order.price_compare.hint`、`btn.buy.no_rebate`、`error.30412`（有进行中的提现）、`error.30416`（有待扣回金额）。第 2 轮评审后补：`error.30103`、`error.30121`、`error.30151`、`error.30153`（这一次或这个账号拿不到返利、返利已停用）、`error.44001`（风控拦截的兜底文案，拦的是提现时说的就是钱提不了）、`error.50301.not_launched` 与同一句的 `platform_coming_soon`（返利即将开放，即现在没有）、`claim_required`（返利要下单后认领）、`external_page.product_unresolved`（这个商品查不了返利）、`link_landing.owner_hint`（自己买按自购返利算）、`jump_tip`（含 `jump_tip.<platform>`，讲怎样下单才不丢返利）。2026-10-04 并入第 4 批后补：`order_list.deposit_amount`（「已付定金 {amount}」，带按 BR-TEXT-10 格式化的金额，按 ④ 归入）；订单时间线里的预计结算、已结算、失效与扣回节点建键时同样归资金术语（键名用 `order_status.` 前缀，或在本项补列），只说付款事件的 `order_timeline.deposit_paid`、`order_timeline.final_paid` 归普通。
     - 还没有取键名的资金文案（第 2 轮评审后补；建 `contracts/texts.default.json` 时取键名，取名后补进上一项，一律归资金术语）：RebateTag 的零值「暂无返利」（BR-TEXT-10）、返利变为 0 时的确认弹窗「该商品当前暂无返利，继续购买？」（BR-PRICE-13）、错误弹窗的次按钮「仍去购买（无返利）」（BR-TEXT-14）、授权面板关闭或授权失败时的「未授权将无法获得返利」（BR-ID-18）、比价区间后缀「以结算为准」（BR-PRICE-07）、商品详情的「确认收货后随联盟月度结算入账」（BR-TEXT-04）、注销页的勾选句「放弃未提现余额和预估收益」与申请前先提现的提示（BR-ID-27）、BR-TEXT-14 表 C「淘宝未安装（H5 未验证归因时）」「鸿蒙淘宝降级 H5」「某端全部路径丢归因」三行。
     - 通知模板（按模板编码归类：一个编码下任一变体命中认定规则，这个编码的全部变体都归资金术语，守卫按编码判定）：BR-TEXT-09 表中的全部模板（ORDER_TRACKED、ORDER_INVALID、CREDITED、CLAWBACK、WD_SUCCESS、WD_REJECTED、WD_FAILED、CLAIM_RESULT），以及 WD_OVERDUE（BR-TEXT-07）、BALANCE_ADJUSTED（BR-FUND-24）；第 2 轮评审后补 BR-TEXT-23 的 RISK_STATE_CHANGED（提现暂停与恢复，①）、APPEAL_RESULT（订单申诉通过后「返利将在复核后恢复」，①②）、DELETION_PROGRESS（cancelled_negative 带待扣回金额，①④）。P1 的订阅提醒模板 watch.price_drop.\*（带「预估返」，BR-WATCH-14）上线时同样归入。
     - 普通：清单以外的现有键与模板，例如 `btn.buy`、`btn.buy.coupon`、`error.30101`、`error.30102`、`error.30111`（只要求先授权，不说有没有返利）、`error.30131`、`clipboard.prompt`、`claim.guide.*`、`app_update.*`，通知模板 `SMS_CODE` 与发给站长的 `UNION_AUTH_EXPIRING`、`UNION_AUTH_EXPIRED`；第 4 批新增的 `order_list.filter.*`、`order_list.search.*`、`order_list.other_product`、`order_detail.view_product`、`order_timeline.*`、`amount_mask.*`、`auth_manage.*`、`buy.opening`、`jump.taobao_sdk_unavailable`、`error.50304.search_disabled` 与 `agent.notice.search_disabled`（后两个含「查返利」，例外表写明只是请用户改用粘贴链接）也归普通。BR-TEXT-14 表 D 的 `privacy.`、`perm.` 键另归 `content.agreement`，在本清单里归普通。Agent 固定话术（BR-TEXT-22）里的 `order_status.*.summary`、`order_reason.*.summary` 已在前缀范围内，其余归普通。
@@ -748,6 +750,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 10405.no_account（2026-10-03 第 3 批第 3 轮评审后） | 这个账号还没有注册，请先更新 App 再注册 | 同左 | 客户端版本过低时登录，手机号或第三方账号没有对应的已有账号（受限登录只登录已有账号，BR-ID-01 细则「受限会话」）；没有建号；提示后回到 ForceUpdate，由用户去更新 |
 | 20001.nickname_sensitive | 昵称含不允许使用的内容，请修改 | 同左 | BR-ID-39 |
 | 20001.phone_invalid | 请输入 11 位中国大陆手机号 | 同左 | 手机号规范化不通过（BR-ID-05 细则「手机号规范化」，2026-10-03 功能对照 G-19）；手机号输入框旁提示，不发短信 |
+| 20001.favorites_full | 收藏夹已满，请先删除一些 | 同左 | 收藏数已达 `favorites.max_per_user`（规划/01 F-PROD-12，2026-10-05，docs/changes/20261005-分享赚与范围调整.md §3；reason 名与上限值是代理补全的默认，待负责人确认）；轻提示，不弹窗 |
 | 20004.identity_mismatch | 请使用本账号已绑定的{provider_name}验证 | 请使用本账号已绑定的登录方式验证 | 二次验证时重新授权得到的第三方账号不是本账号绑定的那一个（BR-ID-08）；provider_name 取 微信 / Apple / 华为账号 |
 | 30101.auth_unavailable | 淘宝暂时无法下单，请稍后再试 | 同左 | 站长授权过期或失效期间、淘宝绑定非 active 的用户（BR-ID-24，拍板第二批 §8 ADD-02、ADD-08）；不拉起 AuthSheet、不外跳，只给【知道了】，不提供【仍去购买（无返利）】 |
 | 30102.auth_unavailable | 淘宝暂时无法下单，请稍后再试 | 同左 | 同上 |
@@ -772,6 +775,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 50301.maintenance | {platform_name}维护中，请稍后再试 | 该平台维护中，请稍后再试 | 购买按钮置灰「稍后再试」；Toast 显示文案 |
 | 50301.not_launched | {platform_name}返利即将开放 | 该平台返利即将开放 | 卡片购买按钮置灰并显示该文案（即 platform_coming_soon），不弹 Toast |
 | 50304.search_disabled | {platform_name}暂不提供搜索，可以粘贴商品链接查返利 | 该平台暂不提供搜索，可以粘贴商品链接查返利 | 该平台搜索开关关闭（BR-PROD-10 细则「按平台的搜索开关」，2026-10-03 功能对照 G-47）；不显示重试按钮，给【粘贴链接查返利】；三家都关闭时搜索页用同一句（{platform_name} 缺省按包内默认）；Agent 用 BR-TEXT-22 的 agent.notice.search_disabled |
+| 50304.rank_unavailable | {platform_name}热销榜暂不可用 | 热销榜暂不可用 | 该平台没有合规的热销频道或榜单暂取不到（规划/01 F-PROD-13、规划/04 `GET /v1/rank/hot`；2026-10-05，docs/changes/20261005-分享赚与范围调整.md §3；reason 名与文案是代理补全的默认，待负责人确认） |
 
 **表 C · 降级场景文案**（非错误码）
 
@@ -864,6 +868,14 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 分享面板·复制 share.copy_full / share.copy_tpwd_only / share.copy_link_only | 复制完整文案｜只复制淘口令｜只复制链接 | 第二个只在淘宝商品出现，第三个用于京东、拼多多；淘宝取不到推广链接或口令时都不出现（BR-ATTR-10 细则；规划/01 F-SHARE-08，2026-10-03 功能对照 G-83，下同） |
 | 分享面板·复制后 share.copied / share.open_wechat | 已复制，可以打开微信粘贴给好友｜打开微信 | 复制成功后提示；【打开微信】经微信 SDK 打开，本机没有微信时不显示按钮，提示改用表 C 的 share.wechat_unavailable |
 | 分享面板·保存图片 share.save_images / share.saved | 保存图片｜已保存 {n} 张图片到相册 | 海报与商品主图可多选后一次保存；{n} 为成功保存的张数；首次保存的权限说明按表 D |
+| 分享页·预估推广收益 share.est_promo（2026-10-05，docs/changes/20261005-分享赚与范围调整.md §1；本行起至「热销榜·说明」各行的键名与措辞是代理补全的默认，待负责人确认） | 预估推广收益 {amount}｜以平台结算为准 | 只在 `ProductShare` 给分享者本人看，{amount} 取 `POST /v1/shares` 返回的 share 报价，按 BR-TEXT-10 格式化（区间按区间写法）；金额为 0 或拿不到时整行不显示；不进分享文案、海报、中间页（BR-PRICE-06）；用户界面不出现「佣金」 |
+| 分享页·包含项 share.include.title / .price / .tpwd / .link | 标题｜券后价｜下单口令｜下单链接 | 文案区的勾选项；`.tpwd` 只在淘宝出现，`.link` 用于京东、拼多多（淘宝另有链接时也可出现）；口令与链接都没勾时复制按钮置灰（BR-TEXT-20 细则「分享页文案」） |
+| 分享页·文案操作 share.copy_text / share.copy_text.regen_confirm / share.system_share | 复制文案｜会重新生成文案，你的修改不保留｜分享 | 第二句在用户编辑过文案后再改勾选项时弹出，【确定】【取消】沿用通用按钮键；【分享】调起系统分享面板 |
+| 分享页·生成失败 share.generate_failed / share.retry | 分享链接生成失败，请稍后重试｜重试 | `POST /v1/shares` 失败且不是授权类错误时；授权类错误（30101、30111）按表 A 走授权引导；淘宝取不到推广链接或口令时按表 A 对应码，不出复制与分享按钮 |
+| 分享赚入口页 share_hub.title / .paste / .paste_hint / .go_share / .from_favorites / .favorites_empty / .rule_note | 分享赚｜粘贴｜粘贴商品链接或口令，生成你的分享链接｜去分享｜从收藏夹选｜收藏夹还没有商品，先去逛逛吧｜好友通过你的链接下单，你得推广收益；好友本人不获得返利 | `ShareHub`；识别不到用表 A 的 30132；`.rule_note` 归资金术语键（BR-TEXT-12 细则） |
+| 收藏 favorite.add / .added / .removed / .invalid / favorites.empty | 收藏｜已收藏｜已取消收藏｜已失效｜还没有收藏的商品 | 收藏夹已满用表 B 的 20001.favorites_full；商品详情底栏与收藏夹（规划/01 F-PROD-12，docs/changes/20261005-分享赚与范围调整.md §3） |
+| 热销榜·说明 rank.notice / rank.sales.tb / rank.sales.neutral | 名次与销量来自平台，按平台返回的顺序排列｜近 30 天销量 {sales}｜销量（以平台返回为准）{sales} | `HotRankList` 顶部说明与卡片销量行；{sales} 原样显示接口返回值，接口没有该字段时整行不显示（规划/01 F-PROD-13；docs/changes/20261004-设计方向第三轮.md §7 A） |
+| 价格走势 price_trend.title / .source / .empty | 近 30 天券后价｜凑狸记录的券后价｜暂无价格记录 | 商品详情折叠模块（规划/01 F-PROD-14，docs/changes/20261005-分享赚与范围调整.md §3、§4）；摘要句只用 BR-TEXT-13 细则「降价表述」的法务确认前模板；不出现「历史最低」「史低」「全网最低」「最低」 |
 | 第三方页容器加载失败 external_page.load_failed / external_page.retry / external_page.close | 页面打不开，请检查网络后重试｜重试｜关闭 | `ExternalWebView` 主框架连不上、域名解析失败、超时或证书错误被取消时的原生错误页；不显示出错的完整 URL；网站自己返回的 4xx、5xx 页面照常显示（规划/03 §5.1，2026-10-03 功能对照 G-82） |
 | 设置页·清除缓存 settings.clear_cache / .size / .confirm / .confirm_ok / .confirm_cancel / .done | 清除缓存｜{size}｜只清除图片和网页缓存，不会退出登录，也不会清除你的设置｜清除｜取消｜已清除 | {size} 为图片与 WebView 缓存的合计，按 KB / MB 取整显示；点【清除缓存】先出确认框；不清的内容见规划/03 §4.3（2026-10-03 功能对照 G-89） |
 | 关于页·复制诊断信息 about.copy_diagnostics / .done | 复制诊断信息｜已复制，可以粘贴给客服 | 可选功能（规划/01 F-OBS-06）；复制的内容是固定的英文字段名加值，不经字典；不含密钥、完整设备标识与令牌（2026-10-03 功能对照 G-88） |
@@ -893,7 +905,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 改这些键的文案按协议类内容管理：后台归 `content.agreement` 权限点（规划/04 §11.2），保存时填法务确认人并写审计；只有普通配置权限的账号改不了。这一归属是代理补全的默认假设，待负责人确认（规划/06「功能对照待确认」）。
 - 文案同样过 BR-TEXT-13 校验；系统权限怎样申请、被拒后怎样处理见 BR-ID-13 与 规划/03 §4.9，本表只管文案。
 
-**表 E · 客服代办核验文案**（2026-10-04，docs/changes/20261004-审查闭环决定.md §1；本表先登记键名与用途，文案取值待设计稿定稿后回填；规则只在 BR-ID-41，本表只管文案。键名是代理补全的默认，待负责人确认）
+**表 E · 客服代办核验文案**（**已作废**：负责人 2026-10-05 取消客服核验流程，BR-ID-41 作废，docs/changes/20261005-分享赚与范围调整.md §2；下列键与模板 `CS_VERIFY_REQUEST` 不进 `contracts/texts.default.json` 与 notify-templates，键名不复用；以下仅作历史保留）（2026-10-04，docs/changes/20261004-审查闭环决定.md §1；本表先登记键名与用途，文案取值待设计稿定稿后回填；规则只在 BR-ID-41，本表只管文案。键名是代理补全的默认，待负责人确认）
 
 | 键 | 用在哪里 | 要点 | 说明 |
 | --- | --- | --- | --- |
@@ -1106,6 +1118,12 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 例：分享模板「【淘宝】#标题# 券后 #券后价#」→ 保存拒绝；改为「#标题# 券后 #券后价#，复制 #口令# 打开淘宝」通过。
 - 例：商品标题「【天猫】伊利官方旗舰店纯牛奶」→ 渲染用「伊利旗舰店纯牛奶」。
 - 商品分享文案不带邀请码与下载地址（2026-10-03，功能对照 G-41；按功能对照 Q-17 默认 A 写，待负责人确认）：分享模板的变量白名单维持 #标题# #券后价# #口令# #链接# 四个，不加 #邀请码#、#下载地址#。理由：买的人从分享单拿不到返利（BR-ATTR-10），文案里带邀请码和下载地址，容易被读成「下载就能返利」；《微信外部链接内容管理规范》2.3.1 条禁止以利益诱导下载或跳转外部 App（规划/09 CAP-X-03）。邀请码与下载地址只用于邀请文案（BR-INV-18 的 {invite_code}、{download_url}）。负责人改选 B（做成可选项、默认关闭）时：只加这两个变量，做成模板级开关、默认关闭，保存时同样过 BR-TEXT-13 与 BR-INV-20 校验，不得出现「下载即可返利」一类对购买者的承诺，微信好友与群渠道是否开放 #下载地址# 按 CAP-X-03 的结论定；展示收益金额或店铺的变量一律不引入。
+- **分享页文案**（2026-10-05，docs/changes/20261005-分享赚与范围调整.md §1；负责人确认文案含标题、券后价、下单链接 / 口令并可勾选；以下取值是代理补全的默认，待负责人确认）：
+  - 默认模板：分享页（规划/01 F-SHARE-13）用每个平台的「完整」模板生成默认文案，变量仍只用本条白名单 #标题# #券后价# #口令# #链接#，不新增变量；按勾选项逐行拼：标题一行、「券后 ¥x · MM-DD 取价」一行（BR-PRICE-17，无券为「售价 ¥x」）、口令或链接一行（淘宝「复制 #口令# 打开淘宝」，京东、拼多多「下单链接 #链接#」）。例：「伊利纯牛奶 250ml×24 盒\n券后 ¥49.9 · 10-05 取价\n复制 ₤AbCd1234₤ 打开淘宝」。
+  - 可勾选项的默认：全部勾选；口令与链接至少保留一项，都不勾时不能复制文案。勾选项只改本机拼出的文案，不改服务端模板。
+  - 用户编辑：分享者在分享页改的文字只留在本机、不上传、不保存为模板，服务端不校验（是分享者自己发出的话）；客户端不在其中补入任何收益金额。编辑后再改勾选项时先提示会覆盖修改（BR-TEXT-14 表 C `share.copy_text.regen_confirm`）。是否要对用户编辑做本机禁用词提示，待负责人确认（默认不做）。
+  - 禁用词：模板保存与渲染照常过 BR-TEXT-13（如「原价」「最低价」「历史最低」）；「史低」不在 BR-TEXT-13 硬禁用词表里，只由语义预检标黄（BR-TEXT-13 细则「语义预检」），默认模板不使用；是否把「史低」加入硬禁用词表，属 BR-TEXT-13 的取值，未经负责人决定不改。
+  - 收益金额：文案、海报、素材图一律不带任何收益金额（BR-PRICE-06）；分享页给分享者本人看的「预估推广收益」只是页面提示（BR-TEXT-14 表 C `share.est_promo`），不能被勾选进文案。
 - 短信（待验证）：签名 ≤8 字、签名 + 模板 ≤68 字按 1 条计费，「红包」「下载」等词易被驳回——来源为花卷云查漏底稿，需在阿里云短信控制台实际报备验证。
 - 交易类推送挂厂商消息分类（小米通知类别、OPPO「个人账号与资产变化」、华为「帐号动态」）——同为待验证。
 - WD_FAILED 短信示例：「【{签名}】你的提现打款未成功，¥10 已退回余额，请在 App 内查看原因。」须实测字数与审核结果。
