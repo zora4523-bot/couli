@@ -129,6 +129,14 @@
   }
 
   /* ------------------------------------------------------------ 取数与轮询 */
+  /* 远端拉取失败时数据可能落后：右上角不再显示成正常的「实时」。 */
+  function showFresh() {
+    const s = state.board.sources;
+    const lag = [s.planning.note, s.ledger.note].filter(Boolean);
+    if (lag.length) setLive('stale', `数据可能落后：${lag.join('；')}`);
+    else setLive('live', `实时 · 数据更新于 ${stamp(state.board.generated_at)}`);
+  }
+
   function setLive(mode, text) {
     const live = $('#live');
     live.dataset.state = mode;
@@ -178,7 +186,7 @@
       state.fetched = fetched;
       const cell = $('#fetched-at');
       if (cell) cell.textContent = fetched ? `上次向远端核对 ${fetched}` : '还没有向远端核对过';
-      setLive('live', `实时 · 数据更新于 ${stamp(state.board.generated_at)}`);
+      showFresh();
     } catch (error) {
       if (!state.board) $('#main').replaceChildren(el('div', { class: 'notice error' }, problem(error)));
       setLive('stale', problem(error));
@@ -234,6 +242,7 @@
     $('#subtitle').textContent = `今天 ${board.today}（${board.calendar.current_week || '周计划之外'}）· ${board.tasks.length} 个计划任务 · ${
       board.sources.ledger.available ? `台账 ${board.ledger.entries.length} 个拆分任务` : '读不到工程台账'}`;
     renderTabs();
+    document.documentElement.style.setProperty('--topbar-h', `${$('.topbar').offsetHeight}px`);
     main.replaceChildren(...notices(board), ...({
       overview: viewOverview, tasks: viewTasks, open: viewOpen, caps: viewCaps, list: viewList,
     })[state.tab](board));
@@ -743,6 +752,10 @@
     if (event.key === 'Escape' && state.drawer) closeDrawer();
   });
 
+  window.addEventListener('resize', () => {
+    document.documentElement.style.setProperty('--topbar-h', `${$('.topbar').offsetHeight}px`);
+  });
+
   window.addEventListener('hashchange', () => {
     const hash = location.hash.slice(1);
     if (state.board && hash !== state.tab && TABS.some((tab) => tab.key === hash)) { state.tab = hash; render(); }
@@ -760,7 +773,7 @@
     }
     try {
       await load();
-      setLive('live', `实时 · 数据更新于 ${stamp(state.board.generated_at)}`);
+      showFresh();
     } catch (error) {
       $('#main').replaceChildren(el('div', { class: 'notice error' }, problem(error)));
       setLive('stale', problem(error));
