@@ -26,6 +26,7 @@
 
 2026-10-05 后台保守规则（docs/changes/20261005-后台保守规则与适配范围.md §3，负责人 2026-10-05 确认「根据建议执行」）：BR-FUND-24 ⑥ 与细则补「红冲只按原单整笔」——调账红冲只允许按原调账单金额整笔冲回，不支持部分红冲；要改金额须红冲后另开新调账单。状态不变，没有新增条目与错误码。
 2026-10-05 Agent 只读收益工具（docs/changes/20261005-Agent只读收益工具.md，负责人 2026-10-05 确认，00 D32）：BR-FUND-17 正文 ② 加一句指针——Agent 回答金额问题时，金额只出现在服务端用钱包页同一查询函数填的卡片上，模型看不到金额（规则在 BR-AI-01 细则「收益查询」、BR-AI-02 ③）；消除与 BR-AI-02 ③ 原依赖禁令的冲突。BR-FUND-18 细则「说明」的 Agent 查询加指针。状态不变，没有新增条目。
+2026-10-05 比价说明与界面默认项（docs/changes/20261005-比价说明与界面默认项.md §3.1，第 ① 类同步）：BR-FUND-18 例的钱包进度行改为「其中已收货」与「最早预计 {月份} 结算」分成两项，与 BR-TEXT-01 一致；字段与取值不变，状态不变。
 
 ### 6.1 规则一览
 
@@ -821,7 +822,7 @@ C-02 已由负责人决定（拍板第二批 OPS-01）：提现侧用「到账�
 - 来源：规划/04 §3.2、§6.4；规划/01 §5 J6、F-WDR-01、F-SET-08；PRD修订_后端功能规划 §2.8 负债日快照；参考_花卷云功能查漏底稿 §7；docs/changes/20261001-拍板第二批.md OPS-01、FUND-07；docs/changes/20261001-拍板第二批.md §8 ADD-06
 - 需同步修改的规划文档：4 处（计数仅作记录，落点见 README §0.6）
 
-**例**：用户余额 available=−400，frozen=0，WAITING 两单 308+617（其中 617 维权中，308 的 expected_credit_period=2026-11），ESTIMATED 一单 123，无提现、无冻结 → withdrawable=0，negative=400，estimated_total=1048，estimated=123，pending_credit=925，pending_credit_paused=617，next_credit_period=2026-11，credit_overdue=false，withdrawn=0，risk_paused_reason=null；钱包按 BR-TEXT-01 显示「预估收益 ¥10.48（其中已收货 ¥9.25，预计 11 月结算；其中 ¥6.17 暂缓入账）」。若到 2026-12-05（11 月账单日 11-24 + 宽限 10 天之后）308 那单仍未入账 → 该单 credit_overdue=true，next_credit_period=null，credit_overdue=true，页面附「入账核对中」。
+**例**：用户余额 available=−400，frozen=0，WAITING 两单 308+617（其中 617 维权中，308 的 expected_credit_period=2026-11），ESTIMATED 一单 123，无提现、无冻结 → withdrawable=0，negative=400，estimated_total=1048，estimated=123，pending_credit=925，pending_credit_paused=617，next_credit_period=2026-11，credit_overdue=false，withdrawn=0，risk_paused_reason=null；钱包按 BR-TEXT-01 显示「预估收益 ¥10.48（其中已收货 ¥9.25｜最早预计 11 月结算｜其中 ¥6.17 暂缓入账）」（月份是各订单里最早的一个，与已收货金额分成两项，2026-10-05 修正，docs/changes/20261005-比价说明与界面默认项.md §3.1）。若到 2026-12-05（11 月账单日 11-24 + 宽限 10 天之后）308 那单仍未入账 → 该单 credit_overdue=true，next_credit_period=null，credit_overdue=true，页面附「入账核对中」。
 
 **为何快照先于批次**：若结算批次在 00:00 后、当日快照完成前执行，D+1 入账的订单凭证 accounting_date=D+1，快照时又已不在 WAITING，这批金额既不在 D 日余额也不在 D 日 waiting，R3「用户应付 vs 资产快照」少一截。00:00 至快照完成之间的非记账状态变化（如失效）计入 D 日。
 
