@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>凑狸 · 规划与任务看板</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="static/kanban.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-row">
+      <div class="brand">
+        <img src="logo.svg" alt="">
+        <div>
+          <h1>凑狸 · 规划与任务看板</h1>
+          <p id="subtitle">正在读取规划文档与工程台账…</p>
+        </div>
+      </div>
+      <div class="live" id="live" data-state="stale" role="status" aria-live="polite">
+        <span class="live-dot" aria-hidden="true"></span>
+        <span id="live-text">连接中</span>
+      </div>
+    </div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+  </div>
+
+  <main id="main" tabindex="-1"></main>
+  <footer class="sources" id="sources"></footer>
+
+  <div id="drawer-root"></div>
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script id="board-data" type="application/json"></script>
+  <script src="static/kanban.js"></script>
+</body>
+</html>
