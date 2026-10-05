@@ -659,9 +659,16 @@ main {
   background: var(--color-background-surface);
 }
 
-.table-wrap.tall {
-  max-height: calc(100vh - 170px);
-  overflow: auto;
+/* 宽屏下任务清单不另设滚动框，表头贴在顶栏下面，页面怎么滚都看得到；窄屏仍横向滚动。 */
+@media (min-width: 900px) {
+  .table-wrap.tall {
+    overflow: visible;
+  }
+
+  .table-wrap.tall table.list th {
+    top: var(--topbar-h, 96px);
+    z-index: 1;
+  }
 }
 
 table.list {
