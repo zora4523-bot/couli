@@ -50,6 +50,8 @@
 
 2026-10-05 被拦请求申诉与剪贴板开关文案（docs/changes/20261005-被拦请求申诉与剪贴板开关文案.md §2、§3，负责人 2026-10-05 对设计审查待定项「按建议来」）：BR-TEXT-14 表 C 新增设置页剪贴板开关的标题与副标题 `settings.clipboard_auto`、`settings.clipboard_auto.desc`（措辞取自设计稿），BR-TEXT-12 细则归为普通；三处 44001 弹窗说明句（`withdraw.risk_blocked.desc`、`login.risk_blocked.desc`、`phone_change.risk_blocked.desc`）与 `cs.appeal_entry` 措辞不改，用处一列改为指向 BR-ID-36 细则「被拦截请求申诉」（「客服核实后会帮你登记」现在有后台的登记对象承接）。状态不变，没有新增条目与错误码。
 
+2026-10-06 写入 规划/12 §9 已确认的保守默认（docs/changes/20261006-待确认事项整批确认与交由Jev判断.md §6.3）：BR-TEXT-14 表 C `jump.taobao_sdk_unavailable` 的显示条件补「已初始化而拉起失败」、写明不另出找回入口（12 L-05）；`link_landing.invalid` 补「别人的分享 link 因分享者授权失效」（12 L-14）。没有新增文案键，状态不变。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -835,7 +837,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 京东/拼多多未安装或鸿蒙降级到网页 | 将通过浏览器打开{platform_name} | — |
 | 鸿蒙淘宝降级 H5 | 鸿蒙版可能影响返利跟踪，如未显示订单可申请找回 | — |
 | 某端全部路径丢归因 | 本设备暂不支持{platform_name}返利 | 隐藏购买按钮 |
-| 淘宝客户端 SDK 不可用 jump.taobao_sdk_unavailable | 暂时无法打开淘宝，请稍后再试 | 百川初始化重试后仍失败、且本次没有可执行的后续步骤时显示；不外跳，不给无返利购买（BR-ATTR-27 淘宝行说明，2026-10-03 功能对照 G-50） |
+| 淘宝客户端 SDK 不可用 jump.taobao_sdk_unavailable | 暂时无法打开淘宝，请稍后再试 | 百川初始化重试后仍失败，或已初始化而拉起失败（SDK 返回失败码），且本次没有可执行的后续步骤时显示；不外跳，不给无返利购买，不另出找回入口（BR-ATTR-27 淘宝行说明，2026-10-03 功能对照 G-50；拉起失败一项与不新增找回资格为负责人 2026-10-06 确认，规划/12 §9 L-05） |
 | 待跟单卡（pending_track_card） | 订单同步中｜在{platform_name}下单后，订单通常会在一段时间内同步到这里，同步可能有延迟（CAP-\*-07 实测后改为「最长约 {n} 分钟」，n 取 order_sync.delay_hint_min.&lt;platform>） | 找回入口「未跟单？去找回」的出现条件按 BR-ATTR-17、BR-ATTR-21 |
 | platform_coming_soon（= error.50301.not_launched，表 B） | {platform_name}返利即将开放 | 卡片按钮；只在 50301 data.reason=not_launched 时出现 |
 | platform_no_rebate | {platform_name}暂不支持返利 | — |
@@ -870,7 +872,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 待确认·放弃时正在处理 pending_confirm.abandon_busy | 上一次提交正在处理，暂时不能放弃，请稍后再试 | 作废接口返回 40901 时显示，保持待确认状态（第 3 轮评审补） |
 | 待确认·放弃时已处理完 pending_confirm.already_done | 上一次提交已经处理完成 | 作废接口返回原结果（outcome=completed）时显示，随后按原结果展示（提现单、换绑结果或原结果的错误文案），删除未决记录、恢复提交入口（第 3 轮评审补） |
 | App 内链接落地页·分享者本人提示 link_landing.owner_hint | 这是你分享的商品，自己购买按自购返利计算 | 只在 `GET /v1/links/{link_id}` 返回 viewer_is_sharer=true 时显示；不显示金额（BR-ATTR-11，2026-10-03 功能对照 G-03） |
-| App 内链接落地页·链接失效 link_landing.invalid | 链接已失效 | 30144 时显示空态与按钮【去搜索】，不自动重试（BR-ATTR-05 细则） |
+| App 内链接落地页·链接失效 link_landing.invalid | 链接已失效 | 30144 时显示空态与按钮【去搜索】，不自动重试（BR-ATTR-05 细则）；别人的分享 link 因分享者授权失效返回 30102 / 30111（带表示分享者授权失效的 data.reason）时同样显示，不弹授权（BR-ATTR-05 细则「别人的分享 link 不可用」，负责人 2026-10-06 确认，规划/12 §9 L-14） |
 | 分享中间页按钮 share_page.open_in_app | 在 App 中打开 | App 外浏览器里显示；与【复制淘口令】同时显示时为次按钮（见 share_page.copy_tpwd 行）；微信内不显示；`open_in_app_url` 为 null 时不显示；文案不得带返利、红包等利益表述（BR-ATTR-05 细则，规划/09 CAP-X-03） |
 | 分享中间页·微信内引导 share_page.open_in_browser_hint | 请点右上角，选择在浏览器打开 | 只在微信内显示，代替【在 App 中打开】与【复制淘口令】（规划/03 §8.3） |
 | 分享中间页按钮 share_page.copy_tpwd | 复制淘口令 | 只在接口响应带 `tpwd_ticket` 时显示（微信内不显示）；点击时才取口令并写入剪贴板，成功后提示「已复制淘口令」（share_page.copy_tpwd.done）（BR-ATTR-10 细则，2026-10-03）；与【在 App 中打开】同时显示时本按钮为主按钮、【在 App 中打开】为次按钮（负责人 2026-10-04 确认，docs/changes/20261004-设计稿第二批拍板.md §8） |
