@@ -1,6 +1,15 @@
 # 任务书模板
 
-用途：派给实现者（Codex 或 Claude 子代理）的唯一输入。由 `pnpm ops:brief <任务编号>` 生成到 `couli-runs/<任务编号>/brief.md`，不入库；评审方用同一份。规则见 `规划/11` §2.3、§5.3。
+用途：每个阶段一份，是该阶段执行者的唯一输入（规划/11 §2.3 第 2 步）：
+
+| 阶段 | 派给 | 允许改的路径 | 自己能跑的验证（规划/11 §4.1 验证入口） | 固定尾句 |
+| --- | --- | --- | --- | --- |
+| 测试 | Codex，经 `tools/agent/codex-run.sh impl` | 台账 `test_paths` + 任务 `paths` 内只抛 `NotImplemented` 的骨架 | 只做类型检查、lint；不执行测试 | 测试阶段尾句 |
+| 实现 | Claude Opus 5.5 子代理 | 任务 `paths`；规则测试冻结 | 只经 `tools/ops/verify-container.sh` 跑 `verify:fast` | Opus 实现尾句 |
+| 换家实现 | Codex，经 `tools/agent/codex-run.sh impl`（只限 RV0 / RV1，规划/11 §2.5） | 任务 `paths`；规则测试冻结 | 只做类型检查、lint；不执行测试、不调用 Docker | 换家实现尾句 |
+| 评审 | 评审方（规划/11 §1.1），只读 | 无 | 不执行 | 按评审 schema 输出 |
+
+由 `pnpm ops:brief <任务编号>` 按阶段生成到 `couli-runs/<任务编号>/`，不入库。规则见 `规划/11` §2.3、§5.3。
 
 生成约束：
 
@@ -17,7 +26,8 @@
 
 - 仓库：<rebate-platform / ios / android / harmony>；分支：`task/<编号>`；第 <n> 次尝试
 - 规格版本：`SPEC_REF=<提交号>`
-- 风险级：<RV0 / RV1 / RV2>；实现：<codex / claude>；规则测试作者：<另一家>
+- 阶段：<测试 / 实现 / 评审>
+- 风险级：<RV0 / RV1 / RV2>；实现：<claude / codex>；规则测试作者：<另一家，默认 codex>
 - 依赖任务：<已完成的前置编号>
 
 ## 1. 目标
@@ -46,12 +56,13 @@
 
 ## 3. 可以改的路径
 
-<任务 paths 列表>
+<测试阶段：台账 test_paths 列表，加任务 paths 内的骨架文件；实现阶段：任务 paths 列表；评审阶段：无，只读>
 
 ## 4. 不能改的
 
 - 保护路径：<由脚本列出与本任务相关的保护路径>
-- 已有规则测试（`spec_commit=<提交号>` 之后不得改动）：<测试文件列表>
+- 已有规则测试（实现阶段起，`spec_commit=<提交号>` 之后不得改动）：<测试文件列表>
+- 测试阶段：不写实现，骨架只抛 `NotImplemented`。
 - `ops/`、`docs/` 下任何文件；结果只写进 JSON 输出。
 
 ## 5. 必须遵守的仓库规则
@@ -64,7 +75,13 @@
 <pnpm verify:fast 或更小范围的命令>
 ```
 
-必须变绿的规则测试：<测试 ID 列表>。完整验证由编排者在沙箱外跑。沙箱里没有网络，连不上数据库和 Docker，也不能监听端口：不要跑集成测试、迁移和类型生成，需要时写进 `outside_needed`。
+实现阶段（Opus）：必须变绿的规则测试：<测试 ID 列表>。跑测试只用可信副本的 `tools/ops/verify-container.sh <任务编号>`（只跑 `verify:fast` 这一层，参数以代码仓库为准），不在宿主上直接跑测试；完整验证由编排者在隔离容器里跑。
+
+换家实现（Codex）：必须变绿的规则测试同上，但沙箱里只做类型检查与 lint，不执行测试；测试由编排者在隔离容器或 CI 里跑，失败输出附进下一轮的第 7 节。
+
+测试阶段：本节改为「必须先红的测试」：<测试 ID 列表>。沙箱里只做类型检查与 lint，不执行测试；写好的测试全部列进 `outside_needed`，由编排者在隔离容器或 CI 里确认先红（有效的红按测试类型判，规划/11 §2.3 第 3 步）。
+
+各阶段都不要跑集成测试、迁移和类型生成，需要时写进 `outside_needed`。
 
 ## 7. 上一轮失败输出（第 2 次起才有）
 
@@ -87,4 +104,8 @@
 | `blocked_reason` | 没做完或发现规格冲突时写原因；没有填空串 |
 | `notes` | 需要评审方注意的地方，三句以内 |
 
-Do not commit. Do not install dependencies. Do not modify any file under `ops/` or `docs/`. 不要运行需要网络、Docker、数据库或监听端口的命令。
+固定尾句按阶段三选一（评审阶段另按评审 schema）：
+
+- 测试阶段（Codex）：Do not commit. Do not install dependencies. Do not modify any file under `ops/` or `docs/`. Do not write implementation code. Do not run tests. 只做类型检查与 lint；不要运行需要网络、Docker、数据库或监听端口的命令。
+- 换家实现（Codex）：Do not commit. Do not install dependencies. Do not modify any file under `ops/` or `docs/`. Do not modify existing rule tests. Do not run tests. 只做类型检查与 lint；不要运行需要网络、Docker、数据库或监听端口的命令。
+- Opus 实现（Claude Opus 子代理）：Do not commit. Do not install dependencies. Do not modify any file under `ops/` or `docs/`. Do not modify existing rule tests. 跑测试只用 `tools/ops/verify-container.sh`，这是唯一允许调用 Docker 的命令；不要在宿主上直接跑测试、连数据库、跑迁移或类型生成，也不要自己起网络服务。
