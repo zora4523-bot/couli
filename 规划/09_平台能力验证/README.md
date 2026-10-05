@@ -11,6 +11,8 @@
 
 2026-10-04 接口实测（负责人当日指示：用负责人已有的已审核应用测试，凑狸自己的应用批下后复测；探测由代理在本机运行，密钥只在本机文件、不进会话与仓库）：逐接口结果见 [淘宝 §2.7](2_TB_淘宝.md#27-2026-10-04-接口实测负责人已有的已审核应用测试用)、[京东 §3.5](3_JD_京东.md#35-2026-10-04-接口实测负责人已有的已审核应用测试用)，私有证据在 `rebate-private/cap-tests/2026-10-04/`；主表 TB-02、07、08、10、12 与 JD-01、02、04、06、07、10、12 改为「进行中」（§0.2 硬规则 2，只到进行中），§1 矩阵同步；结论待负责人批量确认（规划/11 §7.3 第 7 项）。
 
+2026-10-05 模型多厂商接入（`docs/changes/20261005-模型多厂商接入.md`，负责人 2026-10-05：千问保留为主，接入 GLM 等）：5_X 新增 CAP-X-18（首批智谱 GLM），§7 新增 V-45；只登记检索到的文档说法，未实测
+
 **用户决策**（00 D24）：淘宝、京东、拼多多**三家同时接入、同时验证、独立验收、独立放量**。按平台开关 `convert.enabled.<platform>` 放量，任何一家权限未下来不阻塞另外两家；人工时间不够时淘宝优先做真实下单验证。
 
 **本轮范围（00 D7，拍板第二批 AI-01 确认首版不接入）**：淘礼金创建、领取与 A/B/C 判定后续接入、未排期，CAP-TB-09 与 V-19 不作为首版门槛；相关资料保留供后续验证，普通素材 unknown 提示与关闭提示仍需实现。
@@ -169,9 +171,9 @@
 | ③ 转链与订单归属 | TB-05（未开始）<br>TB-06（未开始）<br>TB-07（进行中）<br>TB-11（未开始） | JD-05（未开始）<br>JD-06（进行中）<br>JD-07（进行中）<br>JD-08（未开始）<br>JD-09（未开始）<br>JD-11（未开始） | PDD-05（未开始）<br>PDD-06（未开始）<br>PDD-07（未开始）<br>PDD-08（未开始）<br>PDD-11（未开始） | X-03 微信内打开（未开始）<br>X-04 鸿蒙唤起（未开始） |
 | ④ 系统分享载荷 | TB-14（未开始） | JD-14（未开始） | PDD-14（未开始） | X-01 分享接收（未开始） |
 | ⑤ 提醒数据的成本与频率 | TB-13（未开始） | JD-13（未开始） | PDD-13（未开始） | X-05 推送分类（未开始）<br>X-10 成本模型（未开始）<br>X-11 后台任务（未开始） |
-| 不在五条链路内 | TB-03、TB-09（未开始）；TB-08、TB-10、TB-12（进行中） | JD-03（未开始）；JD-10、JD-12（进行中） | PDD-09、PDD-10、PDD-12（均未开始） | X-06 支付宝、X-07 百炼、X-08 实名、X-09 短信、X-12 商店审核、X-13 TypeSafe Jev、X-14 银行卡代付通道、X-15 微信商家转账、X-16 微信 APP 支付、X-17 支付宝 App 支付（均未开始） |
+| 不在五条链路内 | TB-03、TB-09（未开始）；TB-08、TB-10、TB-12（进行中） | JD-03（未开始）；JD-10、JD-12（进行中） | PDD-09、PDD-10、PDD-12（均未开始） | X-06 支付宝、X-07 百炼、X-08 实名、X-09 短信、X-12 商店审核、X-13 TypeSafe Jev、X-14 银行卡代付通道、X-15 微信商家转账、X-16 微信 APP 支付、X-17 支付宝 App 支付、X-18 其他模型厂商（智谱 GLM）（均未开始） |
 
-表内编号省略 `CAP-` 前缀。美团（§4A，P1，D15）不在上表列内：MT-05、MT-06、MT-07、MT-11 属链路③，MT-08、MT-12 属其他，均未开始。条目数：淘宝 14、京东 14、拼多多 14、美团 6、跨平台 17，共 65 条（X-14 为 2026-10-01 按拍板第二批 FUND-03 新增；X-15 为 2026-10-04 按微信零钱提现评估新增，X-16、X-17 为 2026-10-04 按收款基础设施新增）。
+表内编号省略 `CAP-` 前缀。美团（§4A，P1，D15）不在上表列内：MT-05、MT-06、MT-07、MT-11 属链路③，MT-08、MT-12 属其他，均未开始。条目数：淘宝 14、京东 14、拼多多 14、美团 6、跨平台 18，共 66 条（X-14 为 2026-10-01 按拍板第二批 FUND-03 新增；X-15 为 2026-10-04 按微信零钱提现评估新增，X-16、X-17 为 2026-10-04 按收款基础设施新增）。
 
 ### 1.1 按平台放量门槛（S1、S3 已由负责人确认 2026-09-30；S2 入账口径已由拍板第二批 FUND-01 确认）
 
@@ -370,6 +372,7 @@
 | V-42 | 微信商家转账：商户号与佣金报酬场景开通后，按 BR-WDR-33 做小额真实转账验证——确认成功、超时未确认、撤销、姓名不一致、超过额度、余额不足、断线后按商户单号查询；三端拉起确认页（未排期，2026-10-04） | X-15 | 06 Q-C28 商户号、场景与额度；Q-C12 移动应用 | 人+代理 | 不阻塞 S2（通道开关默认 off）；打开 `payout.channel_enabled.wechat` 的前提 | `specs/wechat-transfer-error-map.csv`；商户平台额度截图（私有） |
 | V-43 | 微信 APP 支付：收款商户号开通后，用测试业务类型做小额真实支付——下单、三端调起、通知验签与解密、查询、关单、退款、交易账单；重复通知与关单后支付各做一次（未排期，2026-10-04） | X-16 | 06 Q-C29 | 人+代理 | 不阻塞 S1、S2；打开 `pay.channel_enabled.wechat_pay` 的前提 | `specs/wechat-pay-error-map.csv`；通知样例（私有） |
 | V-44 | 支付宝 App 支付：先沙箱后小额真实支付，项目同 V-43；另核对通知的应答格式与重试间隔（未排期，2026-10-04） | X-17 | 06 Q-C30 | 人+代理 | 不阻塞 S1、S2；打开 `pay.channel_enabled.alipay` 的前提 | `specs/alipay-pay-error-map.csv`；通知样例（私有） |
+| V-45 | 其他模型厂商（首批智谱 GLM）：用全量合成评测集与千问同集对照，记录工具参数正确率、首 token P95、单题成本；流式工具调用录制回放（未排期，2026-10-05） | X-18 | 06 Q-C31 | 代理写脚本 / 人运行 | 不阻塞 S1；只决定离线对照与日后线上讨论的依据 |
 
 ### 7.5 P1（S3 第一类提醒；完整观测定在 W8）
 
@@ -576,6 +579,7 @@
 | ALIPAY-SDK-UNI / QUERY | alipay-sdk-java-all v3 `AlipayFundTransUniApi.md`；https://github.com/alipay/alipay-sdk-net-all/blob/master/v3/docs/AlipayFundTransCommonApi.md |
 | ALIPAY-LIMIT | opendocs.alipay.com/b/03ah5t、/support/01rfzl（检索摘要） |
 | BL-RATE / CACHE / FC / DEP / PRIV | https://help.aliyun.com/zh/model-studio/ 下 rate-limit、context-cache、qwen-function-calling、model-depreciation（检索摘要）、privacy-notice（检索摘要） |
+| GLM-BL / GLM-ZP | 阿里云百炼「GLM-智谱」页 https://help.aliyun.com/zh/model-studio/glm-zhipu（检索摘要，2026-10-05）；智谱开放平台 OpenAI 兼容说明 https://docs.bigmodel.cn/cn/guide/develop/openai/introduction（检索摘要，2026-10-05） |
 | ID2META / ID2META-PRICE | https://help.aliyun.com/zh/id-verification/information-verification/developer-reference/vatsl9lfmbwe74iv ；阿里云信息核验计费概述 |
 | SMS-RULE | https://help.aliyun.com/zh/sms/user-guide/message-rules（检索摘要） |
 | COMMUNITY-QUOTA | 阿里云开发者社区、CSDN 对淘宝 / 多多进宝配额的转述（低） |
