@@ -145,7 +145,7 @@
 
 **CAP-TB-11 唤起与归因保持（对应 05 HM-04）**
 
-未知项：百川鸿蒙版 openByUrl 是否支持 relationId、是否支持备案所需 authorize（06 Q-G11）；scheme 直接打开 s.click / uland 链接时归因是否保留（三端分别）；手淘是否支持 Universal Link / Android App Link / 鸿蒙 App Linking 打开推广链接；未安装淘宝时 H5（内置 WebView 或系统浏览器）下单是否保留归因；微信内打开淘宝短链下单是否保留归因（见 X-03）；百川 SDK 隐私合规要求（首次启动前不得初始化等）对冷启动唤起的影响；回跳（2026-10-03，功能对照 G-50）：设置本 App 自己的回跳 scheme 与只依赖 SDK 自带回调两种情况下，在淘宝里点返回能否回到本 App 并显示待跟单卡；百川初始化失败的触发条件、返回的错误码，以及失败后重试一次能否恢复（BR-ATTR-27 淘宝行说明）。
+未知项：百川鸿蒙版 openByUrl 的淘客参数（`AlibcTaokeParams`，2026-10-02 取得的官方存档没有展开完整字段）是否支持 relationId、拉起后归因是否保留（06 Q-G11）；百川鸿蒙版 `Alibc.authorize` 接口本身已在官方存档中写明（须先设置授权窗口，返回 accessToken 与 expireTime，两次调用间隔须大于 1 秒；2026-10-05 整理，私有库 `rebate-private/docs-mirror/baichuan/prior-snapshots/121845.md`，存档未核实是否为最新版本，最新正文受浏览工具站点策略阻止未能复核），但「接口存在」不等于「能完成渠道备案」：用它取得的授权能否完成我方联盟应用的渠道备案、得到的 relation_id 是否写进订单，文档没有保证，仍待实测，不能据接口存在结束备案实验（`docs/changes/20261005-开发资料结论回写.md`）；scheme 直接打开 s.click / uland 链接时归因是否保留（三端分别）；手淘是否支持 Universal Link / Android App Link / 鸿蒙 App Linking 打开推广链接；未安装淘宝时 H5（内置 WebView 或系统浏览器）下单是否保留归因；微信内打开淘宝短链下单是否保留归因（见 X-03）；百川 SDK 隐私合规要求（首次启动前不得初始化等）对冷启动唤起的影响；回跳（2026-10-03，功能对照 G-50）：设置本 App 自己的回跳 scheme 与只依赖 SDK 自带回调两种情况下，在淘宝里点返回能否回到本 App 并显示待跟单卡；百川初始化失败的触发条件、返回的错误码，以及失败后重试一次能否恢复（BR-ATTR-27 淘宝行说明）。
 
 步骤：
 1. 人：W0 申请新 App 的百川 AppKey（iOS / Android / 鸿蒙），提交鸿蒙加白（V-03）。
