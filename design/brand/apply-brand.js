@@ -10,7 +10,7 @@
     brandPrimary: '--orange', brandEmphasis: '--brand-text',
     canvas: '--paper', surface: '--white',
     textPrimary: '--ink', textSecondary: '--muted', link: '--link-color',
-    price: '--price', pendingText: '--pending', pendingBackground: '--pending-bg',
+    price: '--price', rebateText: '--rebate', rebateBackground: '--rebate-bg', pendingText: '--pending', pendingBackground: '--pending-bg',
     successText: '--settled-text', successBackground: '--settled-bg',
     errorText: '--error-text', errorBackground: '--error-bg',
     primaryAction: '--primary-action-background', primaryActionText: '--primary-action-text',
