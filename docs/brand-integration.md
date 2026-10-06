@@ -4,7 +4,7 @@
 
 ## 1. 入口与唯一来源
 
-从根目录 [brand.config.json](../brand.config.json) 进入品牌配置。它登记名称、素材路径、令牌源、语义别名和展示页输出位置，**不另存一套色值**。中文名为「凑狸」；正式英文名与 Slogan 仍未定，`englishName` / `tagline` 保持 `null`，`couli` 仅作项目标识，不据此确定商店英文名或 Bundle ID。
+从根目录 [brand.config.json](../brand.config.json) 进入品牌配置。它登记名称、素材路径、令牌源、语义别名和展示页输出位置，**不另存一套色值**。中文名为「凑狸」，英文名为 `Couli`（2026-10-06，`englishName`）；Slogan 仍未定，`tagline` 保持 `null`。
 
 | 位置 | 职责 | 编辑方式 |
 | --- | --- | --- |
