@@ -934,8 +934,13 @@ def parse_pending(items, warn):
             if not tracked and re.match(STARTED_WORD, plain(due)):
                 status, due, tracked = due, "", True      # a status written into the deadline cell
             role = re.match(r"待(契约线|运营|法务|财务)", plain(status))
+            # A partly settled row whose remaining part names someone else is no longer the owner's.
+            text = plain(status)
+            rest = re.search(r"(?:待|由)(法务|财务|运营|契约线|实测)|(法务|财务|运营|契约线)确认仍待", text)
+            if not role and rest and classify(status) == "in_progress" and not re.search(r"待负责人|仍未定", text):
+                role = rest
             item = items.add(ident, kind, f"06 {section}", title, status, DOC_PENDING, line, due=due,
-                             owner=role.group(1) if role else default_owner, tracked=tracked,
+                             owner=next(filter(None, role.groups())) if role else default_owner, tracked=tracked,
                              fields=row_fields(table, cells, {0, 1, status_at, due_at}))
             if not tracked and kind == "legal":
                 item["status_raw"] = "未登记（06 写明负责人称法务文本已基本完成，只是没有逐项标记）"
@@ -1114,8 +1119,11 @@ def parse_decisions(items, warn):
                 first = plain(cells[0])
                 ident = first if re.fullmatch(r"D\d+", first) else f"00 §3.2 #{pending}"
                 due = cells[due_at] if due_at is not None else ""
-                items.add(ident, "decision", "00 §3.2 默认决策，待确认或推翻", cells[1], "按默认执行，待负责人确认或推翻",
-                          DOC_OVERVIEW, line, status="open", due=due, owner="负责人", fields=row_fields(table, cells, {0, 1, due_at}))
+                confirmed = re.search(r"已确认", plain(due))      # the deadline cell records a later confirmation
+                items.add(ident, "decision", "00 §3.2 默认决策，待确认或推翻", cells[1],
+                          plain(due) if confirmed else "按默认执行，待负责人确认或推翻", DOC_OVERVIEW, line,
+                          status="done" if confirmed else "open", quoted=bool(confirmed), due="" if confirmed else due,
+                          owner="负责人", fields=row_fields(table, cells, {0, 1, due_at}))
     if not settled:
         warn("00 §3.1 已定决策表没有读到（表头应为「# | 决策 | 影响」）")
     scope = {}
