@@ -3,7 +3,7 @@ const $ = (s, root = document) => root.querySelector(s);
 const $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const view = $('#app-view');
 const state = {screen: 'home', navigation: ['home'], aiAvailable: true, orderTab: 'self', query: '', platform: 'all', product: 'cup', order: 'pending', message: '', aiMode: '', loadingTimer: null};
-const priceNote = '券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准';
+const priceNote = '券后价按单件计算，不含运费及会员价等优惠，以下单页为准';
 const products = [
   {id:'cup',name:'轻量随行保温杯 · 350 mL',platform:'淘宝',price:'49',before:'59',coupon:'10',rebate:'3.2',after:'45.8',terms:['杯','保温','随行']},
   {id:'towel',name:'纯棉毛巾 · 2 条装',platform:'京东',price:'29.9',before:'34.9',coupon:'5',rebate:'1.5',after:'28.4',terms:['毛巾','纯棉']},

@@ -52,6 +52,8 @@
 
 2026-10-06 写入 规划/12 §9 已确认的保守默认（docs/changes/20261006-待确认事项整批确认与交由Jev判断.md §6.3）：BR-TEXT-14 表 C `jump.taobao_sdk_unavailable` 的显示条件补「已初始化而拉起失败」、写明不另出找回入口（12 L-05）；`link_landing.invalid` 补「别人的分享 link 因分享者授权失效」（12 L-14）。没有新增文案键，状态不变。
 
+2026-10-06（docs/changes/20261006-淘宝价格取接口到手价扣除会员项.md）：BR-TEXT-14 表 C `price_basis.general` 默认文案随 BR-PRICE-03 的 price_basis 去掉「跨店满减」，含义不变。
+
 2026-10-06（docs/changes/20261006-待确认事项整批确认与交由Jev判断.md §3、§9、§10）：BR-TEXT-14 表 C 新增 `price_basis.general`（无券商品与混排列表的价格口径说明，代理取名）与「淘宝本次打开方式领不到券·确认弹窗」（键名待补）两行，`btn.buy.rebate_suffix` 行改注为已确认；BR-TEXT-20 细则「分享页文案」补离开分享页即丢弃编辑、不弹窗；BR-TEXT-21 细则补 AI 助手报表的「成交」口径；BR-TEXT-01 细则补风控冻结时提现按钮不置灰的指针。状态不变，没有新增条目。
 
 2026-10-06 剩余旧标注处理（docs/changes/20261006-待确认事项整批确认与交由Jev判断.md §14；00 §8 第 ① 类同步，原需负责人确认的默认按 规划/11 §7.1 交 Jev 判断）：BR-TEXT-14 表 B `50304.rank_unavailable` 文案、表 C「收藏」行按默认确认，「热销榜·说明」行改注负责人 2026-10-05 已确认；表 C 新增 `price_trend.title.general`、`price_trend.source.general`（无券商品的价格走势标题与说明，代理取名）；50301 data.reason 与 C-03 改注代理自定（00 §9），G-04 改注负责人 2026-09-30 已确认。状态不变，没有新增条目与错误码。
@@ -853,7 +855,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 购买按钮带金额 btn.buy.rebate_suffix（2026-10-04 设计方向第三轮，docs/changes/20261004-设计方向第三轮.md §4；键名与条件是代理补全的默认，负责人 2026-10-06 确认，规划/06「设计方向第三轮待确认」第 8 项） | · 预估返 {amount} | 接在 `cta.text_key` 的动词（「领券购买」「去购买」，BR-TEXT-12 细则 TRADE-21）后面，组成「领券购买 · 预估返 ¥1.23」；只在同时满足时拼：rebate_min_fen = rebate_max_fen > 0（单一金额）、rebate_basis 不是 no_rebate / amount_unknown / login_required、金额隐藏开关未打开（BR-TEXT-10 细则「金额隐藏」）、所在页面显示返利金额（`LinkLanding`、分享中间页、海报不显示，BR-ATTR-05 细则、BR-PRICE-06）；{amount} 与同一张卡 RebateTag 的金额是同一个按 BR-TEXT-10 格式化的结果；区间只写动词，不写「起」或上下限；无返利仍为 `btn.buy.no_rebate`；loading、禁用与「稍后再试」等状态按钮不拼 |
 | rebate_login_to_view（rebate_basis=login_required，BR-AI-11，拍板第二批 AI-03） | 登录查看返利 | 替代 RebateTag，卡片按钮同文案；点击走登录，登录后按 BR-ATTR-05 处理；只在开关 agent.guest_login_to_view.&lt;platform> 开启的平台出现 |
 | spec_min_price_note（商品级价格对应规格无法确定，BR-PROD-04） | 规格以下单页为准 | 价格旁显示；确知为最低规格价或联盟返回区间时价格写「¥x 起」（BR-PROD-04） |
-| 价格口径说明·通用句 price_basis.general（2026-10-06，代理取名；代理用 Jev 判断，规划/06「设计方向第三轮待确认」第 7 项） | 价格按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准 | 无券商品与有券无券混排的列表用这一句，不出现「券后」；有券商品仍用 price_basis（BR-PRICE-03 正文）；下发与选用只按 BR-PRICE-03 细则「无券商品与混排列表的口径说明」与 BR-PRICE-17 |
+| 价格口径说明·通用句 price_basis.general（2026-10-06，代理取名；代理用 Jev 判断，规划/06「设计方向第三轮待确认」第 7 项） | 价格按单件计算，不含运费及会员价等优惠，以下单页为准 | 2026-10-06 随 price_basis 去掉「跨店满减」（docs/changes/20261006-淘宝价格取接口到手价扣除会员项.md）。无券商品与有券无券混排的列表用这一句，不出现「券后」；有券商品仍用 price_basis（BR-PRICE-03 正文）；下发与选用只按 BR-PRICE-03 细则「无券商品与混排列表的口径说明」与 BR-PRICE-17 |
 | 剪贴板识别提示条 clipboard.prompt | 检测到商品链接，查返利？ | 出现条件、读取时机与方式只按 BR-ID-16 |
 | 剪贴板邀请提示条 clipboard.invite_prompt | 检测到好友邀请码 {invite_code}，绑定为邀请人？ | 出现条件按 BR-INV-04（商品优先；含落地页链接或「邀请码」字样才提示，拍板第二批 OPS-06），读取方式只按 BR-ID-16；点击后进入绑定确认，不直接绑定 |
 | 购买请求超时 buy.timeout | 网络不稳定，请重试 | 重试沿用同一幂等键，不自动外跳（超时时长与重试规则归 规划/03 §4.2，拍板第二批 TRADE-22） |
