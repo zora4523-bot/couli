@@ -16,15 +16,17 @@
 
 2026-10-06（docs/changes/20261006-待确认事项整批确认与交由Jev判断.md §9、§10）：BR-PRICE-03 细则补「无券商品与混排列表的口径说明」（新键 price_basis.general，代理用 Jev 判断，规划/06「设计方向第三轮待确认」第 7 项），BR-PRICE-17 正文的 disclaimer_keys 与海报口径说明随之改一句；BR-PRICE-14 细则加一句：淘宝按 item_id 打开领不到券不是 coupon_gone（BR-ATTR-27「当前购买路径领不到券」）。状态不变，没有新增条目。
 
+2026-10-06 淘宝价格口径（docs/changes/20261006-淘宝价格取接口到手价扣除会员项.md，负责人 2026-10-06 选 B）：淘宝的三个价格字段改为按联盟接口的优惠明细取值，以预估到手价为基准加回会员专享项，全员可享的券与平台立减计入，清单外的未识别项默认不出价（代理默认，待负责人确认）；BR-PRICE-01 正文、BR-PRICE-02 正文与淘宝映射、BR-PRICE-03 正文与 price_basis 文案、BR-PRICE-05 术语说明随之修改，京东、拼多多不变。条目状态不变，没有新增条目。
+
 ### 3.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
 | --- | --- | --- | --- |
-| BR-PRICE-01 | **价格三字段定义与计算**<br>商品价格只用三个整数分（int64，_fen）字段表达，全部指「默认 SKU、购买 1 件、联盟接口返回」的价格：price_fen = 券前价（平台当前售价，未扣任何券）；coupon_fen = 本 App 转链后可用的券面额（选券规则见细则），没有可用券时等于 0；final_price_fen = 券后价 = price_fen − coupon_fen，这个恒等式在任何情况下都必须成立。计算只能在服务端 UnionAdapter + packages/domain 完成，禁止浮点，客户端不得重算。元字符串转分只能用 packages/domain.parseYuanToFen()：按字符串做十进制解析，最多两位小数；超过两位小数、非数字、空串、负数一律视为字段缺失，不得四舍五入。final_price_fen 一律自算；平台返回的券后价类字段（如淘宝 final_promotion_price、京东 lowestCouponPrice）只存原始报文，与自算值相差 ≥1 分时记日志 PRICE_CALC_DIFF。某个平台字段只有经 BR-PRICE-02 实测确认口径与本条一致、列入 specs/union/&lt;platform>.md 的「平台券后价白名单」（初始为空）并在规划/09 登记后，才可以以它为准，此时 coupon_fen 记为 price_fen − 该字段值，保持恒等式。price_fen 缺失、coupon_fen ≥ price_fen 或 final_price_fen ≤ 0 时按数据异常处理：记告警 PRICE_ANOMALY，不得把缺失价格当 0 元；检索类场景（搜索、feeds、Agent 检索）该商品不出卡；inputs/parse、rebate_quote 出一张 availability=price_unavailable 的卡，不显示任何金额，文案「暂时查不到该商品价格」，按钮「稍后再试」，不下发 link_id；open 复核时新价格异常，按 BR-PRICE-13 的复核失败分支处理。 | 默认假设 | product_card.price_fen / coupon_fen / final_price_fen；product_card.availability（新增 price_unavailable）；packages/domain.parseYuanToFen()；GET /v1/products/search；GET /v1/products/{product_key}；POST /v1/inputs/parse；Agent product_list / rebate_quote 卡片；price_snapshot 表；UnionAdapter.&lt;platform>；specs/union/&lt;platform>.md 平台券后价白名单；验收：券门槛、多券选择、过期券、金额解析、价格缺失用例 |
-| BR-PRICE-02 | **各平台取价字段映射**<br>UnionAdapter 必须按平台把联盟返回映射到 BR-PRICE-01 的三个字段。映射表以 S0 实测的接口样例为准（映射写入 specs/union/&lt;platform>.md；样例录制按拍板第二批 TECH-02 存私有存储）。对照通过的条件：用一个无会员身份（非 88VIP、非 PLUS）的测试账号，抽取 ≥20 个商品（有券、无券各 ≥5 个），下单页单件、默认 SKU、不含运费、不勾选平台红包和淘金币等可选优惠时的券后价，与 final_price_fen 全部一致（误差 0 分）；任何一个不一致即判不通过，修正映射后整批重测；证据截图与接口报文存私有存储（仓库公开，拍板第二批 TECH-02），specs/union/&lt;platform>.md 只记字段映射与对照结论，由负责人签字。对照通过前，该平台的 convert.enabled.&lt;platform> 不得开启。默认映射：淘宝 price_fen 取折扣价 zk_final_price，不取一口价 reserve_price；final_promotion_price 等预估到手价类字段只存原始报文。京东 price_fen 取 priceInfo.price，lowestPrice、lowestCouponPrice 只存原始报文；券从 couponInfo.couponList 按 BR-PRICE-01 的选券规则选取。拼多多 price_fen 取拼单价 min_group_price，不取单买价 min_normal_price，卡片标签按 BR-PRICE-04 显示「拼单」字样。 | 待验证 | UnionAdapter.taobao / jd / pdd；specs/union/&lt;platform>.md；规划/09 平台能力验证表；配置 convert.enabled.&lt;platform>；前端组件 PriceTag（拼单文案）；验收：价格与下单页对照用例 |
-| BR-PRICE-03 | **运费与平台外优惠不计入**<br>price_fen、final_price_fen、预估返后价都不得包含运费，也不得包含只在下单页才生效的优惠，包括 88VIP 价、京东 PLUS 价、淘金币抵扣、跨店满减、店铺会员价、平台红包和补贴满减、第三方淘礼金。凡是展示券后价的地方，disclaimer_keys 都必须包含 price_basis，文案为「券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准」（配置下发，见 BR-PRICE-17）。呈现形式：商品详情页、分享海报、分享中间页常驻显示全文；搜索列表、首页物料流和 Agent 卡片流每屏在列表底部显示一次全文，单张卡只放 i 图标，点击展开全文。联盟返回包邮标识时可以显示「包邮」标签，但不得据此把运费加减进任何价格字段。 | 默认假设 | product_card.disclaimer_keys；商品详情页、搜索卡、Agent 卡、分享海报、分享中间页口径说明；前端组件 DisclaimerFooter / i 图标；订阅提醒（Watch）价格口径；客服话术：「为什么下单价和 App 显示的不一样」；配置：文案键 price_basis |
+| BR-PRICE-01 | **价格三字段定义与计算**<br>商品价格只用三个整数分（int64，_fen）字段表达，全部指「默认 SKU、购买 1 件、联盟接口返回」的价格：price_fen = 券前价（平台当前售价，未扣任何券；淘宝为折扣价扣除接口优惠明细中全员可享的平台立减后的价格，2026-10-06）；coupon_fen = 本 App 转链后可用的券面额（选券规则见细则；淘宝为接口优惠明细中券项的合计，2026-10-06），没有可用券时等于 0；final_price_fen = 券后价 = price_fen − coupon_fen，这个恒等式在任何情况下都必须成立。计算只能在服务端 UnionAdapter + packages/domain 完成，禁止浮点，客户端不得重算。元字符串转分只能用 packages/domain.parseYuanToFen()：按字符串做十进制解析，最多两位小数；超过两位小数、非数字、空串、负数一律视为字段缺失，不得四舍五入。final_price_fen 一律自算；平台返回的券后价类字段（如京东 lowestCouponPrice）只存原始报文，与自算值相差 ≥1 分时记日志 PRICE_CALC_DIFF。淘宝例外（2026-10-06）：预估到手价 final_promotion_price 按 BR-PRICE-02 作为计算基准、加回会员专享项后得出 final_price_fen，不进下述白名单。某个平台字段只有经 BR-PRICE-02 实测确认口径与本条一致、列入 specs/union/&lt;platform>.md 的「平台券后价白名单」（初始为空）并在规划/09 登记后，才可以以它为准，此时 coupon_fen 记为 price_fen − 该字段值，保持恒等式。price_fen 缺失、coupon_fen ≥ price_fen 或 final_price_fen ≤ 0 时按数据异常处理：记告警 PRICE_ANOMALY，不得把缺失价格当 0 元；检索类场景（搜索、feeds、Agent 检索）该商品不出卡；inputs/parse、rebate_quote 出一张 availability=price_unavailable 的卡，不显示任何金额，文案「暂时查不到该商品价格」，按钮「稍后再试」，不下发 link_id；open 复核时新价格异常，按 BR-PRICE-13 的复核失败分支处理。 | 默认假设 | product_card.price_fen / coupon_fen / final_price_fen；product_card.availability（新增 price_unavailable）；packages/domain.parseYuanToFen()；GET /v1/products/search；GET /v1/products/{product_key}；POST /v1/inputs/parse；Agent product_list / rebate_quote 卡片；price_snapshot 表；UnionAdapter.&lt;platform>；specs/union/&lt;platform>.md 平台券后价白名单；验收：券门槛、多券选择、过期券、金额解析、价格缺失用例 |
+| BR-PRICE-02 | **各平台取价字段映射**<br>UnionAdapter 必须按平台把联盟返回映射到 BR-PRICE-01 的三个字段。映射表以 S0 实测的接口样例为准（映射写入 specs/union/&lt;platform>.md；样例录制按拍板第二批 TECH-02 存私有存储）。对照通过的条件：用一个无会员身份（非 88VIP、非 PLUS）的测试账号，抽取 ≥20 个商品（有券、无券各 ≥5 个；淘宝另须覆盖细则「淘宝对照样本」所列几类），下单页单件、默认 SKU、不含运费、不勾选平台红包和淘金币等可选优惠时的券后价，与 final_price_fen 全部一致（误差 0 分）；任何一个不一致即判不通过，修正映射后整批重测；证据截图与接口报文存私有存储（仓库公开，拍板第二批 TECH-02），specs/union/&lt;platform>.md 只记字段映射与对照结论，由负责人签字。对照通过前，该平台的 convert.enabled.&lt;platform> 不得开启。淘宝映射（负责人 2026-10-06 确认，docs/changes/20261006-淘宝价格取接口到手价扣除会员项.md）：以预估到手价 final_promotion_price 为基准，按优惠明细 final_promotion_path_list 把会员专享项加回；明细每项按可配置的名称清单归为券、平台立减、会员专享或未识别（未识别项怎么计价由开关决定，代理默认不出价、待负责人确认）；final_price_fen = 预估到手价 + 加回项，coupon_fen = 券合计，price_fen = final_price_fen + coupon_fen（即折扣价 zk_final_price 扣除平台立减）；不取一口价 reserve_price；明细与到手价对不上时按价格异常处理；分类清单、有效期、核对、回退开关见细则。京东 price_fen 取 priceInfo.price，lowestPrice、lowestCouponPrice 只存原始报文；券从 couponInfo.couponList 按 BR-PRICE-01 的选券规则选取。拼多多 price_fen 取拼单价 min_group_price，不取单买价 min_normal_price，卡片标签按 BR-PRICE-04 显示「拼单」字样。 | 待验证 | UnionAdapter.taobao / jd / pdd；specs/union/&lt;platform>.md；规划/09 平台能力验证表；配置 convert.enabled.&lt;platform>；前端组件 PriceTag（拼单文案）；验收：价格与下单页对照用例 |
+| BR-PRICE-03 | **运费与平台外优惠不计入**<br>price_fen、final_price_fen、预估返后价都不得包含运费，也不得包含会员专享优惠（88VIP 价、京东 PLUS 价、店铺会员价，含淘宝优惠明细里的会员项）和联盟接口没有计入的下单页优惠（淘金币抵扣、跨店满减、平台红包、第三方淘礼金等）。淘宝优惠明细里全员可享的券与平台立减（百亿补贴、秒杀直降等）按 BR-PRICE-02 计入（负责人 2026-10-06 确认）；京东、拼多多是否同样计入待实测后另定。凡是展示券后价的地方，disclaimer_keys 都必须包含 price_basis，文案为「券后价按单件计算，不含运费及会员价等优惠，以下单页为准」（配置下发，见 BR-PRICE-17）。呈现形式：商品详情页、分享海报、分享中间页常驻显示全文；搜索列表、首页物料流和 Agent 卡片流每屏在列表底部显示一次全文，单张卡只放 i 图标，点击展开全文。联盟返回包邮标识时可以显示「包邮」标签，但不得据此把运费加减进任何价格字段。 | 默认假设 | product_card.disclaimer_keys；商品详情页、搜索卡、Agent 卡、分享海报、分享中间页口径说明；前端组件 DisclaimerFooter / i 图标；订阅提醒（Watch）价格口径；客服话术：「为什么下单价和 App 显示的不一样」；配置：文案键 price_basis |
 | BR-PRICE-04 | **券前价与售价标签**<br>price_fen 在所有用户可见处一律标为「券前价」或「券前 ¥x」，不得使用「原价」「划线价」「日常价」等字样，也不得用删除线样式，因为本 App 无法证明该价格就是平台促销前的成交价（按此默认上线，法务意见出来后改文案字典，拍板第二批 TRADE-18）。coupon_fen > 0 时，主价标「券后 ¥x」（final_price_fen），副行「券前 ¥x · 券 ¥y」（不划线）。coupon_fen = 0 时只显示一个价格，标为「售价 ¥x」，不带「券后」字样，并显示无券状态。拼多多卡片（price_fen 取拼单价，BR-PRICE-02）：有券时主价「拼单券后 ¥x」、副行「拼单券前 ¥x · 券 ¥y」；无券时「拼单价 ¥x」；benefit_tags 不再重复加「拼单价」标签。 | 已确认 | 前端组件 PriceTag；商品详情页、搜索卡、Agent 卡、分享海报；分享文案模板变量；禁用词清单（BR-PRICE-18）；术语表（BR-PRICE-05）；验收：PriceTag 快照测试（有券、无券、拼多多有券无券） |
-| BR-PRICE-05 | **价格术语统一**<br>界面、接口文档、客服话术必须使用以下固定术语：券前价 = price_fen（coupon_fen>0 时展示）；售价 = coupon_fen=0 时 final_price_fen 的展示名；券 / 券面额 = coupon_fen；券后价 = coupon_fen>0 时的 final_price_fen；预估返利 = rebate_min_fen–rebate_max_fen，界面短标签只允许「预估返」且后面直接接金额；预估推广收益 = App 内分享页给分享者看的推广收益估算（BR-PRICE-06；原叫「分享预估赚」，2026-10-05 按负责人确认的用词改，docs/changes/20261005-分享赚与范围调整.md §1）；预估返后价 = est_net_price_fen（BR-PRICE-09），界面短标签「预估返后」；素材参考价 = material.claimed_price_fen（BR-PRICE-10）。拼多多在券前价、券后价、售价前加「拼单」（BR-PRICE-04）。其他简称一律不允许。界面上不得把「到手价」或「接口到手价」用作价格标签，因为 final_price_fen 不含运费和下单页优惠，不等于用户实际付的钱。「返利后到手价透明」只作卖点表述，落到界面上就是预估返后价。 | 默认假设 | 规划/01、03、04 文案；配置中心文案键（F-CFG-06）；客服话术；Agent 系统提示词里的术语表；验收：界面文案检查 |
+| BR-PRICE-05 | **价格术语统一**<br>界面、接口文档、客服话术必须使用以下固定术语：券前价 = price_fen（coupon_fen>0 时展示）；售价 = coupon_fen=0 时 final_price_fen 的展示名；券 / 券面额 = coupon_fen；券后价 = coupon_fen>0 时的 final_price_fen；预估返利 = rebate_min_fen–rebate_max_fen，界面短标签只允许「预估返」且后面直接接金额；预估推广收益 = App 内分享页给分享者看的推广收益估算（BR-PRICE-06；原叫「分享预估赚」，2026-10-05 按负责人确认的用词改，docs/changes/20261005-分享赚与范围调整.md §1）；预估返后价 = est_net_price_fen（BR-PRICE-09），界面短标签「预估返后」；素材参考价 = material.claimed_price_fen（BR-PRICE-10）。拼多多在券前价、券后价、售价前加「拼单」（BR-PRICE-04）。其他简称一律不允许。界面上不得把「到手价」或「接口到手价」用作价格标签，因为 final_price_fen 不含运费、会员价和下单页优惠，不等于用户实际付的钱；淘宝 final_price_fen 计入平台立减后（2026-10-06）仍叫「券后价」，理由见细则。「返利后到手价透明」只作卖点表述，落到界面上就是预估返后价。 | 默认假设 | 规划/01、03、04 文案；配置中心文案键（F-CFG-06）；客服话术；Agent 系统提示词里的术语表；验收：界面文案检查 |
 | BR-PRICE-06 | **预估返利计算口径**<br>本条只管展示对象与 buy_type，计算不在本条维护：报价 = splitCommission(quoteN) 的本人份额，见 BR-CALC-20（N_quote 定义、技术服务费、扣除平台预留比例 reserve_bp（BR-CALC-02，与入账同一函数）、取较低值、向下取整、规则版本与查看者等级都以 BR-CALC-20 为准）。rebate_min_fen / rebate_max_fen 由 packages/domain.quoteRebate() 按 BR-CALC-20 输出，不得另写估算逻辑。展示对象与 buy_type：搜索卡、详情、inputs/parse、Agent 卡用 buy_type=self，显示「预估返 ¥x」（查看者等级，游客按 BR-CALC-20 的注册默认等级）；buy_type=share 的金额只在 App 内分享页 `ProductShare` 给分享者本人看（查看者即分享者），文案「预估推广收益 ¥x」（2026-10-05 由「分享预估赚 ¥x」改，用词按 BR-TEXT-01，docs/changes/20261005-分享赚与范围调整.md §1），对应分享收益（SHARE_CREDIT，入单一余额，BR-FUND-13、拍板第二批 §8 ADD-06；规划/01 J8、F-ORD-04）；分享中间页、海报、分享文案一律不显示任何返利金额，也不显示预估返后价。只展示查看者本人份额。零值展示见 BR-PRICE-08，比价区间见 BR-PRICE-07，金额格式与口径说明文案见 BR-PRICE-17。下单后订单详情只展示基于快照的预估，不与报价比较，页面不得承诺报价金额。 | 已确认 | packages/domain.quoteRebate() / splitCommission()；product_card.rebate_min_fen / rebate_max_fen；App 内分享面板（分享预估赚）；分享中间页、海报、分享文案（不显示返利）；specs/commission-examples.csv 参数化测试；配置：tech_fee_bp[platform]、commission_rules.r_own_bp[platform][level][order_type]（BR-CALC-06；别名 r_self_bp，C-29）、commission_rule_reserves.reserve_bp[platform]（BR-CALC-02）；验收：同输入时展示报价 = 入账预估 |
 | BR-PRICE-07 | **比价风险与返利区间**<br>MVP 只对 platform=taobao 展示比价区间；拼多多不出区间：是否存在比价降佣、怎样预判待 CAP-PDD-04（09 附录 A-14），实测通过并打开开关 rebate.pdd.compare_precheck.enabled（默认关）后，点击复核时预判为比价的按 BR-PRICE-08 的无返利原因处理（细则「拼多多的比价预判」，2026-10-03），实测结论与此不同时按 00 §8 改本条。有比价预判定权限时，以 link_log.compare_risk 为准；权限存在但结果尚未返回时，先按无权限规则判定，拿到结果后在 open 响应中更新 rebate_\*。无权限时（M-内测默认）按 entry_source 判定：inputs/parse（粘贴链接或口令）、搜索、Agent 卡（含换一批）判为 price_compare_risk；首页物料流、商品池、淘礼金商品池、分享面板与分享中间页判为 normal；商品详情页和由卡片派生的请求继承来源卡片 link 记录的 entry_source，没有来源卡片（直接打开详情）时判为 price_compare_risk；订阅提醒点击继承创建提醒时来源卡的 entry_source，无法确定时判为 price_compare_risk。rebate_basis=normal 时 rebate_min_fen = rebate_max_fen，显示「预估返 ¥x」。rebate_basis=price_compare_risk 时，rebate_max_fen 按正常佣金率计算，rebate_min_fen 按「正常佣金率 × rebate.taobao.compare_rate_ratio_bp / 10000」计算（算法同 BR-CALC-20），显示「预估返 ¥a–¥b」，disclaimer_keys 含 rebate_compare（「以结算为准」）。rebate_min_fen=0 且 rebate_max_fen>0 时仍为 price_compare_risk，显示「预估返 ¥0–¥x」；只有 rebate_max_fen=0 时才判为 no_rebate。不得只显示上限，也不得在区间以外另显示一个「保守值」。下单前比价展示只在本条维护，BR-CALC-16 只管订单侧计算；compare_rate_ratio_bp 占位值不得用于运营素材、客服话术或对外宣传（C-22，默认处理，已由负责人确认 2026-09-30，财务知悉）。 | 待验证 | product_card.rebate_basis / rebate_min_fen；links.entry_source（新增）；link_log.compare_risk；orders.is_price_compare、commission_rate_min_bp / max_bp；前端组件 RebateTag；配置 rebate.taobao.compare_rate_ratio_bp；disclaimer_keys: rebate_compare；验收：至少 1 笔比价订单三处一致（F-ORD-11）；详情继承来源用例 |
 | BR-PRICE-08 | **无返利与淘礼金返利展示**<br>rebate_max_fen = 0 时，rebate_basis 必须为 no_rebate。搜索、首页物料流、Agent 检索结果必须过滤掉 no_rebate 商品（不采用「标无返利放最后」这个选项）；淘礼金商品池里的商品不受这条过滤限制。过滤后不足 page_size 时，最多向上游补拉 1 页补足，仍不足就按实际数量返回；has_more 以上游返回为准；分页游标记录上游页码，不记录过滤后的偏移量。用户主动粘贴或分享的链接和口令（inputs/parse、rebate_quote）即使无返利也照常出卡：显示「暂无返利」，按钮为「去购买（无返利）」。「去购买（无返利）」的目标：转链成功但佣金为 0 时用转链结果；转链失败时，跳到由 product_key 生成、不带任何推广参数的平台商品页；不得原样外跳用户粘贴的链接或口令（可能带其他推广者的推广位），不得把原链接当作返利链接返回；该按钮不显示任何预估返利，也不写 links 报价快照。拼多多直链（拍板第二批 TRADE-08）：用户粘贴合法拼多多商品链接或进宝长短链，联盟拿不到商品信息（无 goods_sign 或价格），且直链转链开关 pdd.direct_convert.enabled 打开（默认关，CAP-PDD-01 zs.unit.url.gen 获批后打开）时，出卡 rebate_basis=amount_unknown：rebate_min_fen、rebate_max_fen 为空，不显示任何价格与返利金额，显示「可返利，金额以订单为准」（BR-TEXT-14 rebate_amount_unknown），按钮「去购买」；登记 link（product_key 为空、报价快照价格字段为空），点击经 POST /v1/links/{link_id}/open 由服务端带用户参数直链转链（BR-ATTR-05），open 不做价格复核；直链转链失败按本条无返利处理。开关关闭或条件不满足时按 BR-PROD-03 报错，不出该卡。淘礼金（我方或 A/B 类）商品默认不叠加自购返利（后台可按商品配置），此时 rebate_basis=no_rebate，文案为「淘礼金商品不叠加返利」。淘礼金金额只放在 tlj.amount_fen 字段里（随卡下发 tlj.amount_fen、tlj.remain、tlj_kind，cta 类型为 claim_tlj / claim_tlj_and_buy），不得从 final_price_fen 或 est_net_price_fen 中扣减；淘礼金卡的标签、按钮与说明文案见 BR-TEXT-15。C 类淘礼金卡按普通返利计算，不得打「淘礼金」标签。无返利原因（2026-10-03）：rebate_basis=no_rebate 的卡，以及复核结果为无返利（new_rebate_max_fen = 0）的 open 响应，可带 no_rebate_cause，目前只有一个取值 price_compare（点击复核时平台对当前用户的比价预判为比价，BR-PRICE-07 细则「拼多多的比价预判」）；带该值时提示文案与【看看相似商品】入口按细则「无返利原因」，其他无返利情形不带该字段、展示不变。 | 默认假设 | product_card.rebate_basis / no_rebate_cause / tlj；GET /v1/products/search、feeds 过滤与分页游标；POST /v1/inputs/parse；Agent search_products / get_rebate_quote；前端 RebateTag、CTA 文案键；rebate_basis=amount_unknown（拼多多直链）与配置 pdd.direct_convert.enabled；验收：三态卡片用例、淘礼金卡用例、补拉分页用例、无返利购买不外跳原链接用例、拼多多直链 amount_unknown 用例 |
@@ -48,10 +50,11 @@
 #### BR-PRICE-01 细则 · 价格三字段定义与计算
 
 - 状态：默认假设
-- 默认值：券门槛按单件判断；多券取可用的最大面额；券后价一律自算，平台券后价白名单初始为空；价格异常时检索场景不出卡、主动查询出 price_unavailable 卡
-- 决策人：负责人
+- 默认值：券门槛按单件判断；多券取可用的最大面额（淘宝除外，按接口优惠明细，见 BR-PRICE-02）；券后价一律自算，平台券后价白名单初始为空；价格异常时检索场景不出卡、主动查询出 price_unavailable 卡
+- 决策人：负责人（淘宝三字段的取值口径负责人 2026-10-06 已确认，docs/changes/20261006-淘宝价格取接口到手价扣除会员项.md；本条其余部分仍为默认假设，状态不变）
 - 依赖平台能力：无
 - 取代：
+  - 本条原写（2026-10-06 前）：「price_fen = 券前价（平台当前售价，未扣任何券）；coupon_fen = 本 App 转链后可用的券面额」——对淘宝意味着只扣券、百亿补贴等平台立减不计入；负责人 2026-10-06 选 B 后，淘宝按 BR-PRICE-02「淘宝优惠明细的分类」取值，京东、拼多多不变
   - 参考_花卷云功能查漏底稿 §4 统一商品模型：「原价、券额、券后价（未定义门槛与单件口径）」
   - PRD v2.1 §10.7：「product_card v1 价格字段 price_fen、coupon_fen、final_price_fen（未定义原价口径）」
 - 来源：规划/04 §8.3；规划/03 §10.2 PriceTag；规划/01 E04 F-PROD-05；PRD v2.1 §10.7；参考_花卷云功能查漏底稿 §4
@@ -59,7 +62,7 @@
 
 **公式**：`final_price_fen = price_fen − coupon_fen`。
 
-**选券**：候选券 = 同时满足 `coupon_start_at ≤ now < coupon_end_at`、`remain > 0`、`price_fen ≥ coupon_threshold_fen` 的券；取 coupon_amount_fen 最大的一张，面额相同取门槛低的；平台标记的 isBest 只作参考；一张都不满足时 coupon_fen=0。
+**选券**（京东、拼多多；淘宝不走本段，券项由接口优惠明细直接给出，按 BR-PRICE-02 合计）：候选券 = 同时满足 `coupon_start_at ≤ now < coupon_end_at`、`remain > 0`、`price_fen ≥ coupon_threshold_fen` 的券；取 coupon_amount_fen 最大的一张，面额相同取门槛低的；平台标记的 isBest 只作参考；一张都不满足时 coupon_fen=0。
 
 **时间与剩余量**：平台时间带时区的按其时区解析，不带时区的一律按 +08:00；只给日期的结束时间，coupon_end_at 取该日次日 00:00:00+08:00（开区间）；只给日期的开始时间，取当日 00:00:00+08:00。平台不返回剩余量字段时视为 remain>0（点击时由 BR-PRICE-13/14 复核兜底）；返回剩余量为 0 时该券不可用。
 
@@ -81,16 +84,17 @@
 #### BR-PRICE-02 细则 · 各平台取价字段映射
 
 - 状态：待验证
-- 默认值：淘宝 zk_final_price；京东 priceInfo.price + 按 BR-PRICE-01 选券；拼多多 min_group_price 并标「拼单」；对照 ≥20 个商品误差 0 分全部一致才算通过
-- 决策人：负责人
-- 依赖平台能力：淘宝/京东/拼多多：物料搜索、详情、转链、口令解析各接口的价格与券字段实际返回样例；淘宝 final_promotion_price 是否含跨店满减或 88VIP；拼多多拼单价与单买价在下单页的实际差异；京东是否返回 PLUS 价（规划/09 价格口径链路②）
-- 取代：无
+- 默认值：淘宝以预估到手价为基准加回会员专享项（未识别项按代理默认不出价），券单列，立减计入券前价；京东 priceInfo.price + 按 BR-PRICE-01 选券；拼多多 min_group_price 并标「拼单」；对照 ≥20 个商品误差 0 分全部一致才算通过
+- 决策人：负责人（淘宝映射负责人 2026-10-06 已确认；字段映射仍待对照，状态不变）
+- 依赖平台能力：淘宝/京东/拼多多：物料搜索、详情、转链、口令解析各接口的价格与券字段实际返回样例；淘宝优惠明细的名称清单是否完整、详情与转链接口的明细是否与搜索一致、满元减与满件折是否按单件给出（final_promotion_price 含 88VIP 折扣项，物料搜索 2026-10-06 实测已答，规划/09 CAP-TB-03）；拼多多拼单价与单买价在下单页的实际差异；京东是否返回 PLUS 价（规划/09 价格口径链路②）
+- 取代：
+  - 本条原写（2026-10-06 前）：「淘宝 price_fen 取折扣价 zk_final_price，不取一口价 reserve_price；final_promotion_price 等预估到手价类字段只存原始报文」，券取 coupon_amount 等券字段——升级版接口已没有这些券字段（规划/09 CAP-TB-03 2026-10-06 实测），且负责人 2026-10-06 选 B，改为按优惠明细分类
 - 来源：规划/04 §8.3；PRD修订_后端功能规划 §2.2 平台佣金口径差异；规划/01 E04 F-PROD-05「卡片金额与联盟接口一致」；docs/changes/20261001-拍板第二批.md（TECH-02）
 - 需同步修改的规划文档：1 处（计数仅作记录，落点见 README §0.6）
 
 | 平台 | price_fen 默认字段 | 只存原始报文 | 券字段 | 待实测点 |
 |---|---|---|---|---|
-| taobao | zk_final_price | reserve_price、final_promotion_price | coupon_amount、coupon_start_fee、coupon_start_time、coupon_end_time、coupon_remain_count | final_promotion_price 口径；reserve_price 与下单页差异 |
+| taobao | 由 final_promotion_price（计算基准）加回会员专享项再加券得出，核对通过时等于 zk_final_price − 平台立减合计（见下文「淘宝优惠明细的分类」） | reserve_price、more_promotion_list、promotion_tag_list | final_promotion_path_list 中归为券的项：promotion_fee（面额）、promotion_start_time / promotion_end_time（毫秒时间戳）、promotion_id；门槛只在 promotion_desc 文案里 | 名称清单是否完整；详情、转链接口的明细是否与搜索一致；满元减与满件折是否按单件 |
 | jd | priceInfo.price | lowestPrice（可能含秒杀、拼购价）、lowestCouponPrice | couponInfo.couponList 中各券 discount、quota、有效期 | PLUS 价是否混进返回；lowestCouponPrice 与自算值是否一致 |
 | pdd | min_group_price | min_normal_price | coupon_discount、coupon_min_order_amount、coupon_start_time、coupon_end_time、coupon_remain_quantity | 单买价与拼单价的差；goods_sign 转链后价格是否变化 |
 
@@ -100,27 +104,58 @@
 
 - 拼多多转链的拼团方式（2026-10-03，功能对照 G-48）：转链固定用单人团，自购与分享相同，不开放给用户设置；参数名与取值按官方接口文档写进 `specs/union/pdd.md`。核对口径（第 1 轮评审后改；原写「卡片的拼单价按单人团的落地页实付单价核对」作废，有券时实付是券后价）：同一 SKU、同样件数与优惠条件下，单人团落地页的实付等于卡片的 final_price_fen（券后价，BR-PRICE-01），落地页给的是单人团还是拼团另行核对（规划/09 CAP-PDD-02 步骤 3）；price_fen、coupon_fen、final_price_fen 三个字段的含义不变。只有核对不一致时，才加多人团的对照实验并回写本条。例：上文 min_group_price=1990、券 300 的商品，通过条件是落地页实付 1690 分（final_price_fen），不是 1990 分。
 
-**异常**：某个字段缺失 → 按 BR-PRICE-01 的数据异常处理，不猜值。
+**淘宝优惠明细的分类**（负责人 2026-10-06 选 B，docs/changes/20261006-淘宝价格取接口到手价扣除会员项.md）
+
+- 依据：联盟接口的预估到手价 final_promotion_price 与优惠明细 final_promotion_path_list 的每一项（promotion_title、promotion_fee、起止时间、promotion_id）。不自己拼凑优惠，不把 more_promotion_list（部分用户可领的店铺关注券、店铺会员券、淘金币等）和 promotion_tag_list 计入任何价格字段。
+- 归类按 promotion_title 做（实测没有可判断「会员专享」的结构化字段，规划/09 CAP-TB-03），名称先做 NFKC 归一并去首尾空白，按以下顺序判定，命中即停。清单都是服务端配置（随配置版本发布，改清单不改代码），默认值取自 2026-10-06 实测出现过的名称：
+  1. 会员专享：名称包含 `price.taobao.member_title_keywords` 中任一词，默认 {88VIP}（只放有实测依据的词）。不计入（加回）。名称只是识别线索；加词前要有该名称只对会员生效的依据（下单页对照或官方说明），并配录制样例（含不该命中的名称）回归。
+  2. 券：名称等于 `price.taobao.coupon_titles` 中任一项，默认 {商品券, 店铺券}。
+  3. 平台立减：名称等于 `price.taobao.discount_titles` 中任一项，默认 {百亿补贴, 秒杀直降, 限时补贴, 限时优惠, 满元减, 满件折}。
+  4. 未识别：以上都不命中。每次出现记告警 PRICE_PROMO_UNKNOWN（带名称，不带商品信息），由运营判断后加进清单。怎么计价由开关 `price.taobao.unknown_promo` 决定：`unavailable`（默认，该商品按价格异常处理，不出价）/ `add_back`（不计入，同会员项一样加回）/ `count`（按负责人 B「其他优惠照单全收」的字面计入，归为平台立减）。默认取 `unavailable`：分类不明时不出价，既不会把可能只有部分用户享有的优惠算成人人可得，也不会因加回而抬高价格与预估返利；这是代理按「不扩大对用户的承诺、不改变返利口径」定的默认，B 原文没有覆盖清单外名称，待负责人确认，改默认只改配置。2026-10-06 实测样本的名称都在清单里。
+- 有效期：券与平台立减项按 BR-PRICE-01 的时间规则解析起止时间；没给起止时间的项按接口给出即有效。若接口计入的某项在取数时刻已过期或未开始，说明这份明细不可靠：不单独剔除该项（剔除后剩下的组合接口没有确认过），整条按价格异常处理，记 PRICE_CALC_DIFF；open 复核时按 BR-PRICE-13 的复核失败分支。不按最大面额另选券，接口给出的券全部计入。
+- 计算（以接口到手价为基准）：final_price_fen = final_promotion_price + 会员专享项合计（`add_back` 时再加未识别项合计）；coupon_fen = 券项合计；price_fen = final_price_fen + coupon_fen。核对通过时 price_fen 恰好等于 zk_final_price − 平台立减合计（`count` 时含未识别项），所以券前价扣了立减、券只含券，BR-PRICE-01 的恒等式成立，券前价、券两个展示名（BR-PRICE-04、BR-PRICE-05）名实相符。
+- 核对与异常（按顺序判，命中即停）：以下任一情况按 BR-PRICE-01 的价格异常处理（检索不出卡，主动查询出 price_unavailable 卡，不显示任何金额），并记 PRICE_CALC_DIFF，不用部分明细拼出价格：① zk_final_price 或 final_promotion_price 缺失或解析失败；② 明细里任一项 promotion_fee 缺失或解析失败（不能当 0 参与求和），或任一券项缺 promotion_id（2026-10-06 实测券项都有），或任一项起止时间格式非法；③ 明细非空，但 zk_final_price − 全部明细合计 ≠ final_promotion_price；④ 明细为空（或没有该字段），但 final_promotion_price ≠ zk_final_price；⑤ 算出的价格触发 BR-PRICE-01 的异常条件。明细列表为空与没有该字段同样处理：两价相等时 price_fen = zk_final_price，coupon_fen = 0。
+- 降级开关 `price.taobao.basis`：`promotion_path`（默认，即上述做法）/ `coupon_only`。`coupon_only` 是只扣券的降级口径，不是 B 的分支：price_fen = zk_final_price，coupon_fen = 接口明细里的券项合计，不计任何平台立减，异常判定同上。它与 2026-10-06 前「按单件门槛选最大一张券」的旧规则不完全相同（升级版接口没有结构化门槛，旧规则无法原样恢复；两张券都可用时旧规则只扣一张，本口径扣两张）。切换会改变对外显示的价格口径，须负责人同意（规划/00 §8 第 ② 类），也不能用来让 BR-PRICE-02 的下单页对照通过。
+- 报价快照与「原券」（BR-PRICE-12、BR-PRICE-13、BR-PRICE-14）：淘宝 quoted_coupon_fen 存 coupon_fen；quoted_coupon_id 存各张券的 promotion_id 按字典序升序、以英文逗号连接的串（字段形状不变；券项缺 ID 已按上文作价格异常，所以不需要按面额比对）。淘宝判断「报价是否变化」时，除 final_price_fen 外还比较券 ID 串与 coupon_fen：任一不同都视同 new ≠ old，按 BR-PRICE-12 新建快照、不复用旧快照，open 返回 new_link_id（券增加或券换了而券后价没变时也一样）。open 复核时，快照里任一个 ID 不在复核结果的券项里，即判原券不可用（coupon_gone），即使券后价没变；卡片换成新快照，用户确认后再点不再重复弹窗。复核结果里接口仍计入已失效的券时，按上文「有效期」作价格异常，不按 BR-PRICE-14「券过期按无券重算」处理。
+- 单件口径：明细里的券、满元减、满件折是否都按购买 1 件给出，待 BR-PRICE-02 的下单页对照实测；实测前按接口明细计入，不自己判断门槛，promotion_desc 只作展示参考。预售商品仍按 BR-PRICE-22（拿不到总价不出价）。
+- 价格区间与有券筛选：淘宝物料搜索的 start_price / end_price 比较的是 zk_final_price（规划/09 CAP-TB-03 实测），按券后价筛选的做法只按 BR-PRICE-15；has_coupon 只作粗筛，「有券」以 coupon_fen > 0 为准。
+- 淘宝对照样本（BR-PRICE-02 正文的对照条件，淘宝另加）：20 个样本里，明细含平台立减（百亿补贴、秒杀直降、限时类）≥5 个，明细含会员专享项 ≥3 个（无会员账号下单页应比预估到手价高出该项金额），含满元减或满件折 ≥2 个，同时含商品券与店铺券 ≥1 个；按商品 ID 打开、领不到券的路径（BR-ATTR-27「当前购买路径领不到券」）≥2 个，核对这时的无券价（含立减）在下单页是否成立；几类可与有券、无券样本重叠。秒杀、限时类会过期，下单页截图与接口调用间隔不超过 5 分钟，超过的样本作废重取。
+
+**例**（淘宝，金额为分，报价时刻各项都在有效期内，除注明者外）
+
+| zk_final_price | 优惠明细 | final_promotion_price | price_fen | coupon_fen | final_price_fen | 说明 |
+|---|---|---|---|---|---|---|
+| 3990 | 商品券 500、百亿补贴 1000、88VIP9.5折 125 | 2365 | 2990 | 500 | 2490 | 加回会员项 125 |
+| 3990 | 店铺券 300、某个清单外的名称 200 | 3490 | — | — | — | `unavailable`（默认）：价格异常，记 PRICE_PROMO_UNKNOWN；`add_back` 时为 3990 / 300 / 3690；`count` 时为 3790 / 300 / 3490 |
+| 3990 | 秒杀直降 800 | 3190 | 3190 | 0 | 3190 | 无券，显示售价 |
+| 3990 | 商品券 500（已过期） | 3490 | — | — | — | 明细不可靠，价格异常，记 PRICE_CALC_DIFF |
+| 3990 | 商品券 500 | 3390（与 3490 不符） | — | — | — | 价格异常，记 PRICE_CALC_DIFF |
+| 3990 | （空） | 3990 | 3990 | 0 | 3990 | |
+| 3990 | （空） | 3490 | — | — | — | 价格异常（明细为空但两价不等） |
+
+**异常**：京东、拼多多的必需字段缺失 → 按 BR-PRICE-01 的数据异常处理，不猜值；淘宝哪些缺失算异常、哪些可缺，只按上文「核对与异常」与「有效期」。
 
 **对照失败示例**：20 个中 1 个下单页 2890、final 2990 → 不通过，记录原因（如跨店满减被自动勾选或字段映射错误），修正后 20 个重测。
 
 #### BR-PRICE-03 细则 · 运费与平台外优惠不计入
 
 - 状态：默认假设
-- 默认值：不含运费、不含下单页优惠；详情与分享常驻全文，列表每屏底部一次 + 单卡 i 图标；不估算运费
+- 默认值：不含运费、会员价与接口未计入的下单页优惠（淘宝明细里全员可享的券与立减计入，2026-10-06）；详情与分享常驻全文，列表每屏底部一次 + 单卡 i 图标；不估算运费
 - 决策人：负责人
 - 依赖平台能力：三平台是否返回包邮 / 运费字段（待实测）
 - 取代：
+  - 本条原写（2026-10-06 前）：「也不得包含只在下单页才生效的优惠，包括 88VIP 价、京东 PLUS 价、淘金币抵扣、跨店满减、店铺会员价、平台红包和补贴满减、第三方淘礼金」，price_basis 原文「券后价按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准」——淘宝优惠明细里的满元减可能就是跨店满减，计入后再写「不含跨店满减」会说错，改为只点名会员价（docs/changes/20261006-淘宝价格取接口到手价扣除会员项.md）
   - PRD v2.1 §10.19 通用规则：「订阅提醒价格口径为联盟券后价，不含 88VIP、跨店满减、淘金币（未说明运费）」
 - 来源：PRD v2.1 §10.19；PRD v2.1 §10.6.1 第四步；规划/04 §8.3（未定义运费）；PRD修订_后端功能规划 §2.3 搜索（未定义运费）
 - 需同步修改的规划文档：3 处（计数仅作记录，落点见 README §0.6）
 
 - **例 1**：券后价 2990，下单页运费 600 → 卡片显示 ¥29.9，口径说明注明不含运费；不做任何提示或校正。
 - **例 2**：券后价 2990，88VIP 用户在下单页看到 2690 → 卡片仍显示 ¥29.9；这不算价格变动，不触发 BR-PRICE-13。
+- **例 2a**（淘宝，2026-10-06）：折扣价 39.9 元，优惠明细里有百亿补贴 10 元、商品券 5 元 → 卡片「券后 ¥24.9」，副行「券前 ¥29.9 · 券 ¥5」；百亿补贴已计入券前价，不单独显示为券。
 - **例 3**：Agent 返回 5 张卡 → 列表底部一行口径说明，每张卡右上角一个 i 图标。
 - 包邮标识的字段是否可用，待 BR-PRICE-02 实测；拿不到时不显示「包邮」，也不显示「不包邮」。
 - 降价提醒同样用这个口径，见 BR-WATCH-03。
-- **无券商品与混排列表的口径说明**（2026-10-06 代理用 Jev 判断，按 规划/11 §7.1；Jev 置信度 0.83；规划/06「设计方向第三轮待确认」第 7 项，docs/changes/20261006-待确认事项整批确认与交由Jev判断.md §9）：price_basis 的「券后价按单件计算…」只用于有券商品（coupon_fen > 0）。无券商品（只显示售价，BR-PRICE-04）用不含「券后」的通用句，键 `price_basis.general`（代理取名），默认文案「价格按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准」，登记在 BR-TEXT-14 表 C；口径与正文相同，只是不写「券后」。
+- **无券商品与混排列表的口径说明**（2026-10-06 代理用 Jev 判断，按 规划/11 §7.1；Jev 置信度 0.83；规划/06「设计方向第三轮待确认」第 7 项，docs/changes/20261006-待确认事项整批确认与交由Jev判断.md §9）：price_basis 的「券后价按单件计算…」只用于有券商品（coupon_fen > 0）。无券商品（只显示售价，BR-PRICE-04）用不含「券后」的通用句，键 `price_basis.general`（代理取名），默认文案「价格按单件计算，不含运费及会员价等优惠，以下单页为准」（2026-10-06 随 price_basis 去掉「跨店满减」，docs/changes/20261006-淘宝价格取接口到手价扣除会员项.md），登记在 BR-TEXT-14 表 C；口径与正文相同，只是不写「券后」。
   - 服务端按卡片下发：有券卡的 disclaimer_keys 放 price_basis，无券卡放 price_basis.general，位置与排序同 BR-PRICE-17。
   - 列表底部那一句全文（搜索列表、首页物料流、热销榜、Agent 卡片流）：列表里的卡全是有券卡时用 price_basis；只要有无券卡（含有券无券混排）就用 price_basis.general。客户端按各卡下发的 disclaimer_keys 判断，不自己判断有没有券。
   - 详情页、分享海报、分享中间页按该商品有没有券取对应的一句。
@@ -148,7 +183,7 @@
 #### BR-PRICE-05 细则 · 价格术语统一
 
 - 状态：默认假设
-- 默认值：统一用「券后价」，无券用「售价」；返利短标签只用「预估返」；界面不用「到手价」
+- 默认值：统一用「券后价」，无券用「售价」；返利短标签只用「预估返」；界面不用「到手价」（2026-10-06 淘宝口径改为计入平台立减后仍不改，理由见本细则末条）
 - 决策人：负责人
 - 依赖平台能力：无
 - 取代：
@@ -166,6 +201,8 @@
 | 返 ¥x、约返、可返（各处草稿） | 预估返 ¥x |
 
 代码字段名保持不变（final_price_fen 等）。sort 的枚举值 final_price_asc 保持不变，显示文案为「券后价从低到高」。
+
+- **淘宝计入平台立减后仍叫「券后价」**（2026-10-06，docs/changes/20261006-淘宝价格取接口到手价扣除会员项.md）：淘宝的平台立减计入 price_fen（券前价）而不计入 coupon_fen（BR-PRICE-02「淘宝优惠明细的分类」），所以「券后 = 券前 − 券」在字面上仍然成立，「券前 ¥x · 券 ¥y」也不会把百亿补贴写成券。不改叫「到手价」：一是 final_price_fen 仍不含运费、会员价和接口没有计入的下单页优惠，叫「到手价」会让用户以为就是实付；二是保持「券后价」不需要改界面、排序文案、价格走势、分享海报与禁用词，影响最小。三个平台用同一套术语，京东、拼多多的口径以后变化时同样适用。
 
 #### BR-PRICE-06 细则 · 预估返利计算口径
 
@@ -394,6 +431,7 @@
 - **例**：搜索时某商品券已过期、佣金 >0 → 出卡「售价 ¥39.9 · 预估返 ¥x」。
 - 规划/01 J3 步骤 2「过滤券失效」按本条理解为「失效券不计入券额」：否则无券商品能出卡、券过期的同一类商品却被过滤，前后不一致。
 - 转链熔断或复核失败时的处理见 BR-PRICE-13。
+- 淘宝（2026-10-06）：快照怎么存多张券、「原券」怎么逐张比对、券变了而券后价没变时怎么换快照、报文仍计入已失效券时按价格异常（优先于本条「券过期按无券重算」），只在 BR-PRICE-02 细则「淘宝优惠明细的分类」维护。
 - 淘宝按 item_id 打开领不到券（BR-ATTR-27 淘宝行说明「当前购买路径领不到券」，2026-10-06）不是本条的 coupon_gone：判定看的是本次下发的打开路径能不能领到券，不看联盟侧的券是否仍有效；价格按无券价重算、返利按无券价预估、话术说明「这次打开方式领不到券」，都按 BR-ATTR-27 那一项，不返回 availability=coupon_gone，也不用「券已失效」「这个券已领完」。
 - 错误码：30142 废弃后码值不回收、不复用；BR-TEXT-14 话术表中的 30142 行随之删除；本条所用码号（30141、30602、50303）以规划/04 §7 与第 13 节错误码表为准。按 C-03 默认处理，待负责人确认（码号分配代理可自定）。
 
@@ -554,7 +592,7 @@
     - 【已由 C-22 处理，默认处理，已由负责人确认 2026-09-30（财务知悉）】BR-PRICE-07 / BR-PRICE-09 与 BR-CALC-16：取不到比价佣金率时，本主题用占位 compare_rate_ratio_bp 展示区间，BR-CALC-16 不展示金额。处理：下单前比价展示只按 BR-PRICE-07（区间，不另显示保守值，不改为不展示金额）；BR-CALC-16 只保留订单侧计算。
     - 【已由 C-29 处理】BR-PRICE-06 与 BR-CALC-06 / 第 13 节映射表：比例字段名 r_self_bp（映射表「保留规划写法」）与 r_own_bp（BR-CALC-06）。处理：统一为 commission_rules 列名 r_own_bp、r_direct_bp，r_self / r_self_bp 只作别名。
     - 【已由负责人 2026-10-01 接受 BR-PRICE-15 口径（拍板第二批 AI-14），BR-AI-05 随之修正】BR-PRICE-15 与 BR-AI-05：「再便宜点」上限公式（min(上一轮上限, 已展示最低价 − 1) 还是 结果集最低价 − 1）。
-    - 【已消解】BR-PRICE-01 / BR-PRICE-19 与 BR-WATCH-03 细则：平台直接返回的券后价是否可直接取用。BR-WATCH-03 细则已写明一律按 BR-PRICE-01 自算、进白名单前平台券后价字段只存原始报文，两处一致；BR-PRICE-19 已改为指向 BR-WATCH-03 的指针。
+    - 【已消解】BR-PRICE-01 / BR-PRICE-19 与 BR-WATCH-03 细则：平台直接返回的券后价是否可直接取用。BR-WATCH-03 细则已写明一律按 BR-PRICE-01 自算、进白名单前平台券后价字段只存原始报文，两处一致；BR-PRICE-19 已改为指向 BR-WATCH-03 的指针。（2026-10-06 起淘宝例外：预估到手价按 BR-PRICE-02 作计算基准，两处同步写明。）
     - 【已消解：BR-TEXT-13 清单已含「返利最高」「最高返」「原价」】BR-PRICE-18 与 BR-TEXT-13：禁用词清单与匹配规则两处维护；本条已改为只列价格类词、匹配规则归 BR-TEXT-13，BR-TEXT-13 需补入「返利最高」「最高返」「原价」。
 15. 预售商品的预售标识、定金、尾款与总价字段，以及 price_fen 默认字段在预售期的口径：待 CAP-TB-02、CAP-JD-02、CAP-PDD-02 实测（BR-PRICE-22）；拼多多直链开关 pdd.direct_convert.enabled 依赖 CAP-PDD-01 zs.unit.url.gen 权限（BR-PRICE-08）。
 16. 拼多多比价预判（BR-PRICE-07、BR-PRICE-08、BR-PRICE-13，2026-10-03）：预判字段的含义与取数身份、时延与配额占用、比价单在订单接口的表现待 CAP-PDD-04；开关 rebate.pdd.compare_precheck.enabled 在此之前保持关闭。是否另显示「如果不是比价可返 ¥x」由负责人定（功能对照 Q-05，默认不显示）。
