@@ -14,6 +14,8 @@
 
 2026-10-05 比价说明与界面默认项（docs/changes/20261005-比价说明与界面默认项.md §1，负责人 2026-10-05 确认「这些是公允的规则……请把规划明确禁止写这类等待时长建议移除掉」）：BR-PRICE-07 细则「拼多多的比价预判」删去「不给等待建议」，改为比价说明文章可以转述平台官方公开的避免做法（写法约束在 BR-TEXT-03「比价说明入口」）；假设金额仍不显示，开关默认关与 CAP-PDD-04 前提不变。BR-PRICE-08 细则「无返利原因」的弹窗加「查看说明」入口。状态不变。
 
+2026-10-06（docs/changes/20261006-待确认事项整批确认与交由Jev判断.md §9、§10）：BR-PRICE-03 细则补「无券商品与混排列表的口径说明」（新键 price_basis.general，代理用 Jev 判断，规划/06「设计方向第三轮待确认」第 7 项），BR-PRICE-17 正文的 disclaimer_keys 与海报口径说明随之改一句；BR-PRICE-14 细则加一句：淘宝按 item_id 打开领不到券不是 coupon_gone（BR-ATTR-27「当前购买路径领不到券」）。状态不变，没有新增条目。
+
 ### 3.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -34,7 +36,7 @@
 | BR-PRICE-14 | **点击时下架或券失效**<br>open 复核发现商品下架时，返回 30141，不外跳；卡片置灰（availability=off_shelf），显示「商品已下架」；Agent 场景追加「换一批」。coupon_gone 只在 open 复核时判定：快照中 quoted_coupon_fen > 0，而复核时原券不可用（平台给券 ID 时按 ID 比对，否则按面额、门槛、结束时间三项比对）。此时商品仍可购买的，返回 200，availability=coupon_gone，new_final_price_fen 按 BR-PRICE-01 用当前可用的券重算（可能有更小的新券，也可能无券），并且不论价差是否达到阈值，都必须弹窗「券已失效：¥旧 → ¥新，继续购买？」；Agent 场景追加「这个券已领完」并提供「换一批」。多种情况同时成立时优先级为 off_shelf > coupon_gone > price_changed；coupon_gone 同时返利归零时，在券失效弹窗里追加「当前暂无返利」。淘礼金卡（cta 为 claim_tlj 或 claim_tlj_and_buy）点击时淘礼金领完，复用 30602（淘礼金已抢光），不外跳；30142 标为废弃，不再返回。检索结果里已下架的商品不出卡；券已过期或领完的商品按 coupon_fen=0 重算后照常出卡（属于「无券有返」，只要仍有返利），只在 has_coupon 等权益筛选时排除。 | 默认假设 | 错误码 30141、30142（废弃）、30602；POST /v1/links/{link_id}/open；product_card.availability；links.quoted_coupon_fen / quoted_coupon_id；客户端购买弹窗、Agent notice 卡；GET /v1/products/search、Agent 检索过滤；验收：下架、券失效（无新券 / 有新券）、淘礼金领完、多情况并存优先级、检索时过期券照常出卡用例 |
 | BR-PRICE-15 | **价格筛选与排序口径**<br>price_min_fen / price_max_fen 必须与 final_price_fen 比较，且都含边界（final ≥ min 且 final ≤ max）。服务端校验 0 &lt; 值 ≤ 10,000,000（单位分，即 ¥0.01–¥100000，两端含），且 min ≤ max（相等合法），否则返回参数错误 20001。向上游只透传 price_min_fen 作为券前价下限（券前价 ≥ 券后价，不会漏召回），不透传上限；上限过滤与 sort=final_price_asc 由服务端对本次拉取的结果执行，只保证当页内有序，相同价格按相关性排序；「返利从高到低」同样只对本页结果按预估返下限（rebate_min_fen）降序排，不请求联盟按返利排序（拍板第二批 TRADE-20）。搜索接口 GET /v1/products/search 提供 price_min_fen / price_max_fen 参数（拍板第二批 TRADE-20）。搜索无结果时展示该平台首页物料流的前 10 个商品，不按类目推荐（拍板第二批 TRADE-20）。用户说「50 以内」，就换算成 price_max_fen=5000。「再便宜点」：price_max_fen = min(上一轮 price_max_fen, 上一轮已展示卡片的最低 final_price_fen − 1)，并设 sort=final_price_asc；「上一轮已展示卡片」不含被过滤掉的商品；计算结果 &lt; 1 时不再检索，保留原结果集，由服务端固定文案回复「没有找到比当前结果更便宜的商品」。筛选只以检索时刻的联盟价为准；之后价格变化不回溯剔除卡片（由 BR-PRICE-13 在点击时处理）。 | 已确认 | GET /v1/products/search 参数与校验（补 price_min_fen / price_max_fen）；搜索无结果推荐（该平台物料流前 10 个）；Agent search_products 参数；Agent 固定回复文案键；验收 AF-04、「再便宜点」用例、min>max 用例、最低 1 分边界用例 |
 | BR-PRICE-16 | **金额唯一来源**<br>价格、券、返利字段（price_fen、coupon_fen、final_price_fen、rebate_\*、est_net_price_fen）必须来自服务端对联盟接口（搜索、详情、转链、口令解析）的返回，或来自其有效期内的缓存或商品池刷新值（BR-PRICE-11），再经 UnionAdapter 和 quoteRebate 计算，由 CardAssembler 或接口下发；不得来自用户粘贴的文本、素材、网页抓取或模型生成。唯一例外是 BR-PRICE-10 的 material.claimed_price_fen：它只作为用户素材的回显，必须带「素材参考价」标签和条件，是否合规以 BR-PRICE-10 的法务结论为准。模型的回复文本里不得出现金额、链接、口令（BR-AI）。每个带金额的卡片或接口对象，都必须带 quoted_at、source 和 disclaimer_keys。source 枚举为 taobao_union、jd_union、pdd_union，与数据来自实时接口、缓存还是商品池无关；是否为缓存降级数据另用 stale 表示。 | 已确认 | CardAssembler；UnionAdapter；Agent 输出过滤；product_card.quoted_at / source / disclaimer_keys / stale；商品池后台（不开放手工改价）；验收：粘贴文案价格不进入价格字段 |
-| BR-PRICE-17 | **金额显示格式与口径说明**<br>金额字符串格式只按 BR-TEXT-10（去末尾 0，如 2990 → ¥29.9；区间 en dash；min=max=0 显示「暂无返利」）。客户端只做格式化，不做计算。product_card.disclaimer_keys 为数组，服务端按以下规则下发并排序：凡展示券后价或售价，先放 price_basis（BR-PRICE-03）；rebate_basis=normal 时加 rebate_estimate；rebate_basis=price_compare_risk 时加 rebate_compare（不再加 rebate_estimate）；素材卡最后加 material_ref（BR-PRICE-10）。客户端按数组顺序拼接显示，呈现位置见 BR-PRICE-03。文案由配置中心按 key 下发（F-CFG-06），不得写死在客户端或模板里；默认文案：rebate_estimate「预估返利以平台结算为准，未结算或订单失效时不返」，rebate_compare「以结算为准」。分享海报和分享文案印「券后 ¥x · MM-DD 取价」（x 取生成时刻的 final_price_fen，无券时为「售价 ¥x」），并附 price_basis 文案；不显示任何返利金额（BR-PRICE-06）。 | 默认假设 | product_card.disclaimer_keys（由 disclaimer_key 改为数组）；前端组件 PriceTag / RebateTag（格式化工具）；配置中心文案键 price_basis / rebate_estimate / rebate_compare / material_ref；分享海报模板、分享文案模板（F-SHARE-01/02）；验收：金额格式快照；各场景 disclaimer_keys 组合 |
+| BR-PRICE-17 | **金额显示格式与口径说明**<br>金额字符串格式只按 BR-TEXT-10（去末尾 0，如 2990 → ¥29.9；区间 en dash；min=max=0 显示「暂无返利」）。客户端只做格式化，不做计算。product_card.disclaimer_keys 为数组，服务端按以下规则下发并排序：凡展示券后价或售价，先放价格口径说明：有券放 price_basis，无券（只显示售价）放 price_basis.general（BR-PRICE-03 及细则「无券商品与混排列表的口径说明」，2026-10-06）；rebate_basis=normal 时加 rebate_estimate；rebate_basis=price_compare_risk 时加 rebate_compare（不再加 rebate_estimate）；素材卡最后加 material_ref（BR-PRICE-10）。客户端按数组顺序拼接显示，呈现位置见 BR-PRICE-03。文案由配置中心按 key 下发（F-CFG-06），不得写死在客户端或模板里；默认文案：rebate_estimate「预估返利以平台结算为准，未结算或订单失效时不返」，rebate_compare「以结算为准」。分享海报和分享文案印「券后 ¥x · MM-DD 取价」（x 取生成时刻的 final_price_fen，无券时为「售价 ¥x」），并附价格口径说明（有券 price_basis，无券 price_basis.general）；不显示任何返利金额（BR-PRICE-06）。 | 默认假设 | product_card.disclaimer_keys（由 disclaimer_key 改为数组）；前端组件 PriceTag / RebateTag（格式化工具）；配置中心文案键 price_basis / price_basis.general（2026-10-06）/ rebate_estimate / rebate_compare / material_ref；分享海报模板、分享文案模板（F-SHARE-01/02）；验收：金额格式快照；各场景 disclaimer_keys 组合 |
 | BR-PRICE-18 | **价格与返利禁止用语**<br>禁用词的总清单（specs/banned-words.yaml）、匹配方式（字段白名单、NFKC 归一后子串匹配）、适用范围与检查点（CI 扫描、后台保存校验）只由 BR-TEXT-13 维护，本条不另定匹配与扫描规则；Agent 输出过滤见 BR-AI。本条只规定价格与返利类用词必须收录进该清单、以及如何改写：(1) 必须收录：全网最低、历史最低、最便宜、最高返利、稳赚、必返（规划/01 F-PRIV-09 已定）；最低价（BR-TEXT-13 已收录）；返利最高、最高返、原价（按默认启用上线，拍板第二批 TRADE-18；法务意见出来后改词典；BR-TEXT-13 尚未收录，由合稿并入；「原价」随 BR-PRICE-04 一并调整）。清单外的「最低」「最高」「新低」单独出现不算命中，是否扩充由法务决定。(2) 卖点表述不用「比价」「全网最低」（「比价」的字段白名单见 BR-TEXT-13）。(3) 用户自己输入的内容（如「返利最高的」）不受限制，但模型回复要改写为「按返利从高到低」；排序选项显示名用「返利从高到低」「券后价从低到高」。 | 已确认 | specs/banned-words.yaml 词条（清单、匹配与扫描规则归 BR-TEXT-13）；后台模板保存校验；Agent 输出过滤词库；分享文案与海报模板；推送模板；客服话术库；验收：禁用词扫描通过 |
 | BR-PRICE-19 | **降价提醒监控的价格口径**<br>降价提醒监控 final_price_fen（按 BR-PRICE-01 自算的券后价），细则只在 BR-WATCH-03 维护，本条不另写口径；状态随 BR-WATCH-03。 | 待验证 | 见 BR-WATCH-03 |
 | BR-PRICE-20 | **点击复核的价格新鲜度窗口**<br>link.open.requote_after_sec 决定 open 时是否可以不实时取价。默认 0：每次 open 都实时调用转链或详情接口取价（规划/01 J3、F-AGENT-08，规划/02 §9.2）。若负责人改为 N > 0（候选 300）：该 link 的 quoted_at 的 age ≤ N 时，用 quoted_final_price_fen 作为 new（不再有预转链价格，拍板第二批 TRADE-03），转链仍实时进行；否则实时取价。无论取值如何，old 始终取 quoted_final_price_fen，转链链接缓存（≤900 秒，BR-PRICE-13）与价格新鲜度分开计算。 | 已确认 | POST /v1/links/{link_id}/open 取价逻辑；links.quoted_at；配置 link.open.requote_after_sec；联盟调用量与配额监控；验收：N=0 时每次点击都调用联盟；N>0 时窗口内不调用 |
@@ -118,6 +120,12 @@
 - **例 3**：Agent 返回 5 张卡 → 列表底部一行口径说明，每张卡右上角一个 i 图标。
 - 包邮标识的字段是否可用，待 BR-PRICE-02 实测；拿不到时不显示「包邮」，也不显示「不包邮」。
 - 降价提醒同样用这个口径，见 BR-WATCH-03。
+- **无券商品与混排列表的口径说明**（2026-10-06 代理用 Jev 判断，按 规划/11 §7.1；Jev 置信度 0.83；规划/06「设计方向第三轮待确认」第 7 项，docs/changes/20261006-待确认事项整批确认与交由Jev判断.md §9）：price_basis 的「券后价按单件计算…」只用于有券商品（coupon_fen > 0）。无券商品（只显示售价，BR-PRICE-04）用不含「券后」的通用句，键 `price_basis.general`（代理取名），默认文案「价格按单件计算，不含运费及会员价、跨店满减等优惠，以下单页为准」，登记在 BR-TEXT-14 表 C；口径与正文相同，只是不写「券后」。
+  - 服务端按卡片下发：有券卡的 disclaimer_keys 放 price_basis，无券卡放 price_basis.general，位置与排序同 BR-PRICE-17。
+  - 列表底部那一句全文（搜索列表、首页物料流、热销榜、Agent 卡片流）：列表里的卡全是有券卡时用 price_basis；只要有无券卡（含有券无券混排）就用 price_basis.general。客户端按各卡下发的 disclaimer_keys 判断，不自己判断有没有券。
+  - 详情页、分享海报、分享中间页按该商品有没有券取对应的一句。
+  - 例：首页物料流 6 张卡，5 张有券、1 张无券 → 底部一行显示「价格按单件计算…」；有券卡的 i 图标展开「券后价按单件计算…」，无券卡的 i 图标展开「价格按单件计算…」。
+  - 正文「凡是展示券后价的地方，disclaimer_keys 都必须包含 price_basis」不变；无券商品不展示券后价，所以不受它约束。
 
 #### BR-PRICE-04 细则 · 券前价与售价标签
 
@@ -386,6 +394,7 @@
 - **例**：搜索时某商品券已过期、佣金 >0 → 出卡「售价 ¥39.9 · 预估返 ¥x」。
 - 规划/01 J3 步骤 2「过滤券失效」按本条理解为「失效券不计入券额」：否则无券商品能出卡、券过期的同一类商品却被过滤，前后不一致。
 - 转链熔断或复核失败时的处理见 BR-PRICE-13。
+- 淘宝按 item_id 打开领不到券（BR-ATTR-27 淘宝行说明「当前购买路径领不到券」，2026-10-06）不是本条的 coupon_gone：判定看的是本次下发的打开路径能不能领到券，不看联盟侧的券是否仍有效；价格按无券价重算、返利按无券价预估、话术说明「这次打开方式领不到券」，都按 BR-ATTR-27 那一项，不返回 availability=coupon_gone，也不用「券已失效」「这个券已领完」。
 - 错误码：30142 废弃后码值不回收、不复用；BR-TEXT-14 话术表中的 30142 行随之删除；本条所用码号（30141、30602、50303）以规划/04 §7 与第 13 节错误码表为准。按 C-03 默认处理，待负责人确认（码号分配代理可自定）。
 
 #### BR-PRICE-15 细则 · 价格筛选与排序口径
