@@ -68,7 +68,7 @@ pr: null
 | 字段 | 说明 |
 | --- | --- |
 | `state` | `ready` / `spec` / `doing` / `verify` / `review` / `longrun` / `pr` / `blocked` / `ask` / `stale` |
-| `attempts` | 按阶段分开的已用次数：`test`（Codex 写测试）、`impl`（Opus 实现）、`impl_fallback`（换家实现）、`spec_review`、`code_review`；派发前加一（规划/11 §2.5） |
+| `attempts` | 按阶段分开的已用次数：`test`（写测试，默认 Codex）、`impl`（主实现，默认 Opus）、`impl_fallback`（换家实现）、`spec_review`、`code_review`；派发前加一（规划/11 §2.5）。规划/11 §1.1 例外的子任务里 `test` 是 Claude、`impl` 是 Codex，执行者以 `runs` 的代理为准 |
 | `opus_failures` | Opus 无产出、超时、容量错误的次数（连续与累计各记一个数）；连续 3 次或累计 5 次即按规划/11 §2.5 换家，RV2 则 `blocked` |
 | `runs` | 每次运行的阶段、代理（`codex` / `claude`）、模型、起止时间、结果文件路径；验证运行另记 `mode`（`container` / `ci` / `host`） |
 | `spec_commit` | 规则测试提交号；此后规则测试不得改动 |
