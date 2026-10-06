@@ -54,6 +54,8 @@
 
 2026-10-06（docs/changes/20261006-待确认事项整批确认与交由Jev判断.md §3、§9、§10）：BR-TEXT-14 表 C 新增 `price_basis.general`（无券商品与混排列表的价格口径说明，代理取名）与「淘宝本次打开方式领不到券·确认弹窗」（键名待补）两行，`btn.buy.rebate_suffix` 行改注为已确认；BR-TEXT-20 细则「分享页文案」补离开分享页即丢弃编辑、不弹窗；BR-TEXT-21 细则补 AI 助手报表的「成交」口径；BR-TEXT-01 细则补风控冻结时提现按钮不置灰的指针。状态不变，没有新增条目。
 
+2026-10-06 剩余旧标注处理（docs/changes/20261006-待确认事项整批确认与交由Jev判断.md §14；00 §8 第 ① 类同步，原需负责人确认的默认按 规划/11 §7.1 交 Jev 判断）：BR-TEXT-14 表 B `50304.rank_unavailable` 文案、表 C「收藏」行按默认确认，「热销榜·说明」行改注负责人 2026-10-05 已确认；表 C 新增 `price_trend.title.general`、`price_trend.source.general`（无券商品的价格走势标题与说明，代理取名）；50301 data.reason 与 C-03 改注代理自定（00 §9），G-04 改注负责人 2026-09-30 已确认。状态不变，没有新增条目与错误码。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -827,7 +829,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 50301.maintenance | {platform_name}维护中，请稍后再试 | 该平台维护中，请稍后再试 | 购买按钮置灰「稍后再试」；Toast 显示文案 |
 | 50301.not_launched | {platform_name}返利即将开放 | 该平台返利即将开放 | 卡片购买按钮置灰并显示该文案（即 platform_coming_soon），不弹 Toast |
 | 50304.search_disabled | {platform_name}暂不提供搜索，可以粘贴商品链接查返利 | 该平台暂不提供搜索，可以粘贴商品链接查返利 | 该平台搜索开关关闭（BR-PROD-10 细则「按平台的搜索开关」，2026-10-03 功能对照 G-47）；不显示重试按钮，给【粘贴链接查返利】；三家都关闭时搜索页用同一句（{platform_name} 缺省按包内默认）；Agent 用 BR-TEXT-22 的 agent.notice.search_disabled |
-| 50304.rank_unavailable | {platform_name}热销榜暂不可用 | 热销榜暂不可用 | 该平台没有合规的热销频道或榜单暂取不到（规划/01 F-PROD-13、规划/04 `GET /v1/rank/hot`；2026-10-05，docs/changes/20261005-分享赚与范围调整.md §3；reason 名是代理补全的默认，负责人 2026-10-05 确认；文案是代理补全的默认，待负责人确认） |
+| 50304.rank_unavailable | {platform_name}热销榜暂不可用 | 热销榜暂不可用 | 该平台没有合规的热销频道或榜单暂取不到（规划/01 F-PROD-13、规划/04 `GET /v1/rank/hot`；2026-10-05，docs/changes/20261005-分享赚与范围调整.md §3；reason 名是代理补全的默认，负责人 2026-10-05 确认；文案是代理补全的默认，已确认：2026-10-06 代理按 规划/11 §7.1 用 Jev 判断，置信度 0.80） |
 
 **表 C · 降级场景文案**（非错误码）
 
@@ -929,7 +931,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 分享面板·复制 share.copy_full / share.copy_tpwd_only / share.copy_link_only | 复制完整文案｜只复制淘口令｜只复制链接 | 第二个只在淘宝商品出现，第三个用于京东、拼多多；淘宝取不到推广链接或口令时都不出现（BR-ATTR-10 细则；规划/01 F-SHARE-08，2026-10-03 功能对照 G-83，下同） |
 | 分享面板·复制后 share.copied / share.open_wechat | 已复制，可以打开微信粘贴给好友｜打开微信 | 复制成功后提示；【打开微信】经微信 SDK 打开，本机没有微信时不显示按钮，提示改用表 C 的 share.wechat_unavailable |
 | 分享面板·保存图片 share.save_images / share.saved | 保存图片｜已保存 {n} 张图片到相册 | 海报与商品主图可多选后一次保存；{n} 为成功保存的张数；首次保存的权限说明按表 D |
-| 分享页·预估推广收益 share.est_promo（2026-10-05，docs/changes/20261005-分享赚与范围调整.md §1；本行起至「热销榜·说明」各行的键名与措辞是代理补全的默认：分享页与分享赚入口页各行负责人 2026-10-05 确认（规划/06「分享赚与范围调整待确认」第 2 项），「收藏」「热销榜·说明」两行仍待负责人确认） | 预估推广收益 {amount}｜以平台结算为准 | 只在 `ProductShare` 给分享者本人看，{amount} 取 `POST /v1/shares` 返回的 share 报价，按 BR-TEXT-10 格式化（区间按区间写法）；金额为 0 或拿不到时整行不显示；不进分享文案、海报、中间页（BR-PRICE-06）；用户界面不出现「佣金」 |
+| 分享页·预估推广收益 share.est_promo（2026-10-05，docs/changes/20261005-分享赚与范围调整.md §1；本行起至「热销榜·说明」各行的键名与措辞是代理补全的默认：分享页与分享赚入口页各行负责人 2026-10-05 确认（规划/06「分享赚与范围调整待确认」第 2 项），「热销榜·说明」行的措辞负责人 2026-10-05 确认（docs/changes/20261004-设计方向第三轮.md §7 A），键名代理自定（00 §9）；「收藏」行已确认（2026-10-06 代理按 规划/11 §7.1 用 Jev 判断，置信度 0.70）） | 预估推广收益 {amount}｜以平台结算为准 | 只在 `ProductShare` 给分享者本人看，{amount} 取 `POST /v1/shares` 返回的 share 报价，按 BR-TEXT-10 格式化（区间按区间写法）；金额为 0 或拿不到时整行不显示；不进分享文案、海报、中间页（BR-PRICE-06）；用户界面不出现「佣金」 |
 | 分享页·包含项 share.include.title / .price / .sale_price / .pre_coupon / .coupon / .tpwd / .link | 标题｜券后价｜售价｜券前价｜券面额｜下单口令｜下单链接 | 文案区的勾选项；`.tpwd` 只在淘宝出现，`.link` 用于京东、拼多多（淘宝另有链接时也可出现）；口令与链接都没勾时复制按钮置灰（BR-TEXT-20 细则「分享页文案」）。价格类勾选项按商品实际返回的字段出现（负责人 2026-10-05 确认，docs/changes/20261005-分享文案字段与后台改会员信息.md §1）：有券时 `.price`、`.pre_coupon`、`.coupon`；无券时只有 `.sale_price`（代替 `.price`）；拼多多的标签按 BR-PRICE-04 加「拼单」 |
 | 分享页·文案操作 share.copy_text / share.copy_text.regen_confirm / share.system_share | 复制文案｜会重新生成文案，你的修改不保留｜分享 | 第二句在用户编辑过文案后再改勾选项时弹出，【确定】【取消】沿用通用按钮键；【分享】调起系统分享面板 |
 | 分享页·生成失败 share.generate_failed / share.retry | 分享链接生成失败，请稍后重试｜重试 | `POST /v1/shares` 失败且不是授权类错误时；授权类错误（30101、30111）按表 A 走授权引导；淘宝取不到推广链接或口令时按表 A 对应码，不出复制与分享按钮 |
@@ -937,6 +939,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 收藏 favorite.add / .added / .removed / .invalid / favorites.empty | 收藏｜已收藏｜已取消收藏｜已失效｜还没有收藏的商品 | 收藏夹已满用表 B 的 20001.favorites_full；商品详情底栏与收藏夹（规划/01 F-PROD-12，docs/changes/20261005-分享赚与范围调整.md §3） |
 | 热销榜·说明 rank.notice / rank.sales.tb / rank.sales.neutral | 名次与销量来自平台，按平台返回的顺序排列｜近 30 天销量 {sales}｜销量（以平台返回为准）{sales} | `HotRankList` 顶部说明与卡片销量行；{sales} 原样显示接口返回值，接口没有该字段时整行不显示（规划/01 F-PROD-13；docs/changes/20261004-设计方向第三轮.md §7 A） |
 | 价格走势 price_trend.title / .source / .empty | 近 30 天券后价｜凑狸记录的券后价｜暂无价格记录 | 商品详情折叠模块（规划/01 F-PROD-14，docs/changes/20261005-分享赚与范围调整.md §3、§4）；摘要句只用 BR-TEXT-13 细则「降价表述」的法务确认前模板；不出现「历史最低」「史低」「全网最低」「最低」 |
+| 价格走势·无券商品 price_trend.title.general / price_trend.source.general（代理取名；2026-10-06 代理按 规划/11 §7.1 用 Jev 判断，置信度 0.96） | 近 30 天价格｜凑狸记录的价格 | 详情报价不含券的商品用这两句代替 price_trend.title / .source，不出现「券后」（BR-PRICE-04；口径同 price_basis.general，规划/06「设计方向第三轮待确认」第 7 项）；空状态仍用 price_trend.empty（规划/01 F-PROD-14 ①） |
 | 第三方页容器加载失败 external_page.load_failed / external_page.retry / external_page.close | 页面打不开，请检查网络后重试｜重试｜关闭 | `ExternalWebView` 主框架连不上、域名解析失败、超时或证书错误被取消时的原生错误页；不显示出错的完整 URL；网站自己返回的 4xx、5xx 页面照常显示（规划/03 §5.1，2026-10-03 功能对照 G-82） |
 | 设置页·清除缓存 settings.clear_cache / .size / .confirm / .confirm_ok / .confirm_cancel / .done | 清除缓存｜{size}｜只清除图片和网页缓存，不会退出登录，也不会清除你的设置｜清除｜取消｜已清除 | {size} 为图片与 WebView 缓存的合计，按 KB / MB 取整显示；点【清除缓存】先出确认框；不清的内容见规划/03 §4.3（2026-10-03 功能对照 G-89）；游客（已同意、未登录）的设置页同样显示（BR-ID-02 细则，2026-10-05） |
 | 设置页·退出登录 settings.logout / .confirm / .confirm_ok / .confirm_cancel（2026-10-05，docs/changes/20261005-比价说明与界面默认项.md §2） | 退出登录｜确定退出登录？｜退出登录｜取消 | 只在已登录时显示；点【退出登录】先出确认框，点 .confirm_ok 才退出（退出的处理按规划/01 F-ACC-05），点 .confirm_cancel 或关闭确认框不退出 |
@@ -988,7 +991,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 例：京东转链开关关闭（原因 maintenance）→ 接口返回 50301、data.reason=maintenance → Toast「京东维护中，请稍后再试」，卡片按钮变灰显示「稍后再试」。拼多多因备案互斥或权限未批保持关闭（原因 not_launched）→ 50301、data.reason=not_launched → 不弹 Toast，卡片按钮置灰显示「拼多多返利即将开放」。trace_id 以 …c3d4e5 结尾 → 显示「（c3d4e5）」；trace_id=abc → 显示「（abc）」。30416 且 data.amount_fen=500 →「账户有待扣回金额 ¥5，抵扣回正后才能注销」。30303 reason=below_min、rules 返回最低 100 分 →「单笔最低提现 ¥1」；rules 未返回该值 →「提现金额低于单笔最低金额」。
 
-- 50301 的 data.reason（新增，默认处理，待负责人确认）：maintenance = 维护或熔断（运营临时关闭、转链熔断）；not_launched = 该平台权限未批、验证未通过或备案互斥等尚未放量的关闭。服务端按配置 convert.off_reason.&lt;platform> ∈ {maintenance, not_launched}（新增，默认 maintenance）填写，熔断触发的关闭一律 maintenance；50301 仍只用于 convert.enabled.&lt;platform> 关闭（BR-PRICE-13）。需同步：13 §13.11 与 规划/04 §7 的 50301 行加 data.reason，04 §10.2 加 convert.off_reason.&lt;platform>，10 AC-S1-28-PDD 断言 reason=not_launched 与「即将开放」文案（AC-S1-15 保持 maintenance）。
+- 50301 的 data.reason（新增，默认处理，代理自定：00 §9，BR-TEXT-14 决策人为代理可自定）：maintenance = 维护或熔断（运营临时关闭、转链熔断）；not_launched = 该平台权限未批、验证未通过或备案互斥等尚未放量的关闭。服务端按配置 convert.off_reason.&lt;platform> ∈ {maintenance, not_launched}（新增，默认 maintenance）填写，熔断触发的关闭一律 maintenance；50301 仍只用于 convert.enabled.&lt;platform> 关闭（BR-PRICE-13）。需同步：13 §13.11 与 规划/04 §7 的 50301 行加 data.reason，04 §10.2 加 convert.off_reason.&lt;platform>，10 AC-S1-28-PDD 断言 reason=not_launched 与「即将开放」文案（AC-S1-15 保持 maintenance）。
 - 文案来源一律为字典 error.&lt;code> / error.&lt;code>.&lt;reason>（BR-TEXT-12）；13 §13.11「客户端动作」列中「显示服务端 msg」的码，文案同样取本表 error.&lt;code>，需同步把该列改为「取 error.&lt;code>」。服务端返回的 msg 由同一份 contracts/texts.default.json 生成，与包内默认一致，只在客户端没有该键时显示。
 - 规则正文中已写的提示句（BR-ID-17 的 30104、30153，BR-PRICE-13 的 50303 按钮，BR-PROD-05 的 30143 等）以本表为文案唯一维护处，措辞不一致时以本表为准，来源条目只保留判定与动作。
 
@@ -998,7 +1001,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 30142 原行「这个券已领完｜展示当前价」已删除：码值废弃后不回收、不复用；客户端收到 30142（旧版本服务端）按表 A「表外码」行处理（显示服务端 msg）。
 - 44001 在本表只指风控拦截；更换手机号开关关闭改用 30414（BR-ID-06），不走 risk_msg。
 - 30152 随取消用户自助换绑废弃（拍板第二批 §8 ADD-01），原行「暂不能换绑，{available_at} 后可再次换绑」已删除；客户端收到 30152（旧版本服务端）按表 A「表外码」行处理。
-- 外跳与未安装降级（G-04）：路径（平台 × 端 × 已装/未装的首选与降级）以 BR-ATTR-27 为准，本表只维护按钮与提示文案；每条路径在对应 CAP-\*-11 验证通过前是条件项，不得对外承诺；只有点击时才外跳（BR-ATTR-21）。「淘宝未安装」原文案「口令已复制，打开淘宝即可领券」已取代（09 A-27：未安装时该提示无法继续）；CAP-TB-11 证实 H5 下单保留归因时改为系统浏览器打开 H5，不出该提示。默认处理，待负责人确认。
+- 外跳与未安装降级（G-04）：路径（平台 × 端 × 已装/未装的首选与降级）以 BR-ATTR-27 为准，本表只维护按钮与提示文案；每条路径在对应 CAP-\*-11 验证通过前是条件项，不得对外承诺；只有点击时才外跳（BR-ATTR-21）。「淘宝未安装」原文案「口令已复制，打开淘宝即可领券」已取代（09 A-27：未安装时该提示无法继续）；CAP-TB-11 证实 H5 下单保留归因时改为系统浏览器打开 H5，不出该提示。默认处理，负责人 2026-09-30 确认（规划/10 §6.1 G-04）。
 - 待跟单卡（G-05）：显示与消失条件只按 BR-ATTR-21，找回入口出现条件只按 BR-ATTR-17，本表不复述时长；CAP-\*-07 实测前同步延迟不写具体分钟数。默认处理，待运营（BR-ATTR-21 决策人）确认。
 - 平台能力降级文案（G-06，代理已定）：platform_coming_soon、platform_no_rebate、claim_required、no_rebate_hint 沿用 规划/09 CAP-TB-05、CAP-TB-07、CAP-JD-05、CAP-MT-05「不支持时怎么办」列原措辞；pdd.parse_failed、rebate_amount_unknown、spec_min_price_note 取自 CAP-PDD-01 降级列，其中「多规格商品显示最低规格价，以拼多多下单页所选规格为准」统一为 BR-PROD-04 写法「规格以下单页为准」+「¥x 起」。只换维护位置；09 该列只描述行为，以键名引用本表（需同步：09 CAP-PDD-01 降级列改引用这三个键）。platform_coming_soon 只由 50301 data.reason=not_launched 触发（见上）。
 - rebate_amount_unknown（已确认，拍板第二批 TRADE-08：启用「可返利，金额以订单为准」，经 links/open 转链带用户参数，不显示金额）：卡片状态「可返利但金额未知」对应 rebate_basis=amount_unknown（rebate_min_fen、rebate_max_fen 为 null）；本表只维护文案，判定条件只在 BR-PRICE-08 维护。需同步：04 §8.3 rebate_basis 取值加 amount_unknown，BR-PRICE-08 补判定条件（如 CAP-PDD-01 拿不到 goods_sign、经 zs.unit.url.gen 转链成功），BR-PRICE-21 三态补该取值的归属。
@@ -1010,7 +1013,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 2026-10-03 功能对照补缺第 3 批新增（docs/changes/20261003-功能对照补缺.md「第 3 批」；代理按 13 §13.11 的分配规则取号，已同步 13 §13.11 与 规划/04 §7）：10405「客户端版本低于最低支持版本」（功能对照 G-24）。表 C 新增未安装微信时登录、分享、客服的三个文案键与客服提示里的两个按钮键（功能对照 G-31）、更新提示的两个按钮键（功能对照 G-24），为代理起草的默认措辞，可在字典中改，不改用途。新增表 D「隐私与权限文案」（功能对照 G-26），键名与用途已定，文案由法务定稿（规划/06 Q-F14）。第 2 轮评审后表 C 加强更页的三个次要入口键（app_update.privacy_policy、app_update.delete_account、app_update.cancel_deletion），为代理起草的默认措辞，可在字典中改，不改用途。第 3 轮评审后表 B 加子键 10403.h5_read_only、10405.no_account（没有新增码，已同步 13 §13.11 与 规划/04 §7），同样是代理起草的默认措辞。
 
-按 C-03 默认处理，待负责人确认。新增码 30415、50304 与 20001.nickname_sensitive、30411.mergeable 子键（2026-10-01 拍板第二批 OPS-13、TRADE-12、OPS-04），以及 30416（§8 ADD-07）与 30101 / 30102 的 auth_unavailable 子键（§8 ADD-02；文案与按钮按 §8 ADD-08 改为「淘宝暂时无法下单，请稍后再试」、只给【知道了】）需同步 13 §13.11 与 规划/04 §7；码号与枚举改名（admin_unbind → admin_disable 等）由代理自定，负责人 2026-10-01 接受。
+按 C-03 默认处理，代理自定（00 §9）。新增码 30415、50304 与 20001.nickname_sensitive、30411.mergeable 子键（2026-10-01 拍板第二批 OPS-13、TRADE-12、OPS-04），以及 30416（§8 ADD-07）与 30101 / 30102 的 auth_unavailable 子键（§8 ADD-02；文案与按钮按 §8 ADD-08 改为「淘宝暂时无法下单，请稍后再试」、只给【知道了】）需同步 13 §13.11 与 规划/04 §7；码号与枚举改名（admin_unbind → admin_disable 等）由代理自定，负责人 2026-10-01 接受。
 
 #### BR-TEXT-15 细则 · 淘礼金卡片如实话术
 
@@ -1387,7 +1390,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 17. 已关闭（C-25，负责人 2026-09-30 决定，变更记录 §3：有收益的都要推送）：ORDER_TRACKED 的对象、触发、合并与去重只在 BR-TEXT-09 维护；跟单与收益通知发给该子订单全部份额 > 0 的受益人（归属用户、直推上级、间推上级），上级通知只含金额与状态（J7 隐私）；去重键 {order_key}:{uid}:{role}:TRACKED（BR-FUND-05）；BR-FUND-03 推送段引用 BR-TEXT-09。取代原默认「直推上级不推」。
 18. 已关闭（C-19）：withdrawn_fen 由 BR-FUND-18 提供，钱包首页展示已提现（BR-TEXT-01）。
 19. BR-TEXT-21 中 UNION_SETTLED、UNION_RECEIVED 的刷新周期取决于各联盟结算明细可取得频率（规划/09 待实测）。
-20. BR-TEXT-14 新增 50301 data.reason（maintenance / not_launched）与配置 convert.off_reason.&lt;platform>，需同步 13 §13.11、规划/04 §7 与 §10.2、10 AC-S1-28-PDD；新增 rebate_basis=amount_unknown 需同步 04 §8.3、BR-PRICE-08、BR-PRICE-21（启用已由拍板第二批 TRADE-08 确认）；13 §13.11「显示服务端 msg」改为「取 error.&lt;code>」。50301 data.reason 为默认处理，待负责人确认。
+20. BR-TEXT-14 新增 50301 data.reason（maintenance / not_launched）与配置 convert.off_reason.&lt;platform>，需同步 13 §13.11、规划/04 §7 与 §10.2、10 AC-S1-28-PDD；新增 rebate_basis=amount_unknown 需同步 04 §8.3、BR-PRICE-08、BR-PRICE-21（启用已由拍板第二批 TRADE-08 确认）；13 §13.11「显示服务端 msg」改为「取 error.&lt;code>」。50301 data.reason 为默认处理，代理自定（00 §9，BR-TEXT-14 决策人为代理可自定）。
 21. 上级（直推、间推）跟单与收益通知属交易类，不计入 BR-WATCH-15 订阅类每日推送上限；下线较多的上级每日可能收到较多「邀请」类推送。已关闭（负责人 2026-10-03，docs/changes/20261003-拍板第三批.md §1）：不改为日汇总，跟单通知越快越好，合并窗口缩短为 notify.tracked_merge_window_seconds（BR-TEXT-09）；邀请类每日上限不设，之后如有打扰投诉由运营再提。
 22. 用户侧「已结算」与 platform_status=SETTLED（联盟已结算）不同：联盟已结算、我方尚未核对入账期间用户仍看到「预估返」。WAITING、CREDITING 的派生条件（改按 BR-FUND-04 ⑪ credit_overdue）与钱包预计结算月份字段已随 BR-FUND-04 月结改写同步：BR-FUND-17 第 10、12 行，BR-FUND-18 next_credit_period、estimated_total_fen（拍板第二批 FUND-01；BR-TEXT-01、BR-TEXT-02、BR-TEXT-04 已按此改）。
 23. Agent 固定话术（BR-TEXT-22）为代理起草（拍板第二批 AI-21），待负责人过目后改为已确认；新增码 30415、50304 由代理自定、负责人 2026-10-01 接受，规划/04 §7 已登记，待 13 §13.11 登记。
