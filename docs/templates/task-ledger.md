@@ -21,7 +21,7 @@
 | `deps` | 是 | 任务编号列表，可空 | 全部 `done` 才就绪 |
 | `paths` | 是 | glob 列表 | 实现阶段允许改动的路径；与在途任务相交则不派发 |
 | `test_paths` | 有测试作者时必填 | glob 列表，只能在保护路径第一类之内（`test/{spec,acceptance,properties,replay}/**` 等） | 测试阶段允许写的测试资产路径（规划/11 §2.3 第 2、3 步）；`tester: none` 时不填 |
-| `impl` | 是 | `claude` / `codex` | 主实现。默认 `claude`（Claude Opus 5.5 子代理，规划/11 §1.1）；`codex` 只用于 RV0 / RV1 超限换家（规划/11 §2.5） |
+| `impl` | 是 | `claude` / `codex` | 主实现。默认 `claude`（Claude Opus 5.5 子代理，规划/11 §1.1）；`codex` 用于 RV0 / RV1 超限换家（规划/11 §2.5），以及 规划/11 §1.1「例外：改由 Codex 实现的任务」所列子任务（此时 `tester: claude`） |
 | `tester` | 是 | `codex` / `claude` / `none` | 规则 / 验收测试作者。有测试作者的默认 `codex`（实现前先写、先红）；不需要规则测试的任务（文档、台账等）保持 `none`；三端的快照与模拟器冒烟随同线写；资金与归属必须与 `impl` 不同。2026-10-05 前入账的任务按真实作者记（规划/11 §1.1 过渡规则） |
 | `accept` | 是 | 命令或测试 ID 列表 | 完成判定 |
 | `status` | 是 | `todo` / `done` | |
