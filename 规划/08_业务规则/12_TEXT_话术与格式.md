@@ -1410,10 +1410,10 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 - 格式：SVG，或边长不小于 512px 的透明底 PNG；单张不超过 200KB（配置键 `content.platform_icon.max_bytes`，默认 204800）。
 - SVG 清洗分两步，先保真转换、再按白名单清洗：
-  1. 转换：文档内的 `<use href="#id">`（含 `xlink:href`）展开成被引用元素的副本（带上 `x`、`y` 换算的变换），引用链有循环或指向外部的整份拒收；`style` 属性与 `<style>` 元素里的声明（只认简单的元素、类、id 选择器）改写成同名表现属性（`fill`、`stroke`、`stroke-width`、`stroke-linecap`、`stroke-linejoin`、`stroke-miterlimit`、`stroke-dasharray`、`opacity`、`fill-opacity`、`stroke-opacity`、`fill-rule`、`clip-rule`、`stop-color`、`stop-opacity`、`transform`）；出现上述以外的声明、复杂选择器、`@` 规则，或值里有本文档片段以外的 `url(...)`，无法保真改写的整份拒收，后台提示「请换一份不含样式表或外部引用的官方 SVG，或改传 PNG」。
+  1. 转换：文档内的 `<use href="#id">`（含 `xlink:href`）展开成被引用元素的副本（带上 `x`、`y` 换算的变换），引用链有循环或指向外部的整份拒收；展开边复制边计数，累计元素超过 5000、引用嵌套超过 8 层、转换产物超过上传大小上限的 4 倍或转换耗时超过 2 秒，立即停止并整份拒收（不先生成完整副本再检查；均为代理补全的默认）；`style` 属性与 `<style>` 元素里的声明（只认简单的元素、类、id 选择器）改写成同名表现属性（`fill`、`stroke`、`stroke-width`、`stroke-linecap`、`stroke-linejoin`、`stroke-miterlimit`、`stroke-dasharray`、`opacity`、`fill-opacity`、`stroke-opacity`、`fill-rule`、`clip-rule`、`stop-color`、`stop-opacity`、`transform`）；出现上述以外的声明、复杂选择器、`@` 规则，或值里有本文档片段以外的 `url(...)`，无法保真改写的整份拒收，后台提示「请换一份不含样式表或外部引用的官方 SVG，或改传 PNG」。
   2. 白名单清洗：只保留绘图元素（`svg`、`g`、`path`、`rect`、`circle`、`ellipse`、`line`、`polyline`、`polygon`、`defs`、`linearGradient`、`radialGradient`、`stop`、`clipPath`、`mask`、`title`、`desc`）与它们的几何、填充、描边、变换属性；其余元素一律删除（含 `script`、`style`、`foreignObject`、`image`、已展开后的 `use`、`a`、`animate` / `set` 等动画元素、`font` 类元素），`on*` 事件属性与 `style` 属性删除。所有属性值里的地址引用（`href`、`xlink:href`、任何 `url(...)`，含 `fill`、`stroke`、`clip-path`、`mask`、`filter` 等表现属性）解析并规范化后只允许本文档内片段 `#id`，其余引用删除所在属性。
 - 清洗后与原件不同的，后台显示「已清除不安全内容」并让操作人确认预览后再保存；不能解析的文件拒收。
-- 显示上下文：后台预览与客户端都只把清洗后的文件当图片显示（H5 与后台用 `<img>`，原生用图片解码库），不内联进页面 DOM，不用 `<object>` / `<iframe>`；验收含：一张带外部 `url(...)` 与脚本的 SVG，清洗后渲染时不发出任何外部请求；一张用文档内 `use` 与样式类着色的正常 SVG，清洗前后在 16、24、32px 下逐像素比对无差异（允许抗锯齿误差）。
+- 显示上下文：后台预览与客户端都只把清洗后的文件当图片显示（H5 与后台用 `<img>`，原生用图片解码库），不内联进页面 DOM，不用 `<object>` / `<iframe>`；验收含：一张带外部 `url(...)` 与脚本的 SVG，清洗后渲染时不发出任何外部请求；一张用文档内 `use` 与样式类着色的正常 SVG，清洗前后在 16、24、32px 下逐像素比对无差异（允许抗锯齿误差）；一张无循环但层层成倍引用的 SVG（如 30 层、每层引用上一层两次），在上限内被拒收，转换进程内存与耗时不超出上述上限。
 - 必填登记：来源页地址（官方品牌或素材下载页）与下载日期；缺任一项只能存草稿，不能发布。标注「仅限签约商户」「不得公开分发」的素材不上传（公开 CDN 可读）。
 - 预览：浅色与深色底上的 16、24、32px 三档，旁边并排显示内置图，便于核对没有变形、裁切或改色。
 - 发布与回滚：按平台各自出版本，发布即生效（不分灰度）；可回滚到任一历史版本，或「恢复内置」（下发里去掉该键）。发布、回滚、恢复内置都写审计。
