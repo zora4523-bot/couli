@@ -34,7 +34,7 @@ PNG 导出宽度均为 2048 px。SVG 图形与中文字标均为路径，无字�
 
 导出示例（安装了 librsvg 时）：`rsvg-convert -w 2048 source/logo-horizontal.svg -o export/logo-horizontal.png`。也可在支持 SVG 的矢量编辑器中等比导出透明 PNG。
 
-品牌展示标题「聪明找好物，优惠看得清。」是本次提案文案，不修改 [名称与 Slogan](../brand/name.md) 中的正式待定状态；`COULI` 仅作项目拼音标注，不确定 Bundle ID 或商店英文名。
+品牌展示标题「聪明找好物，优惠看得清。」是本次提案文案，不修改 [名称与 Slogan](../brand/name.md) 中 Slogan 的待定状态；英文名已定为 Couli（2026-10-06），`COULI` 是它的大写字标写法。
 
 ## 本轮对照
 

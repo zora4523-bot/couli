@@ -4,7 +4,7 @@ window.COULI_BRAND = Object.freeze({
   "identity": {
     "name": "凑狸",
     "projectId": "couli",
-    "englishName": null,
+    "englishName": "Couli",
     "tagline": null
   },
   "metadata": {
