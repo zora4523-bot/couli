@@ -320,7 +320,7 @@ VOID、CLAWED_BACK 是终态：订单同步等自动事件不得让订单离开�
 | SB2 | DRAFT | 确认 | 有权限者 step-up；定时须晚于确认时刻，且不落在资产快照的名义时段内（时段取值见 BR-FUND-18） | CONFIRMED | 记 confirmed_by、confirmed_at、settle_mode |
 | SB3 | CONFIRMED | 撤销定时 | 定时结算且尚未开始执行 | DRAFT | |
 | SB4 | DRAFT | 驳回 | step-up，必填原因 | CANCELLED（终态） | 批内订单保持 WAITING |
-| SB5 | CONFIRMED | 开始执行 | 已到执行时刻；当日资产快照已完成或已超时（BR-FUND-18）；settle.auto.enabled 与该平台 credit.enabled 都为 on；该批次没有「因开关为 off 停住」的标记（到执行时刻因开关为 off 未开始时写入；持久化由契约线定；上线前没有存量批次） | EXECUTING | 快照没完成就等，不执行；带停住标记的只能走 SB10 |
+| SB5 | CONFIRMED | 开始执行 | 已到执行时刻；当日资产快照已完成或已超时（BR-FUND-18）；settle.auto.enabled 与该平台 credit.enabled 都为 on；该批次没有「因开关为 off 停住」的标记（到执行时刻因开关为 off 未开始时写入，先于快照是否完成的判断，快照未完成时也写；持久化由契约线定；上线前没有存量批次） | EXECUTING | 快照没完成就等，不执行；带停住标记的只能走 SB10 |
 | SB6 | EXECUTING | 明细全部处理完 | — | DONE（终态） | |
 | SB7 | EXECUTING | 开关被关闭 | — | PARTIAL | 已入账的保持，未处理的保持 WAITING |
 | SB8 | PARTIAL | 继续执行 | step-up；两个开关都为 on | EXECUTING | |
