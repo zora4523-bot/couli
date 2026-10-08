@@ -285,11 +285,11 @@ INSERT … ON CONFLICT (app_id, product_key) DO UPDATE SET …
 | raw 映射 | product_refs（数据库表，不是缓存） | ≤1800 s（BR-PROD-05） | — |
 | 转链 | `convert:{app_id}:{user_id}:{platform}:{product_key}:{pid_scene}` | ≤900 s | 900 s |
 
-`union_request_params` 指实际发给联盟的全部业务参数，包括 norm(q)、sort、has_coupon、start_price_fen / end_price_fen、spec、cat、is_tmall、material_id、page_no、page_size 等，按 key 排序后序列化；不含 adzone_id/pid、relation_id、user_id、device_id、search_session_id。`norm(q)` = NFKC、去掉首尾空白、连续空白合并为一个、转小写。`filter_cfg_version` 是搜索过滤配置（最低佣金、禁售类目等）的版本号，配置一变更缓存即自然失效。
+`union_request_params` 指实际发给联盟的全部业务参数，包括 norm(q)、sort、has_coupon、start_price_fen（价格下限；上限不透传联盟，BR-PRICE-15）、spec、cat、is_tmall、material_id、page_no、page_size 等，按 key 排序后序列化；不含 adzone_id/pid、relation_id、user_id、device_id、search_session_id。`norm(q)` = NFKC、去掉首尾空白、连续空白合并为一个、转小写。`filter_cfg_version` 是搜索过滤配置（最低佣金、禁售类目等）的版本号，配置一变更缓存即自然失效。
 
-**游标**：我方游标只携带 search_session_id 与 page_no（BR-PROD-08）；服务端先换算成联盟的 page_no，再组键查缓存。
+**游标**：我方游标只携带 search_session_id 与 page_no（BR-PROD-08）；服务端先换算成联盟的 page_no，再组键查缓存。page_no 上限 100：到上限的那一页不再下发 next_cursor，has_more 仍按联盟返回（代理自定的技术取值，2026-10-08 代码仓库 B1-05g）。
 
-**例子**：10:00:00.000 用户 A 搜“纯牛奶”（淘宝、综合排序、无价格区间），结果写入缓存；10:04:59 用户 B 用相同参数搜索，命中；10:05:00.000 仍命中（正好 300 秒）；10:05:00.001 未命中，重查联盟。用户 B 加上“50 元以内”后，end_price_fen=5000 进入键，不会命中 A 的条目。A 等级 V1、B 等级 V3，两人的预估返利各自实时计算。
+**例子**：10:00:00.000 用户 A 搜“纯牛奶”（淘宝、综合排序、无价格区间），结果写入缓存；10:04:59 用户 B 用相同参数搜索，命中；10:05:00.000 仍命中（正好 300 秒）；10:05:00.001 未命中，重查联盟。用户 B 加上“50 元以内”后，上限不透传联盟（BR-PRICE-15），联盟参数与 A 相同，命中 A 的条目，再由服务端按 final_price_fen ≤ 5000 过滤；若 B 加的是“20 元以上”，start_price_fen=2000 进入键，不会命中 A 的条目。A 等级 V1、B 等级 V3，两人的预估返利各自实时计算。
 
 **熔断降级**
 | 情形 | 返回 | App 表现 |
