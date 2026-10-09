@@ -21,7 +21,7 @@ ADR-0001 把 staging 与 prod 的 PostgreSQL 定为阿里云 RDS（高可用 + 1
 
 | 项 | 决定 | 版本线 | 说明 |
 | --- | --- | --- | --- |
-| PostgreSQL（staging、prod） | Pigsty 管理的集群，跑在阿里云 ECS 上 | Pigsty 4.5.x，首装 v4.5.0（2026-08-14 发布）；PostgreSQL 18，小版本以该版离线包为准 | 用离线包安装，不在线跟随上游软件源（文档强烈建议生产这样做）；升级先 staging 后 prod；已部署环境不重跑 `deploy.yml`。退版预案不变：staging 验证发现 PG 18 的离线包或 pgvector 有问题时退 PG 17（ADR-0001 §2），不改代码 |
+| PostgreSQL（staging、prod） | Pigsty 管理的集群，跑在云 ECS 上（本文以阿里云为默认；staging 实测节点由负责人在火山引擎采购，见 §10；prod 云厂商未定，换云时补 ADR，2026-10-09 回写） | Pigsty 4.5.x，首装 v4.5.0（2026-08-14 发布）；PostgreSQL 18，小版本以该版离线包为准 | 用离线包安装，不在线跟随上游软件源（文档强烈建议生产这样做）；升级先 staging 后 prod；已部署环境不重跑 `deploy.yml`。退版预案不变：staging 验证发现 PG 18 的离线包或 pgvector 有问题时退 PG 17（ADR-0001 §2），不改代码 |
 | 操作系统 | Ubuntu 24.04 LTS，x86_64；同一集群各节点同版本，全新系统 | — | Pigsty 的验证基线之一；离线包绑定系统小版本，ECS 镜像要对得上（§10） |
 | PostgreSQL（local、test、CI） | 不变：`pgvector/pgvector:0.8.6-pg18-trixie` 容器 | 同 ADR-0001 | Pigsty 需要 Linux 节点，不进开发机和 CI。大版本与云上一致，小版本允许不同 |
 | 扩展清单 | 业务用到的扩展只由迁移里的 `CREATE EXTENSION` 建；云上版本须与本地镜像一致（现为 pgvector 0.8.6） | — | Pigsty 预置的 `monitor` schema 和约 15 个扩展是运维对象，不进 `db/schema.sql`；快照与漂移比对只针对由迁移重建的库（ADR-0001 §4.2 第 13 项不变） |
