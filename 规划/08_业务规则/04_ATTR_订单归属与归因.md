@@ -797,7 +797,8 @@ C-05 已由负责人决定（拍板第二批 §8 ADD-01）：一次绑定永久�
 
 - 任一平台在某端全部路径丢归因 → 该端隐藏该平台购买按钮，显示“本设备暂不支持{platform_name}返利”（BR-TEXT-14），其他端不受影响。
 - **淘宝行说明（2026-10-03，实现方案，docs/changes/20261003-淘宝转链改客户端百川.md）**：
-  - pid、relationId 由服务端按 BR-ATTR-05 构造后写进指令，客户端不改不补。百川 5.x 已取消 adzoneId + appkey 方式，只用 pid（09 2_TB §2.5）。
+  - pid、relationId 由服务端按 BR-ATTR-05 构造后写进指令，客户端不改不补。
+  - 百川 SDK「未装淘宝时默认引导下载」必须关闭：进商店或下载页只能由用户点击触发；未装导致 sdk 步骤失败时按一步失败处理、继续执行 fallbacks（03 §4.5）；关闭后的实际行为以 CAP-TB-11 实测为准（2026-10-14，`docs/changes/20261014-问一问深挖更正.md`）。百川 5.x 已取消 adzoneId + appkey 方式，只用 pid（09 2_TB §2.5）。
   - 「我方推广链接」只取联盟基础 API（物料搜索升级版等）在带本次快照 user 的 relation_id、并以该 pid_scene 推广位调用时返回的链接（coupon_share_url 优先，其次 click_url），随 link 登记；不跨用户、不跨推广位复用；实际有效期未核实前按 BR-ATTR-13 ② 的 W_link 判定，过期后只下发 openByCode。
   - 任何 s.click / uland 链接（包括我方推广链接）用 openByUrl 打开时都不传 pid（SDK 不支持二次转链，09 5_X §5.5）；用户粘贴的原链接、口令一律不交给百川打开，也不当作返利链接（BR-PRICE-21），只用于解析出 item_id 后走 openByCode。
   - 口令只能由我方推广链接经 `taobao.tbk.tpwd.create` 生成（权限包「淘宝客【公用】淘口令生成」是否自助申请待核）；拿不到时未安装兜底只显示安装提示、不复制口令。
