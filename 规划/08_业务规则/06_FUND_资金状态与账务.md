@@ -114,7 +114,7 @@
 | P7 | SETTLED | 失效（PLATFORM_INVALID） | 不变 | 写 order_rights(type=INVALID_AFTER_SETTLE, status=SUCCEEDED)，settlement 按 BR-FUND-08 处理 |
 | P8 | PAID / RECEIVED / SETTLED | 维权/处罚（PLATFORM_RIGHTS / PLATFORM_PUNISH） | 不变 | 写 order_rights（处罚 type=PUNISH，映射见 BR-FUND-02）；结算前同样只写 order_rights |
 | P9 | INVALID | 平台回传非失效状态（PLATFORM_PAID / PLATFORM_RECEIVED / PLATFORM_SETTLED） | 平台当前状态 | 记 history 并告警；rebate_status 不自动变化，按 BR-FUND-22 |
-| P10 | 任意 | 比当前更早阶段的状态码（倒退；按事件对应的阶段与当前状态比较得出，不是单独的事件） | 不变 | 写待处理表并告警；整条报文不落 orders 的任何列，原始报文留在 union_raw_payloads；待处理表记录与 order_illegal_transition 事件在本次事务内写入并提交（负责人 2026-10-03 资金规则对齐决-12 选 A；开关 order_sync.regression_hold.enabled，默认 on；off 时状态不迁移，报文里的金额、数量、时间、结算记录照常处理） |
+| P10 | 任意 | 比当前更早阶段的状态码（倒退；按事件对应的阶段与当前状态比较得出，不是单独的事件） | 不变 | 写待处理表并告警；整条报文不落 orders 的任何列，原始报文留在 union_raw_payloads；待处理表记录与 order.illegal_transition 事件在本次事务内写入并提交（负责人 2026-10-03 资金规则对齐决-12 选 A；开关 order_sync.regression_hold.enabled，默认 on；off 时状态不迁移，报文里的金额、数量、时间、结算记录照常处理） |
 | P11 | — | 确认收货/完成（PLATFORM_RECEIVED，首次入库即已收货） | RECEIVED | 同一事务补写 →PAID、→RECEIVED 两条 history；received_at 取平台返回的收货时间。缺该时间时按 P2 落 PAID，收货事件进待处理表，不进 WAITING（BR-FUND-02） |
 | P12 | — | 结算（PLATFORM_SETTLED，首次入库即已结算） | SETTLED | 同一事务补写 →PAID、→RECEIVED、→SETTLED 三条 history；received_at 取平台收货时间，缺时取结算时间（同 P5）；结算额写 order_settlements |
 | P13 | — | 失效（PLATFORM_INVALID，首次入库即失效，且有付款时间） | INVALID | 入库，供去重、找回判定与展示；返利状态按 R1 或 R2 入库后同一事务按 R6 置 VOID；不生成快照（BR-CALC-10）。两个付款时间都为空的不入库（BR-ATTR-25） |
@@ -193,7 +193,7 @@ VOID、CLAWED_BACK 是终态：订单同步等自动事件不得让订单离开�
 
 按 C-01 默认处理（采用双状态，其他条目的单一 order_status 与 O 编号按上方两张映射表换算），已由负责人确认 2026-09-30；按 C-03 默认处理（20902 补 data.resource=order），代理自定（00 §9）；按 C-06 默认处理（快照生成时点按 BR-CALC-10、等级与上级取 paid_at），已由负责人确认 2026-09-30。
 
-按 C-27 默认处理：(a) R3a、(b) R14、(c) R3b 状态口径代理已补（按 BR-ATTR-16、20 与 BR-CALC-10 现有写法），已由负责人确认 2026-09-30；(e) 入账守卫 credit_requires_settle 在月结口径下自然满足（BR-FUND-04 边界；月结由负责人 2026-10-01 确认，拍板第二批 FUND-01），不再待定；(g) R9b 负差即时记账与「结算少了立即扣」同一原则，已由负责人确认 2026-10-01（拍板第二批 FUND-11）；2026-10-03 资金规则对齐决-01 选 A 取代：R9b 改为只存档并出差错单，结算额的下调仍按 R10 负差即时扣；(d) R5a、(f) CREDITED 命中黑名单只写 blacklist_hit_after_credit 进人工复核、扣回按 R8 BLACKLIST_CONFIRMED，待财务确认。
+按 C-27 默认处理：(a) R3a、(b) R14、(c) R3b 状态口径代理已补（按 BR-ATTR-16、20 与 BR-CALC-10 现有写法），已由负责人确认 2026-09-30；(e) 入账守卫 credit_requires_settle 在月结口径下自然满足（BR-FUND-04 边界；月结由负责人 2026-10-01 确认，拍板第二批 FUND-01），不再待定；(g) R9b 负差即时记账与「结算少了立即扣」同一原则，已由负责人确认 2026-10-01（拍板第二批 FUND-11）；2026-10-03 资金规则对齐决-01 选 A 取代：R9b 改为只存档并出差错单，结算额的下调仍按 R10 负差即时扣；(d) R5a、(f) CREDITED 命中黑名单只写 order.blacklist_hit_after_credit 进人工复核、扣回按 R8 BLACKLIST_CONFIRMED，待财务确认。
 
 2026-09-30 随 BR-FUND-04 月结口径对齐（变更记录 §3）：R3、R3a、R4 写 settle_period 取代 credit_due_at；R5 事件由 CREDIT_DUE 改为 SETTLE_BATCH_CREDIT；R5a 改为在后续结算批次处理；O3 映射与上方例子同改。双状态模型与迁移表结构不变。同步落点：规划/04 §4 状态机表 4.1 行（order-rebate.yaml R5 事件名、R4 写入字段）；BR-CALC-14、BR-CALC-25 中「CREDIT_DUE」改为 SETTLE_BATCH_CREDIT；05_CALC BR-CALC-13 细则「下一次 00:05 入账任务」。
 
