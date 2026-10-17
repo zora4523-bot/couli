@@ -23,7 +23,7 @@
 | `test_paths` | 有测试作者时必填 | glob 列表，只能在保护路径第一类之内（`test/{spec,acceptance,properties,replay}/**` 等） | 测试阶段允许写的测试资产路径（规划/11 §2.3 第 2、3 步）；`tester: none` 时不填 |
 | `mechanical_paths` | 否（只有 `impl: codex` 的任务能写） | glob 列表，取值只限代码仓库 `tools/guard/codex-impl-tasks.json` 列出的契约与生成物（`contracts/openapi.yaml`、`packages/contracts-ts/src/openapi.gen.ts`、`route-schemas.gen.ts`） | Codex 实现的接口任务里，由 Claude 另一提交做的机械改动（只删该接口的 `x-implementation: planned` 行并重生成生成物；提交信息带 `Couli-Mechanical: contract-codegen`）允许改的文件；`paths` 里仍不得写契约（2026-10-16，rebate-platform approvals 第 31 条） |
 | `reuse` | `impl` / `contract` / `migration` 必填 | 字符串列表；没有可复用项写 `[none]` 并在注释说明 | 本任务必须用的现成库、组件、仓库里已有的端口或原语（来源：05 任务行「开源接入要点」、03 技术栈表与 §9.1、ADR-0001 §2、各模块 `index.ts` 导出）；任务书渲染成「必须复用」小节，自写等价物按 规划/11 §3.1 记 S1（2026-10-09）。**CT-06 复用门禁任务合并前不写本字段**（现有解析器判未知字段），由编排者在任务书里手工补；合并后才必填（规划/11 §2.1「切换步骤」） |
-| `impl` | 是 | `claude` / `codex` | 主实现。默认 `claude`（Claude Opus 5.5 子代理，规划/11 §1.1）；`codex` 用于 RV0 / RV1 超限换家（规划/11 §2.5），以及 规划/11 §1.1「例外：改由 Codex 实现的任务」所列子任务（此时 `tester: claude`） |
+| `impl` | 是 | `claude` / `codex` | 主实现。默认 `claude`（Claude Opus 5.5 子代理，规划/11 §1.1；困难任务由编排指定 Opus 高推理或 Fable 5.1 时仍写 `claude`，模型写注释，2026-10-17）；`codex` 用于 RV0 / RV1 超限换家（规划/11 §2.5），以及 规划/11 §1.1「例外：改由 Codex 实现的任务」所列子任务与 2026-10-16 至 10-17 间已开工的 Codex 任务（此时 `tester: claude`；2026-10-17 起不再新增，代码仓库 `tools/guard/codex-impl-tasks.json` 冻结） |
 | `tester` | 是 | `codex` / `claude` / `none` | 规则 / 验收测试作者。有测试作者的默认 `codex`（实现前先写、先红）；不需要规则测试的任务（文档、台账等）保持 `none`；三端的快照与模拟器冒烟随同线写；资金与归属必须与 `impl` 不同。2026-10-05 前入账的任务按真实作者记（规划/11 §1.1 过渡规则） |
 | `accept` | 是 | 命令或测试 ID 列表 | 完成判定 |
 | `status` | 是 | `todo` / `done` | |
