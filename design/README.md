@@ -30,10 +30,72 @@
 | 12 | 空态、错误态插画 | `illustrations/` | W3（10-25） | 待办 |
 | 13 | 分享海报、邀请海报 | `posters/` | W3（10-25） | 待办 |
 | 14 | 商店上架素材 | `store/` | W7 提审前（11-22） | 待办 |
-| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 待你定稿；草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
-| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 试行中。首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，模板 [page-spec.md](../docs/templates/page-spec.md)，规划/11 §2.6）；其他页面的格式等试行后再定 |
+| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」，规格在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App / H5 页面仍待你定稿，草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
+| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 8 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）与管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
 
 完成一项后，把「状态」改为「已交付」，或者直接告诉 Claude。
+
+## 管理后台第 1 批定稿（2026-10-18）
+
+负责人 2026-10-18 21:3x 定稿：「第 1 批定稿，全部按推荐」。第 1 批 = 管理后台每天用的 7 页：工作台 / 待办中心、顶栏一框搜、用户查询、用户详情、订单查询、订单详情、找回审核。三条按推荐的决定（工作台「未关闭告警」卡本期不做、位置保留；一框搜无命中不区分「没有」与「没权限」；找回通过后归属锁定、误判只能驳回让用户重提）的落点见 [变更记录](../docs/changes/20261018-后台第1批定稿.md)。
+
+- 规格：[admin-dashboard.md](specs/admin-dashboard.md)、[admin-search.md](specs/admin-search.md)、[admin-users.md](specs/admin-users.md)、[admin-user-detail.md](specs/admin-user-detail.md)、[admin-orders.md](specs/admin-orders.md)、[admin-order-detail.md](specs/admin-order-detail.md)、[admin-claims.md](specs/admin-claims.md)。
+- 画板存放：本机运行目录 `couli-runs/design-hifi/project/<文件名>.dc.html`，1 倍 PNG 在 `couli-runs/design-hifi/review-admin/png/`；Codex 对抗审查 3 轮的记录在 `couli-runs/design-hifi/review-admin/review-log.md`。画板与 PNG **不入本公开仓库**，版本以下表 sha256 为准。
+- 入库前核对（2026-10-18，逐张，共 51 张）：样例数据不含真实手机号、证件号与真实个人信息（手机号、身份证只以脱敏样式出现）；风控规则编号、处置与阈值为样例（规格里已标）；平台只以文字标识来源，无平台商标图形。
+
+| 页面 | 画板文件 | sha256 |
+| --- | --- | --- |
+| 工作台 | AdmDashboard.dc.html | `3718723d53238796be2da7871188ba1c05b28a1ac570c394cdf763b236f12d19` |
+| 工作台 | AdmDashboardFinance.dc.html | `fc9ce929aa933c0a2865137e0f06e968ed046f49aa3ed5da4d0d9f5274cfded6` |
+| 工作台 | AdmDashboardStates.dc.html | `fc31a2cac3d9947a75b33abd50dcf850bd9412aa0cdc2535e77f8667c671d7a7` |
+| 工作台 | AdmAdaptDashboard1280.dc.html | `c07d67b2541cd14cdcfcc3b5c0fe949b2cb9ddf71d9bd9cbcfb67f2d2fa82cbb` |
+| 工作台 | AdmHomeNoPerm.dc.html | `57e50047eeae5c1f22b7066e92a4328238787aa5ce88b075d0b98be9fc0ddbee` |
+| 一框搜 | AdmSearchMulti.dc.html | `39ed7d2ee07e7aa6e28b0957d1d6baddd3e57333355cfdb9b507e1f2d847e479` |
+| 一框搜 | AdmSearchNoHit.dc.html | `226c89429f99d3bbf059e4e8b439b31ec868141ef698a48bda1c812026c9caa9` |
+| 用户查询 | AdmUsers.dc.html | `d4329585aec84e0cad02ee4d4d352e7dc839fd0190680b27e2adaea758701bf1` |
+| 用户查询 | AdmUsersStates.dc.html | `480cc63b87daf36d792f0fd9ec2d12276e064a339d523fb2d93a416a4668a42b` |
+| 用户详情 | AdmUserDetail.dc.html | `617be995aeda6445268c63b65fd712aee327fb5fe76d398cac39bc65b8a7808a` |
+| 用户详情 | AdmUserDetailFunds.dc.html | `13bbcdfe35068c6d39a0c50b1c498cfe4f67c0adb4603b2b50f875fae50314ff` |
+| 用户详情 | AdmUserDetailOrders.dc.html | `99fb8d156049cb837cf5f57d57baeedb44977126b0d8d4188348285ff72d9ade` |
+| 用户详情 | AdmUserDetailClaims.dc.html | `0bfa17cdabc22478940cb0d24f5240fc6e4c9e5cad74fd8350cab748a3253556` |
+| 用户详情 | AdmUserDetailWithdrawals.dc.html | `7c60b7911225dee8c3f636258ab0df8a619e6f7856e41c6fedf587b35d9a431c` |
+| 用户详情 | AdmUserDetailWithdrawalsList.dc.html | `60717727c39fdb9c8fb52b826f93699759b3a00fafddcda7de7c0902a689e49e` |
+| 用户详情 | AdmUserDetailTabStates.dc.html | `e1b4965fdc31b5719a075519eb4bb05f53dd3918fadea1bdb52c39f6c7cd4013` |
+| 用户详情 | AdmUserDetailRisk.dc.html | `de99943fd976f50d3be2bc5304d3cf2d08890799d0b59a33de89d67d9a273703` |
+| 用户详情 | AdmUserDetailNoPerm.dc.html | `3e627744c7b5f7d3abd57bfa3995e792bf3f6e182c0069d8ad8974dd4b23a2d9` |
+| 用户详情 | AdmUserDetailDeleting.dc.html | `d6c327e0c084e3a49bfb17e938a1b4f0cda9385152fbea1b641844439b876872` |
+| 用户详情 | AdmUserDetailDeleted.dc.html | `46fe2ba3149ca5c599c14072963ed988ee10d9a20bf5f5c4799c8761fb03feae` |
+| 用户详情 | AdmUserLevelChange.dc.html | `d000af860f450c26bdc3ca52be05c723a73679df310d9c7029714e28ee911939` |
+| 用户详情 | AdmUserInviterChange.dc.html | `639f2c6e034e1059e29af6f28d4a9d1374edb35bc453cb98c52a805818955638` |
+| 用户详情 | AdmUserInviterChangeOk.dc.html | `134610f7a9ad823a19bbff7dceddf4a63af3436ccc4e5b2647add06baa43a6a4` |
+| 用户详情 | AdmUserInvitees.dc.html | `22b6d035c66683244b26591547d664ef18ea9820c8cc4c7614abd6d11efaa61e` |
+| 用户详情 | AdmUserBalanceAdjust.dc.html | `04b54121cb684c003e21333a80ab51c3386e3d8ff866b6136f1528884f14d3e1` |
+| 用户详情 | AdmUserUnionReset.dc.html | `0453f5ec337a84d935ca57f43fca38ea721385ba00e8750649b31b53fcc71d2a` |
+| 用户详情 | AdmUserUnionDisable.dc.html | `13f5bc22b7d617b2f1b322c64553cb7b7b6055007aa0130768691d47fee94f90` |
+| 用户详情 | AdmUserFreeze.dc.html | `b9037fbe7bb9893bfadb5756e4d3184ef502a4c74c3db902d6781602371fcbbe` |
+| 用户详情 | AdmUserUnfreeze.dc.html | `093f142185109ac323bac081321bba04fdda4a98fa174e03c3082ea10a788327` |
+| 用户详情 | AdmUserRealnameFix.dc.html | `aa337d48e22be7ea0f37d30458c84868099f79ea7546824cbfbfb4f5235df0b5` |
+| 用户详情 | AdmUserEdit.dc.html | `4fb9af006f38467ad099df1c97d4ba9b1d46f7a56746d05a6855e06bb19c9baa` |
+| 用户详情 | AdmUserDataExport.dc.html | `a08b538fac720520288e6595ccfb71f0645d4325a481367e9be73f3126ee966c` |
+| 订单查询 | AdmOrders.dc.html | `1c3ac708e1cb7bee6f46a5cc54d0fb6d24588c79f63c9fbf9a912cf891966c0f` |
+| 订单查询 | AdmOrdersStates.dc.html | `73070371e3a0413e0b813cccb3b14b78dafb572ab1172b77ad06012f55d0aa5b` |
+| 订单查询 | AdmAdaptOrdersWideTable.dc.html | `9905d20e0535e689a3c3581f0ec6781a8e8a51f28fa640fb992451ff68727bc9` |
+| 订单查询 | AdmOrderSync.dc.html | `f9056167321eea3b767696d945b034d5601482c297d68ea054807e3906e79967` |
+| 订单查询 | AdmOrderSyncRecords.dc.html | `8b00d0ca32cdc250966dbe812547cac1a354a4f55d7adbb8af8b6969ec47aa19` |
+| 订单查询 | AdmRightsImport.dc.html | `f31ad8e7922d445c860212ed126b7bf7bb8d1cd44aead4f4ec5c2c6bb0066d9a` |
+| 订单详情 | AdmOrderDetail.dc.html | `53283883bcc3b17f5d2210a93285bb36dec60838bca712501ba99c6676685245` |
+| 订单详情 | AdmOrderActionStates.dc.html | `3632a14934398109572d9f47f9d477cd0a5542c48bbecbedff5c2ed65b146aee` |
+| 订单详情 | AdmOrderSettleHold.dc.html | `243fce26daf1619355300744929697ddbd125ae2402b9bc8d91a1c0556d5aa51` |
+| 订单详情 | AdmOrderSettleHoldDone.dc.html | `9e51e2ce7c63c297971ee847008502e7bac3c513c96a27557791d3f19975e207` |
+| 订单详情 | AdmOrderSettleResume.dc.html | `8974196755fd68481b920b0d7c06b8cca1eec0d597952202b0c93b6cf1449a0e` |
+| 订单详情 | AdmOrderAssignUnattributed.dc.html | `fa1ac7750b5557defc1bbf02698a8297b9680985a592437bb3548a453592dbe1` |
+| 订单详情 | AdmOrderAssignUnattributedConfirm.dc.html | `802e589c64caacc58a3c9823ca794be96bc344724f7e7d9dddf2d201651b2fbb` |
+| 订单详情 | AdmOrderAssignUnattributedConfirmReceived.dc.html | `60f77ba3186a5a0b892f5a4e3e63731ea544b4dbec5e327d6074424ec0a2548b` |
+| 订单详情 | AdmOrderAssignUnattributedDone.dc.html | `ed47cdb2c6b80c1d97695b732c9165bcf2abd7cadd28f268e29f540e770e13a9` |
+| 订单详情 | AdmAdaptOrderDetail1280.dc.html | `87dc95eb08015290a14272c8e2f2f2d9b80b82bb9cc64d35dba79512906b7202` |
+| 找回审核 | AdmClaims.dc.html | `1c0db82aebe6972b3886afc5adbd72e9f6b8763b425b11c838d664da0b59817f` |
+| 找回审核 | AdmClaimsStates.dc.html | `65e5cb76805900b18de866e17f88cce6ec828a3b844fdcdd466d3d228ad8248c` |
+| 找回审核 | AdmClaimReview.dc.html | `6af101e473e5c8e080013851c8c73229b3a9fe01dc6c19e56fa6fdab78ebdec2` |
 
 ## 本次交付验证
 
