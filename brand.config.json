@@ -27,6 +27,23 @@
     "css": "design/tokens/variables.css",
     "foundations": "design/tokens/foundations.css"
   },
+  "themes": {
+    "base": "light",
+    "modes": [
+      "light",
+      "dark"
+    ],
+    "fields": {
+      "light": "value",
+      "dark": "dark"
+    },
+    "cssSelectors": {
+      "light": ":root",
+      "systemDark": "@media (prefers-color-scheme: dark) { :root:not([data-theme=\"light\"]) }",
+      "forcedDark": ":root[data-theme=\"dark\"]"
+    },
+    "note": "两套取值都只在 tokens.source 里维护；深色块由 scripts/sync-brand.py 生成，三端映射见 design/tokens/README.md"
+  },
   "semantics": {
     "brandPrimary": "color.brand.primary",
     "brandEmphasis": "color.brand.emphasis",
@@ -56,7 +73,13 @@
     "primaryAction": "color.button.primary.default.background",
     "primaryActionText": "color.button.primary.default.text",
     "controlBorder": "color.border.control",
-    "focusRing": "color.focus.ring"
+    "focusRing": "color.focus.ring",
+    "borderActive": "color.border.active",
+    "overlayScrim": "color.overlay.scrim",
+    "controlChecked": "color.control.checked",
+    "badgeBackground": "color.badge.background",
+    "inverseActionBackground": "color.button.inverse.background",
+    "inverseActionText": "color.button.inverse.text"
   },
   "preview": {
     "entry": "design/brand/index.html",

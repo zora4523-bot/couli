@@ -20,14 +20,22 @@
     document.documentElement.style.setProperty(alias, `var(${brand.semantics[role].cssVariable})`);
   }
 
+  // Light and dark values both come from the generated config; swatches follow the CSS variable.
+  const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const darkActive = () => document.documentElement.dataset.theme === 'dark' ||
+    (document.documentElement.dataset.theme !== 'light' && darkQuery.matches);
+
   function applyAssets(root = document) {
     root.querySelectorAll('[data-brand-asset]').forEach(element => {
-      const url = brand.assets[element.dataset.brandAsset];
+      // data-brand-asset-dark names the inverse asset to show on dark grounds (e.g. the horizontal lockup).
+      const role = darkActive() && element.dataset.brandAssetDark ? element.dataset.brandAssetDark : element.dataset.brandAsset;
+      const url = brand.assets[role];
       const attribute = element.tagName === 'IMG' ? 'src' : 'href';
       if (url && element.getAttribute(attribute) !== url) element.setAttribute(attribute, url);
     });
   }
   applyAssets();
+  darkQuery.addEventListener('change', () => applyAssets());
   document.querySelectorAll('[data-brand-token]').forEach(element => {
     const url = brand.tokens[element.dataset.brandToken];
     if (element.getAttribute('href') !== url) element.setAttribute('href', url);
@@ -49,12 +57,12 @@
 
   document.querySelectorAll('[data-brand-swatch]').forEach(button => {
     const color = brand.semantics[button.dataset.brandSwatch];
-    const value = color.value;
     button.querySelector('.swatch-color').style.backgroundColor = `var(${color.cssVariable})`;
-    button.querySelector('[data-brand-hex]').textContent = `${value} / ${button.dataset.brandLabel}`;
-    button.setAttribute('aria-label', `复制${button.querySelector('b').textContent}色值 ${value}`);
+    button.querySelector('[data-brand-hex]').textContent = `浅 ${color.value} · 深 ${color.dark} / ${button.dataset.brandLabel}`;
+    button.setAttribute('aria-label', `复制${button.querySelector('b').textContent}当前主题色值（浅 ${color.value}，深 ${color.dark}）`);
     button.addEventListener('click', async () => {
       const feedback = document.querySelector('#copy-feedback');
+      const value = darkActive() ? color.dark : color.value;
       try {
         await navigator.clipboard.writeText(value);
         feedback.textContent = '已复制 ' + value;
