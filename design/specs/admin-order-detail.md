@@ -25,7 +25,7 @@
 
 | 区域 | 组件 | 数据 | 交互 |
 | --- | --- | --- | --- |
-| 标题行 | Title + 订单号（可复制）+ 平台 + 按钮组【同步此单】【暂停结算 / 恢复结算】【指定归属】 | sub_order_id、platform、user_id、rebate_status、locked、hold | 指定归属只在 user_id 为空时显示；已入账 / 已作废 / 未归因时暂停置灰并 `aria-describedby` 写原因 |
+| 标题行 | Title + 订单号（可复制）+ 平台 + 按钮组【同步此单】【暂停结算 / 恢复结算】【指定归属】 | sub_order_id、platform、user_id、rebate_status、locked、hold | 【指定归属】的显示条件按 BR-ATTR-20，【暂停结算】的可用条件按 BR-FUND-06；置灰时 `aria-describedby` 写原因 |
 | 权限说明行 | Typography.Text（12px） | — | 固定文案：order.view / order.hold / order.assign（只对未归因） |
 | 状态卡 | Descriptions：平台状态、返利状态、用户侧显示、暂停 / 维权、订单锁定、归属锁定 | platform_status、rebate_status、display_status、hold、rights、locked、attribution_locked | 「已锁定」与「归属已锁定」可同时出现，并列显示 |
 | 基本信息 / 归属信息 / 分佣快照 / 状态历史 / 原始报文 | Card + Descriptions + Timeline + 折叠 JSON | 契约字段 | 【查看金额变更记录】【展开全部】 |
@@ -49,7 +49,7 @@
 
 ## 5. 权限点与开关（04 §11.1 / §11.2）
 
-`order.view`；`order.hold`（不需二次验证）；`order.assign`（动态码，只对未归因订单）。已归属订单改给他人不提供（负责人 2026-10-18，#136；第 1 批定稿 ③ 维持）。
+`order.view`；`order.hold`；`order.assign`（step-up 档位与适用范围按 04 §11.2 与 BR-ATTR-20；负责人 2026-10-18 #136，第 1 批定稿 ③ 维持）。
 
 ## 6. 稿上没画、实现要做的
 

@@ -34,7 +34,7 @@
 | 标题行 | Title + UID + Tag（risk_state）+ 按钮组（加入黑名单 / 冻结 / 封禁） | user_id、risk_state、frozen_until | 按权限点显示；注销中 / 已注销不显示按钮 |
 | 页签 | Tabs（六个） | — | 切换只换下方内容 |
 | 基本信息 | Descriptions（4 列）+ 【查看】（pii.reveal_*）+ 等级旁【调等级】 | 昵称、phone_masked、实名、身份证脱敏、收款账号、邀请码、level、状态、注册方式 / 渠道 / 时间 | 【查看】每次 step-up 并审计 |
-| 联盟授权 | Table：平台 / 状态 / 绑定标识 / 授权时间 / 冷却到期 / 操作 | union_bindings[]（淘宝、拼多多、京东各一行） | 淘宝【重置授权】【停用返利】；京东 / 拼多多只有【停用返利】/【恢复返利】；blocked 不显示重置 |
+| 联盟授权 | Table：平台 / 状态 / 绑定标识 / 授权时间 / 冷却到期 / 操作 | union_bindings[]（三家平台各一行） | 每行可做的操作按 BR-ID-20 细则（哪家有【重置授权】、何时不显示），按钮由响应字段决定，不在前端写死 |
 | 上级与直推 | Card + Descriptions +【改上级】【查看直推名单】 | parent_id、bind_source、parent_bound_at、invitee_count | 改上级对话框；直推名单抽屉 |
 | 余额 | Card + Statistic +【调整余额】【查看流水】 | available_fen、frozen_fen、negative_since、withdraw_block | 调整余额打开调账抽屉（UID 固定） |
 | 风控与名单 | Card | risk_state、hits_30d、blacklist、appeal | 【查看命中记录】切到风控页签 |

@@ -41,7 +41,7 @@
 
 - 规格：[admin-dashboard.md](specs/admin-dashboard.md)、[admin-search.md](specs/admin-search.md)、[admin-users.md](specs/admin-users.md)、[admin-user-detail.md](specs/admin-user-detail.md)、[admin-orders.md](specs/admin-orders.md)、[admin-order-detail.md](specs/admin-order-detail.md)、[admin-claims.md](specs/admin-claims.md)。
 - 画板存放：本机运行目录 `couli-runs/design-hifi/project/<文件名>.dc.html`，1 倍 PNG 在 `couli-runs/design-hifi/review-admin/png/`；Codex 对抗审查 3 轮的记录在 `couli-runs/design-hifi/review-admin/review-log.md`。画板与 PNG **不入本公开仓库**，版本以下表 sha256 为准。
-- 入库前核对（2026-10-18，逐张）：样例数据不含真实手机号、证件号与真实个人信息（手机号、身份证只以脱敏样式出现）；风控规则编号、处置与阈值为样例（规格里已标）；平台只以文字标识来源，无平台商标图形。
+- 入库前核对（2026-10-18，逐张，共 51 张）：样例数据不含真实手机号、证件号与真实个人信息（手机号、身份证只以脱敏样式出现）；风控规则编号、处置与阈值为样例（规格里已标）；平台只以文字标识来源，无平台商标图形。
 
 | 页面 | 画板文件 | sha256 |
 | --- | --- | --- |

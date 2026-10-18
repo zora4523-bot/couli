@@ -14,7 +14,7 @@
 | 空输入框（各页顶栏） | 任一后台画板顶栏，如 AdmDashboard.dc.html（3718723d5323） | 页面加载 | 本地 |
 | 多命中候选 | AdmSearchMulti.dc.html（39ed7d2ee07e） | 回车后 `items.length > 1` | adminSearch · 200 · example |
 | 单命中 | 不适用（直接跳转） | `items.length == 1` | 同上 |
-| 无命中（含无权限） | AdmSearchNoHit.dc.html（226c89429f99） | `items` 为空 | 同上，items 置空；无权限对象同样返回空，不单独提示（BR-ID-34 细则「一框搜」） |
+| 无命中 | AdmSearchNoHit.dc.html（226c89429f99） | `items` 为空 | 同上，items 置空；无权限时的表现按 BR-ID-34 细则「一框搜」 |
 | 加载中 | 不适用 | 请求在途 | 本地：Input.Search loading |
 | 出错 | 不适用 | 网络 / 5xx | 本地：message.error + 保留输入 |
 
@@ -33,7 +33,7 @@
 | 位置 | 字典键 |
 | --- | --- |
 | 候选条目类型名、状态 | BR-TEXT-25 `admin_dict.*` |
-| 出错提示 | BR-TEXT-14（通用网络错误；10403 不出现在本功能） |
+| 出错提示 | BR-TEXT-14（通用网络错误） |
 | 占位、无命中说明、底部说明 | 08 无键，用画板文案，登记 admin.search.* |
 
 ## 4. 接口
@@ -44,7 +44,7 @@
 
 ## 5. 权限点与开关（04 §11.1）
 
-结果按 `user.lookup`、`order.view`、`fund.view` 裁剪（服务端）；无权限对象不出现，无命中提示不区分「没有」与「没权限」（防探测；取值在 BR-ID-34 细则「一框搜」，负责人 2026-10-18 第 1 批定稿 ②）。按完整手机号命中写审计（同 `user.lookup`）。
+结果按 `user.lookup`、`order.view`、`fund.view` 裁剪（服务端）；无权限对象与无命中的表现、按手机号命中的审计，全部按 BR-ID-34 细则「一框搜」（负责人 2026-10-18 第 1 批定稿 ②），本规格不复述。
 
 ## 6. 稿上没画、实现要做的
 
