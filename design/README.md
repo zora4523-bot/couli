@@ -30,8 +30,8 @@
 | 12 | 空态、错误态插画 | `illustrations/` | W3（10-25） | 待办 |
 | 13 | 分享海报、邀请海报 | `posters/` | W3（10-25） | 待办 |
 | 14 | 商店上架素材 | `store/` | W7 提审前（11-22） | 待办 |
-| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」，规格在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App / H5 页面仍待你定稿，草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
-| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 8 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）与管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
+| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」；管理后台第 2 批（财务：提现审核与打款、月结账单与对账差错、调账与核销、余额流水与导出、资金看板）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 2 批定稿」，规格 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；两批规格都在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App / H5 页面仍待你定稿，草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
+| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 16 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）、管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）与第 2 批 8 份 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
 
 完成一项后，把「状态」改为「已交付」，或者直接告诉 Claude。
 
@@ -96,6 +96,63 @@
 | 找回审核 | AdmClaims.dc.html | `1c0db82aebe6972b3886afc5adbd72e9f6b8763b425b11c838d664da0b59817f` |
 | 找回审核 | AdmClaimsStates.dc.html | `65e5cb76805900b18de866e17f88cce6ec828a3b844fdcdd466d3d228ad8248c` |
 | 找回审核 | AdmClaimReview.dc.html | `6af101e473e5c8e080013851c8c73229b3a9fe01dc6c19e56fa6fdab78ebdec2` |
+
+## 管理后台第 2 批定稿（2026-10-18）
+
+负责人 2026-10-18 22:1x 定稿：「第 2 批定稿，全部按推荐」。第 2 批 = 管理后台财务页：提现审核与打款（列表、详情、驳回、补录、批量手动、自动到账判定与设置、打款队列、打款记录、余额录入）、月结账单与对账差错、人工调账与核销、余额流水与导出、资金看板。三条按推荐的决定（自动到账总开关只在紧急开关页改、需 `switch.all`；调账一步提交、待批列表只留系统预填单；打款延迟不另加主动通知、维持 BR-WDR-26）的落点见 [变更记录](../docs/changes/20261018-后台第2批定稿.md)。
+
+- 规格：[admin-withdrawals.md](specs/admin-withdrawals.md)、[admin-withdrawal-detail.md](specs/admin-withdrawal-detail.md)、[admin-payouts.md](specs/admin-payouts.md)、[admin-settle-bills.md](specs/admin-settle-bills.md)、[admin-recon.md](specs/admin-recon.md)、[admin-adjustments.md](specs/admin-adjustments.md)、[admin-ledger.md](specs/admin-ledger.md)、[admin-fund-dashboard.md](specs/admin-fund-dashboard.md)。
+- 画板存放：本机运行目录 `couli-runs/design-hifi/project/<文件名>.dc.html`，1 倍 PNG 在 `couli-runs/design-hifi/review-admin/png/`，总览 `review-admin/overview-2a-finance.png`、`overview-2b-finance.png`；Codex 对抗审查记录在 `review-admin/review-log.md`。画板与 PNG **不入本公开仓库**，版本以下表 sha256 为准。用户详情【调整余额】抽屉 AdmUserBalanceAdjust.dc.html 已在第 1 批登记，本批只引用。
+- 入库前核对（2026-10-18，逐张，共 45 张）：样例数据不含真实手机号、证件号与真实个人信息（手机号、收款账号、卡号、姓名只以脱敏样式出现，微信收款标识不显示）；自动到账阈值、水位比例与时效、核销阈值、支付宝 / 微信响应码与状态值为样例或占位（规格里已标）；平台只以文字标识来源，无平台商标图形。
+- 画板与规划不一致、实现以规划为准的项（提现状态名与差错单类型名按 BR-TEXT-25、调账单「待批」应为「待批准」且人工发起的【保存待批】【撤回】不实现、部分按钮档位应为动态码、受阻原因筛选与一键组批未画、结算明细上传页本期不做）已逐条写在各规格第 7 节；画板改名另立一轮。
+
+| 页面 | 画板文件 | sha256 |
+| --- | --- | --- |
+| 提现审核 | AdmWithdrawList.dc.html | `2ac7d0122ace42bec28296bd67bac3d0bb50629bd2192ea503ec3a21de164dbd` |
+| 提现审核 | AdmWithdrawListFilterDraft.dc.html | `cfb0cfabf00f110fe969967782a25fbe829469a55dea542276d636e46d5cba59` |
+| 提现审核 | AdmWithdrawListFilterApplied.dc.html | `21ba428a5b45bdeb5ec8446808089d7aae7d68ffe5e725220c2c46ad35cfdda0` |
+| 提现审核 | AdmWithdrawBatchApprove.dc.html | `f9a4adb6ad1ffabeb6045ca87770e380f79cb824dac92e36b6580390f39b886e` |
+| 提现审核 | AdmWithdrawManualBatch.dc.html | `126414a8fdf8c0f026cb9798339b2951143449341416ea91d20f733e6bcea51f` |
+| 提现审核 | AdmWithdrawAutoSettings.dc.html | `de60f79a4925280c61ec6ebabede970b10f9d0ad55f52f450ac3c0e5b217c680` |
+| 提现审核 | AdmAdaptWithdrawList1280.dc.html | `244e9dbabce1e6f9d788014ee1fb690f41d8f8fbab5187ec118a3f4591642030` |
+| 提现审核 | AdmAdaptWithdrawList720.dc.html | `33388a9511fa2e2f078ce95c318a5bb290a0cd877f9d1ce1be465bf8b982a828` |
+| 提现单详情 | AdmWithdrawDetail.dc.html | `4e55d52a231d2fe9b2fd887510f58e474fe9d5a8f11182ec9b2914458886a7c0` |
+| 提现单详情 | AdmWithdrawReject.dc.html | `ef320b8d193ead2b82f4f3da58503b26da2aa89f1f91e3da3d2c03e4510f308f` |
+| 提现单详情 | AdmWithdrawAutoDecision.dc.html | `6053736c459a1a9bc463d3d192ed742122b0b3a782f86f6e7ff215c4956a3357` |
+| 提现单详情 | AdmWithdrawManualEntry.dc.html | `5e6a9684fec96793081bca8b2409a5441f02d46a4e46245b92263d8f4d1edce8` |
+| 提现单详情 | AdmWithdrawDetailWechat.dc.html | `7b7f39d6bb4f73b7e28791edcd9a766ab349b72a9102f55c3f234835a3feed79` |
+| 打款队列与记录 | AdmPayoutQueue.dc.html | `831870049e6eea13818ff8de48cbeccbfac82a4cf14515d58ffef44f3b4577f1` |
+| 打款队列与记录 | AdmPayoutQueuePaused.dc.html | `c75be89783f7593d3eb33818d480f3b0ba3137753105e5a7465ffdcd3b210a0c` |
+| 打款队列与记录 | AdmPayoutExecuteConfirm.dc.html | `a990b72f488667c5202d0de7a0f7b4838c3a3c4db6d765482fc88a2e4b182d6b` |
+| 打款队列与记录 | AdmPayoutExecuteDone.dc.html | `e110d8dea503f5c772ab30bfed1df55ef5af29e78667509f1f9b9e60f3c24820` |
+| 打款队列与记录 | AdmPayoutUnknown.dc.html | `df557e7d41f6e4356a36a9fdca4337df84aab9659a008f7e8204b5068aa24ecc` |
+| 打款队列与记录 | AdmPayoutAttempts.dc.html | `0ee0eadd1f3f8eeae1167ce71a6d4094898e38173fa74f0aca223f936a3728cf` |
+| 打款队列与记录 | AdmPayoutBalanceEntry.dc.html | `402d13ce3293b964a1399cbf24983576bae1f0ca74675a5f8d3a8cfa3d0fcc6e` |
+| 打款队列与记录 | AdmPayoutBalanceEntryInvalid.dc.html | `7663d65ef3575acd36b21d96d5e0c0f739d949fa23d312fe8f99b5b550c8421e` |
+| 月结账单 | AdmSettleBills.dc.html | `790b1a57eab4e282eb33f4712b154c32c613c89c51a829226325134099a214a5` |
+| 月结账单 | AdmSettleBillDetail.dc.html | `d412d70cbc763824d3249755e85b542b6143c096e34cab806449e2f833954fe3` |
+| 月结账单 | AdmSettleBillConfirm.dc.html | `e6cdc11cf92560146e690d6e6d928c3e0a6955a803a51b629e2c6433f6eedb0a` |
+| 月结账单 | AdmSettleBillRunning.dc.html | `004bf542cad98240865965a25608f3547ca91c508ead7562f7061e335426e14c` |
+| 月结账单 | AdmSettleSupplementLaunch.dc.html | `114405a5fa50e03159e353076bf954b991ea66aba4112fb793baea2383ea0999` |
+| 月结账单 | AdmSettleSupplementCreated.dc.html | `a59522351031edab635b69948f6164fe111ffc001832b7f58b3b1d8404d99fb8` |
+| 月结账单 | AdmSettleSupplementEmpty.dc.html | `a4cb3eda1808f9800ba929e779a6bf3bcd951b89a23eb87080d78b7f3be5ac8a` |
+| 月结账单 | AdmSettleStatementUpload.dc.html | `afbb1e226bbd88c5d6095e0b80b306611dbdd75c7dab343bd14d35b0299bd22f` |
+| 月结账单 | AdmSettleStatementUploadReady.dc.html | `862b8a4ed35d6f121b8ef96998066508c66ad678eab40366025b56520f0c5545` |
+| 月结账单 | AdmSettleStatementUploaded.dc.html | `09d7d44e27b471ece8d163122fd430ece0fc8100b30cad9f4c2549efbf951648` |
+| 对账与差错 | AdmRecon.dc.html | `894f7d854fa01a6c5879d68c3cd820f6862db36f25459026331f184abe845328` |
+| 对账与差错 | AdmReconDiffsList.dc.html | `4ddb589b0b6a6f8633472a9eea94f200304e009ee4a502f2a80b17089408af51` |
+| 对账与差错 | AdmReconDiffs.dc.html | `70b1104410e4d79b458a16f219229e5bc1cb91048930e60f0582a44e0950cca2` |
+| 调账与核销 | AdmAdjust.dc.html | `0fb0f5ab98e3cbc6cf17cf382ff8b2ec98dcce2664ee86e84a9104535a329e0a` |
+| 调账与核销 | AdmAdjustApprove.dc.html | `52583862069d47ff26f84a42720f19b1242cd9b9b2acb89c969a42aacfac333f` |
+| 调账与核销 | AdmAdjustReverse.dc.html | `5593542cdec1bf7826e09b55045311698ab05af70fa63642c88b1f187460de9a` |
+| 调账与核销 | AdmAdjustReversed.dc.html | `cfcb7c1cdff57ce80ea92ceeb163eef3934f6cf8ea3ee718ce1e9160f5b2f04f` |
+| 调账与核销 | AdmWriteoff.dc.html | `75bc4f7b03d5ee908d501166845ede57e2769f4f0180667a292a89b1f9f3fa23` |
+| 调账与核销 | AdmWriteoffBlocked.dc.html | `5df5525e44c5c105df2968e9ba04c59fcf462a2d00d78ffb1cfbfcf8a709af9a` |
+| 调账与核销 | AdmWriteoffDone.dc.html | `e4980fc58e348d6768b1143eb28c255a9271cbd08a3b3184a4c307025137f0f4` |
+| 余额流水与导出 | AdmLedger.dc.html | `a569ebb9f83ddbc73c09486d01a0617c349a73816eee3b3d2642add196a6b4f3` |
+| 余额流水与导出 | AdmExportTasks.dc.html | `089779a6f3b97f9b597574d731bd1bfa4382ea6d7557df6846a4d8b9073a7ad9` |
+| 资金台账与看板 | AdmFundLedger.dc.html | `f60abba6f181d0597debc249e5b22aa682e2db1fe41c062b0600ddfc20321014` |
+| 资金台账与看板 | AdmReportFunds.dc.html | `d7957c385f84bb40f7d7556d67994d00b69709bd5b709c3ece6358682bc1c4c9` |
 
 ## 本次交付验证
 
