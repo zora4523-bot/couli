@@ -39,6 +39,8 @@
 
 2026-10-06 规划/12 §9 同步类不一致清理（`docs/changes/20261006-流程图不一致同步.md`，00 §8 第 ① 类；原需负责人选择的几处按 规划/11 §7.1 交 Jev）：本文件按 12 §9 的同步项修正引用与细则，条目状态不变；交 Jev 选择、待财务确认与撤回的内容见该记录 §2、§3、§6；逐条见该变更记录。
 
+2026-10-18 记账模板待定项（`docs/changes/20261018-账务模板待定项.md`，资金线起草 specs/ledger-templates.csv 时报来；00 §8 第 ① 类：只补记账分类、金额名与模板形状，不改任何金额、归属与用户可见金额）：BR-FUND-15 细则补「平台科目分录与几类凭证的 ledger_type」（平台差额沿用所在业务、平台专属凭证取 REBATE_CREDIT 占位、改派红冲按类型分组反向、延后差额补记沿用开立事务），BR-FUND-16 细则补平台科目分录子户一律 available，BR-FUND-05 细则补分录模板表平台一行的占位值与金额名 platform_credit_fen，BR-FUND-04 细则补金额名 pending_credit_fen，BR-FUND-20 细则补联盟回款凭证（键、金额 receipt_fen），BR-FUND-01 细则补「R14 的分录类型」；改派时旧受益人注销中或已注销怎么记登记为 §6.3 第 23 项，待负责人决定，决定前这种改派不执行。各条状态不变，没有新增条目与错误码。
+
 ### 6.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -152,6 +154,10 @@ R9 与 R9b 的判定：同一次同步中 refunded_quantity 增加，或存在�
 同一次更新同时满足逆向事件（R8、R9）与结算额变化（R10）时：先写结算记录，再按逆向事件记 CLAWBACK，差额按新基数与当前净额计算；R10 随后重算，差额为 0 不写（2026-10-03 资金规则对齐，方案 §2 R-27）。例：P0 订单（预留 2000，结算佣金 1000，本人 400、直推 80、平台 520）一次同步同时带来 2 件退 1 件与新的结算记录 500 → 新基数 400、预留 100，只按 CLAWBACK 扣一次：本人 −200、直推 −40、平台 −260，UNION_RECEIVABLE 净额 500；R10 重算差额为 0，不写。
 
 **R14 的凭证键**（2026-10-03 第 2 轮评审后修改）：红冲、重记与没收的键都带本次 reassign_id，见上表 R14 记账列。例：预留 0、本人 5000、直推 1000，结算佣金 1000；U1、U2 付款时的直推上级都是被封禁的 P。旧快照入账 U1 500（`{order_key}:U1:self:CREDIT`）、平台 400（`{order_key}:PLATFORM:CREDIT`），P 的 100 没收（`{order_key}:PLATFORM:FORFEIT:P:direct`），UNION_RECEIVABLE 1000。改派给 U2（reassign_id=A1）：红冲 U1 500（`…:U1:self:REASSIGN_REV:A1`，借 USER_BALANCE:U1 500 / 贷 UNION_RECEIVABLE 500）、平台 500（`…:PLATFORM:REASSIGN_REV:A1`，留存 400 与没收 100 一起，借 COMMISSION_REVENUE 500 / 贷 UNION_RECEIVABLE 500）；重记 U2 500（`…:U2:self:REASSIGN_CREDIT:A1`）、平台 400（`…:PLATFORM:REASSIGN_CREDIT:A1`），P 仍被封禁，100 再没收一次（`…:PLATFORM:FORFEIT:P:direct:REASSIGN:A1`，借 UNION_RECEIVABLE 100 / 贷 COMMISSION_REVENUE 100；与旧快照的键不同，不会被当作已入账跳过）。UNION_RECEIVABLE 1000 = booked_n_fen 1000 − 0，平台收入净额 500（留存 400 + 没收 100）。另一组 P 在旧快照入账与改派时都是冻结：旧快照 UNION_RECEIVABLE 900 = 1000 − 100；改派时作废 P 的首次入账义务，红冲 U1 500、平台 400，重记 U2 500、平台 400，P 开改派入账义务，UNION_RECEIVABLE 900 = 1000 − 100；P 之后转封禁 → 补记项按同一个 `…:PLATFORM:FORFEIT:P:direct:REASSIGN:A1` 没收 100，UNION_RECEIVABLE 1000。各步凭证借贷相等。
+
+**R14 的分录类型**（2026-10-18 补，`docs/changes/20261018-账务模板待定项.md`；按 BR-FUND-15「沿用被更正分录的 ledger_type 与 sub_type」与 BR-FUND-25「原受益人的入账与红冲相抵为 0」推出）：红冲凭证（每个旧受益人 / 角色各一张、平台一张，键不变）按被更正分录的 (ledger_type, sub_type) 分组逐组反向，每组的金额 = 该组分录在该账户上的代数和，金额为 0 的组不写，全部组都为 0 才不写这张凭证（净额为 0 而组不为 0 的照写：如直推先入账 100、后经负向补差扣回 100，红冲仍写入账组、补差组各冲回 100，看板才能相抵）；用户各组的对方科目一律是 UNION_RECEIVABLE，平台各组在 COMMISSION_REVENUE 与 UNION_RECEIVABLE 之间反向（申诉补发的借方随平台组冲回，同上表口径）。重记凭证：新受益人的分录取其角色的入账类型（BR-FUND-05 分录模板表），平台分录按 BR-FUND-15 细则取平台专属凭证的类型。例：预留 0、本人 5000、没有上级，结算佣金 1000，入账 U1 500（REBATE_CREDIT）、平台 500；部分退款后联盟佣金 800 → U1 扣回 100、平台差额 100（都是 CLAWBACK / PART_REFUND），UNION_RECEIVABLE 800。改派给 U2（reassign_id=A2）：`…:U1:self:REASSIGN_REV:A2` 写两组——REBATE_CREDIT 组 借 USER_BALANCE:U1 500 / 贷 UNION_RECEIVABLE 500，CLAWBACK / PART_REFUND 组 借 UNION_RECEIVABLE 100 / 贷 USER_BALANCE:U1 100（U1 合计 −400）；`…:PLATFORM:REASSIGN_REV:A2` 同样两组——借 COMMISSION_REVENUE 500 / 贷 UNION_RECEIVABLE 500，借 UNION_RECEIVABLE 100 / 贷 COMMISSION_REVENUE 100；重记 U2 400（REBATE_CREDIT）、平台 400；UNION_RECEIVABLE 800 = booked_n_fen 800 − 0。收益看板上 U1 自购栏的 +500 与 −500 相抵为 0、U2 +400；若把净额 400 整笔记在 REBATE_CREDIT 下，U1 自购栏会剩 +100，与 BR-FUND-25 不符。
+
+**旧受益人已进入注销处理或已注销**（待负责人决定，§6.3 第 23 项）：旧快照里有受益人已进入注销 processing 或已注销、且其在本单键下还有不为 0 的类型组（用户账户上的，或改记平台坏账的扣回）时，红冲写在墓碑账户上还是改记平台坏账，本迁移没有写（BR-FUND-08、BR-CALC-09 的「改记平台坏账」只覆盖扣回与负差）。负责人决定前这种改派不执行：该情形没有分录模板，R14 事务整笔不提交，归属、快照与分录都不变。旧受益人在注销冷静期的照常红冲（冷静期不算失效，BR-CALC-13），余额可以变负，冷静期满按 BR-ID-27 撤销注销申请；在本单键下没有任何分录的（入账时已没收，份额只在平台凭证里），不写其凭证，没收的份额随平台红冲。
 
 VOID、CLAWED_BACK 是终态：订单同步等自动事件不得让订单离开，只有人工恢复（R12、R13，BR-FUND-22）可以离开；R3b 在 VOID 上只写归属、状态不变（2026-10-03 资金规则对齐方案 §8 O-03；原 R10 的第二种结局「补差后 → CLAWED_BACK」已随同-03 删去）。
 
@@ -360,6 +366,8 @@ VOID、CLAWED_BACK 是终态：订单同步等自动事件不得让订单离开�
 
 **held 受益人与补记项**（⑫）：一单中除 held 受益人（BR-CALC-13）外的全部受益人同批入账；held 受益人解除后按 BR-FUND-01 R5a 在后续批次（含补充批次）以受益人补记项单独入账，金额按执行时的 booked_base_fen 重算，转 forfeited 时份额记平台（FORFEIT 凭证，首次整份没收）；正差被延后的受益人同样经补记项补记，转没收时只没收当前待补记额，已入账的部分不改为被剥夺（延后差额没收，⑫）。每一次待补记义务有自己的 beneficiary_credit_id，跨批次纳入、重试、并发执行都按它只记一次；延后的正差用 `ADJ:DEFERRED:{beneficiary_credit_id}` 键，同一条结算记录下再次补记也不撞键（2026-10-03 评审后修改）。补记前迁移 R9、R10 等事务已把义务的份额归了平台或补给了受益人的，该事务同时关闭义务，补记项不再执行；补记项执行前还校验本单 BR-FUND-19 ⑤ 等式，金额取剩余未履约金额（2026-10-03 第 2 轮评审后修改，⑫）。按 C-27 (d) 默认处理，待财务确认。
 
+**补记与没收的金额名与流水类型**（2026-10-18 补，`docs/changes/20261018-账务模板待定项.md`；只命名，不改取值）：⑫ 的剩余未履约金额（执行时取值，即 BR-FUND-19 ⑤ 的待补记额）在分录模板里记 `pending_credit_fen`；延后差额义务的补记凭证 `{order_key}:{uid}:{role}:ADJ:DEFERRED:{beneficiary_credit_id}`（借 UNION_RECEIVABLE:{platform} / 贷 USER_BALANCE.available）与没收凭证 `{order_key}:PLATFORM:FORFEIT:{uid}:{role}:DEFERRED:{beneficiary_credit_id}`（借 UNION_RECEIVABLE:{platform} / 贷 COMMISSION_REVENUE，BR-CALC-13）都取它。首次入账义务、改派入账义务的补记与没收沿用 CREDIT、REASSIGN_CREDIT、FORFEIT 的凭证，金额同样是剩余未履约金额（即按执行时 booked_base_fen 的应得）。这两张延后差额凭证的 ledger_type 见 BR-FUND-15 细则；补记的流水类型在开立延后差额义务时随开立事件一并记下。
+
 **例（受益人补记项，2026-10-03 资金规则对齐 E-21）**：(a) 淘宝预留 2000，本人 5000、直推 1000；入账时 U1 冻结（暂缓），P1 +80、平台 +520；暂缓期间结算佣金改为 900 → P1 −8、平台 −52，U1 应得变 360；U1 解冻后下一个账单日生成补记项，执行时按 booked_base_fen 720 补 U1 +360（不按入账当天的 800 补 400），UNION_RECEIVABLE 900。(b) P0 入账后 U1 才被冻结，冻结期间结算佣金改为 1200 的正差获批：P1 +16、平台 +104，U1 的 +80 延后 → UNION_RECEIVABLE 1120；U1 解冻后补记 +80（键 ADJ:DEFERRED:{beneficiary_credit_id}），UNION_RECEIVABLE 1200；若 U1 转为封禁，只没收这笔待补记的 80（延后差额没收，键 `…:PLATFORM:FORFEIT:U1:self:DEFERRED:{beneficiary_credit_id}`，借 UNION_RECEIVABLE 80 / 贷 COMMISSION_REVENUE 80），同样 1200——不按 BR-CALC-13 的整份应得 480 没收（那样应收联盟会变成 1600），U1 也不追加 forfeited 事件；已入账的 400 照常参与之后的调整：结算佣金再改为 900 → U1 按 BR-CALC-09 的封禁规则新应得 min(360, 400) = 360，扣 40，直推 −24，平台冲回 236，UNION_RECEIVABLE 900。(c) 预留 0、本人 5000、没有上级，已入账 U1 500、平台 500；后台改派给冻结中的 U2（R14）→ 红冲 U1 500、平台 500，按新快照重记只写平台 500，U2 的 500 待补记；U2 解冻后补记 500（REASSIGN_CREDIT 键），UNION_RECEIVABLE 1000；若 U2 改为转封禁，没收 500 用 `…:PLATFORM:FORFEIT:U2:self:REASSIGN:{reassign_id}`（第 2 轮评审后修改），同样 1000。补记项执行时订单已被扣回为 CLAWED_BACK → 跳过，不补钱。(d) 同一条结算记录下第二次补记（2026-10-03 评审后修改；预留 0、本人 5000、没有上级）：seq1 结算佣金 1000 入账 U1 500、平台 500；seq2 结算佣金 1200 时 U1 冻结，正差获批 → 平台 +100，U1 的 +100 开延后差额义务 D1，UNION_RECEIVABLE 1100 = 1200 − 100；U1 解冻后补记 +100（键 `…:U1:self:ADJ:DEFERRED:D1`），D1 完成，U1 净额 600，UNION_RECEIVABLE 1200；全额维权扣回 U1 −600、平台 −600，UNION_RECEIVABLE 0，订单 CLAWED_BACK，结算记录仍是 seq2；平台恢复有效后人工 R13 恢复，此时 U1 又冻结 → 平台 +600，U1 的 600 开新义务 D2，UNION_RECEIVABLE 600 = 1200 − 600；U1 再次解冻 → 补记 +600（键 `…:U1:self:ADJ:DEFERRED:D2`，与 D1 的键不同，不会被当作已入账跳过），U1 净额 600，UNION_RECEIVABLE 1200 = booked_n_fen 1200 − 0。各步凭证借贷相等。同一义务同时被补充批次与下一期账单的批次纳入时，两条明细引用同一 beneficiary_credit_id，先取得锁的一批写凭证并完成义务，另一批重验见义务已完成，记 skipped；批次续跑或任务重复投递同理只记一次。(e) 调整先于补记把待补记的份额归了平台（2026-10-03 第 2 轮评审后修改；比例同 (b)：预留 2000，本人 5000、直推 1000）：接 (b) 的正差获批——U1 冻结，延后差额义务 D1 待补 80，直推 96、平台 624，UNION_RECEIVABLE 1120 = 1200 − 80。U1 转封禁，D1 尚未执行时联盟出新结算记录 1100（B=880）→ 负差一路：U1 新应得 min(440, 400) = 400，不写；直推 −8（借 USER_BALANCE:P1 8 / 贷 UNION_RECEIVABLE 8）；平台应得 1100 − 400 − 88 = 612，冲回 12（借 COMMISSION_REVENUE 12 / 贷 UNION_RECEIVABLE 12，键 `{order_key}:PLATFORM:ADJ:{seq}`）。U1 多出的 40 已随这张平台凭证归平台，同一事务把 D1 记为没收并关联这张凭证，UNION_RECEIVABLE 1100 = booked_n_fen 1100 − 0。下一期不再为 D1 生成补记项，之前生成的补记项重验见 D1 已关闭（结算记录 seq 也已变）、记 skipped，不会再没收 40（否则 UNION_RECEIVABLE 变成 1140）。反过来先执行 D1：没收 80（借 UNION_RECEIVABLE 80 / 贷 COMMISSION_REVENUE 80，键 `…:PLATFORM:FORFEIT:U1:self:DEFERRED:D1`），平台净额 704，UNION_RECEIVABLE 1200 = 1200 − 0；再到 1100：U1 不写，直推 −8，平台由净额 704 冲回到 612（−92），UNION_RECEIVABLE 1100 = 1100 − 0。两种顺序最终都是 U1 400、直推 88、平台 612，U1 多出的份额只归平台一次；各步凭证借贷相等。
 
 **平台入账开关 credit.enabled.&lt;platform>**（BR-CALC-03 默认 off；打开前须有 BR-CALC-03 验证证据，且该平台 08b 首个月结对账已通过（见下方「首个月结批次」），见 规划/05 S2 门槛）：
@@ -402,6 +410,7 @@ C-02 已由负责人改定（变更记录 §3；拍板第二批 OPS-01 再次确
   - 本条正文 2026-10-03 前写法：「B_credit=0 时不写凭证，只迁移状态。」（写于没有平台预留的时候；预留比例不为 0 时会出现基数为 0 而联盟佣金与预留大于 0，照字面预留不进账，联盟回款时 UNION_RECEIVABLE 倒挂）（2026-10-03 资金规则对齐（负责人批准），方案 §7.3，同-23）
   - 本条正文 2026-10-03 前写法：「平台留存 = B_credit − Σ受益人份额，尾差归平台」「每个份额 >0 的受益人写 1 张凭证」（没有写被剥夺、暂缓的受益人怎么记；随 BR-CALC-13 的 FORFEIT 凭证与 BR-FUND-04 ⑫ 补记项写明）（2026-10-03 资金规则对齐（负责人批准），方案 §6.1、§6.6，同-08、同-13）
   - 本条状态 2026-10-03 前为「待决策（…入账基数取法与凭证粒度属金额口径，决策人为财务…）」（入账基数取法已定、凭证粒度经决-04 确认默认，改为已确认）（2026-10-03 资金规则对齐（负责人批准），方案 §6.5，同-12、决-04）
+  - 本条分录模板表平台一行 2026-10-18 前写法：「—（不对用户展示）」（ledger_entries.ledger_type 非空、只取 13 个值，平台这行没有可写的值；补 REBATE_CREDIT 占位，不对用户展示的含义不变，`docs/changes/20261018-账务模板待定项.md`）
 - 来源：规划/04 §4.1 O6/O7；规划/02 §8.1、§8.3；规划/01 E10 F-SET-02；PRD修订_后端功能规划 §2.7、§2.8 记账规则 2；docs/changes/20261001-平台预留比例.md；docs/changes/20261001-拍板第二批.md §8 ADD-06；docs/changes/20261003-资金规则对齐.md
 - 需同步修改的规划文档：3 处（计数仅作记录，落点见 README §0.6）
 
@@ -413,7 +422,9 @@ C-02 已由负责人改定（变更记录 §3；拍板第二批 OPS-01 再次确
 | 分享者 share | SHARE_CREDIT | UNION_RECEIVABLE:{platform} | USER_BALANCE:{uid}.available |
 | 直推上级 parent_direct | REFERRAL_CREDIT（sub_type=DIRECT） | UNION_RECEIVABLE:{platform} | USER_BALANCE:{uid}.available |
 | 间推上级 parent_indirect（role=indirect，仅 indirect_enabled=true 的版本） | REFERRAL_CREDIT（sub_type=INDIRECT） | UNION_RECEIVABLE:{platform} | USER_BALANCE:{uid}.available |
-| 平台 | —（不对用户展示） | UNION_RECEIVABLE:{platform} | COMMISSION_REVENUE |
+| 平台 | —（不对用户展示；分录的 ledger_type 取 REBATE_CREDIT 占位、sub_type 为空，不进任何用户口径统计，BR-FUND-15 细则「平台科目分录与几类凭证的 ledger_type」） | UNION_RECEIVABLE:{platform} | COMMISSION_REVENUE |
+
+**金额名**（分录模板的 amount_ref，2026-10-18 补，只命名、不改取值）：平台凭证金额（正文的平台留存 + 预留金额 reserve_fen）记 `platform_credit_fen`；迁移 R14 的平台重记凭证同此，按新快照计算。
 
 **booked_base_fen**：该子订单最近一次记账所用基数；入账、扣回（BR-FUND-08）、补差（BR-FUND-09）、恢复（BR-FUND-22）同事务更新，供 BR-FUND-19 ⑤ 校验。**booked_n_fen**：同一次记账所依据的联盟佣金（正数部分），与 booked_base_fen 成对更新，供 BR-FUND-19 ⑤ 校验（2026-10-03 资金规则对齐）。
 
@@ -715,6 +726,12 @@ USER_BALANCE 可入流水：REBATE_CREDIT、SHARE_CREDIT、REFERRAL_CREDIT、CLA
 
 **sub_type 值域**：CLAWBACK：FULL / PART_REFUND / RIGHTS / PUNISH；SETTLE_ADJUST：SETTLE_DIFF / PRICE_COMPARE / PRICE_PROTECT（默认 SETTLE_DIFF，Adapter 能识别原因时写 PRICE_PROTECT、PRICE_COMPARE；R9b 不再写 SETTLE_ADJUST，2026-10-03 资金规则对齐方案 §2）；REFERRAL_CREDIT：DIRECT / INDIRECT（INDIRECT 只在间推开关开启的规则版本下产生，BR-CALC-05）；REWARD：newbie / checkin / invite；ADMIN_ADJUST：调账原因码，值域与流程只在 BR-FUND-24 维护（含 RESTORE，见 BR-FUND-22；ACCOUNT_CLOSED，注销放弃余额）。
 
+**平台科目分录与几类凭证的 ledger_type**（2026-10-18 补，`docs/changes/20261018-账务模板待定项.md`；与本条一起由代理起草、待财务确认）：
+- 平台科目分录（不涉及用户余额）沿用所在业务的类型：扣回事务里的平台差额取 CLAWBACK，sub_type 同本次扣回；补差事务里的取 SETTLE_ADJUST，sub_type 同本次结算记录；恢复取 ADMIN_ADJUST / RESTORE（BR-FUND-22 原文）。所在业务在 13 个值里没有对应类型的平台专属凭证——平台入账 `{order_key}:PLATFORM:CREDIT`、三种没收 FORFEIT（含 `:REASSIGN:`、`:DEFERRED:` 两种键）、改派平台重记 `{order_key}:PLATFORM:REASSIGN_CREDIT:{reassign_id}`、联盟回款（BR-FUND-20 细则）——分录取 REBATE_CREDIT、sub_type 为空，只为满足 ledger_type 非空，业务类别以凭证的业务类型为准（代理补全的默认，2026-10-18，Jev 判断：平台专属凭证一律占位 0.67、置信度 0.56；平台差额沿用所在业务 0.63、置信度 0.26，与 BR-FUND-22 R13 的平台恢复凭证同一原则）。按 ledger_type 取数的用户口径——余额流水（本条正文）、收益看板（BR-FUND-25）、月末核对 X1（BR-FUND-23）、所得类型映射（BR-FUND-13）——只取用户账户上的分录，平台科目分录一律不取。
+- 改派红冲（REASSIGN_REV，每个旧受益人 / 角色各一张、平台一张）按被更正分录的 (ledger_type, sub_type) 分组逐组反向，一张凭证可有多组分录，全部组都为 0 才不写；改派重记（REASSIGN_CREDIT）的用户分录取该角色的入账类型。依据本条正文与 BR-FUND-25「原受益人的入账与红冲相抵为 0」，例见 BR-FUND-01 细则「R14 的分录类型」（Jev 0.98、置信度 0.96）。
+- 延后差额义务的补记凭证 `{order_key}:{uid}:{role}:ADJ:DEFERRED:{beneficiary_credit_id}`（BR-FUND-04 ⑫）沿用开立该义务的事务：BR-FUND-09 补差开立的取 SETTLE_ADJUST，sub_type 取开立时那条结算记录的 sub_type；迁移 R13 恢复开立的取 ADMIN_ADJUST / RESTORE；开立时把这对类型记在义务上（BR-FUND-04 ⑫ 的开立事件一并登记，写入后不变，补记时不取最新结算记录的原因）。同一义务后来并入了别的来源的延后（⑫「新的延后并入它」），整笔仍按开立时记下的类型补记：这是合并义务的分类约定，补记金额、余额与收益看板（SETTLE_ADJUST、ADMIN_ADJUST 都不计入「已结算」）不受影响，只是流水里这一笔的类型名按开立来源显示；没有合并时，用户看到的流水类型与不延后时相同（代理补全的默认，2026-10-18，Jev：沿用 0.63、一律 SETTLE_DIFF 0.30、按角色入账类型 0.07，置信度 0.45）。延后差额没收的平台凭证 `…:PLATFORM:FORFEIT:{uid}:{role}:DEFERRED:{beneficiary_credit_id}` 属平台专属凭证，按第一项取 REBATE_CREDIT（Jev 0.91、置信度 0.82）。
+- REWARD（P1）的分录模板、键与金额随 P1 规格（BR-INV-22）定，MVP 的机读模板不列。
+
 **用户侧名称**：各 ledger_type 的用户侧名称只在 BR-TEXT-19（字典 ledger_type.&lt;CODE>.name）维护；WITHDRAW_PAID 为「提现到账」（C-02 已由负责人决定，拍板第一批 §3、拍板第二批 OPS-01）。
 
 **映射表**：
@@ -772,6 +789,8 @@ C-02 已由负责人决定（拍板第二批 OPS-01）：提现侧用「到账�
 **强一致**：余额、分录、rebate_status、提现状态只在同一 PG 事务内变更；领域事件（与业务写入同一事务入队的任务）只驱动推送、风控、看板、trace。
 
 **分工**：凭证粒度、科目、红冲规则写在 specs/ledger-rules.md（代理按本主题起草，财务确认）；锁顺序按上方「加锁流程」（2026-10-03 按本条授权统一）；缓存策略等其他实现细节代理可自定。
+
+**平台科目分录的子户**（代理补全的默认，2026-10-18，与资金线已用的做法一致，`docs/changes/20261018-账务模板待定项.md`）：平台科目分录的 sub_account 一律为 available；frozen 只用于用户提现冻结（BR-FUND-14），平台科目不分子户核算。
 
 #### BR-FUND-17 细则 · 资金话术与状态对应
 
@@ -902,6 +921,8 @@ C-02 已由负责人决定（拍板第二批 OPS-01：用户侧不再单列「�
 **垫资周期**：入账随月结账单批次发生（BR-FUND-04），入账时联盟已对该单结算；已入账未回款主要是联盟结算到联盟回款之间的时差，回款日待 规划/09 核实。敞口远小于原逐单入账口径。
 
 **例**：11-24 月结批次入账 2026-10 账单合计 1,200,000 分、12-20 淘宝回款 1,150,000 分 → UNION_RECEIVABLE:taobao 余额 50,000 分，差额进 R1 差错单，不直接记损益。阈值 1,000,000 分时：11-24 至 12-19 每天合计 1,200,000 → 每天告警 1 次；12-21 回落到 50,000 → 不告警。
+
+**联盟回款凭证**（代理补全的默认，2026-10-18，待财务确认，`docs/changes/20261018-账务模板待定项.md`）：每条回款记录（财务在后台录入，或经 R1 确认，同一笔回款只登记一条）写一张凭证，uniq_key `RECEIPT:{platform}:{receipt_id}`（receipt_id 是该回款记录的 id），借 CASH_ALIPAY（银行卡通道开通后为对应银行科目）/ 贷 UNION_RECEIVABLE:{platform}；金额记 `receipt_fen` = 该笔实际到账的回款额，不是应收额，与已入账未回款的差额按上例进 R1 差错单、不直接记损益；ledger_type 按 BR-FUND-15 细则「平台科目分录与几类凭证的 ledger_type」取平台专属凭证的占位值。
 
 企业支付宝水位 W/P 与暂停打款规则见 BR-WDR-18、BR-WDR-17。
 
@@ -1073,5 +1094,6 @@ C-02 已由负责人决定（拍板第二批 OPS-01：用户侧不再单列「�
 20. 月结账单状态：负责人补充中列出 出账中 → 已出账 → 结算中 → 已结算 四个状态，花卷云另有「待结算」；本条按五个状态（含定时结算未到时刻的「待结算」）由批次状态派生（BR-FUND-04 细则），是否保留「待结算」需负责人确认；这些是后台账单状态用词，不出现在用户侧；BR-TEXT-13 禁用「待结算」「结算中」只约束用户可见文案，二者不冲突。
 21. 代理按拍板第二批补全、负责人 2026-10-01 授权按推荐的写法，财务确认 specs/ledger-rules.md 时一并核对：BR-FUND-24 的原因码集合与各原因码对方科目（ACCOUNT_CLOSED 记 COMMISSION_REVENUE、PAYOUT_RECOVERY 记 CASH_ALIPAY）；BR-FUND-08 注销后扣回借 BAD_DEBT 的分录（FUND-09）；BR-FUND-22 ③ 封禁申诉撤销后补发 forfeited 份额（FUND-14）。原列「BR-FUND-12 注销时负余额当即生成核销候选单」已由 §8 ADD-07 取消（余额为负不能注销）。
 22. BR-FUND-25 收益看板（2026-10-03，功能对照 G-11）：是否进 M-公开、邀请栏只给本月与上月合计，按功能对照 Q-10 默认 A 写，负责人 2026-10-06 已确认（docs/changes/20261006-待确认事项整批确认与交由Jev判断.md）；「已结算」取入账类分录的代数和（含更正与改归属的红冲、重记，各按自己的会计日归期）、不并入售后扣回、结算补差与人工调账，是代理起草的默认；是否改为净额需财务确认（改净额时须同时定扣回归入哪个期间），红冲是否改为回改原入账期间也一并由财务确认。
+23. 【待负责人决定，2026-10-18 资金线报来，`docs/changes/20261018-账务模板待定项.md` §3】BR-FUND-01 R14：已入账订单改派时，旧快照里有受益人已进入注销 processing 或已注销、且在本单键下还有不为 0 的类型组（BR-FUND-01 细则「R14 的分录类型」），这部分红冲怎么记。选项：A（推荐）比照 BR-FUND-08 与 BR-CALC-09 的已注销规则，不写墓碑账户，按其净额改借 BAD_DEBT / 贷 UNION_RECEIVABLE（键不变，净额为 0 不写），这笔由平台承担，新受益人照常重记；B 照常红冲墓碑账户，余额变负且之后没有收入抵扣，BR-FUND-12 核销又只适用于未注销用户，负数会一直挂在墓碑上；C 这种订单不允许改派，新受益人拿不到这单返利，订单仍归已注销的旧受益人。决定前按 C 的效果处理：该情形没有分录模板，R14 事务整笔不提交，什么都不变（BR-FUND-01 细则「R14 的分录类型」）。决策人：负责人（改变由谁承担金额）。
 
 ---
