@@ -1501,7 +1501,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | `withdrawal_status` | PENDING_REVIEW / APPROVED / PAYING / PAID_API / PAID_MANUAL / REJECTED / FAILED | 待审核 / 已通过待打款 / 打款中 / 接口打款成功 / 线下打款成功 / 已驳回 / 打款失败 | — | 用户侧文案另按 BR-TEXT-06 |
 | `withdrawals.risk_flags[].code` | first_withdrawal / credited_today / same_device_multi_account / invalid_ratio_60d / high_commission_ratio_60d / withdraw_vs_received / had_negative / recon_diff / blacklist_hit / payee_prev_other_user / risk_calc_failed | 首次提现 / 当日有入账 / 同设备多账号 / 60 天失效占比高 / 60 天高佣占比高 / 30 天提现额与 60 天确认收货返利比例异常 / 曾负余额 / 有对账差错 / 命中黑名单 / 收款账号曾属他人 / 风险计算失败 | — | BR-WDR-29 ①–⑩ 与 risk_calc_failed；命中 `withdraw.auto_payout.risk_block_flags` 的另标「转人工」（BR-WDR-30 ⑫） |
 | `claim_status` | submitted / auto_matched / manual_review / approved / rejected / cancelled | 已提交 / 自动匹配待确认 / 人工审核中 / 已通过 / 已驳回 / 已取消 | — | BR-ATTR-18 |
-| `claim_reject_reason` | 契约线补（编码表由 BR-ATTR 给出，本主题 §12.3 第 14 条） | 契约线补 | — | — |
+| `claim_reject_reason` | NO_EVIDENCE / EXPIRED_CLICK / NOT_TRACKED / OTHER_TLJ / FRAUD / OTHER / NOT_IN_POOL / ORDER_INVALID | 缺少证据 / 点击已过期 / 未跟单 / 他人淘礼金 / 欺诈 / 其他 / 不在未归因池（系统专用） / 订单已失效（系统专用） | 用户侧取字典 `claim_reject_reason.<CODE>.title`（BR-TEXT-09 CLAIM_RESULT） | BR-ATTR-18；编码表与契约 `contracts/enums/order.yaml` 一致；前 6 个客服可选，后 2 个系统专用（2026-10-19 回写，后台第 1 批 CT-24） |
 | `export_status` | pending / running / done / failed / expired / cancelled | 排队中 / 生成中 / 已完成 / 失败 / 已过期 / 已取消 | — | 规划/04 §6.6 `exports`；取值 BR-ID-34 细则「后台导出任务」 |
 | `union_accounts.auth_status` | active / expiring / expired | 有效 / 即将到期 / 已过期 | — | BR-ID-24；规划/04 §3.2 `union_accounts` |
 | `union_accounts.last_probe_ok`（探测结果） | true / false | 探测正常 / 探测失效 | — | 失效时并列显示 `last_probe_error` 原文与 `last_probe_at`；ADD-08 |
@@ -1531,7 +1531,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 11. 2026–2027 年法定节假日与调休日历的录入责任人与时间（BR-WDR-26 workday_calendar）。
 12. 修订① 的 D8（C 类素材是否给「复制原口令」）与 规划/00 的 D8（分销计酬）编号冲突，需在文档登记表中重新编号。
 13. PUNISH 子原因对用户透出粒度需负责人与运营确认（BR-TEXT-05 默认用不含联盟术语的概括文案）。
-14. 找回驳回原因字典 claim_reject_reason 的编码表由 BR-ATTR 给出（BR-TEXT-09 CLAIM_RESULT 引用）。
+14. 找回驳回原因字典 claim_reject_reason 的编码表由 BR-ATTR 给出（BR-TEXT-09 CLAIM_RESULT 引用）。已补（2026-10-19，BR-TEXT-25 取值表 `claim_reject_reason` 行，8 个编码的后台显示名与契约枚举描述一致）。
 15. 订单状态按 C-01 改用 BR-FUND-01 双状态与 BR-FUND-17 派生的 display_status（BR-TEXT-01/02/03/04/05/09/18），已由负责人确认 2026-09-30；不采纳时按本主题开头的映射回退。
 16. 已关闭：BR-FUND-17 已删去术语表，派生表文案列改为「示意」并声明以 BR-TEXT-02 为准，只保留派生条件与「状态和金额只取接口」；现派生表示意文案已用「入账核对中」「售后处理中，入账暂停」「已收货，等待联盟结算后入账」。原记录：BR-FUND-17 文案列与本主题不一致、未列入 §14.3：REVIEWING「返利审核中」对本主题「入账核对中」（本主题不透露 hold）；RIGHTS_PENDING「返利暂缓到账」、CREDITING「到账处理中」、WAITING_SETTLE「等待联盟结算后到账」对方案 A 的「入账」；BR-FUND-04 推送「¥x 已到账」对 BR-TEXT-09「已入账」。建议随 C-02 一并裁决，文案以本主题为准（BR-FUND-17 只保留派生条件）。
 17. 已关闭（C-25，负责人 2026-09-30 决定，变更记录 §3：有收益的都要推送）：ORDER_TRACKED 的对象、触发、合并与去重只在 BR-TEXT-09 维护；跟单与收益通知发给该子订单全部份额 > 0 的受益人（归属用户、直推上级、间推上级），上级通知只含金额与状态（J7 隐私）；去重键 {order_key}:{uid}:{role}:TRACKED（BR-FUND-05）；BR-FUND-03 推送段引用 BR-TEXT-09。取代原默认「直推上级不推」。
