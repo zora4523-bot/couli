@@ -8,7 +8,7 @@
 - `variables.css`：自动生成的 H5 消费文件；颜色、间距等映射为 CSS 自定义属性，并追加 `foundations.css` 的基础样式。消费端只需加载这一份 CSS，禁止手改。
 - `foundations.css`：手写基础样式源，提供可选的 `.couli-button-primary`、`.couli-control`、`.couli-touch-target`；修改样式后重新生成消费 CSS，不复制品牌色值。
 - `../brand/brand-config.js`：由根配置和令牌源生成的浏览器消费配置；与生成 CSS 一起供品牌展示页使用，禁止手改。
-- 当前只交付浅色 UI，`metadata.theme = "light"`、`color-scheme: only light`；深色 UI 为 P1。图标的深色外观版本不代表 App 内已支持深色主题。
+- 当前令牌源只有浅色取值（`metadata.theme = "light"`、`color-scheme: only light`）。2026-10-18 起三端与 H5 开发时一起支持深色（规划/00 D35）：深色取值由组件库任务（规划/05 DS-02）补进 `design/tokens/design-tokens.json` 这一个唯一源，同步版本、生成物与 `design/colors/colors.md` 的对比度核对；补进前展示页仍只有浅色。图标的深色外观版本不代表 App 内已支持深色主题。
 
 本仓库已有 `scripts/sync-brand.py`，从根配置定位源文件，生成 CSS 与浏览器配置；它使用 Python 标准库，不是运行时主题服务，也不生成三端原生资源。调整数值先修改 JSON，并同步版本、语义说明及 `colors/colors.md` 中受影响的对比度记录，再在仓库根目录运行：
 
