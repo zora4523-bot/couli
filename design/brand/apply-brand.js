@@ -36,6 +36,8 @@
   }
   applyAssets();
   darkQuery.addEventListener('change', () => applyAssets());
+  // A page-level data-theme override (e.g. a preview forcing light or dark) must swap the inverse assets too.
+  new MutationObserver(() => applyAssets()).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
   document.querySelectorAll('[data-brand-token]').forEach(element => {
     const url = brand.tokens[element.dataset.brandToken];
     if (element.getAttribute('href') !== url) element.setAttribute('href', url);

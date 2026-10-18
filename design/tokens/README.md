@@ -8,7 +8,7 @@
 - `variables.css`：自动生成的 H5 消费文件；颜色、间距等映射为 CSS 自定义属性，并追加 `foundations.css` 的基础样式。消费端只需加载这一份 CSS，禁止手改。
 - `foundations.css`：手写基础样式源，提供可选的 `.couli-button-primary`、`.couli-control`、`.couli-touch-target`；修改样式后重新生成消费 CSS，不复制品牌色值。
 - `../brand/brand-config.js`：由根配置和令牌源生成的浏览器消费配置；与生成 CSS 一起供品牌展示页使用，禁止手改。
-- 令牌源有**浅 / 深两套取值**（规划/00 D35，2026-10-18；规划/03 §10.1）：`metadata.theme = "light"` 是基准主题，`metadata.modes = ["light", "dark"]`，`metadata.darkThemePhase = "MVP"`。每个颜色叶节点的 `value` 是浅色值、`dark` 是深色值；阴影令牌同样带 `dark`；尺寸、字号等不随主题变化、没有 `dark`。语义令牌名只有一套，组件只引用令牌名、不判断主题；取值与消费方式见下文「浅 / 深两套取值与各端消费」。图标的深色外观版本与 UI 主题是两回事。
+- 令牌源有**浅 / 深两套取值**（规划/00 D35，2026-10-18；规划/03 §10.1）：`metadata.theme = "light"` 是基准主题，`metadata.modes = ["light", "dark"]`，`metadata.darkThemePhase = "MVP"`。每个颜色叶节点的 `value` 是浅色值、`dark` 是深色值；阴影 `shadow.card` / `shadow.floating` 同样带 `dark`（`shadow.none` 两态都是空数组、不带 `dark`）；尺寸、字号等不随主题变化、没有 `dark`。消费方读不到 `dark` 时回退 `value`。语义令牌名只有一套，组件只引用令牌名、不判断主题；取值与消费方式见下文「浅 / 深两套取值与各端消费」。图标的深色外观版本与 UI 主题是两回事。
 
 本仓库已有 `scripts/sync-brand.py`，从根配置定位源文件，生成 CSS 与浏览器配置；它使用 Python 标准库，不是运行时主题服务，也不生成三端原生资源。调整数值先修改 JSON，并同步版本、语义说明及 `colors/colors.md` 中受影响的对比度记录，再在仓库根目录运行：
 
@@ -25,7 +25,7 @@ python3 scripts/sync-brand.py --check
 
 | `type` | `value` 结构 | 平台消费方式 |
 | --- | --- | --- |
-| `color` | 大写六位十六进制字符串 `#RRGGBB`；带透明度的遮罩类用八位 `#RRGGBBAA`（末两位为透明度，目前只有 `color.overlay.scrim`） | 六位按 sRGB 不透明颜色解析；八位 CSS 输出为 `rgba()`，iOS / 鸿蒙按 RGBA 读取，Android 的 `#AARRGGBB` 顺序不同、生成时须换位 |
+| `color` | 大写六位十六进制字符串 `#RRGGBB`；带透明度的遮罩类用八位 `#RRGGBBAA`（末两位为透明度，目前只有 `color.overlay.scrim`） | 六位按 sRGB 不透明颜色解析；八位 CSS 输出为 `rgba()`，iOS 按 RGBA 读取；Android `colors.xml` 与鸿蒙 `color.json` 的八位格式都是 `#AARRGGBB`，生成时须换位（浅 `#28251F66` → `#6628251F`，深 `#0000008C` → `#8C000000`），直接照抄会变成接近全透明 |
 | `number` | 无单位数字 | 倍数或比例，原样使用（目前只有 `component.checkbox.max-scale`） |
 | `dimension` | 数字，另有 `unit: "logical"` | H5 用 px；iOS 用 pt；Android 用 dp；鸿蒙用 vp；布局值不随字号缩放 |
 | `fontSize` | 数字，另有 `unit: "logical"` | H5 转 rem（以 16 为基数且保留用户根字号）；iOS 通过 Dynamic Type 缩放 pt 基础值；Android 用 sp；鸿蒙用 fp |
@@ -45,7 +45,7 @@ python3 scripts/sync-brand.py --check
 | H5 / 管理后台（CSS） | 只加载一份 `variables.css`：`:root` 是浅色值；`@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) }` 与 `:root[data-theme="dark"]` 是两个**同值**的深色块，只覆盖带 `dark` 的令牌，并把 `color-scheme` 设为 `dark`。页面默认跟随系统；App 内 H5 由宿主在 `<html>` 上写 `data-theme="dark"` / `"light"` 与原生保持同一主题，站外 H5 不写该属性。页面不要再写 `color-scheme: only light` |
 | iOS（Asset Catalog） | 每个颜色令牌一个 Color Set，`Any Appearance` 填 `value`、`Dark` 填 `dark`；SwiftUI 用 `Color("color-text-primary")` 之类的令牌名取色，系统切换外观时自动换值，不在视图里判断 `colorScheme`。阴影两套用 `shadow.*.dark` 对应 |
 | Android（资源目录） | `values/colors.xml` 放 `value`、`values-night/colors.xml` 放同名的 `dark`；Compose 主题按 `isSystemInDarkTheme()` 选 `lightColorScheme` / `darkColorScheme`，两套都从令牌生成，并把 M3 的 `surfaceContainer*`、`secondaryContainer`、`scrim` 等映射补齐（组件清单 §7）。八位十六进制换成 `#AARRGGBB` |
-| 鸿蒙（资源目录） | `resources/base/element/color.json` 放 `value`、`resources/dark/element/color.json` 放同名的 `dark`；ArkUI 用 `$r('app.color.color_text_primary')` 引用，系统深色时自动命中 `dark` 目录；系统组件的品牌色经 `ThemeControl.setDefaultTheme` 按令牌映射 |
+| 鸿蒙（资源目录） | `resources/base/element/color.json` 放 `value`、`resources/dark/element/color.json` 放同名的 `dark`；ArkUI 用 `$r('app.color.color_text_primary')` 引用，系统深色时自动命中 `dark` 目录；八位十六进制同样换成 `#AARRGGBB`；系统组件的品牌色经 `ThemeControl.setDefaultTheme` 按令牌映射 |
 | 代码仓库契约 | `contracts/design-tokens.json` 接收本文件的固定版本快照（含 `dark` 字段），各端生成器从同一快照产出上述资源，不手工维护第二套数值（规划/03 §10.1） |
 
 组件验收用两态截图（规划/03 §10.2「两态交付」）；深色下关键页的可读性与对比度按规划/10 AC-S1-185 验收。

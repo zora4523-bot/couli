@@ -90,7 +90,7 @@ UI 跟随系统深色（规划/00 D35，接法见 §7）；App 图标的 dark / 
 
 ## 7. 深色接入
 
-令牌 v0.4.0 起（2026-10-18，规划/00 D35），每个颜色与阴影令牌在唯一源里带 `value`（浅）与 `dark`（深）两个值；语义令牌名只有一套，组件只引用令牌名、不写死色值、不判断主题，业务代码不感知主题。本节只写接法与指针，各端的实现由规划/05 DS-02 交付，**不代表原生工程已完成**。
+令牌 v0.4.0 起（2026-10-18，规划/00 D35），每个颜色令牌与 `shadow.card` / `shadow.floating` 在唯一源里带 `value`（浅）与 `dark`（深）两个值（`shadow.none` 与尺寸类不带 `dark`，读不到时回退 `value`）；语义令牌名只有一套，组件只引用令牌名、不写死色值、不判断主题，业务代码不感知主题。本节只写接法与指针，各端的实现由规划/05 DS-02 交付，**不代表原生工程已完成**。
 
 | 消费端 | 接法 | 指针 |
 | --- | --- | --- |
@@ -98,7 +98,7 @@ UI 跟随系统深色（规划/00 D35，接法见 §7）；App 图标的 dark / 
 | H5 / 后台 | 默认跟随系统；App 内 H5 由宿主在 `<html>` 写 `data-theme` 与原生同主题；后台经 antd `ConfigProvider theme` 映射同一套取值、优先级最低 | 规划/03 §8.1、§9.1 |
 | iOS | Asset Catalog 每个颜色一个 Color Set：Any Appearance = `value`、Dark = `dark` | 规划/03 §3.4、[令牌规范](../design/tokens/README.md#浅--深两套取值与各端消费) |
 | Android | `values/` 放 `value`、`values-night/` 放 `dark`，Compose 两套 ColorScheme 都由令牌生成 | 同上 |
-| 鸿蒙 | `resources/base/element/color.json` 与 `resources/dark/element/color.json` 同名资源 | 同上 |
+| 鸿蒙 | `resources/base/element/color.json` 与 `resources/dark/element/color.json` 同名资源；八位色与 Android 一样换成 `#AARRGGBB` | 同上 |
 | 契约快照 | `contracts/design-tokens.json` 接收含 `dark` 字段的固定版本快照，生成器从同一快照产出以上资源 | 规划/03 §10.1 |
 
 验收：组件两态截图（规划/03 §10.2），关键页深色可读与对比度（规划/10 AC-S1-185），对比度数值记录在 [配色规范 §3.2](../design/colors/colors.md#32-深色2026-10-18)。
