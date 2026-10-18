@@ -396,7 +396,7 @@ platform = reserve_fen + (B − own − direct − indirect)   // reserve_fen �
 - 间推受益人（BR-CALC-05）适用本条全部判定；「不得向上顺延」指直推受益人失效时其份额不转给间推受益人，间推受益人失效时其份额也不转给更上级，均归平台。
 - 规划 01 F-SET-03 已确认'归平台、不顺延'，本条新增判定时点与 hold。
 - 例（没收份额的凭证，2026-10-03 资金规则对齐 E-16）：淘宝预留 2000，本人 5000、直推 1000，结算佣金 1000；入账时本人 U1 已进入注销处理 → P1 +80；平台 CREDIT 凭证 520（留存 320 + 预留 200）；另写 `{order_key}:PLATFORM:FORFEIT:U1:self` 400（借 UNION_RECEIVABLE / 贷 COMMISSION_REVENUE，forfeit_reason=deleted），不写 U1 流水；UNION_RECEIVABLE 合计 1000。
-- held 解除后按 BR-FUND-01 R5a 入账：订单已 CREDITED 时，在 hold 解除后的下一个月结批次或补充批次（BR-FUND-04 ⑫ 受益人补记项）为该受益人单独入账，金额按执行时的 booked_base_fen 重算（暂缓期间结算额变过的，按变后的基数补），uniq_key 沿用 {order_key}:{uid}:{role}:CREDIT（只入一次）；转 forfeited 时份额记平台（{order_key}:PLATFORM:FORFEIT:{uid}:{role}，首次整份没收；改派后新受益人暂缓的，没收键带该次改派的 reassign_id：{order_key}:PLATFORM:FORFEIT:{uid}:{role}:REASSIGN:{reassign_id}，2026-10-03 第 2 轮评审后修改）；BR-FUND-04 为「除 held 受益人外同批入账」。已入账受益人正差被延后的部分另按 BR-FUND-04 ⑫ 的延后差额义务补记（键 `ADJ:DEFERRED:{beneficiary_credit_id}`），转没收时只没收待补记额，不把该受益人整个改为被剥夺（2026-10-03 评审后修改）。按 C-27 (d) 处理，补入账时点随月结口径（拍板第二批 FUND-01）。
+- held 解除后按 BR-FUND-01 R5a 入账：订单已 CREDITED 时，在 hold 解除后的下一个月结批次或补充批次（BR-FUND-04 ⑫ 受益人补记项）为该受益人单独入账，金额按执行时的 booked_base_fen 重算（暂缓期间结算额变过的，按变后的基数补），uniq_key 沿用 {order_key}:{uid}:{role}:CREDIT（只入一次）；转 forfeited 时份额记平台（{order_key}:PLATFORM:FORFEIT:{uid}:{role}，首次整份没收；改派后新受益人暂缓的（R14 2026-10-18 起不开放，当前不产生），没收键带该次改派的 reassign_id：{order_key}:PLATFORM:FORFEIT:{uid}:{role}:REASSIGN:{reassign_id}，2026-10-03 第 2 轮评审后修改）；BR-FUND-04 为「除 held 受益人外同批入账」。已入账受益人正差被延后的部分另按 BR-FUND-04 ⑫ 的延后差额义务补记（键 `ADJ:DEFERRED:{beneficiary_credit_id}`），转没收时只没收待补记额，不把该受益人整个改为被剥夺（2026-10-03 评审后修改）。按 C-27 (d) 处理，补入账时点随月结口径（拍板第二批 FUND-01）。
 - 按 C-01 默认处理（订单级失效改用 BR-FUND-01 状态名），已由负责人确认 2026-09-30。
 
 #### BR-CALC-14 细则 · 入账时的基数取值
