@@ -38,6 +38,8 @@
 
 2026-10-17 优券汇第三轮复核借鉴（`docs/changes/20261017-优券汇第三轮复核借鉴.md`，00 §8 第 ① 类，按 D19 只借鉴做法；试行细则，实现期发现不合适由编排撤回）：BR-WDR-08 细则补「客户端的状态显示只按服务端下发」（「已到账」只对应 PAID_API / PAID_MANUAL，中间态不得按本地字典显示成已到账）；BR-WDR-31 细则补「签署组件与签署凭证」（勾选框默认未选中、全文可打开，签署成功以服务端记录为准，每个版本各签一次）。两条状态不变，不新增、不作废条目；文案仍只在 BR-TEXT-06、BR-TEXT-08 与 BR-WDR-25 维护。
 
+2026-10-18 提现凭证键同步（`docs/changes/20261018-提现凭证键同步.md`，资金线 2026-10-18 起草 specs/ledger-templates.csv（B2-01l）时报来；00 §8 第 ① 类）：BR-WDR-09 细则的 uniq_key 由分录级（`wd:{withdrawal_id}:{FREEZE|RETURN|PAID|FEE|TAX}`）改为凭证级（`wd:{withdrawal_id}:FREEZE` / `:RETURN` / `:PAID`），成功凭证一张一键，WITHDRAW_PAID、WITHDRAW_FEE、TAX_WITHHOLD 在凭证内以 ledger_type 与分录序号区分，以本条正文「写一张凭证」与 BR-FUND-16 为准。记账时点、ledger_type、借贷科目、金额与不变量都不变；条目状态不变。
+
 ### 7.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -439,10 +441,11 @@
   - PRD v2.1 §11.5：「WITHDRAW_UNFREEZE / WITHDRAW_PAYOUT 流水名」
   - 后端功能规划 §2.9：「UNFREEZE、TAX_WITHHELD 流水名」
   - 本条正文 2026-10-03 前写法：「W5（通道成功 → PAID_API）、W8（…）、W10 判 PAID_API：写一张凭证」「SM-WDR-W1…W10」（随 BR-WDR-08 新增 W11 补成功分录的适用迁移）（2026-10-03 资金规则对齐（负责人批准），方案 §6.14，决-08）
+  - 本条细则 2026-10-18 前写法：「每条分录的 `uniq_key = wd:{withdrawal_id}:{FREEZE|RETURN|PAID|FEE|TAX}`，重放时不会重复记账。」（把键写到了分录级，成功凭证出现 PAID / FEE / TAX 三个键，与本条正文「写一张凭证」、BR-FUND-16「每个 uniq_key 对应 1 张凭证」及 04 `ledger_vouchers.uniq_key` 唯一键不一致；2026-10-18 改为凭证级键，`docs/changes/20261018-提现凭证键同步.md`，00 §8 第 ① 类）
 - 来源：规划/04 §2.4、§4.2；规划/02 §8.2、§8.3、§8.4；后端功能规划 §2.9 payout-worker 规则 3；PRD v2.1 §11.5；docs/changes/20261003-资金规则对齐.md
 - 需同步修改的规划文档：4 处（计数仅作记录，落点见 README §0.6）
 
-- 每条分录的 `uniq_key = wd:{withdrawal_id}:{FREEZE|RETURN|PAID|FEE|TAX}`，重放时不会重复记账。
+- 凭证键（uniq_key）在凭证级，不在分录级（BR-FUND-16：每个 uniq_key 对应 1 张凭证 + ≥2 条分录，(app_id, uniq_key) 唯一）：W1 的冻结凭证 `wd:{withdrawal_id}:FREEZE`；W3、W6、W10 判 FAILED 的退回凭证 `wd:{withdrawal_id}:RETURN`；W5、W8、W10 判 PAID_API、W11 的成功凭证 `wd:{withdrawal_id}:PAID`——只有这一张、只有这一个键，WITHDRAW_PAID、WITHDRAW_FEE、TAX_WITHHOLD 是同一张凭证内的分录，以 ledger_type 与分录序号（line）区分，不按分录各设 `:FEE`、`:TAX` 键。重放时 uniq_key 冲突视为已记账、跳过且结果与首次相同（BR-FUND-05）；更正按 BR-FUND-16 写 `{原 uniq_key}:REVERSE` 整张红冲（2026-10-18 同步，`docs/changes/20261018-提现凭证键同步.md`）。
 - 不变量 frozen_fen = Σ 非终态提现单 amount_fen、不使用 `WITHDRAW_IN_TRANSIT` 科目：见 BR-FUND-14，本条分录模板必须使该不变量在任意迁移后成立。
 - 例：available=5000，申请 ¥30 → W1 后 available 2000、frozen 3000；W5 成功，fee 0、tax 0 → 只写 WITHDRAW_PAID 3000 一条用户分录（贷 CASH_ALIPAY 3000），frozen=0，已提现累计 +3000；若 W6 明确失败 → 写 WITHDRAW_RETURN 3000，available 回到 5000。
 - 例：申请 ¥100，fee ¥1，tax ¥2 → W5（或 W8、W10 判 PAID_API）写一张凭证：用户 frozen 三条借方分录 WITHDRAW_PAID 9700、WITHDRAW_FEE 100、TAX_WITHHOLD 200，合计 10000；对方 贷 CASH_ALIPAY 9700、FEE_INCOME 100、TAX_PAYABLE 200。
