@@ -4,7 +4,7 @@
 
 ## 12. 用户可见话术与格式（BR-TEXT）
 
-本节规定：收益术语、订单/提现/流水文案、差额提示、预计结算月份、原因码、通知模板、金额时间格式、禁用词、错误话术、AI 与广告标识、报表金额列口径标注、Agent 固定话术、账号与风控站内信。共 23 条（已确认 10、默认假设 11、待验证 2）。
+本节规定：收益术语、订单/提现/流水文案、差额提示、预计结算月份、原因码、通知模板、金额时间格式、禁用词、错误话术、AI 与广告标识、报表金额列口径标注、Agent 固定话术、账号与风控站内信。共 25 条（已确认 11、默认假设 12、待验证 2；2026-10-18 后台缺口审计回写新增 BR-TEXT-25「后台字典」，`docs/changes/20261018-后台缺口审计回写.md`；原「23 条」漏计 2026-10-06 的 BR-TEXT-24）。
 
 2026-10-01 晚负责人补充决定（docs/changes/20261001-拍板第二批.md §8）：ADD-06 用户只有一个余额，钱包只显示一组数（可提现余额、待抵扣、冻结中、预估收益、已提现），收入来源（自购返利、分享收益、邀请分佣、好友推广奖励）只在订单、通知与流水中按类型区分（BR-TEXT-01、09、19 已改写）；ADD-07 新增错误码 30416 与注销撤销站内信（BR-TEXT-14、23）；ADD-01 30152 废弃、删除话术行；ADD-02 站长授权过期期间 30101 / 30102 的 data.reason=auth_unavailable 文案（BR-TEXT-14）；ADD-08 该文案改为「淘宝暂时无法下单，请稍后再试」、不给无返利购买按钮（BR-TEXT-14），新增站长告警短信模板 UNION_AUTH_EXPIRING / UNION_AUTH_EXPIRED（BR-TEXT-20）。状态均不变。
 
@@ -100,6 +100,7 @@
 | BR-TEXT-22 | **Agent 固定话术**<br>Agent 的拒答、需登录、出错与降级、notice、suggestions、条件标记、页面引导卡的说明与按钮（2026-10-05，D31）、收益卡的说明与按钮（2026-10-05，D32）与订单 / 规则模板文本（BR-AI-01、BR-AI-07、BR-AI-08、BR-AI-14、BR-AI-17、BR-AI-18、BR-AI-24）只能取本条细则表的字典键，经 BR-TEXT-12 字典下发，可改措辞、不可改用途与变量；口吻（拍板第二批 AI-22）：以「凑狸 AI 助手」自称（texts.agent.name，BR-TEXT-16），简短口语，每条不超过 2 句，不用表情符号；不写金额、日期原值、链接与 BR-TEXT-13 禁用词（「佣金」只在 agent.disclaimer.commission 例外）。模型生成的说明文字同样按此口吻写入系统提示，出站过滤仍按 BR-AI-06。order_status.&lt;display_status>.summary 与 order_reason.&lt;CODE>.summary 的包内默认按细则拼法给出，单独配置的以细则表为准。 | 默认假设 | dict_items / config.texts（agent.\*（含 agent.guide.\*、agent.earnings.\*）、order_list.\*、\*.summary）；contracts/texts.default.json；CardAssembler、OutputGuard 模板替换；系统提示词口吻段；CI 禁用词扫描；Agent 评测集话术用例 |
 | BR-TEXT-23 | **账号与风控站内信**<br>风控状态变更、申诉结果、注销进度三类通知只发站内信，不发推送与短信（拍板第二批 OPS-15），必须使用细则表模板（notify-templates 可改措辞，变量与含义不得改）；内容只写原因类别（字典 risk_reason.&lt;category>），不得写风控规则、命中维度、举报来源或他人信息。封禁说明页与钱包「提现已暂停」提示显示原因类别、冻结到期时间（有期限时）与申诉入口（拍板第二批 OPS-12），文案取同一字典。触发与状态规则只在 BR-ID-27、BR-ID-31、BR-ID-36 维护。 | 已确认 | notify-templates（新增 RISK_STATE_CHANGED、APPEAL_RESULT、DELETION_PROGRESS，category=service、渠道只站内）；dict risk_reason.&lt;category>；封禁说明页；钱包提现暂停提示；GET /v1/me 风控字段（原因类别、frozen_until）；申诉接口查询结果 |
 | BR-TEXT-24 | **平台标识素材的来源与替换**<br>界面里的平台标识（来源、授权、支付 / 收款方式、分享去向）只用平台官方原图；安装包与 H5 产物内置一套作兜底，后台可按平台上传替换图并发布、回滚；远程图缺失、下载失败或校验不通过时显示内置图，不留空白。「内置兜底 + 后台可替换」由负责人 2026-10-06 确认（docs/changes/20261006-平台标识后台可替换.md）；上传格式、SVG 清洗、来源登记、预览与发布方式是代理补全的默认，见细则。凑狸自己的品牌素材仍不得含平台商标（BR-TEXT-20、01 F-PRIV-08）。 | 已确认 | `/v1/config.platform_icons`；后台内容「平台标识」页与权限点 `content.platform_icon`；`PlatformBadge`；授权页、支付 / 收款方式、分享面板 |
+| BR-TEXT-25 | **后台字典 / 状态中文名**<br>管理后台里每个枚举值（差错单类型与状态、结算批次状态、调账单状态、提现转人工原因、风险标签、找回驳回原因、导出任务状态、站长授权状态等）显示的中文名只在本条细则表维护，经字典 `admin_dict.<enum>.<code>` 下发（枚举名与编码取 04 原值），页面与画板不得自拟或各自翻译；细则表里标「契约线补」的项在契约落定枚举时由契约线补齐中文名，补齐前后台原样显示编码。后台中文名与用户侧文案是两套：用户看到的仍按 BR-TEXT-02、06、08、19 等映射，后台页面按 BR-TEXT-18 双列同时显示编码与用户文案时，第二列取用户侧字典。 | 默认假设 | 后台各列表与详情、`admin_dict` 字典、design/ 后台画板 |
 
 ### 12.2 细则
 
@@ -1469,6 +1470,51 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 读屏名称始终是平台中文名（如「淘宝」），不随图片变化。
 
 例：运营上传新版 `alipay` SVG，登记来源页与下载日期后发布 → 用户下次取配置后看到新图；CDN 故障时仍看到包内支付宝图；运营点「恢复内置」→ 下发去掉 `alipay`，全部回到包内图。
+
+#### BR-TEXT-25 细则 · 后台字典 / 状态中文名
+
+- 状态：默认假设（2026-10-18 后台缺口审计 §3-7 新增，`docs/changes/20261018-后台缺口审计回写.md`；183 张后台画板各自拟名，没有归属处）
+- 默认值：下表；表里没有的枚举先显示编码
+- 决策人：代理可自定（措辞属实现选择；用户可见文案不在本条）
+- 依赖平台能力：无
+- 来源：规划/04 §2.3、§2.4、§2.5 各枚举（本条只给中文名，不新增、不改写任何枚举值）；BR-FUND-04、12、22、24；BR-WDR-10、29、30；BR-ATTR-02、18；BR-ID-24、31、36；BR-CALC-22；01 F-ADM-03、06、07、08、16、18
+
+规则：
+
+- 字典键 `admin_dict.<enum>.<code>`：`<enum>` 用 规划/04 §2 的枚举名或「表.列」原名，编码取 04 的原值、原大小写；本条不定义枚举，04 改枚举时本表随之改行。下发走后台字典只读接口（形状 规划/04 §6.6 `dict`），缺键时显示编码并在开发态告警。
+- 修改走内容「字典」页；权限按 BR-TEXT-12 细则「资金术语键」的键级归类执行：本表里命中资金术语认定的键（提现、打款、调账、核销、差错单、月结等状态名）归 `content.fund_terms`、动态码并存前后值，其余归 `config.general`；每个 `admin_dict.*` 键同样要落在 `specs/fund-term-keys.yaml` 的某一段，未归类的按资金术语保守处理（BR-TEXT-12 细则）。本条不给后台中文名任何整组豁免。
+- 画板与前端只能引用本表；新增枚举值时先在 04 加值、本表加行（可标「契约线补」），再出画板。
+- 同一编码在不同页面用同一个中文名；需要缩写时用本表「短名」列，不另起名。
+
+取值表（已知项；「契约线补」= 编码尚未在契约落定，补齐前显示编码）：
+
+| 枚举（规划/04 原名） | 编码（04 原值） | 后台中文名 | 短名 | 备注 |
+| --- | --- | --- | --- | --- |
+| `admin_adjustments.status` | PENDING / APPROVED / REJECTED / CANCELLED | 待批准 / 已生效 / 已驳回 / 已撤回 | — | 红冲是关联原单的另一张调账单，不是状态（BR-FUND-24）；详情页对已被红冲的原单加「已红冲」标记 |
+| `settle_batch.status` | DRAFT / CONFIRMED / EXECUTING / PARTIAL / DONE / CANCELLED | 待确认 / 已确认 / 执行中 / 部分完成 / 已完成 / 已取消 | — | BR-FUND-04 细则「结算批次迁移表」 |
+| `settle_mode` | IMMEDIATE / SCHEDULED | 立即执行 / 定时执行 | 立即 / 定时 | BR-FUND-04 |
+| `recon_diff_type` | union_mismatch / channel_mismatch / ledger_mismatch / platform_restore / month_end_unbalanced / settle_amount_mismatch / settle_missing / appeal_restore / estimate_changed_after_credit / pay_mismatch / pay_anomaly | 联盟对账不一致 / 通道对账不一致 / 账实不符 / 平台恢复 / 月末三项不平 / 月结金额不一致 / 应结未结 / 申诉恢复 / 入账后预估变化 / 收款对账不一致 / 收款异常 | — | 04 §2.5 全集；BR-FUND-22、23、BR-WDR-23、BR-PAY-07 |
+| `recon_diffs.source` | R1 / R2 / R3 / R4 | 联盟对账 / 通道对账 / 内部日终 / 收款对账 | — | — |
+| `recon_diff_status` | open / processing / adjusted / written_off / closed | 待处理 / 处理中 / 已调账 / 已核销 / 已关闭（不处理） | — | BR-FUND-22 |
+| `withdrawals.review_mode` | auto / manual | 自动到账 / 人工审核 | 自动 / 人工 | BR-WDR-30 |
+| `withdrawals.auto_decision.failed_conditions[]`（转人工原因列） | disabled / max_amount / outside_window / first_withdrawal / frozen_balance / same_day / payee_daily_count / payee_monthly_count / user_daily_count / user_monthly_count / warn_high_commission / warn_invalid_ratio / warn_withdraw_received / platform_daily_max / minor / channel_disabled / risk_flag:&lt;code> / w2_guard | 自动到账关闭 / 超单笔自动上限 / 不在自动时段 / 首次提现 / 有冻结金额 / 当日入账当日提现 / 收款账号当日次数超 / 收款账号当月次数超 / 本人当日次数超 / 本人当月次数超 / 高佣预警 / 失效占比预警 / 提现收益比预警 / 平台当日上限 / 未成年 / 通道关闭 / 阻断标签（后接标签中文名） / 执行前置未过 | — | 编码沿用 BR-WDR-30 细则「判定顺序与记录」，本表只补中文名；契约落地随 CT-24 |
+| `withdrawal_status` | PENDING_REVIEW / APPROVED / PAYING / PAID_API / PAID_MANUAL / REJECTED / FAILED | 待审核 / 已通过待打款 / 打款中 / 接口打款成功 / 线下打款成功 / 已驳回 / 打款失败 | — | 用户侧文案另按 BR-TEXT-06 |
+| `withdrawals.risk_flags[].code` | first_withdrawal / credited_today / same_device_multi_account / invalid_ratio_60d / high_commission_ratio_60d / withdraw_vs_received / had_negative / recon_diff / blacklist_hit / payee_prev_other_user / risk_calc_failed | 首次提现 / 当日有入账 / 同设备多账号 / 60 天失效占比高 / 60 天高佣占比高 / 30 天提现额与 60 天确认收货返利比例异常 / 曾负余额 / 有对账差错 / 命中黑名单 / 收款账号曾属他人 / 风险计算失败 | — | BR-WDR-29 ①–⑩ 与 risk_calc_failed；命中 `withdraw.auto_payout.risk_block_flags` 的另标「转人工」（BR-WDR-30 ⑫） |
+| `claim_status` | submitted / auto_matched / manual_review / approved / rejected / cancelled | 已提交 / 自动匹配待确认 / 人工审核中 / 已通过 / 已驳回 / 已取消 | — | BR-ATTR-18 |
+| `claim_reject_reason` | 契约线补（编码表由 BR-ATTR 给出，本主题 §12.3 第 14 条） | 契约线补 | — | — |
+| `export_status` | pending / running / done / failed / expired / cancelled | 排队中 / 生成中 / 已完成 / 失败 / 已过期 / 已取消 | — | 规划/04 §6.6 `exports`；取值 BR-ID-34 细则「后台导出任务」 |
+| `union_accounts.auth_status` | active / expiring / expired | 有效 / 即将到期 / 已过期 | — | BR-ID-24；规划/04 §3.2 `union_accounts` |
+| `union_accounts.last_probe_ok`（探测结果） | true / false | 探测正常 / 探测失效 | — | 失效时并列显示 `last_probe_error` 原文与 `last_probe_at`；ADD-08 |
+| `risk_state` | normal / frozen / appealing / banned | 正常 / 冻结 / 申诉中 / 封禁 | — | BR-ID-31、36 |
+| `appeal_status` | processing / upheld / revoked | 处理中 / 维持 / 已撤销 | — | BR-ID-36 |
+| `risk_action` | pass / manual_review / block / void_commission | 通过 / 转人工 / 拦截 / 作废佣金 | — | BR-ID-36；规则清单页的「处置」列 |
+| `bad_debt_writeoff.status` | PENDING / APPROVED / CANCELLED | 待批准 / 已核销 / 已取消 | — | BR-FUND-12 |
+| `commission_rules.status` | draft / published / revoked | 草稿 / 已发布 / 已撤销 | — | BR-CALC-22 |
+| `union_pids.status` | pending / active / retired | 待确认 / 启用 / 停用 | — | BR-ATTR-02 |
+
+- 例：差错单列表「类型」列显示「通道对账不一致」，详情页按 BR-TEXT-18 双列显示 `channel_mismatch`「通道对账不一致」；用户侧看不到差错单。
+- 例：契约线把 `claim_reject_reason` 定为 5 个编码 → 在本表补 5 行中文名，前端不改代码、画板按本表更新。
+- 需同步修改的规划文档：规划/01 F-ADM-06、08（已同步 2026-10-18）；规划/04 §6.6 字典指针与 `dict` 资源（已同步 2026-10-18）；design/ 后台画板（状态文字按本表统一，待补画板时处理）。
 
 ### 12.3 本主题未决问题
 
