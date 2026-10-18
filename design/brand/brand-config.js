@@ -9,17 +9,22 @@ window.COULI_BRAND = Object.freeze({
   },
   "metadata": {
     "name": "凑狸",
-    "version": "0.3.0",
-    "date": "2026-10-04",
+    "version": "0.4.0",
+    "date": "2026-10-18",
     "status": "project baseline",
     "theme": "light",
-    "darkThemePhase": "P1",
+    "modes": [
+      "light",
+      "dark"
+    ],
+    "darkThemePhase": "MVP",
     "colorSpace": "sRGB",
-    "description": "当前项目使用的品牌与界面基线；2026-10-04 按设计方向第三轮调整 App 页面底、返利强调、平台来源标签与图片占位（docs/changes/20261004-设计方向第三轮.md）。已应用于根目录品牌配置、交付素材与品牌预览，不代表原生接入、Icon Composer 或真机验收完成。App 图标外观变体独立于 UI 主题。",
+    "description": "当前项目使用的品牌与界面基线；2026-10-04 按设计方向第三轮调整 App 页面底、返利强调、平台来源标签与图片占位（docs/changes/20261004-设计方向第三轮.md）；2026-10-18 v0.4.0 按 00 D35 给每个颜色与阴影令牌补深色取值（dark 字段，value 仍为浅色）并新增组件令牌 T1–T12（docs/changes/20261018-深色令牌进唯一源.md）。已应用于根目录品牌配置、交付素材与品牌预览，不代表原生接入、Icon Composer 或真机验收完成。App 图标外观变体独立于 UI 主题。",
     "cssFontBase": 16,
     "sources": [
       "https://developer.apple.com/design/human-interface-guidelines/color",
-      "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+      "https://developer.apple.com/design/human-interface-guidelines/accessibility",
+      "https://www.w3.org/TR/WCAG22/#contrast-minimum"
     ]
   },
   "assets": {
@@ -46,147 +51,212 @@ window.COULI_BRAND = Object.freeze({
     "brandPrimary": {
       "token": "color.brand.primary",
       "cssVariable": "--color-brand-primary",
-      "value": "#C44820"
+      "value": "#C44820",
+      "dark": "#C44820"
     },
     "brandEmphasis": {
       "token": "color.brand.emphasis",
       "cssVariable": "--color-brand-emphasis",
-      "value": "#A83B1F"
+      "value": "#A83B1F",
+      "dark": "#F0956B"
     },
     "canvas": {
       "token": "color.background.canvas",
       "cssVariable": "--color-background-canvas",
-      "value": "#F2EEE6"
+      "value": "#F2EEE6",
+      "dark": "#171513"
     },
     "adminCanvas": {
       "token": "color.background.admin-canvas",
       "cssVariable": "--color-background-admin-canvas",
-      "value": "#F6F3ED"
+      "value": "#F6F3ED",
+      "dark": "#171513"
     },
     "surface": {
       "token": "color.background.surface",
       "cssVariable": "--color-background-surface",
-      "value": "#FFFFFF"
+      "value": "#FFFFFF",
+      "dark": "#24211E"
     },
     "imagePlaceholder": {
       "token": "color.background.placeholder",
       "cssVariable": "--color-background-placeholder",
-      "value": "#E9E2D9"
+      "value": "#E9E2D9",
+      "dark": "#36312C"
     },
     "textPrimary": {
       "token": "color.text.primary",
       "cssVariable": "--color-text-primary",
-      "value": "#28251F"
+      "value": "#28251F",
+      "dark": "#F2EEE6"
     },
     "textSecondary": {
       "token": "color.text.secondary",
       "cssVariable": "--color-text-secondary",
-      "value": "#655E57"
+      "value": "#655E57",
+      "dark": "#B5ACA2"
     },
     "link": {
       "token": "color.text.link",
       "cssVariable": "--color-text-link",
-      "value": "#A83B1F"
+      "value": "#A83B1F",
+      "dark": "#F0956B"
     },
     "price": {
       "token": "color.price.text",
       "cssVariable": "--color-price-text",
-      "value": "#28251F"
+      "value": "#28251F",
+      "dark": "#F2EEE6"
     },
     "rebateText": {
       "token": "color.rebate.text",
       "cssVariable": "--color-rebate-text",
-      "value": "#A83B1F"
+      "value": "#A83B1F",
+      "dark": "#F29A6E"
     },
     "rebateBackground": {
       "token": "color.rebate.background",
       "cssVariable": "--color-rebate-background",
-      "value": "#FBEFE8"
+      "value": "#FBEFE8",
+      "dark": "#3A2219"
     },
     "rebateSolidBackground": {
       "token": "color.rebate.solid.background",
       "cssVariable": "--color-rebate-solid-background",
-      "value": "#C44820"
+      "value": "#C44820",
+      "dark": "#C44820"
     },
     "rebateSolidText": {
       "token": "color.rebate.solid.text",
       "cssVariable": "--color-rebate-solid-text",
-      "value": "#FFFFFF"
+      "value": "#FFFFFF",
+      "dark": "#FFFFFF"
     },
     "sourceText": {
       "token": "color.source.text",
       "cssVariable": "--color-source-text",
-      "value": "#655E57"
+      "value": "#655E57",
+      "dark": "#B5ACA2"
     },
     "sourceBackground": {
       "token": "color.source.background",
       "cssVariable": "--color-source-background",
-      "value": "#FFFFFF"
+      "value": "#FFFFFF",
+      "dark": "#24211E"
     },
     "sourceBorder": {
       "token": "color.source.border",
       "cssVariable": "--color-source-border",
-      "value": "#E4DED5"
+      "value": "#E4DED5",
+      "dark": "#3A3530"
     },
     "pendingText": {
       "token": "color.status.pending.text",
       "cssVariable": "--color-status-pending-text",
-      "value": "#655E57"
+      "value": "#655E57",
+      "dark": "#B5ACA2"
     },
     "pendingBackground": {
       "token": "color.status.pending.background",
       "cssVariable": "--color-status-pending-background",
-      "value": "#EFEAE2"
+      "value": "#EFEAE2",
+      "dark": "#2F2B27"
     },
     "successText": {
       "token": "color.status.success.text",
       "cssVariable": "--color-status-success-text",
-      "value": "#26735B"
+      "value": "#26735B",
+      "dark": "#6CC49F"
     },
     "successBackground": {
       "token": "color.status.success.background",
       "cssVariable": "--color-status-success-background",
-      "value": "#EAF4EE"
+      "value": "#EAF4EE",
+      "dark": "#16302A"
     },
     "warningText": {
       "token": "color.status.warning.text",
       "cssVariable": "--color-status-warning-text",
-      "value": "#846020"
+      "value": "#846020",
+      "dark": "#E3B65C"
     },
     "warningBackground": {
       "token": "color.status.warning.background",
       "cssVariable": "--color-status-warning-background",
-      "value": "#FBF2DC"
+      "value": "#FBF2DC",
+      "dark": "#33290F"
     },
     "errorText": {
       "token": "color.status.error.text",
       "cssVariable": "--color-status-error-text",
-      "value": "#B42345"
+      "value": "#B42345",
+      "dark": "#F28DA4"
     },
     "errorBackground": {
       "token": "color.status.error.background",
       "cssVariable": "--color-status-error-background",
-      "value": "#FDECF0"
+      "value": "#FDECF0",
+      "dark": "#3B1A22"
     },
     "primaryAction": {
       "token": "color.button.primary.default.background",
       "cssVariable": "--color-button-primary-default-background",
-      "value": "#C44820"
+      "value": "#C44820",
+      "dark": "#C44820"
     },
     "primaryActionText": {
       "token": "color.button.primary.default.text",
       "cssVariable": "--color-button-primary-default-text",
-      "value": "#FFFFFF"
+      "value": "#FFFFFF",
+      "dark": "#FFFFFF"
     },
     "controlBorder": {
       "token": "color.border.control",
       "cssVariable": "--color-border-control",
-      "value": "#8A8177"
+      "value": "#8A8177",
+      "dark": "#8C8278"
     },
     "focusRing": {
       "token": "color.focus.ring",
       "cssVariable": "--color-focus-ring",
-      "value": "#26735B"
+      "value": "#26735B",
+      "dark": "#5DBB97"
+    },
+    "borderActive": {
+      "token": "color.border.active",
+      "cssVariable": "--color-border-active",
+      "value": "#28251F",
+      "dark": "#F2EEE6"
+    },
+    "overlayScrim": {
+      "token": "color.overlay.scrim",
+      "cssVariable": "--color-overlay-scrim",
+      "value": "#28251F66",
+      "dark": "#0000008C"
+    },
+    "controlChecked": {
+      "token": "color.control.checked",
+      "cssVariable": "--color-control-checked",
+      "value": "#C44820",
+      "dark": "#C44820"
+    },
+    "badgeBackground": {
+      "token": "color.badge.background",
+      "cssVariable": "--color-badge-background",
+      "value": "#C44820",
+      "dark": "#C44820"
+    },
+    "inverseActionBackground": {
+      "token": "color.button.inverse.background",
+      "cssVariable": "--color-button-inverse-background",
+      "value": "#FFFFFF",
+      "dark": "#FFFFFF"
+    },
+    "inverseActionText": {
+      "token": "color.button.inverse.text",
+      "cssVariable": "--color-button-inverse-text",
+      "value": "#A83B1F",
+      "dark": "#A83B1F"
     }
   }
 });

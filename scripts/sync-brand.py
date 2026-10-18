@@ -21,7 +21,13 @@ from urllib.parse import quote, unquote, urlsplit
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = ROOT / "brand.config.json"
 SEGMENT = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
-HEX_COLOR = re.compile(r"#[0-9A-F]{6}\Z")
+HEX_COLOR = re.compile(r"#[0-9A-F]{6}(?:[0-9A-F]{2})?\Z")
+THEMES = ("light", "dark")
+# (selector, wrapped in the system dark media query?) — both blocks carry identical declarations.
+DARK_SELECTORS = (
+    (':root:not([data-theme="light"])', True),
+    (':root[data-theme="dark"]', False),
+)
 REQUIRED_ASSETS = frozenset({
     "logoMark", "logoHorizontal", "logoVertical", "logoMono", "logoInverse",
     "logoHorizontalInverse", "logoVerticalInverse", "iconDefault", "iconDark",
@@ -114,15 +120,28 @@ def numeric_text(value):
 
 def color(value, label):
     require(isinstance(value, str) and HEX_COLOR.fullmatch(value) is not None,
-            f"{label}: expected uppercase #RRGGBB sRGB color")
+            f"{label}: expected uppercase #RRGGBB or #RRGGBBAA sRGB color")
     return value
 
 
-def convert_token(token, path, font_base):
+def css_color(value):
+    # Opaque colors stay hex; #RRGGBBAA becomes rgba() so every consumer parses it alike.
+    if len(value) == 7:
+        return value
+    rgb = ", ".join(str(int(value[i:i + 2], 16)) for i in (1, 3, 5))
+    return f"rgba({rgb}, {numeric_text(round(int(value[7:9], 16) / 255, 2))})"
+
+
+def convert_token(token, path, font_base, theme="light"):
     kind = token["type"]
     value = token["value"]
+    if theme == "dark":
+        require(kind in ("color", "shadow"), f"{path}: only color and shadow tokens take a dark value")
+        value = token["dark"]
     if kind == "color":
-        return color(value, path)
+        return css_color(color(value, path if theme == "light" else path + " (dark)"))
+    if kind == "number":
+        return numeric_text(number(value, path))
     if kind in ("dimension", "fontSize"):
         require(token.get("unit") == "logical", f"{path}: expected unit=logical")
         value = number(value, path, minimum=0, positive=kind == "fontSize")
@@ -155,12 +174,15 @@ def convert_token(token, path, font_base):
             object_value(shadow, label)
             require(set(shadow) == {"x", "y", "blur", "spread", "color", "opacity"},
                     f"{label}: expected x/y/blur/spread/color/opacity")
+            if theme == "dark":
+                label += " (dark)"
             dimensions = []
             for key in ("x", "y", "blur", "spread"):
                 length = number(shadow[key], label + "." + key,
                                 minimum=0 if key == "blur" else None)
                 dimensions.append(numeric_text(length) + "px")
             shade = color(shadow["color"], label + ".color")
+            require(len(shade) == 7, f"{label}.color: shadow colors use opacity, not #RRGGBBAA")
             rgb = ", ".join(str(int(shade[i:i + 2], 16)) for i in (1, 3, 5))
             opacity = numeric_text(number(shadow["opacity"], label + ".opacity", 0, 1))
             shadows.append(" ".join(dimensions) + f" rgba({rgb}, {opacity})")
@@ -169,7 +191,13 @@ def convert_token(token, path, font_base):
 
 
 def flatten_tokens(tree, font_base):
-    tokens, variables = {}, {}
+    """Return (tokens, light variables, dark variables).
+
+    Every color token carries both `value` (light) and `dark`; a shadow token may carry
+    `dark`; no other type may. Dark variables only list tokens whose value changes with the
+    theme, so the dark blocks override exactly what the JSON says differs.
+    """
+    tokens, variables, dark_variables = {}, {}, {}
 
     def walk(node, segments):
         path = ".".join(segments)
@@ -180,6 +208,12 @@ def flatten_tokens(tree, font_base):
             variable = "--" + "-".join(segments)
             require(variable not in variables, f"duplicate CSS variable: {variable}")
             variables[variable] = convert_token(node, path, font_base)
+            if node["type"] == "color":
+                require("dark" in node, f"{path}: color tokens need a dark value (00 D35)")
+            elif "dark" in node:
+                require(node["type"] == "shadow", f"{path}: only color and shadow tokens take a dark value")
+            if "dark" in node:
+                dark_variables[variable] = convert_token(node, path, font_base, theme="dark")
             tokens[path] = (node, variable)
             return
         require(node, f"{path or 'tokens'}: empty token group")
@@ -189,7 +223,40 @@ def flatten_tokens(tree, font_base):
             walk(child, segments + [segment])
 
     walk(tree, [])
-    return tokens, variables
+    return tokens, variables, dark_variables
+
+
+def declarations(variables, indent="  "):
+    return "\n".join(f"{indent}{key}: {value};" for key, value in variables.items())
+
+
+def dark_blocks(dark_variables):
+    """Two selectors with identical declarations: system dark unless the page forces light,
+    and an explicit data-theme=dark for previews or an in-app override."""
+    blocks = []
+    for selector, in_media in DARK_SELECTORS:
+        indent = "    " if in_media else "  "
+        block = (selector + " {\n" + indent + "color-scheme: dark;\n"
+                 + declarations(dark_variables, indent) + "\n" + indent[:-2] + "}")
+        if in_media:
+            block = "@media (prefers-color-scheme: dark) {\n  " + block + "\n}"
+        blocks.append(block)
+    return "\n\n".join(blocks)
+
+
+def check_dark_blocks(css_text, dark_variables):
+    """Confirm the CSS carries both dark blocks, each listing exactly the JSON dark values."""
+    expected = [f"{key}: {value};" for key, value in dark_variables.items()]
+    lines = [line.strip() for line in css_text.split("\n")]
+    found = 0
+    for selector, _ in DARK_SELECTORS:
+        if selector + " {" not in lines:
+            continue
+        start = lines.index(selector + " {") + 1
+        end = lines.index("}", start)
+        body = [line for line in lines[start:end] if line and not line.startswith("color-scheme")]
+        found += body == expected
+    return found == len(DARK_SELECTORS)
 
 
 def relative_url(target, entry):
@@ -285,10 +352,16 @@ def build_outputs():
     data = read_json(source)
     require(data.get("schemaVersion") == "couli.tokens.v1", "unsupported token schema")
     metadata = object_value(data.get("metadata"), "metadata")
-    require(metadata.get("theme") == "light", "this baseline only supports metadata.theme=light")
+    require(metadata.get("theme") == "light", "metadata.theme names the base theme and must be light")
+    require(metadata.get("modes") == list(THEMES), 'metadata.modes must be ["light", "dark"] (00 D35)')
+    themes = object_value(config.get("themes"), "themes")
+    require(themes.get("base") == "light" and themes.get("modes") == list(THEMES),
+            "themes.base/modes must match the token source (light base, light + dark modes)")
+    require(themes.get("fields") == {"light": "value", "dark": "dark"},
+            "themes.fields must name the JSON fields value (light) and dark")
     require(metadata.get("name") == identity["name"], "identity.name and metadata.name disagree")
     font_base = number(metadata.get("cssFontBase"), "metadata.cssFontBase", positive=True)
-    tokens, variables = flatten_tokens(data.get("tokens"), font_base)
+    tokens, variables, dark_variables = flatten_tokens(data.get("tokens"), font_base)
 
     semantics = {}
     aliases = object_value(config.get("semantics"), "semantics")
@@ -298,17 +371,22 @@ def build_outputs():
                 f"semantics.{role}: unknown token alias: {path!r}")
         token, variable = tokens[path]
         require(token["type"] == "color", f"semantics.{role}: alias must target a color token")
-        semantics[role] = {"token": path, "cssVariable": variable, "value": token["value"]}
+        semantics[role] = {"token": path, "cssVariable": variable,
+                           "value": token["value"], "dark": token["dark"]}
 
     foundation_text = foundations.read_text(encoding="utf-8")
     require(bool(foundation_text.strip()), "foundations template is empty")
     used_variables = set(re.findall(r"var\(\s*(--[A-Za-z0-9_-]+)", foundation_text))
     require(used_variables <= variables.keys(),
             "foundations references unknown variables: " + ", ".join(sorted(used_variables - variables.keys())))
-    declarations = "\n".join(f"  {key}: {value};" for key, value in variables.items())
     css = ("/* AUTO-GENERATED by scripts/sync-brand.py; do not edit.\n"
-           " * Sources: brand.config.json, canonical tokens JSON, foundations.css. */\n"
-           ":root {\n  color-scheme: only light;\n" + declarations + "\n}\n\n" + foundation_text)
+           " * Sources: brand.config.json, canonical tokens JSON, foundations.css.\n"
+           " * Light values on :root; the two dark blocks below are identical and override only\n"
+           " * tokens whose JSON carries a dark value (system dark unless data-theme=\"light\",\n"
+           " * or explicit data-theme=\"dark\"). */\n"
+           ":root {\n  color-scheme: light;\n" + declarations(variables) + "\n}\n\n"
+           + dark_blocks(dark_variables) + "\n\n" + foundation_text)
+    require(check_dark_blocks(css, dark_variables), "internal: dark blocks do not match tokens")
     if not css.endswith("\n"):
         css += "\n"
     browser = {
@@ -323,7 +401,8 @@ def build_outputs():
     payload = payload.replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
     js = ("/* AUTO-GENERATED by scripts/sync-brand.py; do not edit. */\n"
           "window.COULI_BRAND = Object.freeze(" + payload + ");\n")
-    return {css_output: css, js_output: js}, len(tokens), len(assets), len(semantics)
+    return ({css_output: css, js_output: js}, len(tokens), len(assets), len(semantics),
+            (css_output, len(dark_variables), dark_variables))
 
 
 def write_outputs(outputs):
@@ -352,19 +431,23 @@ def main():
     parser.add_argument("--check", action="store_true", help="read-only generated-output drift check")
     args = parser.parse_args()
     try:
-        outputs, count, asset_count, alias_count = build_outputs()
+        outputs, count, asset_count, alias_count, (css_output, dark_count, dark_variables) = build_outputs()
         if args.check:
             drift = [path for path, content in outputs.items()
                      if not path.is_file() or path.read_bytes() != content.encode("utf-8")]
+            if not drift and not check_dark_blocks(css_output.read_text(encoding="utf-8"), dark_variables):
+                drift.append(css_output)
             if drift:
                 for path in drift:
                     print(f"DRIFT {path.relative_to(ROOT)}", file=sys.stderr)
                 print("Run python3 scripts/sync-brand.py to regenerate.", file=sys.stderr)
                 return 1
-            print(f"PASS: {count} tokens, {asset_count} assets, {alias_count} aliases; 2 generated files match.")
+            print(f"PASS: {count} tokens ({dark_count} with dark values), {asset_count} assets, "
+                  f"{alias_count} aliases; 2 generated files match, both dark blocks equal the JSON.")
         else:
             write_outputs(outputs)
-            print(f"Generated 2 files from {count} tokens, {asset_count} assets, {alias_count} aliases.")
+            print(f"Generated 2 files from {count} tokens ({dark_count} with dark values), "
+                  f"{asset_count} assets, {alias_count} aliases.")
         return 0
     except (ValueError, OSError, UnicodeError) as error:
         print(f"ERROR: {error}", file=sys.stderr)
