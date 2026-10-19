@@ -44,7 +44,7 @@
 | --- | --- | --- |
 | adminListClaims | 进入、筛选、切页签、切页、重试 | 10001、10403、20001 |
 | adminGetClaim | 进审核页 | 20001（`data.fields=[claim_id]`，未知 id；后台先例，不用 40401，2026-10-19） |
-| adminApproveClaim / adminRejectClaim | 通过 / 驳回 | 20902（`data.resource=claim_item`：另一名客服已先处理该子项，刷新后看结果）、20001（缺说明或驳回缺原因）。订单已被同步或他人归属**不报错**：按 BR-ATTR-20 ② 子项自动结案（申请人本人 → cancelled，否则 → rejected NOT_IN_POOL），提示「订单已被自动归属」（2026-10-19 对齐 08） |
+| adminApproveClaimItem / adminRejectClaimItem | 子订单逐个通过 / 驳回（`/admin/v1/claims/{claim_id}/items/{item_id}/approve`、`/reject`，2026-10-19 随契约 CT-24l 改名） | 20902（`data.resource=claim_item`：另一名客服已先处理该子项，刷新后看结果）、20001（缺说明或驳回缺原因）。订单已被同步或他人归属**不报错**：按 BR-ATTR-20 ② 子项自动结案（申请人本人 → cancelled，否则 → rejected NOT_IN_POOL），提示「订单已被自动归属」（2026-10-19 对齐 08） |
 
 ## 5. 权限点与开关（04 §11.2）
 
@@ -59,3 +59,4 @@
 - 列表【一键通过】与统计卡为设计自拟，本期不做（F-ADM-06、后台缺口审计 §3-21）：实现时隐藏，画板暂留。
 - ~~`claim_reject_reason` 编码表未定~~：已补（couli #147，8 个编码）。
 - 说明文字的落点（2026-10-19）：写 `claims.reason`（最近一次审核说明，详情页展示）并随每次通过 / 驳回写入审计；子项不加备注列。
+- 驳回时订单恰好已作废（2026-10-19，BR-ATTR-18）：子项记 ORDER_INVALID（系统原因），客服所选原因与说明照写审计；页面提示「订单已失效，已按系统原因驳回」。
