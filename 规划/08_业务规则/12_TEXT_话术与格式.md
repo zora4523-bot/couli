@@ -1485,7 +1485,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 默认值：下表；表里没有的枚举先显示编码
 - 决策人：代理可自定（措辞属实现选择；用户可见文案不在本条）
 - 依赖平台能力：无
-- 来源：规划/04 §2.3、§2.4、§2.5 各枚举（本条只给中文名，不新增、不改写任何枚举值）；BR-FUND-04、12、22、24；BR-WDR-10、29、30；BR-ATTR-02、18；BR-ID-24、31、36；BR-CALC-22；01 F-ADM-03、06、07、08、16、18
+- 来源：规划/04 §2.3、§2.4、§2.5 各枚举（本条只给中文名，不新增、不改写任何枚举值）；BR-FUND-04、12、22、24；BR-WDR-10、29、30；BR-ATTR-02、18、30；BR-ID-24、31、36；BR-CALC-22；01 F-ADM-03、06、07、08、16、18
 
 规则：
 
@@ -1508,9 +1508,9 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | `withdrawals.auto_decision.failed_conditions[]`（转人工原因列） | disabled / max_amount / outside_window / first_withdrawal / frozen_balance / same_day / payee_daily_count / payee_monthly_count / user_daily_count / user_monthly_count / warn_high_commission / warn_invalid_ratio / warn_withdraw_received / platform_daily_max / minor / channel_disabled / risk_flag:&lt;code> / w2_guard | 自动到账关闭 / 超单笔自动上限 / 不在自动时段 / 首次提现 / 有冻结金额 / 当日入账当日提现 / 收款账号当日次数超 / 收款账号当月次数超 / 本人当日次数超 / 本人当月次数超 / 高佣预警 / 失效占比预警 / 提现收益比预警 / 平台当日上限 / 未成年 / 通道关闭 / 阻断标签（后接标签中文名） / 执行前置未过 | — | 编码沿用 BR-WDR-30 细则「判定顺序与记录」，本表只补中文名；契约落地随 CT-24 |
 | `withdrawal_status` | PENDING_REVIEW / APPROVED / PAYING / PAID_API / PAID_MANUAL / REJECTED / FAILED | 待审核 / 已通过待打款 / 打款中 / 接口打款成功 / 线下打款成功 / 已驳回 / 打款失败 | — | 用户侧文案另按 BR-TEXT-06 |
 | `withdrawals.risk_flags[].code` | first_withdrawal / credited_today / same_device_multi_account / invalid_ratio_60d / high_commission_ratio_60d / withdraw_vs_received / had_negative / recon_diff / blacklist_hit / payee_prev_other_user / risk_calc_failed | 首次提现 / 当日有入账 / 同设备多账号 / 60 天失效占比高 / 60 天高佣占比高 / 30 天提现额与 60 天确认收货返利比例异常 / 曾负余额 / 有对账差错 / 命中黑名单 / 收款账号曾属他人 / 风险计算失败 | — | BR-WDR-29 ①–⑩ 与 risk_calc_failed；命中 `withdraw.auto_payout.risk_block_flags` 的另标「转人工」（BR-WDR-30 ⑫） |
-| `claim_status` | submitted / auto_matched / manual_review / approved / rejected / cancelled | 已提交 / 自动匹配待确认 / 人工审核中 / 已通过 / 已驳回 / 已取消 | — | BR-ATTR-18 |
-| `claim_reject_reason` | NO_EVIDENCE / EXPIRED_CLICK / NOT_TRACKED / OTHER_TLJ / FRAUD / OTHER / NOT_IN_POOL / ORDER_INVALID | 缺少证据 / 点击已过期 / 未跟单 / 他人淘礼金 / 欺诈 / 其他 / 不在未归因池（系统专用） / 订单已失效（系统专用） | 用户侧取字典 `claim_reject_reason.<CODE>.title`（BR-TEXT-09 CLAIM_RESULT） | BR-ATTR-18；编码表与契约 `contracts/enums/order.yaml` 一致；前 6 个客服可选，后 2 个系统专用（2026-10-19 回写，后台第 1 批 CT-24） |
-| `export_status` | pending / running / done / failed / expired / cancelled | 排队中 / 生成中 / 已完成 / 失败 / 已过期 / 已取消 | — | 规划/04 §6.6 `exports`；取值 BR-ID-34 细则「后台导出任务」 |
+| `claim_status` | submitted / auto_matched / manual_review / approved / rejected / cancelled | 已提交 / 自动匹配待确认 / 人工审核中 / 已通过 / 已驳回 / 已取消 | — | BR-ATTR-18、BR-ATTR-30 |
+| `claim_reject_reason` | NO_EVIDENCE / EXPIRED_CLICK / NOT_TRACKED / OTHER_TLJ / FRAUD / OTHER / NOT_IN_POOL / ORDER_INVALID | 缺少证据 / 点击已过期 / 未跟单 / 他人淘礼金 / 欺诈 / 其他 / 不在未归因池（系统专用） / 订单已失效（系统专用） | 用户侧取字典 `claim_reject_reason.<CODE>.title`（BR-TEXT-09 CLAIM_RESULT） | BR-ATTR-30；编码表与契约 `contracts/enums/order.yaml` 一致；前 6 个客服可选，后 2 个系统专用（2026-10-19 回写，后台第 1 批 CT-24） |
+| `export_status` | pending / running / done / failed / expired / cancelled | 排队中 / 生成中 / 已完成 / 失败 / 已过期 / 已取消 | — | 规划/04 §6.6 `exports`；取值 BR-ID-42 |
 | `union_accounts.auth_status` | active / expiring / expired | 有效 / 即将到期 / 已过期 | — | BR-ID-24；规划/04 §3.2 `union_accounts` |
 | `union_accounts.last_probe_ok`（探测结果） | true / false | 探测正常 / 探测失效 | — | 失效时并列显示 `last_probe_error` 原文与 `last_probe_at`；ADD-08 |
 | `risk_state` | normal / frozen / appealing / banned | 正常 / 冻结 / 申诉中 / 封禁 | — | BR-ID-31、36 |
