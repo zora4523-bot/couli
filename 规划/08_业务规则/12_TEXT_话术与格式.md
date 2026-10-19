@@ -1451,7 +1451,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 
 上传与发布：
 
-- 格式：SVG，或边长不小于 512px 的透明底 PNG；单张不超过 200KB（配置键 `content.platform_icon.max_bytes`，默认 204800）。
+- 格式：后台上传的替换图为 SVG，或边长不小于 512px 的透明底 PNG；单张不超过 200KB（配置键 `content.platform_icon.max_bytes`，默认 204800）。内置兜底图（`design/icons/platform/`，随安装包与 H5 产物发布）用负责人提供的官方原图，SVG 或边长不小于 96px 的 PNG（界面最大 32pt，按 3 倍屏），保留原分辨率、不放大；小于 96px 的不用（2026-10-19 改，00 §8 第 ① 类：负责人提供的官方图多数小于 512px；原写法「格式：SVG，或边长不小于 512px 的透明底 PNG；单张不超过 200KB（配置键 `content.platform_icon.max_bytes`，默认 204800）」，内置文件与后台替换图用同一要求）。
 - SVG 清洗分两步，先保真转换、再按白名单清洗：
   1. 转换：文档内的 `<use href="#id">`（含 `xlink:href`）展开成被引用元素的副本（带上 `x`、`y` 换算的变换），引用链有循环或指向外部的整份拒收；展开边复制边计数，累计元素超过 5000、引用嵌套超过 8 层、转换产物超过上传大小上限的 4 倍或转换耗时超过 2 秒，立即停止并整份拒收（不先生成完整副本再检查；均为代理补全的默认）；`style` 属性与 `<style>` 元素里的声明（只认简单的元素、类、id 选择器）改写成同名表现属性（`fill`、`stroke`、`stroke-width`、`stroke-linecap`、`stroke-linejoin`、`stroke-miterlimit`、`stroke-dasharray`、`opacity`、`fill-opacity`、`stroke-opacity`、`fill-rule`、`clip-rule`、`stop-color`、`stop-opacity`、`transform`）；出现上述以外的声明、复杂选择器、`@` 规则，或值里有本文档片段以外的 `url(...)`，无法保真改写的整份拒收，后台提示「请换一份不含样式表或外部引用的官方 SVG，或改传 PNG」。
   2. 白名单清洗：只保留绘图元素（`svg`、`g`、`path`、`rect`、`circle`、`ellipse`、`line`、`polyline`、`polygon`、`defs`、`linearGradient`、`radialGradient`、`stop`、`clipPath`、`mask`、`title`、`desc`）与它们的几何、填充、描边、变换属性；其余元素一律删除（含 `script`、`style`、`foreignObject`、`image`、已展开后的 `use`、`a`、`animate` / `set` 等动画元素、`font` 类元素），`on*` 事件属性与 `style` 属性删除。所有属性值里的地址引用（`href`、`xlink:href`、任何 `url(...)`，含 `fill`、`stroke`、`clip-path`、`mask`、`filter` 等表现属性）解析并规范化后只允许本文档内片段 `#id`，其余引用删除所在属性。
