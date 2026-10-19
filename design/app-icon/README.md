@@ -27,7 +27,13 @@ Apple 建议图标简洁、主体居中、边缘清楚；重要特征在各外�
 
 凑狸采用单一实色轮廓，图标内不加小字、照片或 UI 截图。前景保留透明底，素材不烘焙投影、高光、毛边或玻璃效果。此类效果留到 Icon Composer 中调节，避免与系统光照重复；Apple 同样建议导出前移除效果与背景设置，并不要导出画布遮罩。[Creating your app icon using Icon Composer](https://developer.apple.com/documentation/xcode/creating-your-app-icon-using-icon-composer)
 
-本项目为不同用途分别设置留白：iOS 构图将 `256×256` 主体放大 `3.6` 倍、平移 `(51.2, 51.2)`；自适应前景放大 `3.05` 倍、平移 `(121.6, 121.6)`。iOS 版相较第一版放大主体，自适应版将所有非透明像素保留在中央直径 `66/108 × 1024 ≈ 625.78 px` 的保守安全圆内（这里是 66/108，约 61.1%，不是 66%）。Android 官方要求 108 dp 图层与中央 66 dp 安全范围；此处采用内接圆作保守检查，不把其等同于每个启动器的实际遮罩。[Android adaptive icons](https://developer.android.com/develop/ui/compose/system/icon_design_adaptive) 上述参数都是凑狸自定，**不是 Apple 规定的固定缩放比例或安全区数值**；后续仍须按官方模板和实际遮罩检查。背景色与深色配色也属于品牌自定规范。
+本项目为不同用途分别设置留白：iOS 构图将 `256×256` 主体放大 `3.6` 倍、平移 `(51.2, 51.2)`；自适应前景放大 `3.05` 倍、平移 `(121.6, 121.6)`。iOS 版相较第一版放大主体，自适应版将所有非透明像素保留在中央直径 `66/108 × 1024 ≈ 625.78 px` 的保守安全圆内（这里是 66/108，约 61.1%，不是 66%）。Android 官方要求 108 dp 图层与中央 66 dp 安全范围；此处采用内接圆作保守检查，不把其等同于每个启动器的实际遮罩。[Android adaptive icons](https://developer.android.com/develop/ui/compose/system/icon_design_adaptive) 上述参数都是凑狸自定，**不是 Apple 规定的固定缩放比例或安全区数值**；后续仍须按官方模板和实际遮罩检查。
+
+三端工程实测补充（2026-10-19，BRAND-01）：
+
+- **Android**：图形铺满 66 dp 安全圆时，在 Pixel 启动器 72 dp 可见区里贴边（耳朵顶到圆形遮罩）。工程里把自适应前景与单色层以中心再等比缩到 `0.75`（图形外接圆约 49 dp，与 Material 图标的内容参考线相当），路径不改；圆形、方圆、圆角方三种遮罩与主题图标都已核对。后续重出 `adaptive-foreground.svg` / `monochrome.svg` 时直接按这个尺寸出，工程里就不用再缩。
+- **鸿蒙**：分层图标叠加后取中间 2/3 显示（[OpenHarmony 应用图标 · 图标交付](https://gitee.com/openharmony/docs/raw/master/zh-cn/design/ux-design/visual-app-icons.md)），现有前景未再缩放、主屏核对正常；启动图标（startIcon）用原色图形，白色前景放在浅色启动底上看不见。
+- **iOS 着色（Tinted）外观**：系统对灰阶图再上色，约定是深底、浅色图形（与系统图标一致）。`icon-tinted.svg` 是浅底深图形，转灰阶后观感与系统图标相反，所以工程改用 `icon-dark.svg` 的构图转灰阶作 Tinted 外观；`icon-tinted.svg` 仍只作单色识别检查用。背景色与深色配色也属于品牌自定规范。
 
 ## Icon Composer 接入与验收
 

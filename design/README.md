@@ -19,7 +19,7 @@
 | 1 | 英文名、Slogan | `brand/name.md` | 尽快 | 中文名「凑狸」、英文名 Couli 已定（2026-10-06）；Slogan 待填 |
 | 2 | 商标查询与注册 | 不放仓库（只在 `brand/name.md` 记录注册号与类别） | 建议现在 | 待办 |
 | 3 | Logo 源文件 | `logo/source/` | W1（10-11） | 第二版作为当前基线：图形、横版、竖版、单色、反白 SVG；对应 PNG 在 `logo/export/`，根配置统一引用 |
-| 4 | App 图标 | `app-icon/` | W1（10-11） | 1024 SVG/PNG 与分层源已交付；`.icon`、三端工程资源与真机验收待后续 |
+| 4 | App 图标 | `app-icon/` | W1（10-11） | 1024 SVG/PNG 与分层源已交付；三端工程资源已接入（BRAND-01，2026-10-19：rebate-ios d0ca07c、rebate-android cd38146 + fdd8265、rebate-harmony c8a30ec，模拟器主屏已核对）；`.icon` 与真机验收待后续 |
 | 5 | 启动页 | `splash/` | W1（10-11） | 待办 |
 | 6 | 品牌主色、辅色、功能色 | `colors/colors.md` | **10-06** | 第二版作为当前基线；数值唯一源在 `tokens/design-tokens.json`，此文档维护语义与对比度记录 |
 | 7 | 参考 App UI/UX 3–5 个 | `references/` | **10-06** | 已交付 5 个官方参考及实看画面记录；包含一淘、返利网，详见参考证据索引 |
