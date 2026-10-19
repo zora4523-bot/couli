@@ -1414,7 +1414,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | RISK_STATE_CHANGED frozen_until | risk_state 变为 frozen 且设了到期时间 | 你的账户提现已暂停至 {frozen_until}，原因：{reason_category}。如有疑问，可在帮助中心提交申诉。 |
 | RISK_STATE_CHANGED unfrozen | frozen 到期或人工解除 → normal | 你的账户提现已恢复。 |
 | RISK_STATE_CHANGED banned | risk_state 变为 banned（BR-ID-31） | 你的账号已被限制使用，原因：{reason_category}。可在说明页提交申诉。 |
-| RISK_STATE_CHANGED unbanned | 解封（BR-ID-31、BR-ID-36）；`{need_reauth}` 在用户有淘宝绑定时为「购物前需重新完成淘宝授权。」，否则为空（其他联盟解封直接回 active，BR-ID-20，负责人 2026-10-18；2026-10-19 同步，原模板不分平台） | 你的账号限制已解除。{need_reauth} |
+| RISK_STATE_CHANGED unbanned | 解封（BR-ID-31、BR-ID-36）；`{need_reauth}` 在生成这条通知时用户的淘宝绑定为 invalid（解封后 ban 改为 invalid、需用户重新授权，BR-ID-20）时为「购物前需重新完成淘宝授权。」；淘宝绑定已重新授权（active）、仍被后台停用返利（blocked、admin_disable，只能由后台「恢复返利」解除）、没有淘宝绑定时都为空（其他联盟解封直接回 active，BR-ID-20，负责人 2026-10-18；2026-10-19 同步，原模板不分平台；2026-10-19 澄清触发条件，原写「在用户有淘宝绑定时」，按字面会在已重新授权或被停用返利时误提示，B1-12g） | 你的账号限制已解除。{need_reauth} |
 | APPEAL_RESULT account_revoked | 账户申诉撤销（BR-ID-36） | 你的申诉已通过，相关限制已解除。 |
 | APPEAL_RESULT order_revoked | 订单申诉撤销（BR-ID-36） | 你对一笔订单的申诉已通过，返利将在复核后恢复。 |
 | APPEAL_RESULT upheld | 申诉维持 | 你的申诉已处理，维持原处理结果。如有疑问请联系客服。 |
