@@ -30,8 +30,8 @@
 | 12 | 空态、错误态插画 | `illustrations/` | W3（10-25） | 待办 |
 | 13 | 分享海报、邀请海报 | `posters/` | W3（10-25） | 待办 |
 | 14 | 商店上架素材 | `store/` | W7 提审前（11-22） | 待办 |
-| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」；管理后台第 2 批（财务：提现审核与打款、月结账单与对账差错、调账与核销、余额流水与导出、资金看板）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 2 批定稿」，规格 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；两批规格都在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App 内高保真第 2 批（2026-10-21 负责人定稿；钱：钱包与流水、订单、找回、提现、AI 订单进度，含 15 张深色稿），画板清单与 sha256 见下方「App 内高保真第 2 批定稿」，规格 `specs/app-*.md` 14 份（2026-10-21）；App / H5 其余页面以各批定稿登记为准，未登记的草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
-| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 30 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）、管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）与第 2 批 8 份 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；App 内高保真第 2 批 14 份 `specs/app-{wallet,ledger,earnings,order-list,order-detail,appeal-order,find-order,withdraw,withdraw-reverify,withdraw-records,real-name,payout-account,labor-agreement,agent-chat-orders}.md`（2026-10-21）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
+| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」；管理后台第 2 批（财务：提现审核与打款、月结账单与对账差错、调账与核销、余额流水与导出、资金看板）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 2 批定稿」，规格 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；两批规格都在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App 内高保真第 2 批（2026-10-21 负责人定稿；钱：钱包与流水、订单、找回、提现、AI 订单进度，含 15 张深色稿），画板清单与 sha256 见下方「App 内高保真第 2 批定稿」，规格 `specs/app-*.md` 14 份（2026-10-21）；App 内高保真第 3 批（「我的」与其他：我的、邀请、收藏与消息、设置与账号、注销与账号受限、隐私与协议、帮助与客服、基本模式与更新、容器、AI 页面引导，168 张含深色 29 张）负责人 2026-10-21 定稿「全部定稿吧 先开发 后面在微调」，画板清单与 sha256 见下方「App 内高保真第 3 批定稿」，规格 `specs/app-*.md` 26 份（2026-10-21）；App / H5 其余页面以各批定稿登记为准，未登记的草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
+| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 56 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）、管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）与第 2 批 8 份 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；App 内高保真第 2 批 14 份 `specs/app-{wallet,ledger,earnings,order-list,order-detail,appeal-order,find-order,withdraw,withdraw-reverify,withdraw-records,real-name,payout-account,labor-agreement,agent-chat-orders}.md`（2026-10-21）、第 3 批 26 份 `specs/app-*.md`（2026-10-21，清单见下方「App 内高保真第 3 批定稿」）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
 
 完成一项后，把「状态」改为「已交付」，或者直接告诉 Claude。
 
@@ -297,6 +297,188 @@
 | AI 助手（查订单与收益） | AgentEarningsHistory.dc.html | `4932706c6e6e579e9ca9770d870b65300a2673b92c5b0f78dbc25b2c6d16f11b` |
 | AI 助手（查订单与收益） | AgentOrderAnswerDark.dc.html | `34438e4dc69469b61af056136814db2a50b61ea60605165cfe360b1937603561` |
 | AI 助手（查订单与收益） | AgentEarningsCardDark.dc.html | `ddfa7ca2462bb299c221703528fc94cc9e2c88a17528e2e94c865e8a2c6c3854` |
+
+## App 内高保真第 3 批定稿（2026-10-21）
+
+负责人 2026-10-21 在对话中定稿：「全部定稿吧 先开发 后面在微调」（应用内高保真三批全部定稿）。第 3 批 =「我的」与其他：我的、邀请好友与填写邀请码、收藏夹、消息中心与公告、通知设置、设置与修改昵称、授权管理、绑定 / 更换手机号、账号注销、账号状态与申诉、启动隐私弹窗、隐私中心、协议、关于、帮助中心与返利规则、联系客服、基本模式、版本更新、可信容器与第三方页容器、AI 页面引导卡。登记、入库前核对与待回写清单见 [变更记录](../docs/changes/20261021-App内高保真第3批定稿.md)。
+
+- 规格（26 份，按页面）：[app-me.md](specs/app-me.md)、[app-invite-share.md](specs/app-invite-share.md)、[app-invite-backfill.md](specs/app-invite-backfill.md)、[app-favorites.md](specs/app-favorites.md)、[app-messages.md](specs/app-messages.md)、[app-notice.md](specs/app-notice.md)、[app-notify-settings.md](specs/app-notify-settings.md)、[app-settings.md](specs/app-settings.md)、[app-auth-manage.md](specs/app-auth-manage.md)、[app-bind-phone.md](specs/app-bind-phone.md)、[app-phone-change.md](specs/app-phone-change.md)、[app-delete-account.md](specs/app-delete-account.md)、[app-risk-notice.md](specs/app-risk-notice.md)、[app-appeal.md](specs/app-appeal.md)、[app-launch.md](specs/app-launch.md)、[app-privacy-center.md](specs/app-privacy-center.md)、[app-agreement.md](specs/app-agreement.md)、[app-about.md](specs/app-about.md)、[app-help.md](specs/app-help.md)、[app-rules.md](specs/app-rules.md)、[app-contact-cs.md](specs/app-contact-cs.md)、[app-basic-mode.md](specs/app-basic-mode.md)、[app-force-update.md](specs/app-force-update.md)、[app-web-page.md](specs/app-web-page.md)、[app-external-page.md](specs/app-external-page.md)、[app-agent-chat-page-guide.md](specs/app-agent-chat-page-guide.md)。
+- 画板存放：本机运行目录 `couli-runs/design-hifi/project/<文件名>.dc.html`，1 倍 PNG 在 `couli-runs/design-hifi/review-me/v1/png/`，浏览页 `review-me/v1/me-boards.html`，逐张改动与依据见 `review-me/v1/README.md`；Codex 对抗审查 2 轮（r2 PASS）记录在 `review-me/v1/codex-review-r*.md`。画板与 PNG **不入本公开仓库**，版本以下表 sha256 为准。
+- 入库前核对（2026-10-21，逐张，共 168 张）：无 11 位手机号、18 位证件号与银行卡号样式的真实号码（手机号只以 138****5678 等脱敏样式出现；帮助文章示意图里的 19 位数字是 `sample-data.md` 登记的淘宝订单号样例）；嵌入图片只有 4 种——`icons/platform/` 的淘宝、京东、拼多多官方图标缩样（只用在来源标签与授权行）和 `app-icon/icon-1024.png` 缩样（关于、强更、邀请页与海报），凑狸自家素材不含平台商标或近似元素；没有外链图片。
+- 作废不实现（文件留在运行目录，不登记）：`InviteBackfillDone`、`InviteBackfillBound`、`InviteBackfillExpired`、`InviteBackfillHasOrders`、`CsHandoff`、`CsVerify*`、`MessagesCsVerify`。
+- 底稿首页同步（第 1 批 v1.1 对抗评审 V1-14）：`MainUpdatePrompt-v2`、`MainUpdatePromptDark` 背后的首页以第 1 批 `Main-v3` 为准，`BasicMode-v2` 的游客首页底稿以 `HomeGuest-v3` 为准；规格已注明，画板下次改稿时同步，sha256 照原样登记。
+- `StateLoadFailed`、`StateNetworkError` 是通用加载失败 / 断网态，登记在「通用状态」，各页规格第 1 节引用。
+
+| 页面 | 画板文件 | sha256 |
+| --- | --- | --- |
+| 我的 | Me.dc.html | `63524bac6c77965b80d4f027515f42055f246773376d647530cd06cab80f94a4` |
+| 我的 | MeEarningsEntry.dc.html | `8ebac9f53fe2d2ee59c4f62974328924ef80aba125d7d4572ef6f4870b1d6d94` |
+| 我的 | MeGuest.dc.html | `5d2e6b070643130eec182854d53642d9427ffe367edb4e42d4e77f5e5a4d0a3f` |
+| 我的 | MeHidden.dc.html | `689a0823ec0083c74c0ee204fda5ba64f102fa826373e6b22b365744db290f82` |
+| 我的 | MeInviteBackfill-v2.dc.html | `b3f9a0369ed8359c381ad5273beb3bba19a5f02ec48709f0344c36049522fd89` |
+| 我的 | MeInviteBound.dc.html | `d87097d0aaa96a8321bf3a7fd492d50094ba8e7e9dd39afc4bead28989ef2a76` |
+| 我的 | MeMinor.dc.html | `2f8c3f44b8b64f39030c1d31177c79e4d53a2d16d84c6caf3e2caed2484f2dd9` |
+| 我的 | MeStates.dc.html | `9d15fd5093b81930239f32c1a4cd247124f9e3e5c1cdebcda49b10e35306d4a2` |
+| 我的 | MeDark.dc.html | `77cd55030482a394a670cb71b51844a43f6d4a1135a8c2a1e34e60c59c9f6659` |
+| 邀请好友 | InviteShare-v2.dc.html | `8bcd1fbfb42f168e4a72e08ebe33daef5acb46661e179980c7e44493ca3d4ae3` |
+| 邀请好友 | InviteShareReward.dc.html | `859b68194f91302fdcbdf1f1c9550490cc28977db944bf75c9bdb9fd490f82b9` |
+| 邀请好友 | InviteShareUnavailable-v2.dc.html | `388fc83a1a313dd07dda2e752b381e44ec92005c6fc01ca4018f3b087711227f` |
+| 邀请好友 | PosterInvite-v2.dc.html | `887f00a3eefb5f15f996a448d873071acadda9976765bf3f4ab33fac308bd759` |
+| 邀请好友 | InviteShareDark.dc.html | `8648a72219aa3df0b7849d1db22375efb816dcc42e760ff65f2ca34b88701b68` |
+| 填写邀请码 | InviteBackfill-v2.dc.html | `4974164c60d13cb2a2ca63906a906b0549c5ff84d7a61ae048b652e5ca9c0394` |
+| 填写邀请码 | InviteBackfillError-v2.dc.html | `fb0d4d4362180824c0d16e0d8786a5cb6034d12e68d4d3ad56bb8cb42ada73b7` |
+| 填写邀请码 | InviteBackfillErrorStates.dc.html | `16b7a693347c4b236575fd6af6bf858faea5f993bc383761f9274757978f029b` |
+| 填写邀请码 | InviteBackfillDark.dc.html | `3f320d44244976443ab2b2d7be6c0834a501f41cdd7d7486c049d4f88114c218` |
+| 收藏夹 | Favorites-v2.dc.html | `b45d3fa5a8df53fff192001afb1ae68c105bea84c537e8f09fd653308a942c84` |
+| 收藏夹 | FavoritesEmpty-v2.dc.html | `c623d5a9f2abca78677219bb8892708881d56cc3ce0a1f9524b14be77302f7be` |
+| 收藏夹 | FavoritesManage-v2.dc.html | `e6d7c799bd764dcbd39a1424bed021dbe4f595dc7de269cd17355873d54b219b` |
+| 收藏夹 | FavoritesPickShare.dc.html | `ecf1c8d7d03e784a09b8233730f982e013cfadebefa8742b66a0c62b74a1b632` |
+| 收藏夹 | FavoritesDark.dc.html | `2e22407b8b3de28d2c16cf9ea8ab70e4c31cd8d88d76ff2556fc039a7dbca2ba` |
+| 消息中心 | Messages-v2.dc.html | `bb6b6607c6fc6c54f2ca18a38352016b3b88da3a9f454d85ef79f913c892d9ad` |
+| 消息中心 | MessagesEmpty.dc.html | `94d15c9ab971d9e770da5dfda026e0c33aa6e48f66a113e07f546a182c4a8573` |
+| 消息中心 | MessagesDeletion-v2.dc.html | `93ba88f2b3b49c0254366455010f9e9804e58808797baf88629a6f25eeecf650` |
+| 消息中心 | MessagesDeletionNegative.dc.html | `af24fdc4dd84417877b4bef956c7a262f3d8a6b61a19e4b30a4a0110c44a49f4` |
+| 消息中心 | MessagesOrderAppeal-v2.dc.html | `086f4e43a14708aa56480dfcd09d89be3a0028aa0656663531890614c90399a0` |
+| 消息中心 | MessagesRiskFrozen-v2.dc.html | `857c88b5655fd172341b94eec59b77bbd08808f2f6b4d554f3cf4c4085bb7033` |
+| 消息中心 | MessagesUnbanned-v2.dc.html | `c22ee9eb6ca59dcacde53ca573605c59c05b67903f5ad5aeb8fbb4029a659782` |
+| 消息中心 | MessagesCatalog.dc.html | `4c923c97f4e28495a83d5d601831065af16204fc55bf078b185a93ab04a5886b` |
+| 消息中心 | MessagesDark.dc.html | `a20422604b8127fd8f6ec85d74126dc49531317223519ebc83561ce1a90662ed` |
+| 公告 | Notice-v2.dc.html | `0f412404d73e8465dc2c01bd2b1702f5866423f3b0b31005442a41b98ad07401` |
+| 公告 | NoticeDetail-v2.dc.html | `b71bf593f92d311c5134d7054b152989a9b9f2c8ae2dc2d89f47465eb5e8d085` |
+| 公告 | NoticeDark.dc.html | `7af3d53ff1e26f5294ac8955a4ed5bcaab52a760f090bc0b804ccd629d6f728e` |
+| 通知设置 | NotifySettings.dc.html | `078b68c7a982da44d52773c1d2ac580c28666296717b7afcd856edf0d3927951` |
+| 通知设置 | NotifySettingsOn.dc.html | `8fac5337de42c1b18b784c090fdf60095adc6027dd043a773bdcbe8da49fd55b` |
+| 通知设置 | NotifySettingsNotAsked.dc.html | `03b8c6b8eea16af6372b8b34c3319c6b9354c31e1db20b666eabd5742db878d9` |
+| 通知设置 | NotifySettingsDark.dc.html | `0a70a74ac8f1b97cc86f682b63c214dc00bc2b96d37d08a8a35a0e837f48386c` |
+| 设置 | Settings-v2.dc.html | `d076d94490d7eb7d11f0db2c1fb9c49c1b4a42a7719417f1e3450076af1b7f79` |
+| 设置 | SettingsGuest-v2.dc.html | `7663f3b8db53d7afb68b1a86eef06b36f3ee5cba47898b2584c0833fd12b6816` |
+| 设置 | SettingsBasic.dc.html | `dca586aae4d5ab3dce28a4211547be77dd7076aa3fdaca95a183fe3208c4b30c` |
+| 设置 | SettingsClipboardConsent.dc.html | `668e9c73da58a50878913f6ad7c83652e69fabb64e244dbaa38c783f2dc99ae3` |
+| 设置 | SettingsAgreementSheet-v2.dc.html | `7a2f9deca0568cded6f1f79bf6bd594953ba5904791846016e87dcd3239f389e` |
+| 设置 | SettingsClearCache-v2.dc.html | `2aff1c58b7b3ac79afe2444d897da557a867b5b6103d90cca438edf6c214baf6` |
+| 设置 | SettingsCacheCleared-v2.dc.html | `b8697ade455532645bcf5f57741d7d93c16bd88f9b29b3f6a0e29bf89e9d6053` |
+| 设置 | SettingsLogoutConfirm-v2.dc.html | `fbdb33920e199db8928b68bd584a1a74c5bc196bb5a77844bf298790f2e5f278` |
+| 设置 | SettingsDeletionWithdrawn-v2.dc.html | `e1997e11d790ba17d0f84c32a0769647ddc7b81e9833627d0aab5610aa435236` |
+| 设置 | SettingsNickname.dc.html | `18c611dc0ba74e98360292cdcb364f21147736c16a76545f70dfd2a571150e99` |
+| 设置 | SettingsNicknameSaved-v2.dc.html | `0703e0b867ee310a895e4475c8263f923d1104eca469acdcbe117a56c8a006a7` |
+| 设置 | SettingsNicknameLimit.dc.html | `75c51720903e5cc4e73c9905896530042388d9f27ceb2c322b53d7af217343c4` |
+| 设置 | SettingsNicknameSensitive.dc.html | `12cbff8376266e330ee3eb2b34f5d05668eaf1d40a54e4cb2f49203bcf75dc4e` |
+| 设置 | SettingsDark.dc.html | `a7f7f53b5d4a9fce4cdb2863f0db2ef0048c7d6dfce4bda9fdc79fb722ec9cf1` |
+| 授权管理 | AuthManage-v2.dc.html | `6ec2c5069bcaffe6773e7734aea8702524ccdea3df29945b90dff210ef57e2c1` |
+| 授权管理 | AuthManageBlocked-v2.dc.html | `574ac747fe2d858c1b18d8020c1af9ad1778d3504a51fb71baf91222c0fb7492` |
+| 授权管理 | AuthManageStates.dc.html | `15de53bd2b70f3952bb1eafa49ee40ad4069e14aa9e8c5eaaa15e85551624227` |
+| 授权管理 | AuthManageDark.dc.html | `6d723fa682b2d6923d09ccec98dad3197da878dd6b39530ff4bdea26865f37bf` |
+| 绑定手机号 | BindPhone-v2.dc.html | `4fdff9d70e97a223804b8f531d0b72a8b963ecce48cd384795fa8b84605f6662` |
+| 绑定手机号 | BindPhoneMerge-v2.dc.html | `d89ad26e1582b1098e99b72378f21d24a3406765ff3efc6f9b52eb672dfa4479` |
+| 绑定手机号 | BindPhoneDark.dc.html | `80a6aaaf5641da91ee47298d11150697cf453675b5fcfd1ae744a2390e8d17a7` |
+| 更换手机号 | PhoneChange-v2.dc.html | `1d1bd865a3e34b37e50bb3f252168a37eb7dfad0eac7d594378a6ce2937e321c` |
+| 更换手机号 | PhoneChangeCode.dc.html | `6a3cbdf3dd344a13e9342a0db98a7f0b066375340dd85963cf95640b9ec7ea19` |
+| 更换手机号 | PhoneChangeCodeError.dc.html | `bdd15e1d00e3d6245316ad22c7e9f49b7227ca267addf7da6abf2f7784045a1a` |
+| 更换手机号 | PhoneChangeNew-v2.dc.html | `0c98cf15078366aa6dbcf73a92d34e62d18b38afdeac2f868cc57a040ddc44c3` |
+| 更换手机号 | PhoneChangeNewCode.dc.html | `1987f56addb8efc0fc7a364da0b3ed7e000a1dcd28aad930bc12e5b2e629cadb` |
+| 更换手机号 | PhoneChangeStepUp.dc.html | `fc17181ebdcf8062f3d9b4bad3cedab4b993f81632ff81bb2cb51752ec02e78e` |
+| 更换手机号 | PhoneChangeDisabled.dc.html | `5197b3edcb8ca226466dc487d25a7d76f1724b5d9671861c96453c12cbeeaedf` |
+| 更换手机号 | PhoneChangeNewBlocked-v2.dc.html | `e60305593c1559cffdd6928c594bb0e39c876b616a2248d375cdc29ecbac07e0` |
+| 更换手机号 | PhoneChangeDone.dc.html | `3f47cfe39eabdc8affc71ab0db55d624d339ccedb93e8de21af945069f7c6474` |
+| 更换手机号 | PhoneChangePendingCompleted.dc.html | `691ff322070028b3a49376b6364f59a8796f2494f225132f4caecd7ec701e063` |
+| 更换手机号 | PhoneChangePendingConfirm-v2.dc.html | `c1e7e6c0956ecc6da728f48f1843c58614354ced766f8420b1e0076cb34e0daa` |
+| 更换手机号 | PhoneChangePendingBusy-v2.dc.html | `d44b0aefe59668ca8601c5ba0c0d8884bbfc57fbca66eb22425f91cecd6b9d83` |
+| 更换手机号 | PhoneChangePendingStill-v2.dc.html | `3e10aa31db8442b4793d180b245919e5b5172a3b3f5689e4dbc629e3b216b6f9` |
+| 更换手机号 | PhoneChangePendingAbandonConfirm-v2.dc.html | `50458ccf981483b8c4e57ad05486382c5c1faf7d1091c77f408e238820ec8413` |
+| 更换手机号 | PhoneChangePendingAbandoned-v2.dc.html | `ae968e41937fade84cb6c6ce0099b7ecdc0f6fa0aa972b9f1daecde085104da6` |
+| 更换手机号 | PhoneChangePendingStates.dc.html | `49c4ff4380563d4238e00a6ee99da1b4cc1009bbe92c389b3f8d1436921e9ba6` |
+| 更换手机号 | PhoneChangeCodeDark.dc.html | `a84b40775de95d259cfde3d2da162604a7c0abd04908237824d36d758dbe3e6b` |
+| 账号注销 | DeleteAccount-v2.dc.html | `9b74b389e07dbb69ac88005ecb330b8f1c44a5c1aa989d64f59f649e32ea6d84` |
+| 账号注销 | DeleteAccountNegative-v2.dc.html | `ab5422686c0e0db3d907b567127b14e08606271f758e19b90e0c7f71b962519d` |
+| 账号注销 | DeleteAccountStepUp.dc.html | `8445746f2573896054757d5d7fa0da0b525a2ea7846aeafa9d489c7ab6943de5` |
+| 账号注销 | DeleteAccountStepUpOauth.dc.html | `b624fff7b3b882f320daa9b8cae05ccc3a0eb16f866f8a3af14005cf2a47e0af` |
+| 账号注销 | DeleteAccountCooling-v2.dc.html | `1151e001443d5d6d68d7e5f9aa8d083f8935263f19729bb92a4c70245d7bafd2` |
+| 账号注销 | DeleteAccountStates.dc.html | `ccdf48577918d6e531029ee8c5fe154a453c43b6dc9af533c3090bb6cd4cb97f` |
+| 账号注销 | DeleteAccountPendingConfirm-v2.dc.html | `d7f4be15ebc37e02f12c06f1a985c94ee9b254f58b594085dfc626c774c99991` |
+| 账号注销 | DeleteAccountPendingAbandonConfirm-v2.dc.html | `d875086763c99e23be3fca07caa8deeb21fd7c8af546ee55d0f069b57056d670` |
+| 账号注销 | DeleteAccountPendingBusy-v2.dc.html | `8f9aaf7a52ed6de0fc87c0f9b36c6210eded8b5e4d720143c25ef7b6d89e63bd` |
+| 账号注销 | DeleteAccountPendingStill-v2.dc.html | `978a75afdafe0947395af5e1b1ee264ce5dbc90959955cf10849c0a288a6c64c` |
+| 账号注销 | DeleteAccountPendingAbandoned-v2.dc.html | `8c9782a8958908441e1dec25478dc3e7076c3b0c0a253a318b38a0bcd3437f74` |
+| 账号注销 | DeleteAccountPendingCompleted-v2.dc.html | `bc9bfc74adf3cda289de7aef3fd5b149a2e1cac524027f66c92dccd210051393` |
+| 账号注销 | DeleteAccountPendingStates.dc.html | `817fda267b005aa36f6e883efd61fc8dea519dc3efcd2bb01923626fa2e5b7a0` |
+| 账号注销 | DeleteAccountDark.dc.html | `46c626b04b230f2a628ec8901a58f4719ba4dc9a2f47f2713bade9a5d2a47e20` |
+| 账号注销 | DeleteAccountCoolingDark.dc.html | `cf1601c78a36123747f53a1e208c693538961b4a504f127fe7175955af91563b` |
+| 账号状态 | RiskNoticeBanned-v2.dc.html | `8c6270eba567c667aad56e69403e67e2ab565236c5674646ce15080f1558d68b` |
+| 账号状态 | RiskNoticeBannedAppealing-v2.dc.html | `1ee8c613ca2bdfef76c8f44cd1ec6cb5e6cd498aa10afead6875be971faa7518` |
+| 账号状态 | RiskNoticeBannedUpheld-v2.dc.html | `590aeb864498a75b02ab6fd56a4f4458e01d1428790071e2473562d56a992804` |
+| 账号状态 | RiskNoticeFrozen.dc.html | `f11e629fb6a93d84c8c890688a541a5bc9a28467d5932c0a1f08f412471bb35d` |
+| 账号状态 | RiskNoticeFrozenAppealing.dc.html | `eaea66bca60421cee6ed375f71879de28061ae40a53e17628072bf8d1de4c17b` |
+| 账号状态 | RiskNoticeStates.dc.html | `97b956d881d07542377df187572f9b8d305923a54c222b64a441a52cc96a81af` |
+| 账号状态 | RiskNoticeDark.dc.html | `fd65380f1a8a1130ffe339db64f8d1e8a64d1ed2e402d4a28e1d309433d43923` |
+| 申诉 | Appeal.dc.html | `867e969a8ca2e90ef2874841fa851dc73f3ec4aeff45650efb8675bb85b766e2` |
+| 申诉 | AppealFrozen.dc.html | `c16f5816f4c9739bc10e71adeca51e2aba3b416586631e4b21d1d2dd6b3df340` |
+| 申诉 | AppealProgress-v2.dc.html | `4ad2437f61abc7195b01a1790d6609883b94e095209e2dc0a23e9e19eb8a9881` |
+| 申诉 | AppealProgressFrozen-v2.dc.html | `9e94939c1429d52ea45334df3da8f7d1262c5f6632ff6739dae02c5f0bdbe0bf` |
+| 申诉 | AppealResultLifted-v2.dc.html | `251aa4ccf1d428679742224d8a1183971b32258659eb654ca31aa7415b675fe6` |
+| 申诉 | AppealResultLiftedFrozen-v2.dc.html | `9cb0634a9e66d3d985e2b99073fe07b2a8f8aa663e33ea4d760d08d3db1f156c` |
+| 申诉 | AppealResultUpheld-v2.dc.html | `e083d8b577bab1bb634daab681d2a29b5818fa3a685b530097ca71c9d297d119` |
+| 申诉 | AppealResultUpheldFrozen-v2.dc.html | `367dba9c465f225bc9c881cf9cde86d6323b6a15d183f6f52c59a4edf5944f49` |
+| 申诉 | AppealDark.dc.html | `62a4eda4ba263c2ffea2dac54a8c0709a44342993a72811faa477a9c2a235ad5` |
+| 申诉 | AppealProgressDark.dc.html | `89b821ca3740de1fe28ea3737e7ba64c2dc85b7947d4e6b56a005482c28896ab` |
+| 启动 | LaunchPrivacy-v2.dc.html | `a9508e0b1833b621523f4f2d8ae31eb7532e7d749ac6dafb3120dea887262e74` |
+| 启动 | LaunchSecondNotice-v2.dc.html | `5e9c8122542974e6472b48835cb3c9d171f6c1aad190e5f39e1498a598276571` |
+| 启动 | LaunchPrivacyDark.dc.html | `601ee4066aaf3421a5fc0d9a8f80c1ea134d653c39e151ec3c11e91a611d56af` |
+| 隐私中心 | PrivacyCenter.dc.html | `4d60cd5f4c7c0b7191b128f1a236b0fa5e93cd31e480b6e6388f5ef0a824d686` |
+| 隐私中心 | PrivacyCenterBasic-v2.dc.html | `a7745af326cc13869eec7c1492e80836536f89a34d37013370070e1ccad7952d` |
+| 隐私中心 | PrivacyCenterWithdraw.dc.html | `903bc26faeb6293b70a79f37567cee3cdfba3e51797a6772a341670c7d7a986e` |
+| 隐私中心 | PrivacyCenterForceUpdate.dc.html | `2def87c570a3b1f66b781bde10b5870d72778fec61028e77cc9485cd6808790d` |
+| 隐私中心 | PrivacyCollectList-v2.dc.html | `01468077a062c072acb79a00c52288a06ca7b29e203a37b97a10c6fe4d7617dc` |
+| 隐私中心 | PrivacyShareList-v2.dc.html | `6a1059851bade8eebb1dc500c6cbe0af409f6cfe6b9a13415ddfc2f5374314e6` |
+| 隐私中心 | PrivacyCenterDark.dc.html | `64049c0d2da354dd7986c87b32c2ff2a41288363b04964f48a0f75936d88d558` |
+| 协议 | Agreement-v2.dc.html | `c0dfe5894c4f78c46f502c195e17cafe6f5cc92c5fb4c7a1659978a9c9dc477c` |
+| 协议 | AgreementDark.dc.html | `ae7bf8c3496f46d0c9798594d8c037282f7c6007137bcca3a242f89e716286dc` |
+| 关于 | About-v2.dc.html | `93b849722a71f28e586a8d5bdf6d60ee4d138a1f43cbe2c700f666c9463f600b` |
+| 关于 | AboutBeforeFiling.dc.html | `976dc087f1baff93014da987f6878504ad47ae181f51621ea4cf33d54f7656d2` |
+| 关于 | AboutDark.dc.html | `f24efdd79bfb53ac2a0ad4f72075af0344c5c5df164e5a7c2c48c71326873d9a` |
+| 帮助中心 | Help-v2.dc.html | `4a5546b509d63aa7595058b2a33cd07ad278313da7b7e965a297b90c6b1d35d8` |
+| 帮助中心 | HelpCategory.dc.html | `d3026b2d8821eb5d403e1174293ab93cdaca5e045f1473e352c6f102ec827ffe` |
+| 帮助中心 | HelpArticle-v2.dc.html | `3685fd8ae05529c1294d6e14048e6d34185b03f7133ef9de75a5eb593d5b9c5d` |
+| 帮助中心 | HelpArticleJd-v2.dc.html | `68ffc6ec62d937823a29074cf6151fb6ced96cdbafcb35baabb8a5da91b2f691` |
+| 帮助中心 | HelpArticlePdd-v2.dc.html | `2ce123f4201a45d81643f099a37f6a2e5ead8b129c9def78aeaf85dd6dad2213` |
+| 帮助中心 | HelpArticleAppeal.dc.html | `9d92c381992dc6e87438ebc09f6fc7fcc0dd6ab2fab14062d55a65c7e7943a18` |
+| 帮助中心 | HelpArticleAppealPending.dc.html | `351214e3823aa4900ac8033d34cfd1f94521d63d9b9e885b0ee6658321718a27` |
+| 帮助中心 | HelpArticleAppealNormal.dc.html | `b2f6a28bb79c417e7095ff1cb6f688d95e5a480ec2cd104301a49c9f6c32e94c` |
+| 帮助中心 | HelpArticleInviteRules-v2.dc.html | `d762d2754cab788cb22e81fbfc5715c6f05fc8363bb1c7fe74400ea17eadcf35` |
+| 帮助中心 | HelpArticleInviteReward.dc.html | `484f4baa796f27e5c2f379c5ce6e689d6a34b5bccdec4b1242297f0e52977df8` |
+| 帮助中心 | HelpArticleLogin.dc.html | `ba58d58acf95a152d6c9c104c8d929861a0bb07cfc93b93f15c05a7c35be76e1` |
+| 帮助中心 | HelpArticleNewbie.dc.html | `6cdbdfa639010e0f7228ccf46c64aaddd730846157e75b7fc45feb88396aed87` |
+| 帮助中心 | HelpArticleShareRules.dc.html | `935601e3992c0a43553e8cbb5815e278b4381bfa81a934765f8925d10f6115d5` |
+| 帮助中心 | HelpArticleWithdrawRules-v2.dc.html | `489237b392f0bada3fa4683ca2bec1c9c6fffd9afee0ac2f4125029307702971` |
+| 帮助中心 | HelpArticlePriceCompare-v2.dc.html | `76cdad420e624ff6695d35cd4e0ac91c5d0d60a1d8e1fa2a8e377d6a7ad854a5` |
+| 帮助中心 | HelpDark.dc.html | `fb8a31afc715656ed2a081430f84d244eb723c7a61e039f5d4b16ff1fc9c631c` |
+| 帮助中心 | HelpArticleDark.dc.html | `625f39bb22111e61b478d0460c879590f126ad4f148b212f6b6950b539859256` |
+| 返利规则 | Rules-v2.dc.html | `d2e113e9883b2f4fb8ee1d8fb3175580e0644630562732f36a4f45d5e7b57a95` |
+| 返利规则 | RulesDark.dc.html | `3e73723b35e46ad767558cf759378786e7f72f88af5a4edd45be35eaf372cf9e` |
+| 联系客服 | CsOpenFailed-v2.dc.html | `2beaf0e8a7718481ef397ce464c2a5bd81758bc20d7212187c765fe4357c8dc6` |
+| 联系客服 | CsWechatMissing-v2.dc.html | `10b1ba303b9ac1dfc84c8c2f7b87fa5d820d0f7ffdcddf88991cc4b79bc41e0a` |
+| 联系客服 | CsWechatMissingDark.dc.html | `52572584780a984dd01aaa284ee0009e0e1a08f14008c803c075e9a5b51d3249` |
+| 基本模式 | BasicMode-v2.dc.html | `df31418fe202d3877bb631a43d81eaac7a02bdb08150af4c3529aa938a7bb61e` |
+| 基本模式 | BasicModeDark.dc.html | `d7770416eca3cebbafc37ba41f9dd3c705b659a2a0dea55186ec9dd783f7c151` |
+| 版本更新 | MainUpdatePrompt-v2.dc.html | `b4780f118e85a65107d6408d410573144e88ad1c5de9d1631c553122fe913676` |
+| 版本更新 | ForceUpdate-v2.dc.html | `b78478684ed48819148af0c03e48a98814452c78b2a086fc5b3a5de706309277` |
+| 版本更新 | ForceUpdateUnavailable-v2.dc.html | `726b568b3a09cf65df1746db8fd77e07b59e2565c0751975feda5fe8643edb45` |
+| 版本更新 | ForceUpdateDark.dc.html | `95aa44fd09a7ed224efd43cfaf73eebd3a82f9e795613d224789aca67bde0d0a` |
+| 版本更新 | MainUpdatePromptDark.dc.html | `296ecb16144747ae8b6d66ae41e1b5f9b2cb8870e3e01b1cd1046bf3d652ce4f` |
+| 可信容器 | WebPage.dc.html | `8462e7f48f77a67e3e20c10c9f5ea1ec2ddbd5f97357cf266ce0f13ddc60f4bf` |
+| 可信容器 | WebPageLoading.dc.html | `1be4a2650b6784ef413197f09d5a0473172195f2fdd885c0bb2125a80a85fa0f` |
+| 可信容器 | WebPageError.dc.html | `d9be49c55f09007c42a48513f85cad32f0268b73b5fdb60e22a272d43c56b6de` |
+| 可信容器 | WebPageMaintenance.dc.html | `d093e9ad2b39f615129ea139ecbf60e020b4a330cac61a478b5258fec4abc3fc` |
+| 通用状态 | StateLoadFailed.dc.html | `aea7c5d30a2483fa9c9a18da8bf5ad0a3ae081e0373e29c9edba0fad4b54ae25` |
+| 通用状态 | StateNetworkError.dc.html | `022db8798446a37f3d49f83810c7755567a59e6fe69615b5f33cdc4c06a0b89b` |
+| 第三方页容器 | ExternalPage.dc.html | `62659243f951344c3b2a9633beb28aef1f58576c8e8f4e33e0ada90b0ebca216` |
+| 第三方页容器 | ExternalPageBlocked.dc.html | `49d847862a25b71c34ab2fab19699586a2e005c2d4979045002d7ae8f9365776` |
+| 第三方页容器 | ExternalPageDownloadBlocked.dc.html | `1f9899f2b9b1f15dd1bb101da0f7898a2f31c375405e53efd0bafec4cd031977` |
+| 第三方页容器 | ExternalPageError.dc.html | `ed710d9cdf8bc0b9a13725f19774e25b75b9fb9d1c828ec37dcc9104bf0dee66` |
+| 第三方页容器 | ExternalPageProductUnresolved.dc.html | `349dec8df20a07edc03d49f34af222d5634000b251815ffc9b0938d6438c93ec` |
+| 第三方页容器 | ExternalPageDark.dc.html | `a3eb6e6553adf584c0127ec539b94402804080dbe7f047d91f55696873301efe` |
+| AI 页面引导 | AgentPageGuide.dc.html | `c994bf2413d3d47d670b960625af7e8038d26e16f3225eba3f850ccfb9974118` |
+| AI 页面引导 | AgentPageGuideStates.dc.html | `0b931745ab4744dba20d9fe71f3ac3dddc4bfab7b880d4306b77269f99cf7cf2` |
+| AI 页面引导 | AgentPageGuideDark.dc.html | `93a3a98c2464cfb1b9be7a9fc9bf5372ca961a6be1787a62f65a35f344e9bf3f` |
 
 ## 本次交付验证
 
