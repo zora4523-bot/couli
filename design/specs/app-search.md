@@ -36,7 +36,7 @@
 
 ## 3. 文案键
 
-占位文字：`search.placeholder`；列表口径：`price_basis`、`price_basis.general`（BR-PRICE-03 细则「无券商品与混排列表的口径说明」）；出错 / 关闭：BR-TEXT-14 表 A 50304、表 B `50304.search_disabled`；购买按钮：`btn.buy.*`。
+占位文字：`search.placeholder`（占位文字待搜索页视觉任务定，D10-119 H-V03，暂沿用首页这一键）；列表口径：`price_basis`、`price_basis.general`（BR-PRICE-03 细则「无券商品与混排列表的口径说明」）；出错 / 关闭：BR-TEXT-14 表 A 50304、表 B `50304.search_disabled`；购买按钮：`btn.buy.*`。
 
 ## 4. 接口
 

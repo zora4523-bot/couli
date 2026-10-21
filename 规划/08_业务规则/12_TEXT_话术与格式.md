@@ -78,7 +78,7 @@
 
 2026-10-21 App 内高保真三批定稿回写（docs/changes/20261021-App内高保真定稿回写.md，00 §8 第 ① 类；依据 `docs/changes/20261021-App内高保真第1批定稿.md`、`…第2批定稿.md`、`…第3批定稿.md` 的「待回写清单」，文案取自定稿画板里设计起草的原句，各行注明画板名）：BR-TEXT-14 表 B 新增 `30303.payee_daily_count`（BR-WDR-04 细则要求的子键）与按所在页面选用的场景子键 `30101.auth_unavailable.auth_manage`、`30102.auth_unavailable.auth_manage`、`30151.auth_manage`、`30411.phone_change`（W-15）；表 C 新增第 1 批游客价值卡，第 2 批钱包、提现页、收款账号、劳务协议改版、核实身份（旧号加验）、找回记录与找回驳回原因的用户侧文字、订单页找回入口、余额流水、订单申诉、AI 助手卡片的界面文字，第 3 批「我的」、邀请、收藏夹、消息中心、公告、通知设置、设置、绑定与更换手机号、二次验证摘要、注销、账号状态与账户申诉、帮助中心、客服、可选更新提示、通用断网与页面维护各键（W-01～W-07）；表 C 改 `cs.copy_link` / `cs.go_help` 的用途（加客服打不开时的半屏，W-14）、`cs.appeal_entry` 的用处（加收款账号）、`invite.post_login.optional_hint` 改为按 BR-TEXT-13 由 backfill_hours 渲染并删去过时备注（W-11）；表 D 新增 `privacy.second_notice.title`、两份清单名称、隐私中心个性化与通知用途、通知设置未申请提示、实名单独同意弹层各键，首启弹窗与二次说明两行补画板占位措辞；BR-TEXT-01 收益看板文案表新增 `earnings.as_of`；BR-TEXT-22 表新增 `agent.earnings.last_withdrawal`；BR-TEXT-19 表 BAD_DEBT_WRITEOFF 行的 hint 指向新键；BR-TEXT-20 细则「分享页文案」默认模板与例子补最后一行价格口径说明（键按 BR-PRICE-17）。由负责人、运营或法务提供正文的（邀请规则摘要与活动规则、注销须知、实名同意书）只建键并注明待提供，不起草正文；画板没有原句、由代理补全的几处在行内注明。新键的资金术语归类按 BR-TEXT-12 细则「资金术语键」的认定规则：已有前缀覆盖的照前缀（`wallet.`、`withdraw.`、`ledger.`、`earnings.`、`claim_reject_reason.`、`agent.earnings.`、`error.303` 等），其余待编排补登 `specs/fund-term-keys.yaml`。只登记键与文案，不改规则；各条状态不变，不新增 BR-TEXT 条目与错误码。
 
-2026-10-22 编排裁定 D10-115 G-V09（第 ① 类文案键登记）：BR-TEXT-14 表 C 新增 `search.placeholder`。状态不变。
+2026-10-22 编排裁定 D10-115 G-V09 及其更正（第 ① 类文案键登记）：BR-TEXT-14 表 C 末尾新增 `search.placeholder`（首页）与 `basic.search.placeholder`（基本模式首页）。状态不变。
 
 ### 12.1 规则一览
 
@@ -1069,7 +1069,6 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 通知设置 notify_settings.service_push / .service_push.desc（第 3 批，画板 NotifySettings、NotifySettingsOn） | 服务类推送｜跟单成功、返利结算、提现结果等消息。关闭后不再推送，消息中心里照常可以看到 | 开关关闭即时生效、不弹确认；站内信照常写入（规划/01 F-MSG-03、F-MSG-04）；iOS 从未申请时的提示句见表 D perm.push.not_asked_hint |
 | 设置·分组与行名 settings.group.account / .privacy / .general、settings.nickname / .phone / .delete_account / .privacy_center / .agreements / .notify / .reshow_jump_tip / .help / .about（第 3 批，画板 Settings-v2、SettingsGuest-v2、SettingsBasic） | 账号与安全｜隐私｜通用；昵称｜手机号｜注销账号｜隐私中心｜用户协议与隐私政策｜通知设置｜重新显示下单须知｜帮助中心｜关于凑狸 | 「授权管理」行用 auth_manage.title；剪贴板、清除缓存、退出登录行用已有 settings.\* 键；各行显隐（游客、基本模式、内测包不显示注销）只按 BR-ID-02 细则、BR-ID-27 细则 |
 | 设置·提示与游客 settings.reshow_jump_tip.done / settings.phone.unbound / settings.guest_hint / settings.guest_login / settings.agreements.sheet_title（第 3 批，画板 Settings-v2、SettingsGuest-v2、SettingsAgreementSheet-v2） | 已重新显示下单须知｜未绑定｜登录后可以管理账号、授权和通知｜去登录｜用户协议与隐私政策 | .reshow_jump_tip.done：点「重新显示下单须知」重置各平台下单须知已读记录后的轻提示，不跳页（BR-ATTR-21）；.phone.unbound：账号未绑手机号时手机号行右侧；.sheet_title：协议选择半屏的标题，半屏两行用「用户协议」「隐私政策」 |
-| 首页搜索框占位 search.placeholder（2026-10-22 编排裁定 D10-115 G-V09，App 内高保真第 1 批 `Main-v3` / 首页视觉 APP-11v、HM-07v） | 搜商品名，或粘贴商品链接 | 首页与基本模式首页顶部搜索行的占位文字；搜索页输入框的占位到搜索页视觉任务再定（D10-119 H-V03）；契约随 CT-16f 收录 |
 | 设置·修改昵称 settings.nickname.saved / settings.nickname.hint（第 3 批，画板 SettingsNicknameSaved-v2、SettingsNickname） | 昵称已修改｜{min_len}–{max_len} 个字，保存前会做内容检查；每月最多修改 {monthly_limit} 次。头像暂不支持修改 | 长度与次数按 BR-TEXT-13 由变量渲染：{min_len} / {max_len} / {monthly_limit} 取 BR-ID-39 的取值（不在本句写死；画板 SettingsNickname 写的是数字，记为设计下次改稿项）；超限与内容不通过仍用 error.30415、error.20001.nickname_sensitive |
 | 撤回注销后的轻提示 deletion.withdrawn_toast（第 3 批，画板 SettingsDeletionWithdrawn-v2） | 已撤回注销申请，账号恢复正常使用 | 冷静期内点【撤回注销】成功后回设置页的轻提示；与站内信 DELETION_PROGRESS cancelled 同句，分开设键（原借用站内信原句） |
 | 绑定手机号 bind_phone.bound_toast、bind_phone.merge.title / .target_label / .target（第 3 批，画板 BindPhone-v2、BindPhoneMerge-v2） | 已绑定手机号｜并入原账号｜并入到｜手机号账号 {phone} | 绑定成功的轻提示，之后按 BR-ID-10 恢复原动作；并入弹窗的标题与目标一行，正文仍为表 B 30411.mergeable；{phone} 脱敏 |
@@ -1094,6 +1093,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 可选更新提示 app_update.optional.title / .body（第 3 批 W-07，画板 MainUpdatePrompt-v2；画板这两句是 update_title / update_notes 的示例，用作没有下发时的兜底，代理补全的默认） | 凑狸 {version} 已发布｜修复了一些问题，体验更稳定。 | 可关闭的更新提示在版本检查接口没有 update_title、update_notes 时用这两句，不再退回 error.10405（那一句只用于强更页）；{version} 取版本检查返回的推荐版本，取不到时标题去掉版本号（「凑狸新版本已发布」）；按钮仍是 app_update.later / app_update.go_store |
 | 通用断网 net.unavailable / net.unavailable.desc（第 3 批，画板 StateNetworkError；WebPage 规格） | 网络不可用｜请检查网络后重试 | 没有可显示的缓存数据时的整页断网态，配【重试】；有缓存时仍用 net.stale_data |
 | 页面维护中 web_page.maintenance / web_page.back（第 3 批，画板 WebPageMaintenance） | 这个页面正在维护，请稍后再试｜返回 | 页面级开关 h5.route.&lt;page>.enabled=false 时原生容器直接显示，不加载 H5（规划/03 §8.3） |
+| 首页搜索框占位 search.placeholder（2026-10-22 编排裁定 D10-115 G-V09，App 内高保真第 1 批 `Main-v3`；首页视觉 APP-11v、HM-07v） | 搜商品名，或粘贴商品链接 | 首页顶部搜索行的占位文字；搜索页输入框暂沿用本键，占位文字到搜索页视觉任务再定（D10-119 H-V03）；契约随 CT-16 收录 |
+| 基本模式首页搜索框占位 basic.search.placeholder（2026-10-22 编排更正 D10-115 G-V09：基本模式不能调识别接口（BR-ATTR-29 细则），占位不提粘贴链接） | 搜索商品 | 基本模式首页顶部搜索框的占位文字（BR-ID-11）；契约随 CT-16 收录 |
 
 **表 D · 隐私与权限文案**（2026-10-03，功能对照 G-25、G-26、G-28；键名与用途由本表定，包内默认文案由法务定稿，规划/06 Q-F14。「要点或占位措辞」一列里的成句文字是代理起草的占位措辞，供开发与内测包使用，法务定稿后替换；占位稿不得用于提审与公开版本）
 
