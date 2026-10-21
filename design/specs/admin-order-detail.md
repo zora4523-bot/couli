@@ -3,7 +3,7 @@
 - 核对版本：规划提交 408f6d3（负责人 2026-10-18 后台第 1 批定稿「全部按推荐」，`docs/changes/20261018-后台第1批定稿.md`；含 #136：已归属订单不提供改给他人，04 §6.6 `orders/{id}/reassign` 只接受未归因）；代码主干 16b6f5aa（rebate-platform 远端 main，2026-10-18 核对；派发前再核对一次）
 - 画板存放：`couli-runs/design-hifi/project/<文件名>`（PNG 在 `review-admin/png/`），不入公开仓库；完整 sha256 登记在 [design/README.md](../README.md) 第 15 项「管理后台第 1 批」
 - 路由：后台资源 `orders/{id}`；从哪来：订单查询、一框搜、用户详情订单页签、找回审核；去哪：用户详情（UID）、同步记录、对账与差错（恢复流程）
-- 需求：01 F-ADM-05；规则只引编号：BR-FUND-01 细则「订单锁定（展示标记）」、BR-ATTR-20（找回通过、未归因订单指派与锁定）、BR-FUND-06（hold）；验收：AC-ADM-05（同号规则）、10 AC-S2-59、AC-S1-157；任务：05 F1-07e
+- 需求：01 F-ADM-05；规则只引编号：BR-FUND-01 细则「订单锁定（展示标记）」、BR-ATTR-20（找回通过、未归因订单指派与锁定）、BR-ATTR-31（未归因订单的后台指派，2026-10-21 自 BR-ATTR-20 拆出）、BR-FUND-06（hold）；验收：AC-ADM-05（同号规则）、10 AC-S2-59、AC-S1-157；任务：05 F1-07e
 - 可参考的已合并页面：无
 - 是否资金或归属页面：是（指定归属、暂停结算）
 
@@ -25,7 +25,7 @@
 
 | 区域 | 组件 | 数据 | 交互 |
 | --- | --- | --- | --- |
-| 标题行 | Title + 订单号（可复制）+ 平台 + 按钮组【同步此单】【暂停结算 / 恢复结算】【指定归属】 | sub_order_id、platform、user_id、rebate_status、locked、hold | 【指定归属】的显示条件按 BR-ATTR-20，【暂停结算】的可用条件按 BR-FUND-06；置灰时 `aria-describedby` 写原因 |
+| 标题行 | Title + 订单号（可复制）+ 平台 + 按钮组【同步此单】【暂停结算 / 恢复结算】【指定归属】 | sub_order_id、platform、user_id、rebate_status、locked、hold | 【指定归属】的显示条件按 BR-ATTR-31，【暂停结算】的可用条件按 BR-FUND-06；置灰时 `aria-describedby` 写原因 |
 | 权限说明行 | Typography.Text（12px） | — | 固定文案：order.view / order.hold / order.assign（只对未归因） |
 | 状态卡 | Descriptions：平台状态、返利状态、用户侧显示、暂停 / 维权、订单锁定、归属锁定 | platform_status、rebate_status、display_status、hold、rights、locked、attribution_locked | 「已锁定」与「归属已锁定」可同时出现，并列显示 |
 | 基本信息 / 归属信息 / 分佣快照 / 状态历史 / 原始报文 | Card + Descriptions + Timeline + 折叠 JSON | 契约字段 | 【查看金额变更记录】【展开全部】 |
@@ -49,7 +49,7 @@
 
 ## 5. 权限点与开关（04 §11.1 / §11.2）
 
-`order.view`；`order.hold`；`order.assign`（step-up 档位与适用范围按 04 §11.2 与 BR-ATTR-20；负责人 2026-10-18 #136，第 1 批定稿 ③ 维持）。
+`order.view`；`order.hold`；`order.assign`（step-up 档位与适用范围按 04 §11.2 与 BR-ATTR-31；负责人 2026-10-18 #136，第 1 批定稿 ③ 维持）。
 
 ## 6. 稿上没画、实现要做的
 
@@ -57,5 +57,5 @@
 
 ## 7. 待定与不一致
 
-- 封存稿 removed/AdmOrderReassign*（改派）不实现；「作废后误判只能驳回重提找回」已按 #136 处理，负责人 2026-10-18 第 1 批定稿维持；若要给超管留纠错通道需改 BR-ATTR-20（属负责人决定）。
+- 封存稿 removed/AdmOrderReassign*（改派）不实现；「作废后误判只能驳回重提找回」已按 #136 处理，负责人 2026-10-18 第 1 批定稿维持；若要给超管留纠错通道需改 BR-ATTR-31（属负责人决定）。
 - 目标用户为封禁账号时的错误码待契约线。

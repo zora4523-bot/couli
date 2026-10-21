@@ -3,7 +3,7 @@
 - 核对版本：规划提交 408f6d3（负责人 2026-10-18 后台第 1 批定稿「全部按推荐」，`docs/changes/20261018-后台第1批定稿.md`）；代码主干 16b6f5aa（rebate-platform 远端 main，2026-10-18 核对，B1-10a 迁移 todo、无 admin 契约；派发前再核对一次）
 - 画板存放：`couli-runs/design-hifi/project/<文件名>`（PNG 在 `review-admin/png/`），不入公开仓库；完整 sha256 登记在 [design/README.md](../README.md) 第 15 项「管理后台第 1 批」
 - 路由：后台资源 `claims`（菜单「用户与订单 / 找回审核」），审核页 `claims/{id}`；从哪来：侧栏、工作台「待审找回」卡（带状态筛选）、用户详情找回页签；去哪：订单详情、用户详情、导出记录
-- 需求：01 F-ADM-06；规则只引编号：BR-ATTR-18（证据）、BR-ATTR-30（后台审核与驳回原因，2026-10-19 自 BR-ATTR-18 拆出）、BR-ATTR-20（通过即锁定）；验收：AC-ADM-06（同号规则）、10 AC-S1-26-TB、AC-S1-43、AC-S1-157；任务：05 F1-07f
+- 需求：01 F-ADM-06；规则只引编号：BR-ATTR-18（证据）、BR-ATTR-30（后台审核与驳回原因，2026-10-19 自 BR-ATTR-18 拆出）、BR-ATTR-20（通过即锁定）、BR-ATTR-32（通过时订单已被归属，2026-10-21 自 BR-ATTR-20 拆出）；验收：AC-ADM-06（同号规则）、10 AC-S1-26-TB、AC-S1-43、AC-S1-157；任务：05 F1-07f
 - 可参考的已合并页面：`apps/admin/src/pages/admins/**`
 - 是否资金或归属页面：是（通过即写归属并锁定）
 
@@ -27,7 +27,7 @@
 | 筛选卡 | Form：Select（平台、证据等级）、Input（订单号 / 找回单号、用户） | 查询参数 | 查询 / 重置 |
 | 状态页签 | Tabs + Badge，一个 `claim_status` 枚举值一个页签，页签名取 `admin_dict.claim_status.*`（画板上的页签名为示意） | `claim_status` 计数 | 切换即筛选 |
 | 列表 | Table：找回单号、订单号、平台、用户、付款日期（用户填）、提交时间、证据等级、状态、操作【审核】 | items[] | 进审核页；【一键通过】本期隐藏 |
-| 审核页 | 证据视图（用户填写 vs 联盟回传逐项比对）+ 子订单逐个【通过】【驳回】+ 驳回原因 Select（`claim_reject_reason`）+ 说明（通过与驳回都必填、≥ 5 字，按 BR-ATTR-20 ③；通过时提供一键填入「证据核实一致」，2026-10-19）| claim、matches[] | 通过 / 驳回的后果与条件按 BR-ATTR-30、BR-ATTR-20；审核前提示一句（文案登记 admin.claims.*） |
+| 审核页 | 证据视图（用户填写 vs 联盟回传逐项比对）+ 子订单逐个【通过】【驳回】+ 驳回原因 Select（`claim_reject_reason`）+ 说明（通过与驳回都必填、≥ 5 字，按 BR-ATTR-20 ③；通过时提供一键填入「证据核实一致」，2026-10-19）| claim、matches[] | 通过 / 驳回的后果与条件按 BR-ATTR-30、BR-ATTR-32、BR-ATTR-20；审核前提示一句（文案登记 admin.claims.*） |
 
 ## 3. 文案键
 
@@ -44,7 +44,7 @@
 | --- | --- | --- |
 | adminListClaims | 进入、筛选、切页签、切页、重试 | 10001、10403、20001 |
 | adminGetClaim | 进审核页 | 20001（`data.fields=[claim_id]`，未知 id；后台先例，不用 40401，2026-10-19） |
-| adminApproveClaimItem / adminRejectClaimItem | 子订单逐个通过 / 驳回（`/admin/v1/claims/{claim_id}/items/{item_id}/approve`、`/reject`，2026-10-19 随契约 CT-24l 改名） | 20902（`data.resource=claim_item`：另一名客服已先处理该子项，刷新后看结果）、20001（缺说明或驳回缺原因）。订单已被同步或他人归属**不报错**：按 BR-ATTR-20 ② 子项自动结案（申请人本人 → cancelled，否则 → rejected NOT_IN_POOL），提示「订单已被自动归属」（2026-10-19 对齐 08） |
+| adminApproveClaimItem / adminRejectClaimItem | 子订单逐个通过 / 驳回（`/admin/v1/claims/{claim_id}/items/{item_id}/approve`、`/reject`，2026-10-19 随契约 CT-24l 改名） | 20902（`data.resource=claim_item`：另一名客服已先处理该子项，刷新后看结果）、20001（缺说明或驳回缺原因）。订单已被同步或他人归属**不报错**：按 BR-ATTR-32 子项自动结案（申请人本人 → cancelled，否则 → rejected NOT_IN_POOL），提示「订单已被自动归属」（2026-10-19 对齐 08） |
 
 ## 5. 权限点与开关（04 §11.2）
 
