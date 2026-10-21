@@ -30,8 +30,8 @@
 | 12 | 空态、错误态插画 | `illustrations/` | W3（10-25） | 待办 |
 | 13 | 分享海报、邀请海报 | `posters/` | W3（10-25） | 待办 |
 | 14 | 商店上架素材 | `store/` | W7 提审前（11-22） | 待办 |
-| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」；管理后台第 2 批（财务：提现审核与打款、月结账单与对账差错、调账与核销、余额流水与导出、资金看板）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 2 批定稿」，规格 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；两批规格都在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App 内高保真第 2 批（2026-10-21 负责人定稿；钱：钱包与流水、订单、找回、提现、AI 订单进度，含 15 张深色稿），画板清单与 sha256 见下方「App 内高保真第 2 批定稿」，规格 `specs/app-*.md` 14 份（2026-10-21）；App 内高保真第 3 批（「我的」与其他：我的、邀请、收藏与消息、设置与账号、注销与账号受限、隐私与协议、帮助与客服、基本模式与更新、容器、AI 页面引导，168 张含深色 29 张）负责人 2026-10-21 定稿「全部定稿吧 先开发 后面在微调」，画板清单与 sha256 见下方「App 内高保真第 3 批定稿」，规格 `specs/app-*.md` 26 份（2026-10-21）；App / H5 其余页面以各批定稿登记为准，未登记的草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
-| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 56 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）、管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）与第 2 批 8 份 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；App 内高保真第 2 批 14 份 `specs/app-{wallet,ledger,earnings,order-list,order-detail,appeal-order,find-order,withdraw,withdraw-reverify,withdraw-records,real-name,payout-account,labor-agreement,agent-chat-orders}.md`（2026-10-21）、第 3 批 26 份 `specs/app-*.md`（2026-10-21，清单见下方「App 内高保真第 3 批定稿」）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
+| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」；管理后台第 2 批（财务：提现审核与打款、月结账单与对账差错、调账与核销、余额流水与导出、资金看板）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 2 批定稿」，规格 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；两批规格都在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App 内高保真第 1 批（2026-10-21 负责人定稿，以 v1.1 为准；购物路径：首页与剪贴板识别、搜索、AI 找货、商品详情、去购买、分享、链接落地页、热销榜，108 张含深色 13 张），画板清单与 sha256 见下方「App 内高保真第 1 批定稿」，规格 `specs/app-*.md` 11 份（2026-10-21）；App 内高保真第 2 批（2026-10-21 负责人定稿；钱：钱包与流水、订单、找回、提现、AI 订单进度，含 15 张深色稿），画板清单与 sha256 见下方「App 内高保真第 2 批定稿」，规格 `specs/app-*.md` 14 份（2026-10-21）；App 内高保真第 3 批（「我的」与其他：我的、邀请、收藏与消息、设置与账号、注销与账号受限、隐私与协议、帮助与客服、基本模式与更新、容器、AI 页面引导，168 张含深色 29 张）负责人 2026-10-21 定稿「全部定稿吧 先开发 后面在微调」，画板清单与 sha256 见下方「App 内高保真第 3 批定稿」，规格 `specs/app-*.md` 26 份（2026-10-21）；App / H5 其余页面以各批定稿登记为准，未登记的草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
+| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 67 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）、管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）与第 2 批 8 份 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；App 内高保真第 2 批 14 份 `specs/app-{wallet,ledger,earnings,order-list,order-detail,appeal-order,find-order,withdraw,withdraw-reverify,withdraw-records,real-name,payout-account,labor-agreement,agent-chat-orders}.md`（2026-10-21）、第 3 批 26 份 `specs/app-*.md`（2026-10-21，清单见下方「App 内高保真第 3 批定稿」）、第 1 批 11 份 `specs/app-{home,search,agent-chat,product-detail,auth-sheet,jump-tip,product-buy,product-share,share-hub,link-landing,hot-rank-list}.md`（2026-10-21）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
 
 完成一项后，把「状态」改为「已交付」，或者直接告诉 Claude。
 
@@ -153,6 +153,126 @@
 | 余额流水与导出 | AdmExportTasks.dc.html | `089779a6f3b97f9b597574d731bd1bfa4382ea6d7557df6846a4d8b9073a7ad9` |
 | 资金台账与看板 | AdmFundLedger.dc.html | `f60abba6f181d0597debc249e5b22aa682e2db1fe41c062b0600ddfc20321014` |
 | 资金台账与看板 | AdmReportFunds.dc.html | `d7957c385f84bb40f7d7556d67994d00b69709bd5b709c3ece6358682bc1c4c9` |
+
+## App 内高保真第 1 批定稿（2026-10-21）
+
+负责人 2026-10-21 在对话中定稿：「全部定稿吧 先开发 后面在微调」（应用内高保真三批全部定稿，本节登记第 1 批，以按负责人 10-21 意见修改后的 v1.1 为准）。第 1 批 = 购物路径：首页（含首页弹窗与剪贴板识别）、搜索与结果、AI 助手找货、商品详情、授权半屏、下单须知、去购买的各状态、分享商品与海报、分享赚入口、链接落地页、热销榜，共 108 张画板（95 张浅色 + 13 张深色）。v1.1 另存的 `-v3` 与新增画板取代旧版，被取代的 `-v2` / 无版本号旧稿不登记。登记、入库前核对与待回写清单见 [变更记录](../docs/changes/20261021-App内高保真第1批定稿.md)。
+
+- 规格（11 份，按页面）：[app-home.md](specs/app-home.md)、[app-search.md](specs/app-search.md)、[app-agent-chat.md](specs/app-agent-chat.md)、[app-product-detail.md](specs/app-product-detail.md)、[app-auth-sheet.md](specs/app-auth-sheet.md)、[app-jump-tip.md](specs/app-jump-tip.md)、[app-product-buy.md](specs/app-product-buy.md)、[app-product-share.md](specs/app-product-share.md)、[app-share-hub.md](specs/app-share-hub.md)、[app-link-landing.md](specs/app-link-landing.md)、[app-hot-rank-list.md](specs/app-hot-rank-list.md)。深色稿列在对应规格第 1 节。
+- 画板存放：本机运行目录 `couli-runs/design-hifi/project/<文件名>.dc.html`，1 倍 PNG 在 `couli-runs/design-hifi/review-shop/v1/png/`，浏览页 `review-shop/v1/shop-boards.html`，逐张改动与依据见 `review-shop/v1/README.md`；v1 Codex 对抗审查 3 轮（r3 PASS），v1.1 独立审查 2 轮（r2 PASS，留 2 条 S2 写进 `app-home.md`、`app-product-buy.md`）。画板与 PNG **不入本公开仓库**，版本以下表 sha256 为准。
+- 入库前核对（2026-10-21，逐张，共 108 张）：无 11 位手机号、18 位证件号与银行卡号样式的真实号码；嵌入图片只有 `icons/platform/` 的淘宝、京东、拼多多官方图标 96px 缩样（94 张画板用到，只在来源标签、平台切换、金刚区与授权半屏），没有其他位图与外链图片；分享海报与凑狸自有插图不含平台商标或近似元素（海报来源只写文字）。
+- 画板与规划、契约对不上的地方已逐条写在各规格第 7 节，标「待上游」；需回写规划与设计规范的 13 条列在变更记录「待回写清单」，本次不改规划取值。
+
+| 页面 | 画板文件 | sha256 |
+| --- | --- | --- |
+| 首页 | Main-v3.dc.html | `2ab2d11a402a78725128c3cc3ca69e401e8c04bda822b24973d4c8a3af80383b` |
+| 首页 | MainRankEntry-v3.dc.html | `a9488b8617ae5a99704ba61acd514e1be36af2105b35831fad2b4176c2245433` |
+| 首页 | HomeGuest-v3.dc.html | `2e75bc1fbdf990cd27eabf165154998ccecd00c644383d5f2c485bb3d07e9a14` |
+| 首页 | MainPopup-v3.dc.html | `09e41d992abcbc07ba80789a67831b9b9a751e8dd9c87be0af159a2265d8e4e9` |
+| 首页 | MainPopupStatic.dc.html | `e260d467f3401ac3096d19e31503c097b562c758a6b96b4d131acd451353f350` |
+| 首页 | HomeClipboardInvite-v3.dc.html | `39453277db9cb822f4c3506568c928e2c7dd106c7f471b235979b862376306dc` |
+| 首页 | HomeClipboardConsent-v3.dc.html | `8f6ee27ab7ae8adaf3157ada746f9b8017afa8ad7d1785b3775cd9b1351a423d` |
+| 首页 | HomeClipboardCard-v3.dc.html | `87ca6a98d5390f8b148f413dbf9819d184c221098f958d50611724ab045c3a4f` |
+| 首页 | HomeClipboardResults-v3.dc.html | `8a1e3eb16be41be91f39081c915824b77744d2e10fa4172267ea94e27bd3f40b` |
+| 首页 | MainDark-v3.dc.html | `d208bbdc84a508d59659dbe198dddfa997bfc29b497c4f33e675981e857d7480` |
+| 首页 | HomeClipboardCardDark-v3.dc.html | `a6c2e00b43434705f6040bae760d4e5a0d32cedc0349e0be9ac9ca2ab0fa888c` |
+| 首页 | MainPopupDark.dc.html | `467782a4c30158847fc3bde256065b45b786e2f1924602b30a15e33509e4cb57` |
+| 搜索 | SearchTyping-v2.dc.html | `4ae3fa29b07d804ea732a7e8252b10e652a72027e2276b120ce6b94ff6530ede` |
+| 搜索 | Search-v2.dc.html | `883c38a8fdc86c4fd9c835202b420b169f328af023f49efb5a2b95285adbb878` |
+| 搜索 | SearchCategory-v2.dc.html | `022228a8cd6bedaa26908a3dfdef8c10b8eab2b81bf0ccfad3ab1c1d5ac80c73` |
+| 搜索 | SearchFilterPrice-v2.dc.html | `fd0c24eeb3e2862b23dec09f33cb0245ad769782db8e8ab4767b4b84cf8909cb` |
+| 搜索 | SearchEmpty-v2.dc.html | `b4c98000f13a671a693e8e5e774171c4b43335c1cf3f26f976a004f5d35f66fb` |
+| 搜索 | SearchDisclaimerNote-v2.dc.html | `45ba17491ab68bad96012efe9f3ad3afacf5f909dae2888c921b12332a115163` |
+| 搜索 | SearchLoading.dc.html | `aab428a63c8828fe8081b99d93f07df3041b30e3c5ce03bf659d1e54162d222d` |
+| 搜索 | SearchError.dc.html | `cd2cd5ef2f74de7683a742a6914f4073978bb336fa5dfdf2f07fde12dda34f83` |
+| 搜索 | SearchDisabled.dc.html | `67bb06995d45efeeaad6c2c545e6037473d21f88457016702d072b8799fb30f6` |
+| 搜索 | SearchTypingDark.dc.html | `5214684aae5b6da75fa98911e7b8a2f0eab55b09a3779612f1ecf2acb2134bd2` |
+| 搜索 | SearchDark.dc.html | `3f921e438b1d3b6c2f54d3d8a182ca48c64c722f1f22660476899e11ba41c0af` |
+| AI 助手（找货） | Agent-v2.dc.html | `ef0d8bd319103d805669dea502e98903c2e4987e36a407045e99023e73101d74` |
+| AI 助手（找货） | AgentConsent.dc.html | `6f38f0bb21e14dfd26cfcc01655dc2101edbc19a947109497bdc6210d11919a0` |
+| AI 助手（找货） | AgentStreaming-v2.dc.html | `fd721027e8b27fbeb1b3db7527e0dce6f7d1e78116b180067d1a86a862e7ab90` |
+| AI 助手（找货） | AgentResult-v2.dc.html | `e9731f5bb0d0d3cfc5b73f73b329ab48678f0391b93bb8a9eb28c02f36308a25` |
+| AI 助手（找货） | AgentNoResult-v2.dc.html | `9fbd0ad992626a95d76724f5692ca95aabf43226ce46db984d700de20adf605a` |
+| AI 助手（找货） | AgentDegraded-v2.dc.html | `40942d8477ec8faa8ebf16194526dbfb39edf1d3cd3a3608bb96c8f8adb0f0a9` |
+| AI 助手（找货） | AgentPartialFail-v2.dc.html | `20b3ff61be73a89c1211e43bea64af9dea7a025ce1d3bc39a6a90032426d175c` |
+| AI 助手（找货） | AgentUnavailable-v2.dc.html | `ac9cf2bb3d2ce057ebf2b6b45694d3a4a441fa9d81e127bedcc207ccec6c8e64` |
+| AI 助手（找货） | AgentDisconnected-v2.dc.html | `249b22c2109e1167670062323adef7bacb24c081542f4a47261a02413ebf5102` |
+| AI 助手（找货） | AgentQuotaGuest-v2.dc.html | `974831cedca600b9627f0dacb8a0c91a428c1c984b4a09eba58cfe1c07ba1d03` |
+| AI 助手（找货） | AgentQuotaPhone-v2.dc.html | `ec6fb6d03a859d73f9bb685b406ef895027ecf3b1d3127da2733079ebcfe9595` |
+| AI 助手（找货） | AgentReport-v2.dc.html | `da2316cd2ad5ddd61dc7790b68074d015351b7325297ac9a1741f224795540c0` |
+| AI 助手（找货） | AgentReported-v2.dc.html | `be5efdb9579fda3dc1cf0f936e7dc123f3fd3d8fd0fc835576616c28a667facf` |
+| AI 助手（找货） | AgentClipboardCard.dc.html | `4092777116fada1f40050aa965674e6ac69d8fc84df05b87bf7656fabb74ef35` |
+| AI 助手（找货） | AgentResultDark.dc.html | `6408def6c8887b66d6dce7a8ab6226fb8d33b7e18b0ad0f4979cc17f77c114c8` |
+| 商品详情 | Product-v2.dc.html | `332e5a6255c482bbc54374b9b35a70d1f55d9c85be60c8944cc4ff01f207792c` |
+| 商品详情 | ProductPublic-v2.dc.html | `5910e23441e6df67e498a40af241bd4005db584a3fd1f5d01217846bdf228251` |
+| 商品详情 | ProductFavorited-v2.dc.html | `4f7de72d9e56ee37867b0db889c38821af4ca974de299f77605ef300158f6628` |
+| 商品详情 | ProductFavoriteFull.dc.html | `4bcb3a16d7707ee22c6c660925986979ab6b14f0782793065e1710cae1ff702b` |
+| 商品详情 | ProductPriceTrend-v2.dc.html | `fb121836d240005400ec5361823034453c8802566358a9f20bd8f71a300d0cdb` |
+| 商品详情 | ProductPriceTrendEmpty-v2.dc.html | `f225eca45ee25ae26f2fa1c84fa7124dbb67f80c84301851f37499f3e6149ff2` |
+| 商品详情 | ProductJd.dc.html | `772b02da48b3a90e45c3dac5640afd626f614e9f88247ec8441a5670dc0e2a89` |
+| 商品详情 | ProductDark.dc.html | `25dbc178d1bf6d94d4496ac43a830d124c7468b170f96fce5414f50d0456654e` |
+| 授权半屏 | ProductAuthSheet-v2.dc.html | `ac41612bb7ea604b1125abf23e83316956eff7a88eda0defdbeea52b40f07ef3` |
+| 授权半屏 | ProductAuthSheetDark.dc.html | `410ac1a82aea6eeba0361325ceb570f006dad23de6aa82f8cbfaacdaf10354fc` |
+| 下单须知 | ProductJumpTip-v2.dc.html | `df823e0652363dafdb491052d58b27c1ba8c7f6187db61c9817078a787909e6a` |
+| 下单须知 | ProductJumpTipDark.dc.html | `7c89fab4a8a2181b06254ca0c8ce1306aa742a82bf519d054d0b11192f572c29` |
+| 去购买 | ProductAuthConfirming.dc.html | `f5f53fc6de380c4763dcf8566fde081ec024c821c9d0e3ac575f843f92cfc982` |
+| 去购买 | ProductAuthDeclined-v2.dc.html | `c5539d265ae0fde1dae8993868458421f6ec50686c883f2d7b7d51832814b784` |
+| 去购买 | ProductAuthFailed-v2.dc.html | `14ea5ac603b619642bdac4495c04b2b01c7af20c59f3d01daf590a9e40ceeadc` |
+| 去购买 | ProductAuthUnavailable-v2.dc.html | `f775768afb21592102c91acb1eeefd8e97a636a38d39c804bd7489fd3c7d45b2` |
+| 去购买 | ProductAuthBlocked.dc.html | `dc9d0fb3bf00b6a83f1fb1b13b3029aaf3e26777fef74ae4168f0fe1c53bacfa` |
+| 去购买 | ProductBuyOpening-v2.dc.html | `903bc25c393292a0131f93eb4f54767fe623d17d8515eca7c927d479d83f0004` |
+| 去购买 | ProductBuyTimeout-v2.dc.html | `80e4e2d03ad9d213422c803e822d6a1540bb5425732f39fc4fd2aa4a98b3265f` |
+| 去购买 | ProductRequoteCached.dc.html | `090fa6e4532cc47d5146187f996dad64be564b61c4461e960f0819837cca4d43` |
+| 去购买 | ProductPriceUnconfirmed.dc.html | `ced60eef7ace4eac14b36b3cc2e4afd78afa926f0d16f05e1a48a2618e5cc276` |
+| 去购买 | ProductConvertPaused-v2.dc.html | `ff932ffd13da1ce1dacb2ff06fc5ec56fdbcff6cf42f28bb8e42c7816b66acc9` |
+| 去购买 | ProductOffShelf-v3.dc.html | `a29f3a731e967fbc101b490849d737130c6c92a4f759de43e65b7544cabd8fba` |
+| 去购买 | ProductJumpNotInstalled-v2.dc.html | `e5cadf078ccf63d608f80a7b89cd82aef4e42ae3c431ca755f00424657d9cdd0` |
+| 去购买 | ProductJumpBrowser-v2.dc.html | `afb8f78a30c73a0c66750f35ce38bfda723462fbd9de2f4bc93fd02642a363ab` |
+| 去购买 | ProductJumpHarmonyH5-v2.dc.html | `cce2969ec0db288b103e51d1a827c944878f35a47ea2aa404192a4f451d4dd6f` |
+| 去购买 | ProductJumpSdkFailed-v2.dc.html | `042eb188f2f124cb93cbb133ca3ed4dc904a84a228a2ef4230180bfc8623beba` |
+| 去购买 | ProductJumpUnsupported-v2.dc.html | `42abebb66ddcee16a2f17701e1eb261b0c7eabf444c98b0902b57dbfc1690b8d` |
+| 去购买 | ProductPendingTrack-v2.dc.html | `e90f43626a97f9132c5da8d672181895e4fa28e779d934eee17d5d946da76c78` |
+| 去购买 | ProductPendingTrackDecided-v2.dc.html | `f6c793b18da13b33b9e930b85bb4983ee69473acf038f1d51d07275f4bb7b024` |
+| 去购买 | ProductPendingTrackClaim.dc.html | `55d77235a3368400b9878bed4d99031c35e68a5b68c91f2cbcdb4676438b6897` |
+| 去购买 | ProductPriceChanged-v2.dc.html | `b4762e20bbf2151ed26406df8e2ebe77dabcd8495b801871c39c211ed34e2d05` |
+| 去购买 | ProductPriceChangedCancelled-v2.dc.html | `438bcebacef14f37120e545b8d196a84b640c7008ee577f03b0d75f4249591d2` |
+| 去购买 | ProductPriceChangedRebateGone-v2.dc.html | `8a59a8cccb84db2d9e861b2dd534dc0b6e1c658ff855d5fc41b591a23285198b` |
+| 去购买 | ProductCouponGone.dc.html | `b2f4ae6b68805726c446e16b6e76e7ee6e9ee3e104a7677e568676756332c551` |
+| 去购买 | ProductPriceChangedRebateGoneCancelled-v2.dc.html | `8e2b1229747ea35147f43fbd5eb29662e2f69b3e4ee31d3a50952cd1b8dcf3b4` |
+| 去购买 | ProductRebateGone-v2.dc.html | `fda0dc4c0c5d92a2277baa988d8a7fdff44244f104ec7edbd7887b18193f4997` |
+| 去购买 | ProductRebateGoneCancelled-v2.dc.html | `49af909f51a5372a18f9e855a284fc1e6fddb18aeffb85d5195f7857606133a6` |
+| 去购买 | ProductPriceCompareNoRebate-v2.dc.html | `a20873a07d914e8bd01a9eec904289f4f748ced761457e4b3825870883e41f81` |
+| 去购买 | ProductPriceCompareCancelled-v2.dc.html | `12ebd4f5436e6cda2ef3f51d84e3e4363f2f10a2ef0269f171687317de74a14f` |
+| 去购买 | ProductCardDegrade-v2.dc.html | `d4ffaa8f7552270a4c5ba67e3e16869dddb03970aad85734fdc9eec63f5d627a` |
+| 去购买 | ProductPriceChangedDark.dc.html | `fb48da5c716800d427b3dd5ba768a5fe93f868b8e1f9a4998b89b922a83af57f` |
+| 去购买 | ProductOffShelfDark.dc.html | `9a3bdffa1234581c516374bde093c43d14c2b6b7604c9628b042f9a0e9029fb0` |
+| 分享商品 | ProductShareConverting-v2.dc.html | `ec81dc299be180cca37d39f2f4b49d44f253a6e5a6530e58f41d26ef3879ecf9` |
+| 分享商品 | ProductShareUnavailable-v2.dc.html | `df1fc6393a4530b067bb1fbd743c988063cab9e09f179cd7f705af33a93352ed` |
+| 分享商品 | ProductShare-v2.dc.html | `3cd465ec8ad721e5c06e9ffb1d2be4f3427353affa442163e6f2f2056df9ea7a` |
+| 分享商品 | ProductShareJd-v2.dc.html | `e4717dadb85d594218c04421a3dd0204579b65e319102c073e936480e17f2558` |
+| 分享商品 | ProductShareCopied-v2.dc.html | `cbdc5651dec3be42bb71260cc6b4309d2bc02c00ab46f50428a8418a9d34567b` |
+| 分享商品 | ProductShareEdit-v2.dc.html | `80d1f7770303b7aae6f60a0272940e0f98537e120f949b917b18ddf934b7133f` |
+| 分享商品 | ProductShareEdited-v2.dc.html | `d65a1733ecab4f20394246272218dc5737feec38937351611c7278defd93846e` |
+| 分享商品 | ProductShareEditOverwriteConfirm-v2.dc.html | `49c469417313f35cd63b0807b93b7682def9182dbc0c3fefd8e1a7e7fa0d7a46` |
+| 分享商品 | ProductShareNoImage-v2.dc.html | `306d5d3d6dd253bcca2667ea9edb9787317f5ee753c4c19a5b0a0e8f4e7ca64f` |
+| 分享商品 | ProductShareNoWechat-v2.dc.html | `406fd2f861d0189316e4fd901cbe7842a3517e2d9e7ab2f2b25ffa1eafba78b3` |
+| 分享商品 | ProductSharePhotoPermission-v2.dc.html | `c4fecbe847eee74e3af42b7779abb31d32f814e3d1c888e3bef0780e00d742b3` |
+| 分享商品 | ProductShareSaved-v2.dc.html | `c34ad6e4737873ca4c4e68d07b715e4cce78c697cdc5aaddd56d87fc4f9d7b85` |
+| 分享商品 | ProductShareSaveDenied-v2.dc.html | `d35e0665bd5f947368f22252a3567528924c61d09619dd54f1dd935dcd499aa1` |
+| 分享商品 | PosterShare-v2.dc.html | `319eafa28ce7a1e5f7581a9bc7b0f7be2b8b028ed6999f6b9b112a71c10e720a` |
+| 分享商品 | ProductShareDark.dc.html | `df86a7532eada8f1bb436514ef3e98529e8d8125d8ace96341cd6280e22b4a0f` |
+| 分享赚入口 | ShareHub.dc.html | `64d12ff4362ab26f245db27a3fef228b8bea80af03a8b7e03db1c44e4ce137f0` |
+| 分享赚入口 | ShareHubConverting.dc.html | `19a79a5419c4a4e078a9b7c98aee35a4cf3a7be3b5088c58fb53de591e8a76ef` |
+| 分享赚入口 | ShareHubInvalid.dc.html | `82e58d6dae3a31170888b18643efb863fcec754f7e88707cea040f8045dbd576` |
+| 链接落地页 | LinkLanding-v2.dc.html | `b0c5fe457563b4fc96bcd24d38efb7509172c9d38d018c468f36bbfc273c8430` |
+| 链接落地页 | LinkLandingOwner-v2.dc.html | `15fcdcc7e7b8fc16269606c144b37d7a1b58f7b1abff94f9ac9b2f6c9cc098cd` |
+| 链接落地页 | LinkLandingInvalid.dc.html | `993e93c0626fa1633049c38d7dd726c6db96e735cd5e463443f113c857ad5679` |
+| 热销榜 | RankList-v2.dc.html | `0099337ee1fb84062d80b0cf1a3084f93a3fe8eace3c5abea978f3d5255c06ca` |
+| 热销榜 | RankListPlatform-v2.dc.html | `d0e0213201353b3e67c259a5b1ffd212f737ae1acc838349bdebe3e96b44e4d9` |
+| 热销榜 | RankListLoading-v2.dc.html | `bc1a1a82ada6639680d65248be90a2a51d6ca1624125a107ca55c5a3cba061ee` |
+| 热销榜 | RankListEmpty-v2.dc.html | `8fc9097faf341f9a91136abcfc3a3574e471d6ab3521be777c90158208e0a7a6` |
+| 热销榜 | RankListError.dc.html | `690aa3e84abbeab2041b9593856cc0d254ef5c455509386fa35dbb66b323ee93` |
+| 热销榜 | RankListDark.dc.html | `91793e8406116e0aa6361ef10f32ae54cdb52a77a3d11900199aff3542b03227` |
 
 ## App 内高保真第 2 批定稿（2026-10-21）
 
