@@ -30,8 +30,8 @@
 | 12 | 空态、错误态插画 | `illustrations/` | W3（10-25） | 待办 |
 | 13 | 分享海报、邀请海报 | `posters/` | W3（10-25） | 待办 |
 | 14 | 商店上架素材 | `store/` | W7 提审前（11-22） | 待办 |
-| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」；管理后台第 2 批（财务：提现审核与打款、月结账单与对账差错、调账与核销、余额流水与导出、资金看板）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 2 批定稿」，规格 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；两批规格都在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App / H5 页面仍待你定稿，草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
-| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 16 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）、管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）与第 2 批 8 份 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
+| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」；管理后台第 2 批（财务：提现审核与打款、月结账单与对账差错、调账与核销、余额流水与导出、资金看板）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 2 批定稿」，规格 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；两批规格都在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App 内高保真第 2 批（2026-10-21 负责人定稿；钱：钱包与流水、订单、找回、提现、AI 订单进度，含 15 张深色稿），画板清单与 sha256 见下方「App 内高保真第 2 批定稿」，规格 `specs/app-*.md` 14 份（2026-10-21）；App / H5 其余页面以各批定稿登记为准，未登记的草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
+| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 30 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）、管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）与第 2 批 8 份 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；App 内高保真第 2 批 14 份 `specs/app-{wallet,ledger,earnings,order-list,order-detail,appeal-order,find-order,withdraw,withdraw-reverify,withdraw-records,real-name,payout-account,labor-agreement,agent-chat-orders}.md`（2026-10-21）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
 
 完成一项后，把「状态」改为「已交付」，或者直接告诉 Claude。
 
@@ -153,6 +153,150 @@
 | 余额流水与导出 | AdmExportTasks.dc.html | `089779a6f3b97f9b597574d731bd1bfa4382ea6d7557df6846a4d8b9073a7ad9` |
 | 资金台账与看板 | AdmFundLedger.dc.html | `f60abba6f181d0597debc249e5b22aa682e2db1fe41c062b0600ddfc20321014` |
 | 资金台账与看板 | AdmReportFunds.dc.html | `d7957c385f84bb40f7d7556d67994d00b69709bd5b709c3ece6358682bc1c4c9` |
+
+## App 内高保真第 2 批定稿（2026-10-21）
+
+负责人 2026-10-21 在对话中定稿：「全部定稿吧 先开发 后面在微调」（应用内高保真三批全部定稿，本节登记第 2 批）。第 2 批 = 钱：钱包与余额流水、收益看板、订单列表与详情、订单申诉、订单找回、提现申请与核实身份、提现记录、实名认证、收款账号、劳务协议签署、AI 助手的查订单与查收益，共 132 张画板（117 张浅色 + 15 张深色；93 张本批新写或另存 -v2，39 张原稿沿用）。登记与待回写清单见 [变更记录](../docs/changes/20261021-App内高保真第2批定稿.md)。
+
+- 规格：[app-wallet.md](specs/app-wallet.md)、[app-ledger.md](specs/app-ledger.md)、[app-earnings.md](specs/app-earnings.md)、[app-order-list.md](specs/app-order-list.md)、[app-order-detail.md](specs/app-order-detail.md)、[app-appeal-order.md](specs/app-appeal-order.md)、[app-find-order.md](specs/app-find-order.md)、[app-withdraw.md](specs/app-withdraw.md)、[app-withdraw-reverify.md](specs/app-withdraw-reverify.md)、[app-withdraw-records.md](specs/app-withdraw-records.md)、[app-real-name.md](specs/app-real-name.md)、[app-payout-account.md](specs/app-payout-account.md)、[app-labor-agreement.md](specs/app-labor-agreement.md)、[app-agent-chat-orders.md](specs/app-agent-chat-orders.md)。深色稿列在对应规格第 1 节。
+- 画板存放：本机运行目录 `couli-runs/design-hifi/project/<文件名>.dc.html`，1 倍 PNG 在 `couli-runs/design-hifi/review-money/v1/png/`，浏览页 `review-money/v1/money-boards.html`；Codex 对抗审查 3 轮（第 3 轮 PASS）记录在 `review-money/v1/codex-review-r*.md`。画板与 PNG **不入本公开仓库**，版本以下表 sha256 为准。
+- 入库前核对（2026-10-21，逐张，共 132 张）：手机号只以脱敏样式出现（138****5678、139****0000），无 18 位证件号与银行卡号样式的真实号码（银行卡只有「6214 **** **** 1234」与「尾号 1234」）；12 位以上的数字串只有示例订单号与交易流水号；嵌入图片 98 处全部是 `icons/platform/` 淘宝、京东、拼多多原图的 96px 缩样（装饰，alt 为空），其余图形为自绘线性图标与商品示意图，凑狸自家品牌元素无平台商标或近似元素；支付宝、微信只写文字（官方图标未入库）。
+- 画板与规划、契约对不上的地方（契约缺字段或错误码、08 缺字典键等）已逐条写在各规格第 7 节，标「待上游」，实现以规划与契约为准。
+
+| 页面 | 画板文件 | sha256 |
+| --- | --- | --- |
+| 钱包 | Wallet.dc.html | `39420611de0a1c525e37bf49556640254dee380222c33e9583bf521def318d9b` |
+| 钱包 | WalletHidden.dc.html | `ae2774deea9b391e077cbb343e8e728091b72d6975c41af9aff8353a014efbcb` |
+| 钱包 | WalletFrozen.dc.html | `d683bb4b078e2525eb7a94f7df6faffce34e8b6f0dcb76be22ebde7f9d80cc4a` |
+| 钱包 | WalletNegative-v2.dc.html | `ae0f3613fd5b153080d7ed39d240e00892d474142466d398e0bacf88949fd480` |
+| 钱包 | WalletRiskFrozen-v2.dc.html | `92f868009ea9f17029326c746ac334311baf75e6dcce46dfb8a227b87ff4f73c` |
+| 钱包 | WalletRiskFrozenTap.dc.html | `7d3b9c66dda3b41d05579b4a38e0047fe00403dae64e9aa1ad31134e4ace891c` |
+| 钱包 | WalletStates.dc.html | `ca3762283157213eedab812de0bf4952ee55091c49ebd27c08ec784a3cbb6fac` |
+| 钱包 | WalletEarningsEntry.dc.html | `1e89481e8ebe8627f5e76fef149b54f7949cfc0c03ab561bbffdd1ccf8f9f2cd` |
+| 钱包 | WalletStale.dc.html | `57a01df4654bc4e8baa3a5c863bda2c751e0e7f246be7cf88174bfe221b03b55` |
+| 钱包 | WalletNoteEstimate.dc.html | `306ddd4a1455ba4b21c15ed782bafee3abdd7dbfe6c62da84c2edd493cdd9433` |
+| 钱包 | WalletNoteFrozen.dc.html | `d3cb96cbbb60588a02308b2f5db749de964ba35ca53e4086dd4464a118dd4e44` |
+| 钱包 | WalletNotePaused.dc.html | `dbda4217e9ad70cc63dc9a1199753a11353f8c71bfffbb37331111d576b663ac` |
+| 钱包 | WalletDark.dc.html | `f56890ac6f5ce95710d07b790cdba0edaf1efa6e53e53658d2bd632c6d29de2a` |
+| 余额流水 | Ledger.dc.html | `baa5d8ab954a89257a671f8b74126f1d51c4b932778b129c24f2983043ec9c8c` |
+| 余额流水 | LedgerInviteReward.dc.html | `ca59251e3f6916ac7234450949727b61a7cc201f659fe0eba362282e98f473ea` |
+| 余额流水 | LedgerStates.dc.html | `a0e19a192d84820dd2cecdff77aac1f1f8e285059553e49b83bf867d8db8e11c` |
+| 余额流水 | LedgerEmpty.dc.html | `1a58eb1390d805e237772c2b8f560dfee8279c57cc84e92b46b7b8beaec381be` |
+| 余额流水 | LedgerDark.dc.html | `58b7b8c060beaf9f75456d2f087248382ab3bf5075d325249be8285fb963b02a` |
+| 收益看板 | Earnings-v2.dc.html | `e9ba66bd9739575e102945191d0d37938cffff4181c0a93a6910778105811658` |
+| 收益看板 | EarningsPlatform-v2.dc.html | `174279b9b2c76dc3f312932e071ed8bdb691cf4e5b7cde6768590675d7287ff0` |
+| 收益看板 | EarningsEmpty-v2.dc.html | `b892253566909f483d33b37973f0c90709c1901bb1a4eb596641a9c7259d9d0b` |
+| 收益看板 | EarningsMetricNote-v2.dc.html | `5485ffd51a49872fb5e79deb95b57cc1346e9d963b6cd269c41e1f065ab58645` |
+| 收益看板 | EarningsDark.dc.html | `3d17b69efb5a0e829ae14b53df77a4d85a64b466939792adfc867cb54f365e77` |
+| 订单列表 | Orders-v2.dc.html | `7f56b9f5ffe0692199e3169b5463f1c1a4f7dc5e89760bd070df6505309d6624` |
+| 订单列表 | OrdersShare-v2.dc.html | `92b09141ab1d68348c6741895e9a0cccb2cf63ec61f7356d9787f8d15e0d12c8` |
+| 订单列表 | OrdersEmpty.dc.html | `427293e05b21a96ac33443af0c805888f7bb1f5db221c281c326be23edb47a7e` |
+| 订单列表 | OrdersShareEmpty.dc.html | `b3d648e2013f2dc0049fc7bd882a542ab504bc9ca35106eaa1f9e7c7a9e4834a` |
+| 订单列表 | OrdersFilterMonth-v2.dc.html | `33fe2f489da09fbbda1412c92f817e196c89713a9c1e01152b8d43ab527d5eff` |
+| 订单列表 | OrdersFilterPlatform-v2.dc.html | `2b34babe402c09db158ffe0071758328f88337a94f7b1e9f81252cdd64cff429` |
+| 订单列表 | OrdersSearch-v2.dc.html | `b07ddb68814ff937fba219b258a2637ca03441155792c028bf26313998af7a79` |
+| 订单列表 | OrdersSearchEmpty.dc.html | `ab5b424a11a143234a4dece363770c36d198d7df6760e722a5dd09e7ecf5c2f1` |
+| 订单列表 | OrdersStale-v2.dc.html | `c7933dc74d6e91dbf725f8ea237d1e802030f8ab68b1ccf9a46645b13d09cd66` |
+| 订单列表 | OrdersClaimPinned.dc.html | `9b1b9a1119717572c63a054da2976b95f137844286a4a39a0c493114c26d001c` |
+| 订单列表 | OrdersHidden.dc.html | `b7b4ec5fecb52b1fef068d2e4ddf41704b2b2af11732844f4ea16876ec74d83c` |
+| 订单列表 | OrdersDark.dc.html | `6be77e80f0ea5613ac2b65e2dee5e2524adaeabe1568d0cf69ab92d2fc460837` |
+| 订单详情 | OrderDetailEstimated-v2.dc.html | `a15fa064d12ccc7f4ba99667d4191bc3009461e7445947c53910f10cc4dbcc74` |
+| 订单详情 | OrderDetailSettled-v2.dc.html | `d2a89981fd3d911fbac5adb9b7bc57bf000fda8176fc384ef7b22b464c3ce55c` |
+| 订单详情 | OrderDetailNoRebate-v2.dc.html | `5e5321b5e4415e474583808e95ba7a8a9dce6d20fd694c12232483a4699b7c06` |
+| 订单详情 | OrderDetailPresale-v2.dc.html | `98880476cb0e235856b0a39e01f825b0d3a5607cbe38ddf73bbe4822040dbbb4` |
+| 订单详情 | OrderDetailRightsPending-v2.dc.html | `8f5501159c79b7f958a6d4bcf1a49f25fc9c843d57cf37c2878a1cd1e08e37dc` |
+| 订单详情 | OrderDetailReviewing-v2.dc.html | `4139226928a552fea4010e4726e8ec19cc7bf9e9252beb4b790ac8fa94c6058c` |
+| 订单详情 | OrderDetailClawedBack-v2.dc.html | `35458ec45b74cdbe8df1889bda04fa3509617dbe544111d1ecedfea64fd56d02` |
+| 订单详情 | OrderDetailPartClawed-v2.dc.html | `f430a33b1300c6e0c64a2d784f82cd735560e49cf1eee7a717adc571d5c0848f` |
+| 订单详情 | OrderDetailShare-v2.dc.html | `456e329d2c90419637bcb98646bdf8fc5209bbb2542642b4307263964045c5bb` |
+| 订单详情 | OrderDetailPriceCompareNoRebate-v2.dc.html | `b180e9a84a720ea8b0ffee8e6ead5480429c45011c603197450d37662b24d9a8` |
+| 订单详情 | OrderDetailPriceCompareRisk-v2.dc.html | `d93c597bcd6aabd9a58d3461389c0194fe634aeb3100e97abefed279db036791` |
+| 订单详情 | OrderDetailBlacklist-v2.dc.html | `b6adbd7d4fd9ae3924b4ec4d6d3e785eff63b15e64de1656fca0c2cbd0494560` |
+| 订单详情 | OrderDetailAppealPending-v2.dc.html | `3cfe115e446fb4069fa448414959ceff2507f89a788d7a7ccea4cf09efcaf532` |
+| 订单详情 | OrderDetailAppealRevoked-v2.dc.html | `bbc968b9f653c744cc28bbb348feb36ee97d8d2ac0858a603dd0ef20a91b19ce` |
+| 订单详情 | OrderDetailAppealUpheld-v2.dc.html | `97333d4fd0d661457a85c7f523ee22b9db35051837171a07d405193a657c2364` |
+| 订单详情 | OrderDetailAppealUpheldFinal.dc.html | `0ce8facfc114cd45c9dfbb3082f64588e4752b352ccac2c2d0d724cbcf8ab903` |
+| 订单详情 | OrderDetailUnknown.dc.html | `1ff2ff17b09d7b30a60d40d40a54df9a091ad0ae5a06b54239a42c68b8858dc6` |
+| 订单详情 | OrderDetailReasonStates.dc.html | `f84ac6bc70bb87264e1d665b3ff0aa7526ffd782bf7e0db92d8ac4020ad4d482` |
+| 订单详情 | OrderDetailDark.dc.html | `ad0a35f6342036541efcacbaec45702831190a3a9f3bf9a6694e567ef4c1a435` |
+| 订单申诉 | AppealOrder.dc.html | `7cca26488329fe9f19c95c78597136db53e170deea3452ea27934c54cf9de356` |
+| 订单申诉 | AppealProgressOrder-v2.dc.html | `a3f271827ce7c052f770c68ac452b12cf1adadda25fa741df4c8f6fa1c10fe5d` |
+| 订单找回 | FindOrder-v2.dc.html | `e7e3559e3f058ab4468d775e049fc4cb25152f3c2d0f4a97c0233d8a35c96e45` |
+| 订单找回 | FindOrderNotFound-v2.dc.html | `1b64c39c89940505e4972fd5508893274682545fd6446da62644e1ed0785626d` |
+| 订单找回 | FindOrderRecords-v2.dc.html | `44cbb7bf2cb2cb526f3b7ea63639719e361171094a2018b1fbc6e13c70e6f59c` |
+| 订单找回 | FindOrderRecordsEmpty.dc.html | `e62f4bacad8a258396e489adddd1d33702784fbba19c79c39088982ea384c9b0` |
+| 订单找回 | FindOrderErrors.dc.html | `926a3ea2ec59fc3b2cf9d435636da26bbac6d7989b5dedac7a706aae5dd23730` |
+| 订单找回 | FindOrderDark.dc.html | `782182a3b4bfc04bd694eb301d82212b6b949a7145fd7cfab2fe8b90a1f31dbb` |
+| 订单找回 | FindOrderRecordsDark.dc.html | `3dcf8b722120dc8aad00f2a0e6fad91ea1d5b2ffe135a111a2adc16ff1f64f40` |
+| 提现申请 | Withdraw.dc.html | `a3ec02370d99078fc615b59dda40e15ee26ab6f6c9fd892e8161e8e655defe89` |
+| 提现申请 | WithdrawCalculating.dc.html | `e9a88c0e068badfdb857f851c2936d140bc1da3aac9ed4e3ef813a8663571abe` |
+| 提现申请 | WithdrawEstimateFailed.dc.html | `140ef89d5f643028394cdeb61d8b41af92522556850a8036c356223963186428` |
+| 提现申请 | WithdrawNoteNet.dc.html | `11c0b7aa32025667b0efcd80fd80657a53a868e782c411fc08e8e53cb1a27124` |
+| 提现申请 | WithdrawRealName.dc.html | `9d9752406b6da17b172dfe0862bb7e586f286ab8c3a691160e835b96f067c953` |
+| 提现申请 | WithdrawStepUp-v2.dc.html | `a4c1a513c31311bf36e5dbed7f6e1ec5f5d53a2fc079b9da1f3a947b277d94ff` |
+| 提现申请 | WithdrawSubmitting.dc.html | `9530119ea5112172fe7c01ad247be72f21e0a456a80cc160735e82a495f89a6b` |
+| 提现申请 | WithdrawBlocked.dc.html | `fbb6c6026350d149b2e1dec4cc14e6d4946ed78f690641f1cef3735b9847c992` |
+| 提现申请 | WithdrawWechat.dc.html | `1efb6202ac5604cf81459e2b477956dc250323e6c77836abd545039d0ff7aab3` |
+| 提现申请 | WithdrawPendingConfirm.dc.html | `763bac6c8891262d5a02cf22470fc281ffea5b6907a9a8bbc2e4cbd862d9e2e4` |
+| 提现申请 | WithdrawPendingBusy.dc.html | `66b7777490f2263a4b55c257f108d912049a51bf15037a718ad2fb08c04df784` |
+| 提现申请 | WithdrawPendingStill.dc.html | `dd30ef7943f0b951739fa425a97aa4ea0100ac24e848e195883601e09a4b49f3` |
+| 提现申请 | WithdrawAbandonConfirm.dc.html | `bde016ab1cd2776a765f054cec5daa4ab944df3be483cbfb1a426a6ed7c6c9e5` |
+| 提现申请 | WithdrawAbandoned.dc.html | `920130f93ef913cdb3c7bdc0601e7ace3308e8a54921041a1b95260936e93a1a` |
+| 提现申请 | WithdrawAbandonCompleted-v2.dc.html | `0de2354c778f5dfda7e49160ef03207e3b66a8f64afa0b3a02a260c85a996a1d` |
+| 提现申请 | WithdrawPageStates.dc.html | `c0ae73615beb08f0063ee702fde0b5a5b53929cd5f0801063f65c4815263f82f` |
+| 提现申请 | WithdrawDark.dc.html | `63b4a1de0690940de3fd921f4cc0d5262697f40d698fa23cbd069faec31e73db` |
+| 提现申请 | WithdrawStepUpDark.dc.html | `adc11c54ead61d2580590d8da5a4e3839e1a53dc0f290bff8942e2c8b024367d` |
+| 核实身份（旧号加验） | WithdrawReverifyId.dc.html | `56a3ce56c3213d1a5115412e4d618bd7b6489cb25d6fa9e91cfab2fd40a1c232` |
+| 核实身份（旧号加验） | WithdrawReverifyOauth.dc.html | `550ce0c4aef1a69fc3d6c0dce591c4d18677e81c47f939a24adf09cccd40e810` |
+| 核实身份（旧号加验） | WithdrawReverifyManual.dc.html | `6b7bee12389d8a18fac0b915ddf7cbdbd9a611c9808a17dff2980a8b5f544262` |
+| 提现记录 | WithdrawRecords-v2.dc.html | `cf01250a92030211d9b421f9829931c04609d3a515e7065b6ffc87041c58869d` |
+| 提现记录 | WithdrawRecordsPending-v2.dc.html | `54c438899928c46935d2d6725c704171131a350d1f04c47923cc4b286b0adcc5` |
+| 提现记录 | WithdrawRecordsPaid-v2.dc.html | `c0b9ef897858435c99dbf4fd11fab0b6c89efdfff4943ae22773e64551df3079` |
+| 提现记录 | WithdrawRecordsFailed-v2.dc.html | `54118c4372a1e0cef9cf79fb50d2b908a64b56a83214e33a4cc288a5e2e89350` |
+| 提现记录 | WithdrawRecordsAutoDeciding-v2.dc.html | `bd02a3bebdfadfdc1811d983b37788bb163bc49ed72a63c291786edca0e042c3` |
+| 提现记录 | WithdrawRecordsAutoWaiting-v2.dc.html | `e6fdc88d7fa1c05227109b829a80a6109f6ab3027bd9463dbf1ad82f064275d0` |
+| 提现记录 | WithdrawRecordsPaying-v2.dc.html | `358b5b21a0b5e1792858bc8b7b4c895d1d0916082f96a5ecbb789181cc1d8465` |
+| 提现记录 | WithdrawRecordsDelayed-v2.dc.html | `66778438689342f8a4c203ba6a2e442cfb6ab46840428beb572f0f64c08a4557` |
+| 提现记录 | WithdrawRecordsReviewOverdue-v2.dc.html | `7f5a7afbd5fa8879e3ec26ebdcdc51970896fd93a9c3761be3b339d6bc012b6e` |
+| 提现记录 | WithdrawRecordsEmpty.dc.html | `466c0c5432b79b04059c88fa3faa61a6c41b58e243844a7d51d73af11a6c93ce` |
+| 提现记录 | WithdrawRecordsWechatConfirm-v2.dc.html | `5ce143522bb8d0c80a78dab173f5f9e0d912d4594fd4589db965e422c00eca3e` |
+| 提现记录 | WithdrawRecordsWechatTimeout-v2.dc.html | `1370a40a1c78745b1b99828e79e06d1175d0c7953ced150c990f45235c7f2fc0` |
+| 提现记录 | WithdrawRecordsStates-v2.dc.html | `772af712d7174cde0e69c48b3ea64713cc501abf4e5d91835c1db40a32574f62` |
+| 提现记录 | WithdrawRecordsMore.dc.html | `d4c9e8f21e9762a36d52a9730cd06475ef2fff6f0625608bee5daafc1c704de5` |
+| 提现记录 | WithdrawRecordsDark.dc.html | `df8977f3cae20798fdf3cc63623a58b0e5e0a67c8e129b214bd03ffc333e051b` |
+| 实名认证 | RealName.dc.html | `f3849dc0623d451af79e9689a2f97a07e1a223fb0765749f19f36a0beffa4dbb` |
+| 实名认证 | RealNameConsent-v2.dc.html | `532e3deab4476eba8fe05e54e452ec0c9cad633a04e0cc9d14402d20936df0b0` |
+| 实名认证 | RealNameErrors.dc.html | `60a7b9e9af2a661a3673e0540649af44d5a516c072c988e11a5ac3638ca3e136` |
+| 实名认证 | RealNameDark.dc.html | `678c745cf10c5bc977eed9e03296a1cf81bec9ce2f75253dbb18fce46205c99d` |
+| 收款账号 | PayoutAccount.dc.html | `7fc83faf1ae65a7a929290f374b98a034e39c04aee82d60b5012294f0d4c1cb7` |
+| 收款账号 | PayoutAccountBank-v2.dc.html | `9506fc56ee0d49bb0481e728ae67d123788dcc6ee6d4ceb19670ba2e31a01003` |
+| 收款账号 | PayoutAccountBound.dc.html | `41867ffd379d700ae13189a71eaa77e6c0474db5c208304ea5ac2b5098e86d36` |
+| 收款账号 | PayoutAccountBoundBank.dc.html | `e7a6b2cac56a0ca04ce08f1edfd6f37552c42cc96560da1b35ff0fcb4f95de21` |
+| 收款账号 | PayoutAccountBlocked.dc.html | `39392aaf7eeab9eaf162f16b875edd01cb058ad804b3beae1e3085ac08a8f92a` |
+| 收款账号 | PayoutAccountPendingConfirm.dc.html | `0344664380d10f1fbacfa56c9e0724359c550632556da37820c2258ef5b564c7` |
+| 收款账号 | PayoutAccountPendingAbandonConfirm.dc.html | `8068ad5c7642cf04be57c38997f01368442f2be0454d9dc273a97d0d7a36726e` |
+| 收款账号 | PayoutAccountPendingBusy.dc.html | `a0ffffe9b2898aa613cce9abbe87cb36cde8ae1c4dc45f079bdb489b44fa10e9` |
+| 收款账号 | PayoutAccountPendingCompleted.dc.html | `14a515de90368cca81b2e758a56b7408ed34684c5aa73c307cd82b1f335accf0` |
+| 收款账号 | PayoutAccountPendingAbandoned.dc.html | `780035f86c64ad141979ad6be43eb092f20903d97f98721f6e3fa59c66652af8` |
+| 收款账号 | PayoutAccountPendingStill.dc.html | `8fef2ccfad07eb133be7b516bc87ee201a8e8a5fd668990c688722d8b5587783` |
+| 收款账号 | PayoutAccountWechatBound.dc.html | `59579a90afc640dba37629cc947a6ca7d4a16f20a871a6d10715593a3720ec3e` |
+| 收款账号 | PayoutAccountWechat-v2.dc.html | `7632e45b64ca81af013a3711254418e0527fc821368bb67c0a6f8ad37c79009c` |
+| 收款账号 | PayoutAccountWechatAuthorizing-v2.dc.html | `f62b0c0aeb54979c3fa36243371e55403db2d658a6f5ca7dde2ece5f5d978587` |
+| 收款账号 | PayoutAccountWechatAuthFailed-v2.dc.html | `6e9cb55a018b8d8166f71a0c160e8a4fef39e0af9e1fa91c2e0f6d77ea82b285` |
+| 收款账号 | PayoutAccountErrors.dc.html | `589ccce611a36f07e9f777e5544e61f38e1bd43801515d9ffc5744447a6e9c76` |
+| 收款账号 | PayoutAccountBoundDark.dc.html | `0ab4dcdb26717152673f1396b331783f3f43a8aa13872575d55a63aa0e2003c0` |
+| 劳务协议签署 | LaborAgreement-v2.dc.html | `50ac2210482c36b4de520248a8d15c07891c5613eafbcbfbf95c6c884f1af220` |
+| 劳务协议签署 | LaborAgreementResign.dc.html | `c9170c3e9c59ef7b8adf4ac0bef55b12cc4eee6f27b5d019ecdb20d8eb40f4b7` |
+| 劳务协议签署 | LaborAgreementDark.dc.html | `8b8f12b44a56e7847a0f386380c800099b9478b8f6c897fe1ff4e2dd649a095f` |
+| AI 助手（查订单与收益） | AgentOrderAnswer-v2.dc.html | `9ded17321bfb99e01c7d0a6473fc0ad7f1285961d798492a9717e6adac0eabaf` |
+| AI 助手（查订单与收益） | AgentOrderNeedLogin.dc.html | `fa0f2c4a8d96d650796a399e4352d7790883b81b1dd8ddeb85932e93cb48ca68` |
+| AI 助手（查订单与收益） | AgentOrderNeedPhone.dc.html | `c821e4bbea7a9f5d6958efd38e83f4131a3e0d8b3856c624abb56070edb506c5` |
+| AI 助手（查订单与收益） | AgentOrderNotFound.dc.html | `9f9df0dc89e9977e87dc2b11f39bf380cbeca2959b1cde66a17e05d4fabab729` |
+| AI 助手（查订单与收益） | AgentOrderEmpty.dc.html | `66a26bead3e4484ce853278f53c139fbeca53cb02994372638db57920282fbe0` |
+| AI 助手（查订单与收益） | AgentEarningsCard.dc.html | `3e83207f3de9bb917e2272c3ae411a2adccc875ad28224b63e28abbfa46b3d66` |
+| AI 助手（查订单与收益） | AgentEarningsHistory.dc.html | `4932706c6e6e579e9ca9770d870b65300a2673b92c5b0f78dbc25b2c6d16f11b` |
+| AI 助手（查订单与收益） | AgentOrderAnswerDark.dc.html | `34438e4dc69469b61af056136814db2a50b61ea60605165cfe360b1937603561` |
+| AI 助手（查订单与收益） | AgentEarningsCardDark.dc.html | `ddfa7ca2462bb299c221703528fc94cc9e2c88a17528e2e94c865e8a2c6c3854` |
 
 ## 本次交付验证
 
