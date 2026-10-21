@@ -4,7 +4,7 @@
 
 ## 12. 用户可见话术与格式（BR-TEXT）
 
-本节规定：收益术语、订单/提现/流水文案、差额提示、预计结算月份、原因码、通知模板、金额时间格式、禁用词、错误话术、AI 与广告标识、报表金额列口径标注、Agent 固定话术、账号与风控站内信。共 25 条（已确认 11、默认假设 12、待验证 2；2026-10-18 后台缺口审计回写新增 BR-TEXT-25「后台字典」，`docs/changes/20261018-后台缺口审计回写.md`；原「23 条」漏计 2026-10-06 的 BR-TEXT-24）。
+本节规定：收益术语、订单/提现/流水文案、差额提示、预计结算月份、原因码、通知模板、金额时间格式、禁用词、错误话术、AI 与广告标识、报表金额列口径标注、Agent 固定话术、账号与风控站内信、首页弹窗的动效与兜底。共 26 条（已确认 12、默认假设 12、待验证 2；2026-10-21 首页弹窗动效新增 BR-TEXT-26「首页弹窗的动效与兜底」，`docs/changes/20261021-首页弹窗动效与搜相似商品.md`；2026-10-18 后台缺口审计回写新增 BR-TEXT-25「后台字典」，`docs/changes/20261018-后台缺口审计回写.md`；原「23 条」漏计 2026-10-06 的 BR-TEXT-24）。
 
 2026-10-01 晚负责人补充决定（docs/changes/20261001-拍板第二批.md §8）：ADD-06 用户只有一个余额，钱包只显示一组数（可提现余额、待抵扣、冻结中、预估收益、已提现），收入来源（自购返利、分享收益、邀请分佣、好友推广奖励）只在订单、通知与流水中按类型区分（BR-TEXT-01、09、19 已改写）；ADD-07 新增错误码 30416 与注销撤销站内信（BR-TEXT-14、23）；ADD-01 30152 废弃、删除话术行；ADD-02 站长授权过期期间 30101 / 30102 的 data.reason=auth_unavailable 文案（BR-TEXT-14）；ADD-08 该文案改为「淘宝暂时无法下单，请稍后再试」、不给无返利购买按钮（BR-TEXT-14），新增站长告警短信模板 UNION_AUTH_EXPIRING / UNION_AUTH_EXPIRED（BR-TEXT-20）。状态均不变。
 
@@ -74,6 +74,8 @@
 
 2026-10-19 邀请奖励与登录精简（`docs/changes/20261019-邀请奖励与登录精简.md`，00 §8 第 ② 类，负责人 2026-10-19 在对话中确认）：BR-TEXT-14 表 C——`invite.notice_inviter` 只在邀请落地页显示（App 内三处取消）；`login.pending_invite` 旁不再显示告知句、邀请奖励活动有效时显示新键 `invite.reward.tip`；填写邀请码页新增 `invite.post_login.optional_hint`，`invite.post_login.desc` 保留不用；`invite.before_buy_tip`、`invite.bind_phone_guide.before_buy_warn`、`invite.post_login.skip_before_buy`、`.before_buy_hint` 随购买不再触发插页保留不用（键名不复用）。BR-TEXT-12 细则：`invite.reward.tip` 归资金术语（带 {amount}），`invite.post_login.optional_hint` 归普通。BR-TEXT-19 表加 `REWARD`（sub_type=invite）的名称。状态都不变，没有新增条目与错误码。
 
+2026-10-21 首页弹窗动效与搜相似商品（`docs/changes/20261021-首页弹窗动效与搜相似商品.md`，00 §8 第 ② 类，负责人 2026-10-21 在对话中确认）：新增 BR-TEXT-26「首页弹窗的动效与兜底」（已确认；文件要求、预取与播放细节是代理补全的默认，见细则）；BR-TEXT-14 表 C 新增 `btn.search_similar`「搜相似商品」（普通键），表 A 30141 行的动作加这个按钮（规则在 BR-PRICE-08 细则「搜相似商品」）。剪贴板邀请提示条（BR-INV-04、`clipboard.invite_prompt`）负责人同日确认保留，不改。没有新增错误码。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -103,6 +105,7 @@
 | BR-TEXT-23 | **账号与风控站内信**<br>风控状态变更、申诉结果、注销进度三类通知只发站内信，不发推送与短信（拍板第二批 OPS-15），必须使用细则表模板（notify-templates 可改措辞，变量与含义不得改）；内容只写原因类别（字典 risk_reason.&lt;category>），不得写风控规则、命中维度、举报来源或他人信息。封禁说明页与钱包「提现已暂停」提示显示原因类别、冻结到期时间（有期限时）与申诉入口（拍板第二批 OPS-12），文案取同一字典。触发与状态规则只在 BR-ID-27、BR-ID-31、BR-ID-36 维护。 | 已确认 | notify-templates（新增 RISK_STATE_CHANGED、APPEAL_RESULT、DELETION_PROGRESS，category=service、渠道只站内）；dict risk_reason.&lt;category>；封禁说明页；钱包提现暂停提示；GET /v1/me 风控字段（原因类别、frozen_until）；申诉接口查询结果 |
 | BR-TEXT-24 | **平台标识素材的来源与替换**<br>界面里的平台标识（来源、授权、支付 / 收款方式、分享去向）只用平台官方原图；安装包与 H5 产物内置一套作兜底，后台可按平台上传替换图并发布、回滚；远程图缺失、下载失败或校验不通过时显示内置图，不留空白。「内置兜底 + 后台可替换」由负责人 2026-10-06 确认（docs/changes/20261006-平台标识后台可替换.md）；上传格式、SVG 清洗、来源登记、预览与发布方式是代理补全的默认，见细则。凑狸自己的品牌素材仍不得含平台商标（BR-TEXT-20、01 F-PRIV-08）。 | 已确认 | `/v1/config.platform_icons`；后台内容「平台标识」页与权限点 `content.platform_icon`；`PlatformBadge`；授权页、支付 / 收款方式、分享面板 |
 | BR-TEXT-25 | **后台字典 / 状态中文名**<br>管理后台里每个枚举值（差错单类型与状态、结算批次状态、调账单状态、提现转人工原因、风险标签、找回驳回原因、导出任务状态、站长授权状态等）显示的中文名只在本条细则表维护，经字典 `admin_dict.<enum>.<code>` 下发（枚举名与编码取 04 原值），页面与画板不得自拟或各自翻译；细则表里标「契约线补」的项在契约落定枚举时由契约线补齐中文名，补齐前后台原样显示编码。后台中文名与用户侧文案是两套：用户看到的仍按 BR-TEXT-02、06、08、19 等映射，后台页面按 BR-TEXT-18 双列同时显示编码与用户文案时，第二列取用户侧字典。 | 默认假设 | 后台各列表与详情、`admin_dict` 字典、design/ 后台画板 |
+| BR-TEXT-26 | **首页弹窗的动效与兜底**<br>首页弹窗（`popup` 卡，01 F-HOME-08）除静态图外可配一个 Lottie 动画文件（JSON）；配动画时必须同时配一张静态兜底图，两者都由运营在后台上传。三端用现成的 Lottie 播放库在原生弹窗里播放，播放不超过 3 秒、不循环。动画文件加载失败、弹窗该出现时还没就绪（网速慢），或系统开启了「减弱动态效果」时，只显示静态兜底图、不播放。关闭按钮从弹窗出现时就可点、点一次即关闭，不等动画加载或播完（01 F-HOME-08 原要求不变）。以上由负责人 2026-10-21 确认（docs/changes/20261021-首页弹窗动效与搜相似商品.md）；文件要求与校验、预取与就绪判定、播放细节是代理补全的默认，见细则。 | 已确认 | `home-schema.json` 的 `popup` props（规划/04 §6.2「首页弹窗卡」）；后台首页配置 popup 表单与素材上传（规划/04 §6.6 `pages`，权限点 `content.page`）；三端 SDUI popup 渲染器（规划/03 §6.3）；OSS `media` |
 
 ### 12.2 细则
 
@@ -663,7 +666,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
     - 单列的键：`tag.rebate`（预估返）、`btn.buy.rebate_suffix`（2026-10-04 设计方向第三轮，带 {amount}，按 ③④ 归入）、`share.est_promo`、`share_hub.rule_note`（2026-10-05 分享页，说的是推广收益，按 ② 归入，docs/changes/20261005-分享赚与范围调整.md §1）、`rebate_amount_unknown`、`rebate_login_to_view`、`no_rebate_hint`、`platform_no_rebate`、`no_rebate.price_compare`、`no_rebate.price_compare.confirm`、`order.price_compare.hint`、`btn.buy.no_rebate`、`error.30412`（有进行中的提现）、`error.30416`（有待扣回金额）。第 2 轮评审后补：`error.30103`、`error.30121`、`error.30151`、`error.30153`（这一次或这个账号拿不到返利、返利已停用）、`error.44001`（风控拦截的兜底文案，拦的是提现时说的就是钱提不了）、`error.50301.not_launched` 与同一句的 `platform_coming_soon`（返利即将开放，即现在没有）、`claim_required`（返利要下单后认领）、`external_page.product_unresolved`（这个商品查不了返利）、`link_landing.owner_hint`（自己买按自购返利算）、`jump_tip`（含 `jump_tip.<platform>`，讲怎样下单才不丢返利）。2026-10-04 并入第 4 批后补：`order_list.deposit_amount`（「已付定金 {amount}」，带按 BR-TEXT-10 格式化的金额，按 ④ 归入）；订单时间线里的预计结算、已结算、失效与扣回节点建键时同样归资金术语（键名用 `order_status.` 前缀，或在本项补列），只说付款事件的 `order_timeline.deposit_paid`、`order_timeline.final_paid` 归普通。2026-10-05 Agent 页面引导卡（D31）后补：`agent.guide.Wallet`、`agent.guide.WithdrawRecords`（说的是余额与提现在哪里看，按「拿不准的按资金术语键处理」归入）、`agent.guide.account.fund`（说的是提现与收款账号）。2026-10-19 邀请奖励活动（BR-INV-24，docs/changes/20261019-邀请奖励与登录精简.md）后补：`invite.reward.tip`（「好友下单后，双方各得 {amount}」，带按 BR-TEXT-10 格式化的金额，按 ④ 归入）。
     - 还没有取键名的资金文案（第 2 轮评审后补；建 `contracts/texts.default.json` 时取键名，取名后补进上一项，一律归资金术语）：RebateTag 的零值「暂无返利」（BR-TEXT-10）、返利变为 0 时的确认弹窗「该商品当前暂无返利，继续购买？」（BR-PRICE-13）、错误弹窗的次按钮「仍去购买（无返利）」（BR-TEXT-14）、授权面板关闭或授权失败时的「未授权将无法获得返利」（BR-ID-18）、比价区间后缀「以结算为准」（BR-PRICE-07）、商品详情的「确认收货后随联盟月度结算入账」（BR-TEXT-04）、注销页的勾选句「放弃未提现余额和预估收益」与申请前先提现的提示（BR-ID-27）、BR-TEXT-14 表 C「淘宝未安装（H5 未验证归因时）」「鸿蒙淘宝降级 H5」「某端全部路径丢归因」三行。
     - 通知模板（按模板编码归类：一个编码下任一变体命中认定规则，这个编码的全部变体都归资金术语，守卫按编码判定）：BR-TEXT-09 表中的全部模板（ORDER_TRACKED、ORDER_INVALID、CREDITED、CLAWBACK、WD_SUCCESS、WD_REJECTED、WD_FAILED、CLAIM_RESULT），以及 WD_OVERDUE（BR-TEXT-07）、BALANCE_ADJUSTED（BR-FUND-24）；第 2 轮评审后补 BR-TEXT-23 的 RISK_STATE_CHANGED（提现暂停与恢复，①）、APPEAL_RESULT（订单申诉通过后「返利将在复核后恢复」，①②）、DELETION_PROGRESS（cancelled_negative 带待扣回金额，①④）。P1 的订阅提醒模板 watch.price_drop.\*（带「预估返」，BR-WATCH-14）上线时同样归入。
-    - 普通：清单以外的现有键与模板，例如 `btn.buy`、`btn.buy.coupon`、`error.30101`、`error.30102`、`error.30111`（只要求先授权，不说有没有返利）、`error.30131`、`clipboard.prompt`、`claim.guide.*`、`app_update.*`，通知模板 `SMS_CODE` 与发给站长的 `UNION_AUTH_EXPIRING`、`UNION_AUTH_EXPIRED`；第 4 批新增的 `order_list.filter.*`、`order_list.search.*`、`order_list.other_product`、`order_detail.view_product`、`order_timeline.*`、`amount_mask.*`、`auth_manage.*`、`buy.opening`、`jump.taobao_sdk_unavailable`、`error.50304.search_disabled` 与 `agent.notice.search_disabled`（后两个含「查返利」，例外表写明只是请用户改用粘贴链接）也归普通。BR-TEXT-14 表 D 的 `privacy.`、`perm.` 键另归 `content.agreement`，在本清单里归普通。Agent 固定话术（BR-TEXT-22）里的 `order_status.*.summary`、`order_reason.*.summary` 已在前缀范围内，其余归普通；2026-10-05 新增的页面引导键（D31）中 `agent.guide.Wallet`、`agent.guide.WithdrawRecords` 除外（见上面「单列的键」），`agent.guide.AuthManage`、`agent.guide.OrderList`、`agent.guide.InviteShare`、`agent.guide.Messages`、`agent.guide.open`、`agent.guide.unavailable` 归普通（`agent.guide.unavailable` 2026-10-05 核查后改为通用说法，不再含「提现」）；第 1 轮评审后新增的 `agent.guide.account.phone`、`agent.guide.account.phone_off`、`agent.guide.account.delete` 归普通，`agent.guide.account.fund` 见上面「单列的键」。2026-10-05 比价说明与界面默认项（docs/changes/20261005-比价说明与界面默认项.md）新增的 `no_rebate.price_compare.help`（「查看说明」，只是打开文章的入口）与 `settings.logout.*` 归普通；同批的 `wallet.help.*` 在 `wallet.` 前缀内，归资金术语。2026-10-05 剪贴板默认开启与文案补登（docs/changes/20261005-剪贴板默认开启与文案补登.md §2）新增的 `order_detail.copy.done`、`invite.copy_code.done`、`invite.copy_link.done`、`login.risk_blocked.desc`、`cs.appeal_entry`、`claim.records.empty` 归普通（只说复制了什么、账号没有创建、去找客服、没有找回申请，不说有没有返利、钱能不能提）；同批的 `withdraw.risk_blocked.desc`（说的是提现没提交、金额没冻结、可提现余额不变）在 `withdraw.` 前缀内、`earnings.empty_hint` 在 `earnings.` 前缀内，归资金术语。2026-10-05 游客剪贴板开关与注册拦截申诉（docs/changes/20261005-游客剪贴板开关与注册拦截申诉.md §3）新增的 `phone_change.risk_blocked.desc`、`cs.copy_link.done` 归普通（只说手机号没有更换、复制了客服链接）；同次改写的 `login.risk_blocked.desc` 仍归普通。2026-10-05 被拦请求申诉与剪贴板开关文案（docs/changes/20261005-被拦请求申诉与剪贴板开关文案.md §2）新增的 `settings.clipboard_auto`、`settings.clipboard_auto.desc` 归普通（只说识别复制的商品链接、可以关闭，不说有没有返利、钱能不能提）。2026-10-17 剪贴板自动识别改版（docs/changes/20261017-剪贴板自动识别改版.md）新增的表 D `clipboard.consent.*`（与表 D 其他键一样归 `content.agreement`，本清单里归普通）与表 C `clipboard.paste_hint`、`clipboard.paste_hint.agent` 归普通（只说开启后会读取剪贴板、粘贴查返利，不说有没有返利、钱能不能提）。2026-10-18 登录 v2 画板定稿前（docs/changes/20261018-登录注册改版.md §10）新增的 `login.agree_confirm.body_oauth`、`login.code.countdown`、`login.code.resend_needed`、`login.network_retry`、`login.risk_blocked.desc_send` 与由 `invite.bind_phone_guide.body` / `.body_before_buy` 拆出的 `.benefit`、`.merge_hint`、`.before_buy_warn` 归普通（只说协议与自动注册、倒计时、重新获取、网络重试、验证码没有发送、绑手机的用处与并号、下单后不能再填邀请码，不说金额、提现状态或有没有返利）；其中 `.benefit`（以及保留不用的 `.body`、`.body_before_buy`）含「提现」，例外表理由：只说绑定手机号以后方便提现，不说金额，也不说提现处在什么状态。2026-10-19 邀请奖励与登录精简（docs/changes/20261019-邀请奖励与登录精简.md）新增的 `invite.post_login.optional_hint`（「选填，下单前都可以在「我的」里补填」）归普通（只说可以以后补填邀请码，不说金额、提现状态或有没有返利）；同批保留不用的键归类不变。
+    - 普通：清单以外的现有键与模板，例如 `btn.buy`、`btn.buy.coupon`、`error.30101`、`error.30102`、`error.30111`（只要求先授权，不说有没有返利）、`error.30131`、`clipboard.prompt`、`claim.guide.*`、`app_update.*`，通知模板 `SMS_CODE` 与发给站长的 `UNION_AUTH_EXPIRING`、`UNION_AUTH_EXPIRED`；第 4 批新增的 `order_list.filter.*`、`order_list.search.*`、`order_list.other_product`、`order_detail.view_product`、`order_timeline.*`、`amount_mask.*`、`auth_manage.*`、`buy.opening`、`jump.taobao_sdk_unavailable`、`error.50304.search_disabled` 与 `agent.notice.search_disabled`（后两个含「查返利」，例外表写明只是请用户改用粘贴链接）也归普通。BR-TEXT-14 表 D 的 `privacy.`、`perm.` 键另归 `content.agreement`，在本清单里归普通。Agent 固定话术（BR-TEXT-22）里的 `order_status.*.summary`、`order_reason.*.summary` 已在前缀范围内，其余归普通；2026-10-05 新增的页面引导键（D31）中 `agent.guide.Wallet`、`agent.guide.WithdrawRecords` 除外（见上面「单列的键」），`agent.guide.AuthManage`、`agent.guide.OrderList`、`agent.guide.InviteShare`、`agent.guide.Messages`、`agent.guide.open`、`agent.guide.unavailable` 归普通（`agent.guide.unavailable` 2026-10-05 核查后改为通用说法，不再含「提现」）；第 1 轮评审后新增的 `agent.guide.account.phone`、`agent.guide.account.phone_off`、`agent.guide.account.delete` 归普通，`agent.guide.account.fund` 见上面「单列的键」。2026-10-05 比价说明与界面默认项（docs/changes/20261005-比价说明与界面默认项.md）新增的 `no_rebate.price_compare.help`（「查看说明」，只是打开文章的入口）与 `settings.logout.*` 归普通；同批的 `wallet.help.*` 在 `wallet.` 前缀内，归资金术语。2026-10-05 剪贴板默认开启与文案补登（docs/changes/20261005-剪贴板默认开启与文案补登.md §2）新增的 `order_detail.copy.done`、`invite.copy_code.done`、`invite.copy_link.done`、`login.risk_blocked.desc`、`cs.appeal_entry`、`claim.records.empty` 归普通（只说复制了什么、账号没有创建、去找客服、没有找回申请，不说有没有返利、钱能不能提）；同批的 `withdraw.risk_blocked.desc`（说的是提现没提交、金额没冻结、可提现余额不变）在 `withdraw.` 前缀内、`earnings.empty_hint` 在 `earnings.` 前缀内，归资金术语。2026-10-05 游客剪贴板开关与注册拦截申诉（docs/changes/20261005-游客剪贴板开关与注册拦截申诉.md §3）新增的 `phone_change.risk_blocked.desc`、`cs.copy_link.done` 归普通（只说手机号没有更换、复制了客服链接）；同次改写的 `login.risk_blocked.desc` 仍归普通。2026-10-05 被拦请求申诉与剪贴板开关文案（docs/changes/20261005-被拦请求申诉与剪贴板开关文案.md §2）新增的 `settings.clipboard_auto`、`settings.clipboard_auto.desc` 归普通（只说识别复制的商品链接、可以关闭，不说有没有返利、钱能不能提）。2026-10-17 剪贴板自动识别改版（docs/changes/20261017-剪贴板自动识别改版.md）新增的表 D `clipboard.consent.*`（与表 D 其他键一样归 `content.agreement`，本清单里归普通）与表 C `clipboard.paste_hint`、`clipboard.paste_hint.agent` 归普通（只说开启后会读取剪贴板、粘贴查返利，不说有没有返利、钱能不能提）。2026-10-18 登录 v2 画板定稿前（docs/changes/20261018-登录注册改版.md §10）新增的 `login.agree_confirm.body_oauth`、`login.code.countdown`、`login.code.resend_needed`、`login.network_retry`、`login.risk_blocked.desc_send` 与由 `invite.bind_phone_guide.body` / `.body_before_buy` 拆出的 `.benefit`、`.merge_hint`、`.before_buy_warn` 归普通（只说协议与自动注册、倒计时、重新获取、网络重试、验证码没有发送、绑手机的用处与并号、下单后不能再填邀请码，不说金额、提现状态或有没有返利）；其中 `.benefit`（以及保留不用的 `.body`、`.body_before_buy`）含「提现」，例外表理由：只说绑定手机号以后方便提现，不说金额，也不说提现处在什么状态。2026-10-19 邀请奖励与登录精简（docs/changes/20261019-邀请奖励与登录精简.md）新增的 `invite.post_login.optional_hint`（「选填，下单前都可以在「我的」里补填」）归普通（只说可以以后补填邀请码，不说金额、提现状态或有没有返利）；同批保留不用的键归类不变。2026-10-21 首页弹窗动效与搜相似商品（docs/changes/20261021-首页弹窗动效与搜相似商品.md）新增的 `btn.search_similar`（「搜相似商品」，只是打开搜索页的入口，不说有没有返利）归普通。
   - 机器可读的清单 `specs/fund-term-keys.yaml`（第 2 轮评审后改为逐项明确归类）：分「资金术语」与「普通」两段，每段列前缀、单列的键与通知模板编码，与本条一致；后台权限守卫与 CI 都读它，不按键名另猜，文件与本条不一致时以本条为准修文件。`contracts/texts.default.json` 的每个键、notify-templates 的每个模板编码都必须恰好落在其中一段：没有归类，或同时落在两段里，CI 失败；新键、新模板必须先归类才能合入。关键词扫描不再决定归不归资金术语，只作辅助核对：归为普通、而文案带金额变量（④）、用到术语表的词（⑤）或含「返利」「收益」「提现」「到账」「余额」「冻结」「扣回」「结算」「入账」「抵扣」之一的，须在例外表写一条理由，没有理由 CI 失败（例：`clipboard.prompt`「检测到商品链接，查返利？」只是请用户去查，不说有没有返利；`link_landing.invalid`「链接已失效」说的是链接；`agent.disclaimer.commission` 说的是平台从商家得到的佣金；`perm.push.card_hint` 是通知权限的用途说明）。归类与例外表的改动按资金类评审。
   - 写入口统一（第 2 轮评审后补）：能改文案键或通知模板的每个入口——字典编辑、字典与 `texts` 的导入（含上传文件）、`texts` 整体更新（一次提交整份）、通知模板编辑、批量修改（批量替换、批量发布）、回滚到历史版本——都调用同一个键级权限检查（同一份实现，读同一份 `specs/fund-term-keys.yaml`）：逐一取这次请求实际改动的键与模板（新增、改值、删去覆盖值都算；整体更新与导入只比较有变化的项），任一项属资金术语而操作人没有 `content.fund_terms`，或这次没有完成二次验证，整个请求拒绝、一项都不保存，审计记下被拒的键；清单里查不到的键或模板按资金术语处理，并提示先归类。导入与整体更新不因「整份提交」放宽，批量修改也没有豁免。
   - 权限：修改清单里的键与模板须有后台权限点 `content.fund_terms`（规划/04 §11.2），每次修改都要二次验证，审计记录标「资金术语」并存前后值；只有普通配置权限 `config.general` 的账号改不了这些键，只有 `content.article` 的账号改不了这些通知模板，保存被拒并写审计。保存时照常过禁用词与变量校验。帮助中心与返利规则文章不是文案键，仍归 `content.article`，靠禁用词校验与配置变量渲染数值（BR-TEXT-13）约束。BR-TEXT-14 表 D 的隐私与权限文案键另归 `content.agreement`，不在本范围。
@@ -752,7 +755,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 30121 | 京东这个商品暂不支持返利 | 同左 | 【仍去购买（无返利）】（BR-PRICE-08） |
 | 30131 | 暂不支持这个链接或平台 | 同左 | — |
 | 30132 | 这个口令暂时识别不了 | 同左 | 按钮「用商品名搜索」：预填口令文本中「」内或首行商品名，提取不到则搜索框留空 |
-| 30141 | 商品已下架 | 同左 | 不外跳，卡片置灰（availability=off_shelf）；Agent 场景追加「换一批」（BR-PRICE-14） |
+| 30141 | 商品已下架 | 同左 | 不外跳，卡片置灰（availability=off_shelf）；卡上给【搜相似商品】（`btn.search_similar`，不随卡片置灰；BR-PRICE-08 细则「搜相似商品」，2026-10-21）；Agent 场景另追加「换一批」（BR-PRICE-14） |
 | 30143 | 商品信息已失效，请重新搜索 | 同左 | 跳搜索（BR-PROD-05） |
 | 30144 | 购买链接已失效，正在重新获取 | 同左 | 重新取卡（原生重取商品详情得到新 link，08 §13.11）；App 内链接落地页（LinkLanding）不用本文案，显示表 C 的 link_landing.invalid 空态（2026-10-03） |
 | 30151 | 这个淘宝账号暂时无法绑定到当前账号，本次购买无法获得返利 | 同左 | 【仍去购买（无返利）】【联系客服】；不透露对方账号与冷却原因（BR-ID-18、BR-ID-19） |
@@ -962,6 +965,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 比价无返利弹窗·说明入口 no_rebate.price_compare.help（2026-10-05，docs/changes/20261005-比价说明与界面默认项.md §1） | 查看说明 | 弹窗里的文字入口，打开 /v1/config.help_links.price_compare 配置的比价说明文章（与 BR-TEXT-03 订单侧三处是同一篇）；没有配置时不显示；不占弹窗的按钮位 |
 | 比价无返利卡片原因行 no_rebate.price_compare | 这次被判为比价，没有返利 | 卡片按 open 响应换成无返利态后显示在返利位置，旁边保留文字入口【看看相似商品】；其他无返利情形仍显示「暂无返利」 |
 | 相似商品入口 no_rebate.price_compare.similar | 看看相似商品 | 进入搜索页，平台同原商品，搜索词取卡片标题，去掉原商品（BR-PRICE-08 细则） |
+| 搜相似商品 btn.search_similar（2026-10-21，负责人确认，`docs/changes/20261021-首页弹窗动效与搜相似商品.md` §1） | 搜相似商品 | 识别结果卡显示「暂无返利」或「商品已下架」时，以及点购买时下架（30141）而置灰的卡片上出现；进入搜索页，搜索词取卡片标题，按搜索结果的过滤列出有返利的商品；不是同款、不写「同款」「更便宜」。出现位置、按钮主次与搜索参数只在 BR-PRICE-08 细则「搜相似商品」；比价无返利仍用上一行的【看看相似商品】 |
 | 订单列表查询范围提示 order_list.history_hint | 只显示 {date} 之后的订单，更早的订单请联系客服 | 包内默认：更早的订单请联系客服。只在服务端返回 earliest_visible_date 时显示在列表底部；{date} 按 BR-TEXT-11 的纯日期格式；默认配置不限制范围，此时不显示（BR-ID-30 细则「订单类记录」，2026-10-03 功能对照 G-14） |
 | 订单列表状态分组 order_status_group.all / .estimating / .credited / .no_rebate | 全部｜预估中｜已结算｜无返利 | 订单列表自购、分享子 Tab 下的分组 Tab，成员只按 BR-TEXT-02 细则「订单列表的状态分组与查找」；不得改成「待结算」「结算中」（BR-TEXT-13）（2026-10-03 功能对照 G-60） |
 | 订单列表筛选与搜索 order_list.filter.platform / .filter.month / .search.placeholder | 平台｜月份｜搜订单号或商品名 | 分享子 Tab 的搜索框提示改用 order_list.search.placeholder_share「搜商品名」（分享单不按单号搜）（2026-10-03 功能对照 G-60） |
@@ -1523,6 +1527,42 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 - 例：差错单列表「类型」列显示「通道对账不一致」，详情页按 BR-TEXT-18 双列显示 `channel_mismatch`「通道对账不一致」；用户侧看不到差错单。
 - 例：契约线把 `claim_reject_reason` 定为 5 个编码 → 在本表补 5 行中文名，前端不改代码、画板按本表更新。
 - 需同步修改的规划文档：规划/01 F-ADM-06、08（已同步 2026-10-18）；规划/04 §6.6 字典指针与 `dict` 资源（已同步 2026-10-18）；design/ 后台画板（状态文字按本表统一，待补画板时处理）。
+
+#### BR-TEXT-26 细则 · 首页弹窗的动效与兜底
+
+- 状态：已确认（负责人 2026-10-21 在对话中确认，docs/changes/20261021-首页弹窗动效与搜相似商品.md §1）。**负责人确认的是**：弹窗可配 Lottie 动效并配静态兜底图、两者由运营在后台上传、三端用现成播放库、播放不超过 3 秒、加载失败 / 网速慢 / 系统「减弱动态效果」三种情形显示兜底图、关闭按钮从弹窗出现时就可点。本细则其余内容（文件要求与校验、预取与就绪判定、播放细节、各端读取「减弱动态效果」的方式、后台预览）是代理补全的默认，可按 00 §8 第 ① 类调整
+- 默认值：下文
+- 决策人：负责人（动效方向、3 秒上限、兜底情形）；文件要求与播放细节代理可自定
+- 依赖平台能力：无联盟能力。三端 Lottie 播放库的选型与版本、各端读取「减弱动态效果」设置的接口，在 APP-11 / HM-07 接入时按官方文档核对，结果登记在 规划/03 §6.3；未核对的不写成能力
+- 来源：负责人 2026-10-21 对话；01 F-HOME-08（拍板第二批 TECH-12）；03 §6.2 第 5 步预取；BR-TEXT-24（同类「远程素材 + 本地兜底」的做法）
+
+素材与校验（后台上传时服务端按下列要求校验文件，保存首页配置时再核对引用；不合格返回 20001，`data.fields` 指向该字段；形状见 规划/04 §6.2「首页弹窗卡 `popup`」与 §6.6 `pages`）：
+
+- 动画文件：Lottie JSON（After Effects 经 Bodymovin 导出）一份，不超过 300KB；能解析为 JSON 对象且含 `v`、`fr`、`ip`、`op`、`w`、`h`、`layers`；时长 =（`op` − `ip`）÷ `fr`，须大于 0 且不超过 3 秒；不得引用外部文件——`assets` 里的图片只能内嵌（data URI）或不用，出现网址或相对路径的整份拒收。dotLottie 等打包格式不收。
+- 静态兜底图：要求与只配静态图时的弹窗图相同；配了动画就必须有兜底图。只配静态图、不配动画的弹窗照旧。
+- 宽高比：动画画布 `w`:`h` 与兜底图宽高比相差超过 2% 时，后台表单提示、不拦截；客户端按兜底图的宽高比定弹窗尺寸，动画按比例缩放、居中显示。
+- 存储：OSS `media`，文件名用内容 SHA-256，长缓存；下发带同一摘要（同 BR-TEXT-24）。
+
+客户端（三端原生；首页弹窗只由原生渲染，H5 不涉及）：
+
+- 预取：拿到首页配置后，与首屏图片一起预取兜底图与动画文件（规划/03 §6.2 第 5 步）；动画文件下载后校验 SHA-256、解析成功才算就绪，按摘要缓存。只播放 App 自己下载并校验过的文件，不用播放库按地址自行下载。
+- 出现时机：人群、每日次数与时间段的判定不变（F-HOME-08）；兜底图就绪后弹窗才出现，兜底图也加载不出来的本次不弹、不计入每日次数。
+- 播放：弹窗出现时动画已就绪、且系统没有开启「减弱动态效果」→ 从第一帧播放一次，到动画结尾或满 3 秒（先到者为准）停在当前帧，不循环、不重播；其余情况显示兜底图，本次展示中途不再换成动画（避免闪动）；播放中出错立即换成兜底图。动画没有声音。点弹窗图区域照常按卡片的 `action` 跳转，与是否在播放无关。
+- 「减弱动态效果」：iOS 读系统的「减弱动态效果」开关；Android 读系统动画时长缩放为 0（「移除动画」）；鸿蒙读系统对应的动画或无障碍设置。各端接口在接入时按官方文档核对；某端读不到这项设置时，该端只按「加载失败」「未就绪」两项判断。
+- 关闭按钮：与弹窗同时出现，在动画层之上、不被遮挡，出现即可点；点一次即关闭并停止播放。不以动画播完作为关闭或跳转的前提（F-HOME-08）。
+
+后台：
+
+- 首页配置的 popup 表单有两个上传位（动画文件、兜底图），各自显示校验结果；删去动画文件即回到只有静态图的弹窗。
+- 近似预览只显示兜底图；动画效果以测试包扫码看草稿为准（TECH-11）。
+
+例：
+
+- 运营上传 2.4 秒、180KB 的动画与兜底图并发布 → 用户打开首页，弹窗出现即播放一次，2.4 秒后停在最后一帧；用户在第 1 秒点关闭 → 立即关闭。
+- 同一配置，用户弱网首次打开，弹窗该出现时动画还没下完 → 显示兜底图，本次不再切换；下次打开（已缓存）播放动画。
+- iPhone 开了「减弱动态效果」→ 只显示兜底图。
+- 运营上传 4 秒的动画 → 上传返回 20001，后台在动画上传位旁提示时长超过 3 秒，props 不变。
+- 需同步修改的规划文档：规划/00 §4 首页弹窗位行、§7；01 F-HOME-08、F-ADM-09；03 §6.1、§6.3；04 §6.2、§6.6（已同步 2026-10-21）
 
 ### 12.3 本主题未决问题
 
