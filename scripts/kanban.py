@@ -564,7 +564,7 @@ def parse_milestones(weeks, today, warn):
 
 # ---------------------------------------------------------------- 任务 × 台账
 
-LEDGER_STATE_LABEL = {"done": "已合并", "in_progress": "在途", "todo": "待开工"}
+LEDGER_STATE_LABEL = {"done": "已合并", "in_progress": "在途", "todo": "待开工", "void": "已作废"}
 
 
 def join_ledger(tasks, entries, inflight, merged, warn):
@@ -575,8 +575,10 @@ def join_ledger(tasks, entries, inflight, merged, warn):
         match = LEDGER_ID.match(entry["id"])
         parent = match.group(1) if match else None
         running = inflight.get(entry["id"])
-        stale = entry["status"] != "done" and entry["id"] in merged
-        state = "done" if entry["status"] == "done" or stale else "in_progress" if running else "todo"
+        # status void (代码仓库 CT-06zf, D10-190): cancelled, never implemented; not merged, not in flight.
+        voided = entry["status"] == "void"
+        stale = not voided and entry["status"] != "done" and entry["id"] in merged
+        state = "void" if voided else "done" if entry["status"] == "done" or stale else "in_progress" if running else "todo"
         item = {**entry, "state": state, "step": (running or {}).get("step") if state == "in_progress" else None,
                 "state_label": "已合并（台账还没改成 done）" if stale else LEDGER_STATE_LABEL[state]}
         if stale:
@@ -588,6 +590,7 @@ def join_ledger(tasks, entries, inflight, merged, warn):
     for task in tasks:
         subs = sorted(by_parent.get(task["id"], []), key=lambda item: item["id"])
         task["ledger"] = subs
+        subs = [item for item in subs if item["state"] != "void"]   # void entries do not decide the state
         if task["plan_state"] != "active":
             task["state"] = task["plan_state"]
         elif not subs:
@@ -1372,7 +1375,7 @@ def build(board, version, plan_ref):
 
     parents = [task for task in tasks if task["plan_state"] == "active"]
     split = [task for task in parents if task["ledger"]]
-    subs = [entry for task in tasks for entry in task["ledger"]]
+    subs = [entry for task in tasks for entry in task["ledger"] if entry["state"] != "void"]
     undecided = [item for item in items.items
                  if item["kind"] == "decision" and item["status"] in active and not item.get("same_as")]
     owner_open = [item for item in undecided if item["owner"].startswith("负责人")]
