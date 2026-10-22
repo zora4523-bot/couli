@@ -53,6 +53,8 @@
 
 2026-10-22 couli #176 r2 评审修改（`docs/changes/20261022-后台风控联盟订单接口形状.md` §5）：BR-FUND-06 细则「后台 hold / unhold」的 D10-157 一段删去不会出现的「入账 CREDITED」例、补恢复后可 unhold 的情形，并补空行。规则不变。
 
+2026-10-22 couli #176 r3 后修改（`docs/changes/20261022-后台风控联盟订单接口形状.md` §6）：BR-FUND-06 细则「后台 hold / unhold」补必填说明（进审计）与详情显示最近一次暂停的操作人与说明。规则不变。
+
 ### 6.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -476,7 +478,7 @@ C-02 已由负责人改定（变更记录 §3；拍板第二批 OPS-01 再次确
 - UNMAPPED_STATUS 的 hold（系统置，BR-FUND-02）：BR-FUND-02 的待处理记录关闭之前不能人工 unhold，返回 20902（data.resource=order）；关闭之后照常按 R11 由人工 unhold（编排裁定 D10-155）。
 - hold 之后订单转到其他状态（如作废 VOID）：hold 标记保留，不提供解除，unhold 仍只在 rebate_status ∈ {ESTIMATED, WAITING} 时可做；后台按当前状态显示为已作废 / 已锁定（BR-FUND-01 细则「订单锁定（展示标记）」）。作废单本就不结算，标记对金额没有影响（编排裁定 D10-157，Jev 判断 A 0.66 / B 0.69 近乎打平，编排取不改资金状态机的 A）。hold 期间不会入账（BR-FUND-04 跳过），之后恢复为 ESTIMATED / WAITING 的（如 BR-FUND-22 的 R12 恢复）照常可 unhold。
 
-原因码（编排裁定 D10-152，Jev 判断）：hold、unhold 都只取 RISK 或 CS（UNMAPPED_STATUS 只由系统置）。hold 时按操作人所持权限推导：持有任一 `risk.*` 权限点而没有 `order.claim` → RISK，持有 `order.claim` 而没有 `risk.*` → CS（这一对应是代理补全的默认）；两类都持有（含超管）或都没有时由操作人在两者中选。`risk.*` 只指 risk 开头的权限点（risk.freeze、risk.ban、risk.blocklist、risk.appeal），config.risk 不算（代理补全的默认）。unhold 由操作人在 RISK、CS 中选（必填）。
+原因码（编排裁定 D10-152，Jev 判断）：hold、unhold 都只取 RISK 或 CS（UNMAPPED_STATUS 只由系统置）。hold 时按操作人所持权限推导：持有任一 `risk.*` 权限点而没有 `order.claim` → RISK，持有 `order.claim` 而没有 `risk.*` → CS（这一对应是代理补全的默认）；两类都持有（含超管）或都没有时由操作人在两者中选。`risk.*` 只指 risk 开头的权限点（risk.freeze、risk.ban、risk.blocklist、risk.appeal），config.risk 不算（代理补全的默认）。unhold 由操作人在 RISK、CS 中选（必填）。hold、unhold 都必填一段说明（≤ 200 字），写进审计；订单详情显示最近一次暂停的操作人与说明（编排 2026-10-22 r3 后补定；详情的取法为代理补全的默认）。
 
 **维权导入任务**（2026-10-22，CT-24n，代理补全的默认）：违规单按处罚写 order_rights（type=PUNISH，规划/04 §2.3）；同一文件重复上传生成新的导入任务，已导入的行按上面的去重键跳过、不报错，不重复扣回；这类行单独计数（duplicate_rows），不算进时间窗外的跳过数（skipped_rows），也不算失败（代理补全的默认）。
 导入的取行规则（编排裁定 D10-152，Jev 判断）：time_basis 用来筛选行——带了时间窗时，只导入本系统该子订单的付款时间（付款口径）或收货时间（收货口径）落在 [from, to) 内的行，窗外的行计为跳过、不算失败；收货口径而订单还没有收货时间的行记逐行失败（代理补全的默认）；不带时间窗时不筛选，time_basis 可不填（代理补全的默认）。维权单每行须列明子订单号，只有主订单号的行不展开到子订单、记逐行失败（编排按资金安全取舍：避免误扣没有维权的子订单）。各类 Excel 的列按各联盟官方导出模板，由契约线查 docs-mirror 登记，未实测前标待验证。逐行失败的原因只分五类：行格式不对或缺列、子订单不在本系统、只有主订单号、收货口径而无收货时间、平台不符（编码见 规划/04 §6.6 `rights_import_failure_reason`，代理补全的默认）。

@@ -25,7 +25,7 @@
 
 | 区域 | 组件 | 数据 | 交互 |
 | --- | --- | --- | --- |
-| 标题行 | Title + 订单号（可复制）+ 平台 + 按钮组【同步此单】【暂停结算 / 恢复结算】【指定归属】 | sub_order_id、platform、user_id、rebate_status、locked、hold | 【指定归属】的显示条件按 BR-ATTR-31，【暂停结算】的可用条件按 BR-FUND-06；置灰时 `aria-describedby` 写原因 |
+| 标题行 | Title + 订单号（可复制）+ 平台 + 按钮组【同步此单】【暂停结算 / 恢复结算】【指定归属】 | sub_order_id、platform、user_id、rebate_status、locked、hold、unmapped_pending_open、last_hold_by_name、last_hold_note | 【指定归属】的显示条件按 BR-ATTR-31，【暂停结算】【恢复结算】的可用条件按 BR-FUND-06；`unmapped_pending_open` 为 true 时【恢复结算】置灰（编排裁定 D10-155）；置灰时 `aria-describedby` 写原因；恢复对话框显示最近一次暂停的操作人与说明（2026-10-22） |
 | 权限说明行 | Typography.Text（12px） | — | 固定文案：order.view / order.hold / order.assign（只对未归因） |
 | 状态卡 | Descriptions：平台状态、返利状态、用户侧显示、暂停 / 维权、订单锁定、归属锁定 | platform_status、rebate_status、display_status、hold、rights、locked、attribution_locked | 「已锁定」与「归属已锁定」可同时出现，并列显示 |
 | 基本信息 / 归属信息 / 分佣快照 / 状态历史 / 原始报文 | Card + Descriptions + Timeline + 折叠 JSON | 契约字段 | 【查看金额变更记录】【展开全部】 |
@@ -37,13 +37,14 @@
 | 平台状态 / 返利状态 / 暂停原因中文名（双列，BR-TEXT-18） | BR-TEXT-25 `admin_dict.platform_status.*`、`admin_dict.rebate_status.*`、`admin_dict.hold_reason.*`（契约线补行） |
 | 错误、step-up、无权限提示 | BR-TEXT-14（10003、10403、20902 按 `contracts/error-codes.yaml`） |
 | 其余（卡标题、按钮、置灰原因、权限说明行） | 08 无键，用画板文案，登记 admin.order_detail.* |
+| 画板没有的两种置灰 / 提示原因（2026-10-22） | 新键 `admin.order_detail.unhold_disabled.unmapped_pending`（未映射状态待处理未关闭，暂不能恢复）、`admin.order_detail.hold_kept_after_void`（订单已作废，暂停标记保留、无需恢复）；文案契约线补 |
 
 ## 4. 接口
 
 | operationId | 什么时候调 | 本页会遇到的错误码 |
 | --- | --- | --- |
 | adminGetOrder | 进入、操作后刷新 | 10001、10403、20001（`data.fields=[order_id]`：订单不存在，契约不设 404；2026-10-22 由 40401 改） |
-| adminHoldOrder / adminUnholdOrder | 暂停 / 恢复提交 | 20902（`data.resource=order`：不在预估 / 待结算（BR-FUND-01 表外事件）；已暂停再暂停、未暂停时恢复（同状态，不算表外事件）；系统因未映射状态暂停（UNMAPPED_STATUS）而待处理记录未关闭时恢复（编排裁定 D10-155，详情的 `unmapped_pending_open` 为 true 时【恢复结算】置灰）；版本已变。暂停后订单被作废的，暂停标记保留、不提供恢复（编排裁定 D10-157）。2026-10-22 由 20001 改）、20001（原因码不合法；暂停时推不出原因码而没选、或所选与推导不符，原因码按所持权限推导、推不出由操作人在 RISK / CS 中选，编排裁定 D10-152 ②；恢复时原因码必填，D10-152 ①）、10403 |
+| adminHoldOrder / adminUnholdOrder | 暂停 / 恢复提交 | 20902（`data.resource=order`：不在预估 / 待结算（BR-FUND-01 表外事件）；已暂停再暂停、未暂停时恢复（同状态，不算表外事件）；系统因未映射状态暂停（UNMAPPED_STATUS）而待处理记录未关闭时恢复（编排裁定 D10-155，详情的 `unmapped_pending_open` 为 true 时【恢复结算】置灰）；版本已变。暂停后订单被作废的，暂停标记保留、不提供恢复（编排裁定 D10-157）。2026-10-22 由 20001 改）、20001（说明缺失或超过 200 字；原因码不合法；暂停时推不出原因码而没选、或所选与推导不符，原因码按所持权限推导、推不出由操作人在 RISK / CS 中选，编排裁定 D10-152 ②；恢复时原因码必填，D10-152 ①）、10403 |
 | adminReassignOrder | 指定归属提交（step-up 动态码） | 10003、20902（order_attribution 已变更）、目标用户封禁、注销中或已注销（同一拒绝码，带 `data.reason` 区分；码待契约线，编排裁定 D10-152 ③）、20001（目标用户不存在、原因不合规） |
 | adminCreateOrderSync | 【同步此单】 | 10403、20001；站长授权暂停期间另有拒绝码（码待契约线按 08 §13.11 分配，2026-10-22） |
 
@@ -53,10 +54,10 @@
 
 ## 6. 稿上没画、实现要做的
 
-加载中 / 出错 / 订单不存在（20001）；置灰按钮的原因文字在 1280 不换行到按钮下；状态历史只追加；读屏：按钮名带订单号；抽屉关闭后焦点回【指定归属】。
+加载中 / 出错 / 订单不存在（20001）；「UNMAPPED 未关闭置灰」：`unmapped_pending_open` 为 true 时【恢复结算】置灰，原因用 `admin.order_detail.unhold_disabled.unmapped_pending`（编排裁定 D10-155）；「已作废仍暂停」：rebate_status=VOID 且 hold=true 时不显示【恢复结算】，状态卡按作废 / 已锁定显示并用 `admin.order_detail.hold_kept_after_void` 说明（编排裁定 D10-157）；置灰按钮的原因文字在 1280 不换行到按钮下；状态历史只追加；读屏：按钮名带订单号；抽屉关闭后焦点回【指定归属】。
 
 ## 7. 待定与不一致
 
-- 2026-10-22 摘要同步（`docs/changes/20261022-后台风控联盟订单接口形状.md`）：§1、§4、§6 的订单不存在由 40401 改为 20001（契约没有 40401），暂停 / 恢复被拒由 20001 改为 20902（08 BR-FUND-01、BR-FUND-06 细则为准）；adminCreateOrderSync（【同步此单】）由「10403」补为「10403、20001」与站长授权暂停期间的拒绝（码待契约线，couli #176 r1 去掉原写的 50301）；couli #176 r2 起 §4 按编排裁定 D10-152 ①②③、D10-155、D10-157 补写暂停 / 恢复与指定归属的被拒情形；画板不变。
+- 2026-10-22 摘要同步（`docs/changes/20261022-后台风控联盟订单接口形状.md`）：§1、§4、§6 的订单不存在由 40401 改为 20001（契约没有 40401），暂停 / 恢复被拒由 20001 改为 20902（08 BR-FUND-01、BR-FUND-06 细则为准）；adminCreateOrderSync（【同步此单】）由「10403」补为「10403、20001」与站长授权暂停期间的拒绝（码待契约线，couli #176 r1 去掉原写的 50301）；couli #176 r2 起 §4 按编排裁定 D10-152 ①②③、D10-155、D10-157 补写暂停 / 恢复与指定归属的被拒情形；r3 后 §2 补 `unmapped_pending_open` 与最近一次暂停的操作人和说明，§3 登记两个新 admin.order_detail.* 键，§6 补「UNMAPPED 未关闭置灰」「已作废仍暂停」两种状态；画板不变。
 - 封存稿 removed/AdmOrderReassign*（改派）不实现；「作废后误判只能驳回重提找回」已按 #136 处理，负责人 2026-10-18 第 1 批定稿维持；若要给超管留纠错通道需改 BR-ATTR-31（属负责人决定）。
 - 目标用户为封禁、注销中或已注销账号时的拒绝码（带 `data.reason` 区分三种）待契约线（编排裁定 D10-152 ③）。
