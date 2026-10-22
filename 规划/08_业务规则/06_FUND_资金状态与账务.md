@@ -51,6 +51,8 @@
 
 2026-10-22 couli #176 r1 评审修改（`docs/changes/20261022-后台风控联盟订单接口形状.md` §4）：BR-FUND-06 细则「后台 hold / unhold」——同状态 hold / unhold 不受理、返回 20902，不算表外事件、不告警；UNMAPPED_STATUS 的 hold 在 BR-FUND-02 待处理记录关闭前不能 unhold（编排裁定 D10-155）；hold 后订单转到其他状态时标记保留、不提供解除、unhold 维持 R11 原样（编排裁定 D10-157）；`risk.*` 不含 config.risk；「维权导入任务」补重复行计数、time_basis 可不填与逐行原因五类（代理补全的默认）。R11 与入账口径不变，没有新增条目与错误码。
 
+2026-10-22 couli #176 r2 评审修改（`docs/changes/20261022-后台风控联盟订单接口形状.md` §5）：BR-FUND-06 细则「后台 hold / unhold」的 D10-157 一段删去不会出现的「入账 CREDITED」例、补恢复后可 unhold 的情形，并补空行。规则不变。
+
 ### 6.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -472,7 +474,8 @@ C-02 已由负责人改定（变更记录 §3；拍板第二批 OPS-01 再次确
 **后台 hold / unhold**（2026-10-22，CT-24n，代理补全的默认；接口形状见 规划/04 §6.6 `orders/{id}/hold`）：只有 R11 的两种迁移——hold=false → true 与 hold=true → false，两者都只在 rebate_status ∈ {ESTIMATED, WAITING} 时可做；rebate_status 不在这两种时按 BR-FUND-01 的表外事件处理：订单不变、不写 history，后台返回 20902（data.resource=order）。须 `order.hold`，不要二次验证，写审计。
 - 同状态（已 hold 再 hold、未 hold 时 unhold）：不受理，订单不变、不写 history，返回 20902（data.resource=order）；这不是迁移、不算表外事件，不告警（couli #176 r1 改，原写「按表外事件处理」）。
 - UNMAPPED_STATUS 的 hold（系统置，BR-FUND-02）：BR-FUND-02 的待处理记录关闭之前不能人工 unhold，返回 20902（data.resource=order）；关闭之后照常按 R11 由人工 unhold（编排裁定 D10-155）。
-- hold 之后订单转到其他状态（如作废 VOID、入账 CREDITED）：hold 标记保留，不提供解除，unhold 仍只在 rebate_status ∈ {ESTIMATED, WAITING} 时可做；后台按当前状态显示为已作废 / 已锁定（BR-FUND-01 细则「订单锁定（展示标记）」）。作废单本就不结算，标记对金额没有影响（编排裁定 D10-157，Jev 判断 A 0.66 / B 0.69 近乎打平，编排取不改资金状态机的 A）。
+- hold 之后订单转到其他状态（如作废 VOID）：hold 标记保留，不提供解除，unhold 仍只在 rebate_status ∈ {ESTIMATED, WAITING} 时可做；后台按当前状态显示为已作废 / 已锁定（BR-FUND-01 细则「订单锁定（展示标记）」）。作废单本就不结算，标记对金额没有影响（编排裁定 D10-157，Jev 判断 A 0.66 / B 0.69 近乎打平，编排取不改资金状态机的 A）。hold 期间不会入账（BR-FUND-04 跳过），之后恢复为 ESTIMATED / WAITING 的（如 BR-FUND-22 的 R12 恢复）照常可 unhold。
+
 原因码（编排裁定 D10-152，Jev 判断）：hold、unhold 都只取 RISK 或 CS（UNMAPPED_STATUS 只由系统置）。hold 时按操作人所持权限推导：持有任一 `risk.*` 权限点而没有 `order.claim` → RISK，持有 `order.claim` 而没有 `risk.*` → CS（这一对应是代理补全的默认）；两类都持有（含超管）或都没有时由操作人在两者中选。`risk.*` 只指 risk 开头的权限点（risk.freeze、risk.ban、risk.blocklist、risk.appeal），config.risk 不算（代理补全的默认）。unhold 由操作人在 RISK、CS 中选（必填）。
 
 **维权导入任务**（2026-10-22，CT-24n，代理补全的默认）：违规单按处罚写 order_rights（type=PUNISH，规划/04 §2.3）；同一文件重复上传生成新的导入任务，已导入的行按上面的去重键跳过、不报错，不重复扣回；这类行单独计数（duplicate_rows），不算进时间窗外的跳过数（skipped_rows），也不算失败（代理补全的默认）。

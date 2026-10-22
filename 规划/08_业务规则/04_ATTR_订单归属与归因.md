@@ -50,6 +50,8 @@
 
 2026-10-22 CT-24h / CT-24n 裁定（编排裁定 D10-152，Jev 判断；`docs/changes/20261022-后台风控联盟订单接口形状.md` §3）：BR-ATTR-02 细则「后台登记与启停」补登记后可改、同场景只一条 active、花卷云确认随启用提交；BR-ATTR-26 细则新增「渠道单导入」（另需 risk.blocklist 与动态码）；BR-ATTR-31 细则「改归属的目标用户」加注销中与已注销拒绝。截图格式与大小、改联盟账号时的 sync_start_at 为代理补全的默认。状态不变，没有新增条目与错误码。
 
+2026-10-22 couli #176 r2 评审修改（`docs/changes/20261022-后台风控联盟订单接口形状.md` §5，编排裁定 D10-159）：BR-ATTR-02 细则「后台修改与启用的裁定」改为只有 pending 推广位可改各字段，active / retired 不能改、要换先停用再登记新的一条；删去「已发出的链接……不受影响」。归属规则与白名单范围不变，没有新增条目与错误码。
+
 ### 4.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -146,9 +148,9 @@
 
 **后台登记与启停**（2026-10-22，CT-24h，代理补全的默认；接口形状见 规划/04 §6.6 `union-pids`）：新登记的推广位一律 pending；迁移只有正文这一条路径——启用 pending → active（须已填 hjy_ignore_confirmed_at 与截图路径，BR-ATTR-28）、停用 active → retired；不提供 pending 直接停用，也不提供 retired 恢复为 active。三种状态都留在白名单里，启停只影响能否用于转链，不改已入库订单的归属。同一 (app_id, platform, pid) 不能重复登记。登记、启用、停用都须 `union.pid` 并每次二次验证、写审计，原因选填；查看推广位列表只需 `union.pid`。sync_start_at 按正文取本 App 在该联盟账号下第一个推广位的创建时刻，在登记这第一个推广位的同一事务写入，之后再登记不改。
 
-**后台修改与启用的裁定**（编排裁定 D10-152，Jev 判断）：
-- 登记后各字段（platform、union_account_id、site_id、pid、pid_scene）都可以修改，须 `union.pid` 并每次动态码，审计记前后值；任何状态都可改。改后的白名单只用于之后同步到的订单，已入库订单的 pid 与归属不改；已发出的链接按 BR-ATTR-05 的身份快照照旧，不受影响。修改不改已写入的 sync_start_at；改到一个还没有 sync_start_at 的联盟账号时，以修改时刻写入该账号的 sync_start_at（代理补全的默认）。
-- 同一 app × platform × pid_scene 只允许一条 active：启用第二条，或修改后会出现第二条，都被拒绝（码由契约线按 §13.11 分配）；要换推广位先停用原来那条。
+**后台修改与启用的裁定**（编排裁定 D10-152，Jev 判断；修改范围按 编排裁定 D10-159 更正）：
+- 只有 pending 的推广位可以修改各字段（platform、union_account_id、site_id、pid、pid_scene），须 `union.pid` 并每次动态码，审计记前后值（编排裁定 D10-159）。active、retired 的推广位不能改：要换就先停用原来那条，再登记新的一条，重新走 pending → active 与花卷云忽略登记（BR-ATTR-28）。原因：订单同步按推广位表的当前记录匹配（本条正文），buy_type 取同步时的 pid_scene（BR-ATTR-08）；改 active 或 retired 行会让已发出链接带来的后续订单被丢弃（PID_NOT_OURS），或改变返利类型与份额。修改 pending 行不改已写入的 sync_start_at；改到一个还没有 sync_start_at 的联盟账号时，以修改时刻写入该账号的 sync_start_at（代理补全的默认）。
+- 同一 app × platform × pid_scene 只允许一条 active：启用第二条被拒绝（码由契约线按 §13.11 分配）；要换推广位先停用原来那条。
 - 花卷云忽略确认时刻与截图随启用请求一并提交，写入后才完成 pending → active；截图只收 PNG、JPEG，≤ 5 MB，存 OSS 私有 bucket（代理补全的默认）。
 
 #### BR-ATTR-03 细则 · 双品牌隔离
