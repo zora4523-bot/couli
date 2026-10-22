@@ -45,6 +45,16 @@
 
 2026-10-19 邀请奖励活动（`docs/changes/20261019-邀请奖励与登录精简.md`，负责人 2026-10-19 在对话中确认；规则在 BR-INV-24）：流水类型 REWARD 不再只属 P1——sub_type=invite 随邀请奖励活动启用（开关默认关）。BR-FUND-01 正文把邀请奖励列入「不伴随订单迁移」的凭证；BR-FUND-15 正文与细则改写 REWARD 的阶段说明，分录模板由资金线补（05 B2-16），本主题不写分录；平台侧记 MKT_EXPENSE（规划/02 §8.2）。各条状态不变，没有新增条目与错误码。
 
+2026-10-22 后台 hold / unhold 与维权导入接口形状（`docs/changes/20261022-后台风控联盟订单接口形状.md`，00 §8 第 ① 类；CT-24n 契约前置）：BR-FUND-06 细则新增「后台 hold / unhold」与「维权导入任务」两段，均为代理补全的默认，按 BR-FUND-01 表外事件与本条既有的去重口径推出；hold 的守卫、原因码与入账口径都不变，没有新增条目与错误码。
+
+2026-10-22 CT-24n 裁定（编排裁定 D10-152，Jev 判断；`docs/changes/20261022-后台风控联盟订单接口形状.md` §3）：BR-FUND-06 细则「后台 hold / unhold」补原因码（unhold 复用 RISK / CS，hold 按所持权限推导），「维权导入任务」补 time_basis 筛选行、只有主订单号的行不展开、Excel 列按联盟官方导出模板（待验证）。权限到原因码的对应为代理补全的默认。hold 守卫与入账口径不变，没有新增条目与错误码。
+
+2026-10-22 couli #176 r1 评审修改（`docs/changes/20261022-后台风控联盟订单接口形状.md` §4）：BR-FUND-06 细则「后台 hold / unhold」——同状态 hold / unhold 不受理、返回 20902，不算表外事件、不告警；UNMAPPED_STATUS 的 hold 在 BR-FUND-02 待处理记录关闭前不能 unhold（编排裁定 D10-155）；hold 后订单转到其他状态时标记保留、不提供解除、unhold 维持 R11 原样（编排裁定 D10-157）；`risk.*` 不含 config.risk；「维权导入任务」补重复行计数、time_basis 可不填与逐行原因五类（代理补全的默认）。R11 与入账口径不变，没有新增条目与错误码。
+
+2026-10-22 couli #176 r2 评审修改（`docs/changes/20261022-后台风控联盟订单接口形状.md` §5）：BR-FUND-06 细则「后台 hold / unhold」的 D10-157 一段删去不会出现的「入账 CREDITED」例、补恢复后可 unhold 的情形，并补空行。规则不变。
+
+2026-10-22 couli #176 r3 后修改（`docs/changes/20261022-后台风控联盟订单接口形状.md` §6）：BR-FUND-06 细则「后台 hold / unhold」补必填说明（进审计）与详情显示最近一次暂停的操作人与说明。规则不变。
+
 ### 6.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -462,6 +472,16 @@ C-02 已由负责人改定（变更记录 §3；拍板第二批 OPS-01 再次确
 **例（部分成功、佣金未更新）**：WAITING 订单 10-15 淘宝维权部分成功，接口只给退款金额、无应扣佣金，联盟佣金未变 → order_rights=WAIT_COMMISSION，继续跳过入账；10-18 联盟回传新佣金 → R7 重算预估并关闭记录，随后续结算批次入账。
 
 **异常**：order_rights 处于 PROCESSING 或 WAIT_COMMISSION，且 now − created_at ≥ 60×24 小时 → 告警进人工；手工导入的维权/处罚清单（后台 rights-imports）与接口同等处理，按 (platform, sub_order_id, 平台维权单号) 去重。
+
+**后台 hold / unhold**（2026-10-22，CT-24n，代理补全的默认；接口形状见 规划/04 §6.6 `orders/{id}/hold`）：只有 R11 的两种迁移——hold=false → true 与 hold=true → false，两者都只在 rebate_status ∈ {ESTIMATED, WAITING} 时可做；rebate_status 不在这两种时按 BR-FUND-01 的表外事件处理：订单不变、不写 history，后台返回 20902（data.resource=order）。须 `order.hold`，不要二次验证，写审计。
+- 同状态（已 hold 再 hold、未 hold 时 unhold）：不受理，订单不变、不写 history，返回 20902（data.resource=order）；这不是迁移、不算表外事件，不告警（couli #176 r1 改，原写「按表外事件处理」）。
+- UNMAPPED_STATUS 的 hold（系统置，BR-FUND-02）：BR-FUND-02 的待处理记录关闭之前不能人工 unhold，返回 20902（data.resource=order）；关闭之后照常按 R11 由人工 unhold（编排裁定 D10-155）。
+- hold 之后订单转到其他状态（如作废 VOID）：hold 标记保留，不提供解除，unhold 仍只在 rebate_status ∈ {ESTIMATED, WAITING} 时可做；后台按当前状态显示为已作废 / 已锁定（BR-FUND-01 细则「订单锁定（展示标记）」）。作废单本就不结算，标记对金额没有影响（编排裁定 D10-157，Jev 判断 A 0.66 / B 0.69 近乎打平，编排取不改资金状态机的 A）。hold 期间不会入账（BR-FUND-04 跳过），之后恢复为 ESTIMATED / WAITING 的（如 BR-FUND-22 的 R12 恢复）照常可 unhold。
+
+原因码（编排裁定 D10-152，Jev 判断）：hold、unhold 都只取 RISK 或 CS（UNMAPPED_STATUS 只由系统置）。hold 时按操作人所持权限推导：持有任一 `risk.*` 权限点而没有 `order.claim` → RISK，持有 `order.claim` 而没有 `risk.*` → CS（这一对应是代理补全的默认）；两类都持有（含超管）或都没有时由操作人在两者中选。`risk.*` 只指 risk 开头的权限点（risk.freeze、risk.ban、risk.blocklist、risk.appeal），config.risk 不算（代理补全的默认）。unhold 由操作人在 RISK、CS 中选（必填）。hold、unhold 都必填一段说明（≤ 200 字），写进审计；订单详情显示最近一次暂停的操作人与说明（编排 2026-10-22 r3 后补定；详情的取法为代理补全的默认）。
+
+**维权导入任务**（2026-10-22，CT-24n，代理补全的默认）：违规单按处罚写 order_rights（type=PUNISH，规划/04 §2.3）；同一文件重复上传生成新的导入任务，已导入的行按上面的去重键跳过、不报错，不重复扣回；这类行单独计数（duplicate_rows），不算进时间窗外的跳过数（skipped_rows），也不算失败（代理补全的默认）。
+导入的取行规则（编排裁定 D10-152，Jev 判断）：time_basis 用来筛选行——带了时间窗时，只导入本系统该子订单的付款时间（付款口径）或收货时间（收货口径）落在 [from, to) 内的行，窗外的行计为跳过、不算失败；收货口径而订单还没有收货时间的行记逐行失败（代理补全的默认）；不带时间窗时不筛选，time_basis 可不填（代理补全的默认）。维权单每行须列明子订单号，只有主订单号的行不展开到子订单、记逐行失败（编排按资金安全取舍：避免误扣没有维权的子订单）。各类 Excel 的列按各联盟官方导出模板，由契约线查 docs-mirror 登记，未实测前标待验证。逐行失败的原因只分五类：行格式不对或缺列、子订单不在本系统、只有主订单号、收货口径而无收货时间、平台不符（编码见 规划/04 §6.6 `rights_import_failure_reason`，代理补全的默认）。
 
 C-02 已由负责人决定（拍板第一批 §3；拍板第二批 OPS-01：结算前叫预估、结算后叫已结算），「入账」只作动作词（BR-TEXT-01），本条展示文字以 BR-TEXT-03 为准。
 

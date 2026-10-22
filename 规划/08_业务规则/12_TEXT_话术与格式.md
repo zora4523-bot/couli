@@ -84,6 +84,8 @@
 
 2026-10-22 编排裁定 D10-135 ① 与 #169 评审 r2 N1（第 ① 类文案键登记）：BR-TEXT-22 表新增 `agent.notice.platform_unrecognized`、`agent.suggest.clarify.{reference,price,platform}.1–3` 与 `agent.tool_status.*` 模板（同日按 couli #172 评审 r1 改为定稿画板措辞，三阶段都有带平台的键；价格快捷选项在 BR-TEXT-22 正文写明例外；新键在 BR-TEXT-12 细则「资金术语键」归类）；BR-TEXT-14 表 C 新增 `settings.nickname.hint.plain`、`reverify.id.fail_limit.plain`（变量取不到时的不写数字措辞）。均为代理补全的默认，状态不变。
 
+2026-10-22 couli #176 r1 评审修改（`docs/changes/20261022-后台风控联盟订单接口形状.md` §4）：BR-TEXT-25 取值表补 8 行新枚举的后台中文名（risk_rules.status、order_sync_requests.mode / status、rights_imports.kind / time_basis / status、rights_import_failure_reason、admin_union_auth_sessions.status），代理补全的默认，编码以契约为准。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -1624,6 +1626,14 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | `bad_debt_writeoff.status` | PENDING / APPROVED / CANCELLED | 待批准 / 已核销 / 已取消 | — | BR-FUND-12 |
 | `commission_rules.status` | draft / published / revoked | 草稿 / 已发布 / 已撤销 | — | BR-CALC-22 |
 | `union_pids.status` | pending / active / retired | 待确认 / 启用 / 停用 | — | BR-ATTR-02 |
+| `risk_rules.status` | enabled / disabled | 启用 / 停用 | — | BR-ID-36 细则「规则清单的启停」；规划/04 §3.2 `risk_rules`（2026-10-22，代理补全的默认） |
+| `order_sync_requests.mode` | window / order_nos | 按时间窗 / 按订单号 | — | 规划/04 §6.6 `order-syncs`（2026-10-22，代理补全的默认） |
+| `order_sync_requests.status` | queued / running / done / failed | 排队中 / 同步中 / 已完成 / 失败 | — | 同上 |
+| `rights_imports.kind` | rights / punish / channel | 维权单 / 违规单 / 渠道单 | — | 规划/01 F-ORD-10；规划/04 §6.6 `rights-imports`（2026-10-22，代理补全的默认） |
+| `rights_imports.time_basis` | paid / received | 付款时间 / 收货时间 | — | BR-FUND-06 细则「维权导入任务」（同上） |
+| `rights_imports.status` | queued / running / done / failed | 排队中 / 导入中 / 已完成 / 失败 | — | 同上 |
+| `rights_import_failure_reason` | invalid_row / order_not_found / sub_order_no_missing / received_at_missing / platform_mismatch | 行格式不对 / 订单不在本系统 / 缺子订单号 / 无收货时间 / 平台不符 | — | BR-FUND-06 细则「维权导入任务」；编码契约线补（2026-10-22，代理补全的默认） |
+| `admin_union_auth_sessions.status` | pending / succeeded / failed / expired | 授权中 / 已完成 / 失败 / 已过期 | — | BR-ID-24 细则；规划/04 §3.2（2026-10-22，代理补全的默认） |
 
 - 例：差错单列表「类型」列显示「通道对账不一致」，详情页按 BR-TEXT-18 双列显示 `channel_mismatch`「通道对账不一致」；用户侧看不到差错单。
 - 例：契约线把 `claim_reject_reason` 定为 5 个编码 → 在本表补 5 行中文名，前端不改代码、画板按本表更新。
