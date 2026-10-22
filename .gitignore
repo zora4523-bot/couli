@@ -32,3 +32,7 @@ _vendor-sdk/
 # 看板导出的快照（含本机路径与台账内容），不进仓库
 /board*.html
 /couli-board*.html
+
+# Python 字节码缓存
+__pycache__/
+*.pyc
