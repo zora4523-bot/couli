@@ -47,6 +47,8 @@
 
 2026-10-22 后台 hold / unhold 与维权导入接口形状（`docs/changes/20261022-后台风控联盟订单接口形状.md`，00 §8 第 ① 类；CT-24n 契约前置）：BR-FUND-06 细则新增「后台 hold / unhold」与「维权导入任务」两段，均为代理补全的默认，按 BR-FUND-01 表外事件与本条既有的去重口径推出；hold 的守卫、原因码与入账口径都不变，没有新增条目与错误码。
 
+2026-10-22 CT-24n 裁定（编排裁定 D10-152，Jev 判断；`docs/changes/20261022-后台风控联盟订单接口形状.md` §3）：BR-FUND-06 细则「后台 hold / unhold」补原因码（unhold 复用 RISK / CS，hold 按所持权限推导），「维权导入任务」补 time_basis 筛选行、只有主订单号的行不展开、Excel 列按联盟官方导出模板（待验证）。权限到原因码的对应为代理补全的默认。hold 守卫与入账口径不变，没有新增条目与错误码。
+
 ### 6.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -466,8 +468,10 @@ C-02 已由负责人改定（变更记录 §3；拍板第二批 OPS-01 再次确
 **异常**：order_rights 处于 PROCESSING 或 WAIT_COMMISSION，且 now − created_at ≥ 60×24 小时 → 告警进人工；手工导入的维权/处罚清单（后台 rights-imports）与接口同等处理，按 (platform, sub_order_id, 平台维权单号) 去重。
 
 **后台 hold / unhold**（2026-10-22，CT-24n，代理补全的默认；接口形状见 规划/04 §6.6 `orders/{id}/hold`）：只有 R11 的两种迁移——hold=false → true（rebate_status ∈ {ESTIMATED, WAITING}）与 hold=true → false；rebate_status 不在这两种、已 hold 再 hold、未 hold 时 unhold 都按 BR-FUND-01 的表外事件处理：订单不变、不写 history，后台返回 20902（data.resource=order）。须 `order.hold`，不要二次验证，写审计。
+原因码（编排裁定 D10-152，Jev 判断）：hold、unhold 都只取 RISK 或 CS（UNMAPPED_STATUS 只由系统置）。hold 时按操作人所持权限推导：持有任一 `risk.*` 权限点而没有 `order.claim` → RISK，持有 `order.claim` 而没有 `risk.*` → CS（这一对应是代理补全的默认）；两类都持有（含超管）或都没有时由操作人在两者中选。unhold 由操作人在 RISK、CS 中选（必填）。
 
 **维权导入任务**（2026-10-22，CT-24n，代理补全的默认）：违规单按处罚写 order_rights（type=PUNISH，规划/04 §2.3）；同一文件重复上传生成新的导入任务，已导入的行按上面的去重键跳过、不报错，不重复扣回。
+导入的取行规则（编排裁定 D10-152，Jev 判断）：time_basis 用来筛选行——带了时间窗时，只导入本系统该子订单的付款时间（付款口径）或收货时间（收货口径）落在 [from, to) 内的行，窗外的行计为跳过、不算失败；收货口径而订单还没有收货时间的行记逐行失败（代理补全的默认）；不带时间窗时不筛选。维权单每行须列明子订单号，只有主订单号的行不展开到子订单、记逐行失败（编排按资金安全取舍：避免误扣没有维权的子订单）。各类 Excel 的列按各联盟官方导出模板，由契约线查 docs-mirror 登记，未实测前标待验证。
 
 C-02 已由负责人决定（拍板第一批 §3；拍板第二批 OPS-01：结算前叫预估、结算后叫已结算），「入账」只作动作词（BR-TEXT-01），本条展示文字以 BR-TEXT-03 为准。
 
