@@ -16,7 +16,7 @@
 | 暂停结算 / 已暂停 / 恢复结算 | AdmOrderSettleHold（243fce26daf1）/ HoldDone（9e51e2ce7c63）/ Resume（8974196755fd） | 点【暂停结算】【恢复结算】 | orders/{id}/hold、unhold；实现用详情内的 Popconfirm / 内嵌表单承载同样字段（F-ADM-05「合并进标记」，Codex 第 1 轮 #10），画板只作字段与后果说明 |
 | 指定归属（未归因）：抽屉 / 确认（已付款、已收货）/ 成功 | AdmOrderAssignUnattributed（fa1ac7750b55）/ …Confirm（802e589c64ca）/ …ConfirmReceived（60f77ba3186a）/ …Done（ed47cdb2c6b8） | `user_id` 为空时点【指定归属】 | orders/{id}/reassign（expected_user_id 空、expected_locked）· 20902 时提示已变更 |
 | 1280 窄窗 | AdmAdaptOrderDetail1280.dc.html（87dc95eb0801） | 视口 ≤ 1280 | 本地 |
-| 加载中 / 出错 / 不存在 | 不适用（无画板） | 在途 / 5xx / 40401 | 本地：Skeleton、Result |
+| 加载中 / 出错 / 不存在 | 不适用（无画板） | 在途 / 5xx / 20001（订单不存在） | 本地：Skeleton、Result |
 | 无权限 | AdmOrderActionStates 末行 | 无 order.hold / order.assign | 按钮隐藏；服务端 10403 |
 
 画板上的订单号、商品、金额、分佣快照数字与 UID 均为样例数据；「天猫 / 淘宝」只以文字标识来源，无平台商标图形。
@@ -42,10 +42,10 @@
 
 | operationId | 什么时候调 | 本页会遇到的错误码 |
 | --- | --- | --- |
-| adminGetOrder | 进入、操作后刷新 | 10001、10403、40401 |
-| adminHoldOrder / adminUnholdOrder | 暂停 / 恢复提交 | 20001（已入账、已作废）、10403 |
-| adminReassignOrder | 指定归属提交（step-up 动态码） | 10003、20902（order_attribution 已变更）、目标用户封禁（码待契约线）、20001 |
-| adminCreateOrderSync | 【同步此单】 | 10403 |
+| adminGetOrder | 进入、操作后刷新 | 10001、10403、20001（`data.fields=[order_id]`：订单不存在，契约不设 404；2026-10-22 由 40401 改） |
+| adminHoldOrder / adminUnholdOrder | 暂停 / 恢复提交 | 20902（`data.resource=order`：已入账、已作废、已暂停再暂停、未暂停时恢复或版本已变，BR-FUND-01 表外事件、BR-FUND-06 细则；2026-10-22 由 20001 改）、20001（原因码不合法）、10403 |
+| adminReassignOrder | 指定归属提交（step-up 动态码） | 10003、20902（order_attribution 已变更）、目标用户封禁（码待契约线）、20001（目标用户不存在、原因不合规） |
+| adminCreateOrderSync | 【同步此单】 | 10403、20001、50301（站长授权失效期间，2026-10-22） |
 
 ## 5. 权限点与开关（04 §11.1 / §11.2）
 
@@ -53,9 +53,10 @@
 
 ## 6. 稿上没画、实现要做的
 
-加载中 / 出错 / 40401；置灰按钮的原因文字在 1280 不换行到按钮下；状态历史只追加；读屏：按钮名带订单号；抽屉关闭后焦点回【指定归属】。
+加载中 / 出错 / 订单不存在（20001）；置灰按钮的原因文字在 1280 不换行到按钮下；状态历史只追加；读屏：按钮名带订单号；抽屉关闭后焦点回【指定归属】。
 
 ## 7. 待定与不一致
 
+- 2026-10-22 摘要同步（`docs/changes/20261022-后台风控联盟订单接口形状.md`）：§1、§4、§6 的订单不存在由 40401 改为 20001（契约没有 40401），暂停 / 恢复被拒由 20001 改为 20902（08 BR-FUND-01、BR-FUND-06 细则为准）；画板不变。
 - 封存稿 removed/AdmOrderReassign*（改派）不实现；「作废后误判只能驳回重提找回」已按 #136 处理，负责人 2026-10-18 第 1 批定稿维持；若要给超管留纠错通道需改 BR-ATTR-31（属负责人决定）。
 - 目标用户为封禁账号时的错误码待契约线。

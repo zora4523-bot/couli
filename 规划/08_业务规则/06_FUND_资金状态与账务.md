@@ -45,6 +45,8 @@
 
 2026-10-19 邀请奖励活动（`docs/changes/20261019-邀请奖励与登录精简.md`，负责人 2026-10-19 在对话中确认；规则在 BR-INV-24）：流水类型 REWARD 不再只属 P1——sub_type=invite 随邀请奖励活动启用（开关默认关）。BR-FUND-01 正文把邀请奖励列入「不伴随订单迁移」的凭证；BR-FUND-15 正文与细则改写 REWARD 的阶段说明，分录模板由资金线补（05 B2-16），本主题不写分录；平台侧记 MKT_EXPENSE（规划/02 §8.2）。各条状态不变，没有新增条目与错误码。
 
+2026-10-22 后台 hold / unhold 与维权导入接口形状（`docs/changes/20261022-后台风控联盟订单接口形状.md`，00 §8 第 ① 类；CT-24n 契约前置）：BR-FUND-06 细则新增「后台 hold / unhold」与「维权导入任务」两段，均为代理补全的默认，按 BR-FUND-01 表外事件与本条既有的去重口径推出；hold 的守卫、原因码与入账口径都不变，没有新增条目与错误码。
+
 ### 6.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -462,6 +464,10 @@ C-02 已由负责人改定（变更记录 §3；拍板第二批 OPS-01 再次确
 **例（部分成功、佣金未更新）**：WAITING 订单 10-15 淘宝维权部分成功，接口只给退款金额、无应扣佣金，联盟佣金未变 → order_rights=WAIT_COMMISSION，继续跳过入账；10-18 联盟回传新佣金 → R7 重算预估并关闭记录，随后续结算批次入账。
 
 **异常**：order_rights 处于 PROCESSING 或 WAIT_COMMISSION，且 now − created_at ≥ 60×24 小时 → 告警进人工；手工导入的维权/处罚清单（后台 rights-imports）与接口同等处理，按 (platform, sub_order_id, 平台维权单号) 去重。
+
+**后台 hold / unhold**（2026-10-22，CT-24n，代理补全的默认；接口形状见 规划/04 §6.6 `orders/{id}/hold`）：只有 R11 的两种迁移——hold=false → true（rebate_status ∈ {ESTIMATED, WAITING}）与 hold=true → false；rebate_status 不在这两种、已 hold 再 hold、未 hold 时 unhold 都按 BR-FUND-01 的表外事件处理：订单不变、不写 history，后台返回 20902（data.resource=order）。须 `order.hold`，不要二次验证，写审计。
+
+**维权导入任务**（2026-10-22，CT-24n，代理补全的默认）：违规单按处罚写 order_rights（type=PUNISH，规划/04 §2.3）；同一文件重复上传生成新的导入任务，已导入的行按上面的去重键跳过、不报错，不重复扣回。
 
 C-02 已由负责人决定（拍板第一批 §3；拍板第二批 OPS-01：结算前叫预估、结算后叫已结算），「入账」只作动作词（BR-TEXT-01），本条展示文字以 BR-TEXT-03 为准。
 
