@@ -82,6 +82,8 @@
 
 2026-10-22 CT-26c、CT-26e 码号与路由登记（第 ① 类，依据 identity 线形状稿，CT-26c 待 funds 评审；码号与路由是契约线建议、代理补全的默认）：BR-TEXT-14 表 A 新增 error.10010、error.20005、error.30418。状态不变。
 
+2026-10-22 编排裁定 D10-141（第 ① 类）：BR-TEXT-23 RISK_STATE_CHANGED unbanned 的触发不含申诉撤销，申诉撤销封禁只发 APPEAL_RESULT account_revoked，模板加 `{need_reauth}`（代理补全的默认）。状态不变。
+
 2026-10-22 编排裁定 D10-136 与 couli #172 评审 r2（第 ① 类）：BR-TEXT-22 `agent.suggest.clarify.reference.1–3` 写明「第 3 个」只在最近结果集至少有 3 张卡时出现；`agent.tool_status.*` 行注明多个平台合并显示的写法交契约线随 CT-16 续段定，`{平台}暂时查不到` 与 BR-TEXT-14 表 C「Agent 单平台搜索失败」互相指向；BR-TEXT-12 细则「资金术语键」的「其余归普通」一句补 `agent.tool_status.get_rebate_quote.*` 除外。状态不变。
 
 2026-10-22 编排裁定 D10-135 ① 与 #169 评审 r2 N1（第 ① 类文案键登记）：BR-TEXT-22 表新增 `agent.notice.platform_unrecognized`、`agent.suggest.clarify.{reference,price,platform}.1–3` 与 `agent.tool_status.*` 模板（同日按 couli #172 评审 r1 改为定稿画板措辞，三阶段都有带平台的键；价格快捷选项在 BR-TEXT-22 正文写明例外；新键在 BR-TEXT-12 细则「资金术语键」归类）；BR-TEXT-14 表 C 新增 `settings.nickname.hint.plain`、`reverify.id.fail_limit.plain`（变量取不到时的不写数字措辞）。均为代理补全的默认，状态不变。
@@ -1533,8 +1535,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | RISK_STATE_CHANGED frozen_until | risk_state 变为 frozen 且设了到期时间 | 你的账户提现已暂停至 {frozen_until}，原因：{reason_category}。如有疑问，可在帮助中心提交申诉。 |
 | RISK_STATE_CHANGED unfrozen | frozen 到期或人工解除 → normal | 你的账户提现已恢复。 |
 | RISK_STATE_CHANGED banned | risk_state 变为 banned（BR-ID-31） | 你的账号已被限制使用，原因：{reason_category}。可在说明页提交申诉。 |
-| RISK_STATE_CHANGED unbanned | 解封（BR-ID-31、BR-ID-36）；`{need_reauth}` 在生成这条通知时用户的淘宝绑定为 invalid（解封后 ban 改为 invalid、需用户重新授权，BR-ID-20）时为「购物前需重新完成淘宝授权。」；淘宝绑定已重新授权（active）、仍被后台停用返利（blocked、admin_disable，只能由后台「恢复返利」解除）、没有淘宝绑定时都为空（其他联盟解封直接回 active，BR-ID-20，负责人 2026-10-18；2026-10-19 同步，原模板不分平台；2026-10-19 澄清触发条件，原写「在用户有淘宝绑定时」，按字面会在已重新授权或被停用返利时误提示，B1-12g） | 你的账号限制已解除。{need_reauth} |
-| APPEAL_RESULT account_revoked | 账户申诉撤销（BR-ID-36） | 你的申诉已通过，相关限制已解除。 |
+| RISK_STATE_CHANGED unbanned | 解封（BR-ID-31、BR-ID-36）；不含申诉撤销封禁：那一种只发 APPEAL_RESULT account_revoked，不再另发本变体（2026-10-22 编排裁定 D10-141，代理补全的默认）；`{need_reauth}` 在生成这条通知时用户的淘宝绑定为 invalid（解封后 ban 改为 invalid、需用户重新授权，BR-ID-20）时为「购物前需重新完成淘宝授权。」；淘宝绑定已重新授权（active）、仍被后台停用返利（blocked、admin_disable，只能由后台「恢复返利」解除）、没有淘宝绑定时都为空（其他联盟解封直接回 active，BR-ID-20，负责人 2026-10-18；2026-10-19 同步，原模板不分平台；2026-10-19 澄清触发条件，原写「在用户有淘宝绑定时」，按字面会在已重新授权或被停用返利时误提示，B1-12g） | 你的账号限制已解除。{need_reauth} |
+| APPEAL_RESULT account_revoked | 账户申诉撤销（BR-ID-36）；撤销的是封禁时只发本条（不另发 RISK_STATE_CHANGED unbanned），载荷带 need_reauth，`{need_reauth}` 取值同 RISK_STATE_CHANGED unbanned 那一句（复用同一文案键；2026-10-22 编排裁定 D10-141，代理补全的默认） | 你的申诉已通过，相关限制已解除。{need_reauth} |
 | APPEAL_RESULT order_revoked | 订单申诉撤销（BR-ID-36） | 你对一笔订单的申诉已通过，返利将在复核后恢复。 |
 | APPEAL_RESULT upheld | 申诉维持 | 你的申诉已处理，维持原处理结果。如有疑问请联系客服。 |
 | DELETION_PROGRESS requested | 注销申请进入冷静期（BR-ID-27） | 注销申请已提交，{cancel_deadline} 前可在「设置 → 账号与安全」撤回。 |
