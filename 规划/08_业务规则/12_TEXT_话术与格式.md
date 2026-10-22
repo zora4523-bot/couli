@@ -82,7 +82,7 @@
 
 2026-10-22 CT-26c、CT-26e 码号与路由登记（第 ① 类，依据 identity 线形状稿，CT-26c 待 funds 评审；码号与路由是契约线建议、代理补全的默认）：BR-TEXT-14 表 A 新增 error.10010、error.20005、error.30418。状态不变。
 
-2026-10-22 编排裁定 D10-150（第 ① 类）：BR-TEXT-22 `agent.tool_status.*` 行的多平台合并显示改为按 D10-150 写定（原写交契约线定）。状态不变。
+2026-10-22 编排裁定 D10-150、D10-151（第 ① 类）：BR-TEXT-22 `agent.tool_status.*` 行的多平台合并显示写定（原写交契约线定）：新增多平台模板键 `agent.tool_status.search_products.<phase>.multi`（带 `{platform_names}`），单平台仍用平台后缀键（D10-151 修正 D10-150「不另设合并键」）。状态不变。
 
 2026-10-22 编排裁定 D10-141（第 ① 类）：BR-TEXT-23 RISK_STATE_CHANGED unbanned 的触发不含申诉撤销，申诉撤销封禁只发 APPEAL_RESULT account_revoked，模板加 `{need_reauth}`（代理补全的默认）。状态不变。
 
@@ -1490,7 +1490,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | agent.suggest.clarify.reference.1–3 | 指代追问的快捷选项（BR-AI-01 追问 `clarify`；2026-10-22 D10-135，代理补全的默认）；最近结果集不足 3 张卡时不出「第 3 个」（2026-10-22 编排裁定 D10-136；不足 2 张时「第 2 个」同理，是代理补全的默认），只出点了能解析的项 | 第 1 个｜第 2 个｜第 3 个 |
 | agent.suggest.clarify.price.1–3 | 价格追问的 3 个快捷选项（BR-AI-08「只出 clarify（3 个快捷价格选项）」；2026-10-22 D10-135，代理补全的默认：选项只是用户可点的话术，点后作为用户输入照常解析；价格区间是本条正文写明的例外） | 100 元以内｜100 到 300 元｜300 元以上 |
 | agent.suggest.clarify.platform.1–3 | 平台追问的 3 个快捷选项（BR-AI-01；2026-10-22 D10-135，代理补全的默认；平台名照 BR-TEXT-24） | 淘宝｜京东｜拼多多 |
-| agent.tool_status.&lt;tool>.&lt;phase>（[.&lt;platform>]） | `tool.status` 的 display_text 模板（BR-TEXT-16：只描述动作，不说有没有返利（BR-AI-06），不含用户输入原文或工具参数；2026-10-22 D10-135，couli #172 评审 r1 后按定稿画板 AgentStreaming-v2、AgentPartialFail-v2 改写，键形由契约线随 CT-16 续段定稿）：phase ∈ start / end / failed，平台后缀放在最后（如 `agent.tool_status.search_products.start.taobao`）；有合法 platform 时先取带平台后缀的键，没有再取通用键；未登记的工具用 `agent.tool_status.default.<phase>`；BR-TEXT-16 的例句「正在搜索淘宝」与画板措辞不同时以画板为准；同一工具、同一阶段的几个平台合并成一行：平台名按淘宝、京东、拼多多的固定顺序（名称照 BR-TEXT-24）用「、」连接后套进带平台的模板（如「正在查询淘宝、拼多多商品」「淘宝、京东暂时查不到」），不同阶段分行显示，不另设合并键（2026-10-22 编排裁定 D10-150，采用 content 线 CT-16j 的默认）；failed 的「{平台}暂时查不到」与 BR-TEXT-14 表 C「Agent 单平台搜索失败」是同一句，改措辞两处一起改 | search_products.&lt;phase>.&lt;platform>：正在查询淘宝商品｜已查询淘宝商品｜淘宝暂时查不到（京东、拼多多同样换平台名，平台名照 BR-TEXT-24）；search_products 通用：正在查询商品｜已查询商品｜暂时查不到商品；get_rebate_quote：正在查询返利｜查询完成｜查询没有完成；default：正在处理｜处理完成｜没有完成 |
+| agent.tool_status.&lt;tool>.&lt;phase>（[.&lt;platform>]） | `tool.status` 的 display_text 模板（BR-TEXT-16：只描述动作，不说有没有返利（BR-AI-06），不含用户输入原文或工具参数；2026-10-22 D10-135，couli #172 评审 r1 后按定稿画板 AgentStreaming-v2、AgentPartialFail-v2 改写，键形由契约线随 CT-16 续段定稿）：phase ∈ start / end / failed，平台后缀放在最后（如 `agent.tool_status.search_products.start.taobao`）；有合法 platform 时先取带平台后缀的键，没有再取通用键；未登记的工具用 `agent.tool_status.default.<phase>`；BR-TEXT-16 的例句「正在搜索淘宝」与画板措辞不同时以画板为准；同一工具、同一阶段有几个平台时合并成一行，用多平台模板键 `agent.tool_status.search_products.<phase>.multi`（占位 `{platform_names}`：同一阶段的平台名按淘宝、京东、拼多多的固定顺序、名称照 BR-TEXT-24、用「、」连接）；只有一个平台时仍用 `.<platform>` 后缀键，拿不到合法平台时用通用键；不同阶段分行显示（2026-10-22 编排裁定 D10-151，修正同日 D10-150「不另设合并键」）；failed 的「{平台}暂时查不到」与 BR-TEXT-14 表 C「Agent 单平台搜索失败」是同一句，改措辞两处一起改 | search_products.&lt;phase>.&lt;platform>：正在查询淘宝商品｜已查询淘宝商品｜淘宝暂时查不到（京东、拼多多同样换平台名，平台名照 BR-TEXT-24）；search_products.&lt;phase>.multi：正在查询{platform_names}商品｜已查询{platform_names}商品｜{platform_names}暂时查不到（D10-151）；search_products 通用：正在查询商品｜已查询商品｜暂时查不到商品；get_rebate_quote：正在查询返利｜查询完成｜查询没有完成；default：正在处理｜处理完成｜没有完成 |
 | agent.disclaimer.commission | 佣金披露（BR-AI-10，BR-TEXT-13 例外） | 推荐商品含推广链接，购买后本平台可能获得佣金。 |
 | agent.match.matched | 卡片条件标记（BR-AI-24） | 符合条件 |
 | agent.match.title_shows | 规格经代码匹配（BR-AI-24） | 标题显示为{spec} |
