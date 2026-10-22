@@ -80,6 +80,8 @@
 
 2026-10-22 编排裁定 D10-115 G-V09 及其更正（第 ① 类文案键登记）：BR-TEXT-14 表 C 末尾新增 `search.placeholder`（首页）与 `basic.search.placeholder`（基本模式首页）。状态不变。
 
+2026-10-22 编排裁定 D10-135 ① 与 #169 评审 r2 N1（第 ① 类文案键登记）：BR-TEXT-22 表新增 `agent.notice.platform_unrecognized`、`agent.suggest.clarify.{reference,price,platform}.1–3` 与 `agent.tool_status.*` 模板；BR-TEXT-14 表 C 新增 `settings.nickname.hint.plain`、`reverify.id.fail_limit.plain`（变量取不到时的不写数字措辞）。均为代理补全的默认，状态不变。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -1032,6 +1034,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 劳务协议·改版重签提示 labor_agreement.resign_hint（第 2 批，画板 LaborAgreementResign） | 劳务协议已更新，需要重新阅读并签署后才能提现 | 后台发布需重签的新版本后，已签旧版的用户进签署页时显示在顶部（代替首次签署的说明句）；重签条件与签署凭证只按 BR-WDR-31；协议正文仍待法务 |
 | 核实身份（旧号加验）·通用 reverify.title / .heading / .desc（第 2 批，画板 WithdrawReverifyId / Oauth / Manual） | 核实身份｜需要先核实是你本人｜为保障账户资金安全，在这台设备上继续操作前，需要核实一次身份 | 三种方式共用的页头；不说明判定原因；出现条件、方式与有效期只按 BR-WDR-01 细则（判定、位置与有效期）、BR-WDR-03 ③b；加验的返回码、接口与 data.method 由契约线随本项启用时定义，启用前开关为 0、用户看不到本页；通过后回到原页面，由用户重新操作 |
 | 核实身份·输入身份证号 reverify.id.label / .placeholder / .note / .fail_limit / .submit（同上，画板 WithdrawReverifyId） | 身份证号｜请输入实名认证时用的身份证号｜只和你已完成的实名认证比对，不会另外核验或保存｜连续 {fail_limit} 次没有核实通过，今天不能再在 App 里核实，可以联系客服处理｜核实 | data.method=id_number；{fail_limit} 按 BR-TEXT-13 由变量渲染，取 BR-WDR-01 细则「加验依据」的连续失败上限（不在本句写死；画板 WithdrawReverifyId 写的是数字，记为设计下次改稿项） |
+| 核实身份·失败上限无变量兜底 reverify.id.fail_limit.plain（2026-10-22，#169 评审 r2 N1；代理补全的默认） | 多次没有核实通过，今天不能再在 App 里核实，可以联系客服处理 | 加验错误数据里取不到 `{fail_limit}` 时代替 `reverify.id.fail_limit`（契约随 CT-26c） |
 | 核实身份·第三方重新授权 reverify.oauth.title / .desc / .action（同上，画板 WithdrawReverifyOauth） | 用这个账号已绑定的{provider_name}重新授权｜授权回来的{provider_name}必须是这个账号原来绑定的那一个；授权只用于核实身份，不会改变你的登录方式｜去{provider_name}授权 | data.method=oauth；{provider_name} 取 微信 / Apple / 华为账号（画板示例为微信）；不是 BR-ID-08 的第三方二次验证 |
 | 核实身份·人工核实 reverify.manual.title / .desc / .action（同上，画板 WithdrawReverifyManual） | 这次需要人工核实身份｜请联系客服，客服核实是你本人后会帮你处理；核实前不能在这台设备上继续这项操作｜联系客服 | data.method=manual；按钮打开客服（cs.open，未安装微信时按 cs.wechat_unavailable） |
 | 找回记录·状态与说明 claim.records.status.pending / .auto_tracked / .approved / .rejected、claim.records.desc.pending / .auto_tracked、claim.records.footer（第 2 批，画板 FindOrderRecords-v2） | 审核中｜已自动跟单｜已找回｜未通过；客服正在核对，结果会通过消息通知你｜这笔订单已同步到你的订单列表，无需再找回；只显示你本人提交的找回申请 | 状态与找回子项的对应按 BR-ATTR-30、BR-ATTR-16（「已自动跟单」= 子项被同步自动归属给本人而结束）；「已找回」「未通过」两种的说明句用 CLAIM_RESULT 原文（BR-TEXT-09），未通过的 {reason} 取下一行；底注固定显示在列表末尾；空态仍为 claim.records.empty |
@@ -1070,6 +1073,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 设置·分组与行名 settings.group.account / .privacy / .general、settings.nickname / .phone / .delete_account / .privacy_center / .agreements / .notify / .reshow_jump_tip / .help / .about（第 3 批，画板 Settings-v2、SettingsGuest-v2、SettingsBasic） | 账号与安全｜隐私｜通用；昵称｜手机号｜注销账号｜隐私中心｜用户协议与隐私政策｜通知设置｜重新显示下单须知｜帮助中心｜关于凑狸 | 「授权管理」行用 auth_manage.title；剪贴板、清除缓存、退出登录行用已有 settings.\* 键；各行显隐（游客、基本模式、内测包不显示注销）只按 BR-ID-02 细则、BR-ID-27 细则 |
 | 设置·提示与游客 settings.reshow_jump_tip.done / settings.phone.unbound / settings.guest_hint / settings.guest_login / settings.agreements.sheet_title（第 3 批，画板 Settings-v2、SettingsGuest-v2、SettingsAgreementSheet-v2） | 已重新显示下单须知｜未绑定｜登录后可以管理账号、授权和通知｜去登录｜用户协议与隐私政策 | .reshow_jump_tip.done：点「重新显示下单须知」重置各平台下单须知已读记录后的轻提示，不跳页（BR-ATTR-21）；.phone.unbound：账号未绑手机号时手机号行右侧；.sheet_title：协议选择半屏的标题，半屏两行用「用户协议」「隐私政策」 |
 | 设置·修改昵称 settings.nickname.saved / settings.nickname.hint（第 3 批，画板 SettingsNicknameSaved-v2、SettingsNickname） | 昵称已修改｜{min_len}–{max_len} 个字，保存前会做内容检查；每月最多修改 {monthly_limit} 次。头像暂不支持修改 | 长度与次数按 BR-TEXT-13 由变量渲染：{min_len} / {max_len} / {monthly_limit} 取 BR-ID-39 的取值（不在本句写死；画板 SettingsNickname 写的是数字，记为设计下次改稿项）；超限与内容不通过仍用 error.30415、error.20001.nickname_sensitive |
+| 修改昵称说明·无变量兜底 settings.nickname.hint.plain（2026-10-22，#169 评审 r2 N1；代理补全的默认） | 保存前会做内容检查，每月修改次数有限。头像暂不支持修改 | `/v1/config.nickname` 缺省或取不到时代替 `settings.nickname.hint`（04 §10.1） |
 | 撤回注销后的轻提示 deletion.withdrawn_toast（第 3 批，画板 SettingsDeletionWithdrawn-v2） | 已撤回注销申请，账号恢复正常使用 | 冷静期内点【撤回注销】成功后回设置页的轻提示；与站内信 DELETION_PROGRESS cancelled 同句，分开设键（原借用站内信原句） |
 | 绑定手机号 bind_phone.bound_toast、bind_phone.merge.title / .target_label / .target（第 3 批，画板 BindPhone-v2、BindPhoneMerge-v2） | 已绑定手机号｜并入原账号｜并入到｜手机号账号 {phone} | 绑定成功的轻提示，之后按 BR-ID-10 恢复原动作；并入弹窗的标题与目标一行，正文仍为表 B 30411.mergeable；{phone} 脱敏 |
 | 首次绑定手机号被安全校验拦下 bind_phone.risk_blocked.desc（第 3 批，画板 BindPhone-v2 说明；画板没有起草正文，本句按 2026-10-05 三处 44001 弹窗的统一结构补全，代理补全的默认；Jev 判定涉账号安全与风控（0.89），登记 06「2026-10-21 App 内高保真定稿回写待确认」第 1 项，负责人确认前按本句实现） | 手机号没有绑定，填写的手机号保留在本页，验证码需要重新获取。如有疑问，可以联系客服申诉，客服核实后会帮你登记。 | 绑定手机号提交得到 44001 时弹窗的说明句（phone_change.risk_blocked.desc 的「当前手机号不变」不适用首次绑定）；发码阶段被拦仍用 login.risk_blocked.desc_send；标题与按钮同 `withdraw.risk_blocked.desc`；申诉按 BR-ID-36 细则「被拦截请求申诉」（换手机号类） |
@@ -1460,6 +1464,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | agent.notice.link_limit | 链接超过 3 个（BR-AI-01） | 一次最多识别 3 个链接。 |
 | agent.notice.ordinal_default | 指代追问后仍无法解析（BR-AI-01） | 已按第 1 个商品处理。 |
 | agent.notice.price_unrecognized | 价格条件追问后仍无法解析（BR-AI-08） | 未识别价格条件，已按其他条件查找。 |
+| agent.notice.platform_unrecognized | 平台条件追问后仍无法解析（BR-AI-01 追问 `clarify` 平台槽位；2026-10-22 编排裁定 D10-135，代理补全的默认，句式同上一行） | 未识别平台条件，已按全部平台查找。 |
 | agent.notice.relaxed_spec | 放宽规格（BR-AI-08） | 已放宽规格条件。 |
 | agent.notice.relaxed_price | 放宽价格（BR-AI-08） | 已放宽价格条件。 |
 | agent.notice.no_result | 两次放宽仍无结果（BR-AI-08） | 没有找到符合条件的商品。 |
@@ -1469,6 +1474,10 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | agent.notice.search_disabled | 用户只要某个搜索开关已关闭的平台的商品（BR-PROD-10 细则「按平台的搜索开关」，2026-10-03 功能对照 G-47） | {platform_name}暂不提供搜索，可以把商品链接发给我查返利。 |
 | agent.notice.title_based | 比较或适用性问题（BR-AI-18，AI-07） | 以上只根据商品标题判断，具体以商品详情为准。 |
 | agent.suggest.no_result.1–3 | 无结果建议（BR-AI-08） | 去掉价格条件再找｜只搜{q_short}｜换个平台看看 |
+| agent.suggest.clarify.reference.1–3 | 指代追问的 3 个快捷选项（BR-AI-01 追问 `clarify`；2026-10-22 D10-135，代理补全的默认） | 第 1 个｜第 2 个｜第 3 个 |
+| agent.suggest.clarify.price.1–3 | 价格追问的 3 个快捷选项（BR-AI-08「只出 clarify（3 个快捷价格选项）」；2026-10-22 D10-135，代理补全的默认：选项只是用户可点的话术，点后作为用户输入照常解析，不另设价格档位配置） | 100 元以内｜100 到 300 元｜300 元以上 |
+| agent.suggest.clarify.platform.1–3 | 平台追问的 3 个快捷选项（BR-AI-01；2026-10-22 D10-135，代理补全的默认；平台名照 BR-TEXT-24） | 淘宝｜京东｜拼多多 |
+| agent.tool_status.&lt;tool>.&lt;phase>（[.&lt;platform>]） | `tool.status` 的 display_text 模板（BR-TEXT-16：只描述动作，不含用户输入原文或工具参数；2026-10-22 D10-135，代理补全的默认，键形由契约线随 CT-16 续段定稿）：phase ∈ start / end / failed；有合法 platform 时先取带平台后缀的键，没有再取通用键；未登记的工具用 `agent.tool_status.default.<phase>` | search_products：正在搜索商品｜搜索完成｜搜索没有完成；search_products.&lt;platform>（start）：正在搜索淘宝 / 京东 / 拼多多；get_rebate_quote：正在查返利｜已查到返利｜返利暂时查不到；default：正在处理｜处理完成｜没有完成 |
 | agent.disclaimer.commission | 佣金披露（BR-AI-10，BR-TEXT-13 例外） | 推荐商品含推广链接，购买后本平台可能获得佣金。 |
 | agent.match.matched | 卡片条件标记（BR-AI-24） | 符合条件 |
 | agent.match.title_shows | 规格经代码匹配（BR-AI-24） | 标题显示为{spec} |
