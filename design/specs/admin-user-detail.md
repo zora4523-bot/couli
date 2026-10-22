@@ -63,7 +63,7 @@
 
 ## 5. 权限点与开关（04 §11.1 / §11.2）
 
-`user.lookup` / `user.list`（看）；`pii.reveal_phone`、`pii.reveal_identity`（查看，动态码）；`fund.view`（余额、流水、提现页签）；`user.level`、`user.inviter`（动态码）；`fund.adjust`（短信）；`union.binding_reset`（只淘宝）、`union.binding_disable`；`risk.freeze`、`risk.ban`、`risk.blocklist`；`user.realname_fix`、`user.phone_change`、`user.data_export`。短信档按钮在账号未登记验证手机号时置灰并提示（BR-ID-34 细则）。
+`user.lookup` / `user.list`（看）；`pii.reveal_phone`、`pii.reveal_identity`（查看，动态码）；`fund.view`（余额、流水、提现页签）；`user.level`、`user.inviter`（动态码）；`fund.adjust`（短信）；`union.binding_reset`（只淘宝）、`union.binding_disable`；`risk.freeze`、`risk.ban`、`risk.blocklist`；`user.realname_fix`、`user.phone_change`、`user.data_export`。短信档按钮在账号未登记验证手机号时置灰并提示（BR-ID-45 细则，2026-10-23 自 BR-ID-34 细则拆出）。
 
 ## 6. 稿上没画、实现要做的
 
