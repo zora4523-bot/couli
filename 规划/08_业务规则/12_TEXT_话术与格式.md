@@ -460,7 +460,7 @@
 | PAYING | 打款中 | 副文案按 BR-WDR-25 分支（显示收款账户 {masked_account}） |
 | PAID_API | 已到账 | 「已转入{payout_channel_name} {masked_account}，到账 {net}」；有扣税时「已代扣个税 {tax}」 |
 | PAID_MANUAL | 已到账 | 「已通过{payout_channel_name}转入 {masked_account}，到账 {net}」；扣税同上 |
-| REJECTED | 未通过 | 驳回原因（BR-TEXT-08）+ 退回金额，措辞按 BR-WDR-25；驳回原因为 NEGATIVE_BALANCE 的不写退回金额，按 BR-WDR-25 的 rejected_offset 一行（编排裁定 D10-233 ②） |
+| REJECTED | 未通过 | 驳回原因（BR-TEXT-08）+ 退回金额，措辞按 BR-WDR-25；驳回原因为 NEGATIVE_BALANCE 的不写退回金额，按 BR-WDR-25 的 rejected_offset 一行（编排裁定 D10-233 ②，2026-10-23） |
 | FAILED | 打款未成功 | 失败原因（BR-TEXT-08）+ 退回金额，措辞按 BR-WDR-25；账号类失败码加【修改收款账号】 |
 | 未知编码 | 处理中 | — |
 

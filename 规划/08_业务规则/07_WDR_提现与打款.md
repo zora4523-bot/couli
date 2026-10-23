@@ -793,7 +793,7 @@
 | PAYING（≥ T+2h 或 needs_manual；BR-WDR-15 人工处置期间也是这一行（编排裁定 D10-228，2026-10-23）） | 到账有延迟，我们正在核实，结果会通知你 | paying_delayed |
 | PAID_API / PAID_MANUAL | 按 BR-TEXT-06（两种状态分句，不带 {paid_at}；到账时间在记录行按 BR-TEXT-11 显示） | paid_api / paid_manual（按状态分开） |
 | REJECTED，且驳回原因码为 NEGATIVE_BALANCE（负余额时系统 W3 驳回，BR-WDR-05 (a)；编排裁定 D10-233 ②，2026-10-23） | {reason}；抵扣后的余额以钱包显示为准（代理补全的默认（D10-233），措辞可由负责人调整） | rejected_offset |
-| REJECTED（驳回原因码为 NEGATIVE_BALANCE 的走上一行 rejected_offset，不用本行，编排裁定 D10-233 ②） | {reason}；{amount} 已退回可提现余额 | rejected |
+| REJECTED（驳回原因码为 NEGATIVE_BALANCE 的走上一行 rejected_offset，不用本行，编排裁定 D10-233 ②，2026-10-23） | {reason}；{amount} 已退回可提现余额 | rejected |
 | FAILED（W6，账号类失败码） | {reason}；{amount} 已退回可提现余额，可修改收款账号后重新提现 | failed_account |
 | FAILED（W6，其他失败码） | {reason}；{amount} 已退回可提现余额 | failed_other |
 | FAILED（W10），判 FAILED 时加了 manual_failed_watch 冻结（BR-WDR-15）（编排裁定 D10-228，2026-10-23：原一行的括注「通道名按该单的收款通道；微信零钱单凭已撤销结案的不写『暂不可提现』一句，BR-WDR-33 ⑧」（内层引号原为「」）改为 {payout_channel_name} 写法与下一行） | {payout_channel_name}未完成转账；{amount} 已退回可提现余额，核实期间 {hold_days} 天内暂不可提现 | failed_manual |
