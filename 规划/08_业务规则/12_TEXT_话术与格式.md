@@ -102,6 +102,8 @@
 
 2026-10-23 提现原因文案、改账号入口与 30155 文案（编排裁定 D10-228 后续、D10-229、D10-231；00 §8 第 ① 类：措辞同步与指针更正，不改资金规则、分支条件与对用户的承诺）：BR-TEXT-08 驳回原因表 USER_REQUEST 去掉与 REJECTED 副文案重复的「金额已退回余额」，细则补「原因文案只说原因」一段与例子（NEGATIVE_BALANCE 一句未改，待编排定）；BR-TEXT-08 正文「【修改收款账号】只对 PAYEE_\* 显示」改为指向细则逐码清单，细则补逐码判定一句。另按编排裁定 D10-231：BR-TEXT-14 表 A 30155 的后台文案与说明改为按联盟账号（同账号同场景至多一条启用）。状态不变，不新增条目与错误码。
 
+2026-10-23 负余额驳回的副文案分支（编排裁定 D10-233 ②；00 §8 第 ① 类：编排裁定回写，不改分录与原因文案）：BR-TEXT-08 细则「原因文案只说原因」末句的待定事项改为指向 BR-WDR-25 新增的 rejected_offset 一行（NEGATIVE_BALANCE 原因句本身不改）；BR-TEXT-06 表 REJECTED 行补同一指针。状态不变。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -458,7 +460,7 @@
 | PAYING | 打款中 | 副文案按 BR-WDR-25 分支（显示收款账户 {masked_account}） |
 | PAID_API | 已到账 | 「已转入{payout_channel_name} {masked_account}，到账 {net}」；有扣税时「已代扣个税 {tax}」 |
 | PAID_MANUAL | 已到账 | 「已通过{payout_channel_name}转入 {masked_account}，到账 {net}」；扣税同上 |
-| REJECTED | 未通过 | 驳回原因（BR-TEXT-08）+ 退回金额，措辞按 BR-WDR-25 |
+| REJECTED | 未通过 | 驳回原因（BR-TEXT-08）+ 退回金额，措辞按 BR-WDR-25；驳回原因为 NEGATIVE_BALANCE 的不写退回金额，按 BR-WDR-25 的 rejected_offset 一行（编排裁定 D10-233 ②） |
 | FAILED | 打款未成功 | 失败原因（BR-TEXT-08）+ 退回金额，措辞按 BR-WDR-25；账号类失败码加【修改收款账号】 |
 | 未知编码 | 处理中 | — |
 
@@ -511,7 +513,7 @@
 
 编码统一为代理已定；ORDER_ABNORMAL、USER_REQUEST 为新增对外文案，默认处理，待财务确认（G-03）。
 
-- 原因文案只说原因，不说退回（编排裁定 D10-228 后续，2026-10-23）：上表文案作为 {reason} 代入 BR-WDR-25 REJECTED 副文案「{reason}；{amount} 已退回可提现余额」与 BR-TEXT-09 WD_REJECTED 模板「提现未通过：{reason}，{amount} 已退回余额」，退回金额由模板自己说。USER_REQUEST 原写「已按你的要求取消本次提现，金额已退回余额」，代入后「退回」说两遍，去掉后半句。例：申请 ¥10 后经客服以 USER_REQUEST 驳回 → 记录「未通过｜已按你的要求取消本次提现；¥10 已退回可提现余额」。NEGATIVE_BALANCE 一句与 REJECTED 副文案的冲突未在此处理（改法会改变对用户的说法，待编排定）。
+- 原因文案只说原因，不说退回（编排裁定 D10-228 后续，2026-10-23）：上表文案作为 {reason} 代入 BR-WDR-25 REJECTED 副文案「{reason}；{amount} 已退回可提现余额」与 BR-TEXT-09 WD_REJECTED 模板「提现未通过：{reason}，{amount} 已退回余额」，退回金额由模板自己说。USER_REQUEST 原写「已按你的要求取消本次提现，金额已退回余额」，代入后「退回」说两遍，去掉后半句。例：申请 ¥10 后经客服以 USER_REQUEST 驳回 → 记录「未通过｜已按你的要求取消本次提现；¥10 已退回可提现余额」。NEGATIVE_BALANCE 驳回不用 REJECTED 通用副文案「{reason}；{amount} 已退回可提现余额」，改用 BR-WDR-25 分支表的 rejected_offset 一行（编排裁定 D10-233 ②，2026-10-23；原写「NEGATIVE_BALANCE 一句与 REJECTED 副文案的冲突未在此处理（改法会改变对用户的说法，待编排定）」）；本表 NEGATIVE_BALANCE 的原因句不改。
 
 **失败原因映射（示例，支付宝错误码名称待沙箱核实）**：
 | 支付宝错误码（待核实） | 是否在明确失败白名单 | 用户文案 | 修改收款账号 |
