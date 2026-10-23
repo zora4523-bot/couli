@@ -50,7 +50,7 @@
 
 2026-10-23 提现副文案措辞修正（编排裁定 D10-228 ③，内容线 CT-16m 核对时报来；00 §8 第 ① 类：错引用、措辞同步与代理补全的默认，不改已有分支的条件；新增的一行使审核中且已判自动到账的单从兜底的「处理中」改为显示 BR-TEXT-07 已定的「预计几分钟内到账」，与 OPS-17 一致，不新增承诺）：BR-WDR-25 细则分支表加「sub_text_branch」对照列（契约 withdrawal_sub_text_branch，不改枚举）；补漏列的「非微信零钱、PENDING_REVIEW 且已判定自动到账 → auto_expected_soon」一行；REJECTED、FAILED 行的「¥{amount}」改为「{amount}」（BR-TEXT-10 格式化已带「¥」），「{原因文案}」「{失败原因}」改为 `{reason}` 并写明取自哪个字典；「支付宝…（通道名按该单的收款通道）」改为 `{payout_channel_name}` 写法；FAILED（W10）拆为有冻结 / 无冻结两行（同一分支值 failed_manual、两个文案键），无冻结一句是代理补全的默认；全文「预计几分钟到账」统一为 BR-TEXT-07 的「预计几分钟内到账」；BR-WDR-15 细则「到账有延迟」改为指向 BR-WDR-25 分支表的 paying_delayed 一行，不另写句子；BR-WDR-28 正文「映射表查不到时显示“支付宝处理失败”」改为指向 BR-TEXT-08 的兜底文案（两处原是两种写法，措辞只在 BR-TEXT-08 维护）。各条状态不变，不新增、不作废条目。
 
-2026-10-23 驳回原因文案与退回金额对齐（编排裁定 D10-228 后续；00 §8 第 ① 类：措辞同步，不改分录、分支条件与对用户的承诺）：BR-WDR-05 细则「例（未打款单）」不再引用原因文案原句，改为指向 BR-TEXT-08 的 withdraw_reject_reason.NEGATIVE_BALANCE（原句「冻结金额已用于抵扣」与 REJECTED 副文案「{amount} 已退回可提现余额」相冲，已在 BR-TEXT-08 改写）；BR-WDR-25 细则 `{reason}` 一条补「原因只说原因」与「NEGATIVE_BALANCE 驳回同样整笔转回 available、用 REJECTED 行，不另设分支」。各条状态不变。
+2026-10-23 驳回原因文案只说原因（编排裁定 D10-228 后续；00 §8 第 ① 类：措辞同步，不改分录、分支条件与对用户的承诺）：BR-WDR-25 细则 `{reason}` 一条补「原因文案只说原因、不说退回」（BR-TEXT-08 USER_REQUEST 一句已按此改）。各条状态不变。
 
 ### 7.1 规则一览
 
@@ -294,7 +294,7 @@
 - `available_fen = 0` 不算负余额。
 - risk_state=frozen 仍表示风控冻结，由风控模块维护，与 withdraw_holds 各自独立判断。
 - 例：因扣回余额变成 −¥3.20 → 申请返回 30302；后续入账补到 ¥0 后恢复。
-- 例（未打款单）：available=0、frozen=¥10（PENDING_REVIEW 单 ¥10），订单扣回 ¥3 → available=−¥3 → 系统 W3 驳回该单（NEGATIVE_BALANCE），WITHDRAW_RETURN ¥10 → available=¥7、frozen=0；推送「提现未通过」，原因文案取 withdraw_reject_reason.NEGATIVE_BALANCE（措辞只在 BR-TEXT-08 维护），退回金额照 BR-WDR-25 REJECTED 行写「¥10 已退回」（编排裁定 D10-228 后续，2026-10-23：原在此引用的原因文案「有订单被扣回，冻结金额已用于抵扣」与退回金额的说法相冲，已在 BR-TEXT-08 改写；冻结额是整笔转回 available 后抵扣负数，本例分录不变）。
+- 例（未打款单）：available=0、frozen=¥10（PENDING_REVIEW 单 ¥10），订单扣回 ¥3 → available=−¥3 → 系统 W3 驳回该单（NEGATIVE_BALANCE），WITHDRAW_RETURN ¥10 → available=¥7、frozen=0；推送「提现未通过」，原因文案「有订单被扣回，冻结金额已用于抵扣」。
 - 例（部分扣回）：available=0、frozen=¥10，扣回 ¥3 → available=−¥3 → 驳回 → available=¥7；用户可重新申请 ¥7。
 - 例（PAYING 未发出）：available=0、frozen=¥10，单据已 PAYING 但 payout 进程尚未写 kind=transfer 尝试记录，此时扣回 ¥10 → available=−¥10 → payout 复核走 W9 回到 APPROVED（member_blocked）→ 提现模块随即 W3 驳回：WITHDRAW_RETURN ¥10，available=0。若扣回时已写 transfer 尝试记录 → 不拦截，按打款结果完成，available 保持 −¥10。
 - 例（W9 之后的第二次触发，2026-10-03 资金规则对齐 E-31）：available=0、frozen=1000（一张 PAYING 单，尚未写转账尝试），订单扣回 1000 → available=−1000；account.went_negative 被消费时单据还是 PAYING，不处理；随后 payout 复核发现会员阻断，W9 回到 APPROVED，同一事务入队负余额处理任务 → 消费者在锁内重读余额仍为负 → W3 驳回（NEGATIVE_BALANCE），WITHDRAW_RETURN 1000，available=0。没有坏账，也不会在之后核销后又把这张单付出去。
@@ -793,7 +793,7 @@
 - 表内自上而下取第一条匹配的行（自动到账两行先于 APPROVED、PAYING 通用行）。人工路径不写到账时效；自动到账路径按负责人 2026-10-01 决定（拍板第二批 OPS-17）显示「预计几分钟内到账」（编排裁定 D10-228，2026-10-23：统一为 BR-TEXT-07 的写法，原写「预计几分钟到账」），只用「预计」表述、不写具体分钟数（支付宝处理时长待 BR-WDR-22 实测）；判 auto 后 EXECUTE 受阻（execute_blocked）或到 T+2h 仍未到账时改按通用行显示。
 - 表中变量（编排裁定 D10-228，2026-10-23）：
   - `{amount}` 取该单申请金额 amount_fen，和 `{net}`、`{tax}` 一样是按 BR-TEXT-10 格式化后的字符串，已带「¥」，文案里不再写「¥」（REJECTED、FAILED 四行原写「¥{amount}」，照抄会显示成「¥¥10」）。
-  - `{reason}`：REJECTED 行取字典 withdraw_reject_reason 里该单驳回原因码的用户文案（BR-TEXT-08「驳回原因」表，原写「{原因文案}」；原因文案只说原因、不说退回，编排裁定 D10-228 后续，2026-10-23）。系统以 NEGATIVE_BALANCE 驳回的单同样经 WITHDRAW_RETURN 整笔转回 available、再抵扣负数（BR-WDR-05 (a)、BR-WDR-09），所以也用 REJECTED 这一行，不另设分支；FAILED（W6）两行取该单 fail_code 经字典 withdraw_fail_reason 映射出的用户文案（BR-TEXT-08「失败原因映射」，原写「{失败原因}」），未命中映射时用 BR-TEXT-08 给 {reason} 用的不带金额的兜底句。
+  - `{reason}`：REJECTED 行取字典 withdraw_reject_reason 里该单驳回原因码的用户文案（BR-TEXT-08「驳回原因」表，原写「{原因文案}」；原因文案只说原因、不说退回，编排裁定 D10-228 后续，2026-10-23）；FAILED（W6）两行取该单 fail_code 经字典 withdraw_fail_reason 映射出的用户文案（BR-TEXT-08「失败原因映射」，原写「{失败原因}」），未命中映射时用 BR-TEXT-08 给 {reason} 用的不带金额的兜底句。
   - `{payout_channel_name}` 取该单的收款渠道名，与 BR-TEXT-06 同一字段；`{hold_days}` 是该单判 FAILED 时所加 manual_failed_watch 冻结的天数（BR-WDR-15）。
 - FAILED（W10）两行（编排裁定 D10-228，2026-10-23）：分支值都是 failed_manual，不新增枚举值；按该单判 FAILED 时有没有加 manual_failed_watch 冻结选句（接口字段见契约 CT-20b），分两个文案键：有冻结用 `withdraw_detail.sub_text.failed_manual`，无冻结用 `withdraw_detail.sub_text.failed_manual.no_hold`（其余分支的键为 `withdraw_detail.sub_text.<sub_text_branch>`，D10-228 ①）。
 - 账号类失败码的清单随 BR-WDR-28 的 definite_fail_codes 验证结果确定（BR-TEXT-08 维护码到文案的映射）；验证前 definite_fail_codes 为空，不会出现 W6，上表两行 W6 只在验证后生效。

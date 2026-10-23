@@ -56,6 +56,8 @@
 
 2026-10-23 编排裁定回写（`docs/changes/20261023-d10-writeback.md` §3，编排裁定 D10-176，00 §8 第 ① 类码号登记）：BR-ATTR-02 细则「后台修改与启用的裁定」里「启用第二条被拒绝」的码由「契约线按 §13.11 分配」改为已登记的 30155；推广位版本冲突的 20902 `data.resource=union_pid` 登记在 13 §13.11。规则与状态不变。
 
+2026-10-23 推广位唯一性按联盟账号（编排裁定 D10-231，修正 D10-152 ⑦ 与 D10-221；Jev B 0.88，需负责人 0.19；00 §8 第 ① 类形状裁定更正）：BR-ATTR-02 细则「后台修改与启用的裁定」的「同一 app × platform × pid_scene 只允许一条 active」改为同一 app × platform × union_account_id × pid_scene，换推广位的空档说法改为「该联盟账号该场景」；30155 编号不变，只改触发条件；跨账号按用户绑定账号取推广位的现有做法不变。状态不变。
+
 ### 4.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -153,8 +155,8 @@
 **后台登记与启停**（2026-10-22，CT-24h，代理补全的默认；接口形状见 规划/04 §6.6 `union-pids`）：新登记的推广位一律 pending；迁移只有正文这一条路径——启用 pending → active（须已填 hjy_ignore_confirmed_at 与截图路径，BR-ATTR-28）、停用 active → retired；不提供 pending 直接停用，也不提供 retired 恢复为 active。三种状态都留在白名单里，启停只影响能否用于转链，不改已入库订单的归属。同一 (app_id, platform, pid) 不能重复登记。登记、启用、停用都须 `union.pid` 并每次二次验证、写审计，原因选填；查看推广位列表只需 `union.pid`。sync_start_at 按正文取本 App 在该联盟账号下第一个推广位的创建时刻，在登记这第一个推广位的同一事务写入，之后再登记不改。
 
 **后台修改与启用的裁定**（编排裁定 D10-152，Jev 判断；修改范围按 编排裁定 D10-159 更正）：
-- 只有 pending 的推广位可以修改各字段（platform、union_account_id、site_id、pid、pid_scene），须 `union.pid` 并每次动态码，审计记前后值（编排裁定 D10-159）。active、retired 的推广位不能改：要换就先登记新的一条（pending）并完成花卷云忽略登记（BR-ATTR-28），再停用原来那条、随即启用新的，使该场景没有 active 推广位的空档只剩两次二次验证之间（couli #176 r3 后改顺序）。原因：订单同步按推广位表的当前记录匹配（本条正文），buy_type 取同步时的 pid_scene（BR-ATTR-08）；改 active 或 retired 行会让已发出链接带来的后续订单被丢弃（PID_NOT_OURS），或改变返利类型与份额。修改 pending 行不改已写入的 sync_start_at；改到一个还没有 sync_start_at 的联盟账号时，以修改时刻写入该账号的 sync_start_at（代理补全的默认）。
-- 同一 app × platform × pid_scene 只允许一条 active：启用第二条被拒绝，返回 30155（13 §13.11 登记，契约 CT-24h 按 301 段顺序取号，编排裁定 D10-176，2026-10-23 回写）；换推广位按上一项的顺序，新的一条在旧的停用之后再启用。
+- 只有 pending 的推广位可以修改各字段（platform、union_account_id、site_id、pid、pid_scene），须 `union.pid` 并每次动态码，审计记前后值（编排裁定 D10-159）。active、retired 的推广位不能改：要换就先登记新的一条（pending）并完成花卷云忽略登记（BR-ATTR-28），再停用原来那条、随即启用新的，使该联盟账号该场景没有 active 推广位的空档只剩两次二次验证之间（couli #176 r3 后改顺序；「该联盟账号该场景」按编排裁定 D10-231，2026-10-23，原写「该场景」）。原因：订单同步按推广位表的当前记录匹配（本条正文），buy_type 取同步时的 pid_scene（BR-ATTR-08）；改 active 或 retired 行会让已发出链接带来的后续订单被丢弃（PID_NOT_OURS），或改变返利类型与份额。修改 pending 行不改已写入的 sync_start_at；改到一个还没有 sync_start_at 的联盟账号时，以修改时刻写入该账号的 sync_start_at（代理补全的默认）。
+- 同一 app × platform × union_account_id × pid_scene 只允许一条 active（编排裁定 D10-231，2026-10-23，修正 D10-152 ⑦；Jev B 0.88，需负责人 0.19）：同一联盟账号同一场景启用第二条被拒绝，返回 30155（13 §13.11 登记，契约 CT-24h 按 301 段顺序取号，编排裁定 D10-176，2026-10-23 回写；编号不变，只改触发条件）。不同联盟账号可以各有一条同场景的 active；同一平台可有多个联盟账号、用户按账号绑定（BR-ATTR-06），转链时按用户绑定的联盟账号取推广位的现有做法不变。换推广位按上一项的顺序，新的一条在同账号旧的停用之后再启用。原写「同一 app × platform × pid_scene 只允许一条 active」，没有区分联盟账号。
 - 花卷云忽略确认时刻与截图随启用请求一并提交，写入后才完成 pending → active；截图只收 PNG、JPEG，≤ 5 MB，存 OSS 私有 bucket（代理补全的默认）。
 
 #### BR-ATTR-03 细则 · 双品牌隔离
