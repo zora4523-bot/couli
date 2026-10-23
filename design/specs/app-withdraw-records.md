@@ -62,5 +62,5 @@
 ## 7. 待定与不一致
 
 - 待上游（契约线）：BR-WDR-25 副文案分支要用的 review_deadline、首次转账尝试后时长、needs_manual、channel_state、confirm_deadline、hold_days，以及详情里的到账时间（paid_at），在 Withdrawal 形状里都没有（只有 status、review_mode、reason_code、fail_action、created_at、channel_order_id）；由服务端下发副文案键还是这些字段未定。
-- 待上游（08）：BR-TEXT-08 兜底句写「已退回余额」、BR-WDR-25 分支表写「已退回可提现余额」（本批按后者）；`withdraw_reject_reason.USER_REQUEST` 原句含「金额已退回余额」，与「{原因}；¥x 已退回可提现余额」拼接后重复；BR-TEXT-06 PAID_MANUAL 在银行卡线下转账时 payout_channel_name 取什么未列（画板写「银行卡」）；BR-WDR-32 未写通道未开通期间要不要提示「银行卡到账会慢一些」（画板不加）。
+- 待上游（08）：BR-TEXT-08 兜底句写「已退回余额」、BR-WDR-25 分支表写「已退回可提现余额」（本批按后者）；`withdraw_reject_reason.USER_REQUEST` 原句含「金额已退回余额」，与「{原因}；¥x 已退回可提现余额」拼接后重复（2026-10-23 已在 08 BR-TEXT-08 去掉后半句，NEGATIVE_BALANCE 一句同时改写，编排裁定 D10-228 后续）；BR-TEXT-06 PAID_MANUAL 在银行卡线下转账时 payout_channel_name 取什么未列（画板写「银行卡」）；BR-WDR-32 未写通道未开通期间要不要提示「银行卡到账会慢一些」（画板不加）。
 - 待上游（08 BR-ID-33）：微信零钱的脱敏显示格式未定。
