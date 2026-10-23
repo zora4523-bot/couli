@@ -785,14 +785,14 @@
 | REJECTED | {reason}；{amount} 已退回可提现余额 | rejected |
 | FAILED（W6，账号类失败码） | {reason}；{amount} 已退回可提现余额，可修改收款账号后重新提现 | failed_account |
 | FAILED（W6，其他失败码） | {reason}；{amount} 已退回可提现余额 | failed_other |
-| FAILED（W10），判 FAILED 时加了 manual_failed_watch 冻结（BR-WDR-15）（编排裁定 D10-228，2026-10-23：原一行的括注「通道名按该单的收款通道；微信零钱单凭已撤销结案的不写『暂不可提现』一句」改为 {payout_channel_name} 写法与下一行） | {payout_channel_name}未完成转账；{amount} 已退回可提现余额，核实期间 {hold_days} 天内暂不可提现 | failed_manual |
+| FAILED（W10），判 FAILED 时加了 manual_failed_watch 冻结（BR-WDR-15）（编排裁定 D10-228，2026-10-23：原一行的括注「通道名按该单的收款通道；微信零钱单凭已撤销结案的不写『暂不可提现』一句，BR-WDR-33 ⑧」（内层引号原为「」）改为 {payout_channel_name} 写法与下一行） | {payout_channel_name}未完成转账；{amount} 已退回可提现余额，核实期间 {hold_days} 天内暂不可提现 | failed_manual |
 | FAILED（W10），没有加 manual_failed_watch 冻结（微信零钱单凭已撤销结案，BR-WDR-33 ⑧）（编排裁定 D10-228，2026-10-23：由原一行拆出） | {payout_channel_name}未完成转账；{amount} 已退回可提现余额（代理补全的默认（D10-228），措辞可由负责人调整：即上一行去掉「暂不可提现」一句） | failed_manual |
 
 - 表内自上而下取第一条匹配的行（自动到账两行先于 APPROVED、PAYING 通用行）。人工路径不写到账时效；自动到账路径按负责人 2026-10-01 决定（拍板第二批 OPS-17）显示「预计几分钟内到账」（编排裁定 D10-228，2026-10-23：统一为 BR-TEXT-07 的写法，原写「预计几分钟到账」），只用「预计」表述、不写具体分钟数（支付宝处理时长待 BR-WDR-22 实测）；判 auto 后 EXECUTE 受阻（execute_blocked）或到 T+2h 仍未到账时改按通用行显示。
 - 表中变量（编排裁定 D10-228，2026-10-23）：
   - `{amount}` 取该单申请金额 amount_fen，和 `{net}`、`{tax}` 一样是按 BR-TEXT-10 格式化后的字符串，已带「¥」，文案里不再写「¥」（REJECTED、FAILED 四行原写「¥{amount}」，照抄会显示成「¥¥10」）。
   - `{reason}`：REJECTED 行取字典 withdraw_reject_reason 里该单驳回原因码的用户文案（BR-TEXT-08「驳回原因」表，原写「{原因文案}」）；FAILED（W6）两行取该单 fail_code 经字典 withdraw_fail_reason 映射出的用户文案（BR-TEXT-08「失败原因映射」，原写「{失败原因}」），未命中映射时用 BR-TEXT-08 给 {reason} 用的不带金额的兜底句。
-  - `{payout_channel_name}` 取该单的收款通道名，与 BR-TEXT-06 同一字段；`{hold_days}` 是该单判 FAILED 时所加 manual_failed_watch 冻结的天数（BR-WDR-15）。
+  - `{payout_channel_name}` 取该单的收款渠道名，与 BR-TEXT-06 同一字段；`{hold_days}` 是该单判 FAILED 时所加 manual_failed_watch 冻结的天数（BR-WDR-15）。
 - FAILED（W10）两行（编排裁定 D10-228，2026-10-23）：分支值都是 failed_manual，不新增枚举值；按该单判 FAILED 时有没有加 manual_failed_watch 冻结选句（接口字段见契约 CT-20b），分两个文案键：有冻结用 `withdraw_detail.sub_text.failed_manual`，无冻结用 `withdraw_detail.sub_text.failed_manual.no_hold`（其余分支的键为 `withdraw_detail.sub_text.<sub_text_branch>`，D10-228 ①）。
 - 账号类失败码的清单随 BR-WDR-28 的 definite_fail_codes 验证结果确定（BR-TEXT-08 维护码到文案的映射）；验证前 definite_fail_codes 为空，不会出现 W6，上表两行 W6 只在验证后生效。
 - 客服话术的状态标题按 BR-TEXT-06、副文案按上表；客服后台可以看到内部状态。
