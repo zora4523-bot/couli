@@ -30,8 +30,8 @@
 | 12 | 空态、错误态插画 | `illustrations/` | W3（10-25） | 待办 |
 | 13 | 分享海报、邀请海报 | `posters/` | W3（10-25） | 待办 |
 | 14 | 商店上架素材 | `store/` | W7 提审前（11-22） | 待办 |
-| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」；管理后台第 2 批（财务：提现审核与打款、月结账单与对账差错、调账与核销、余额流水与导出、资金看板）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 2 批定稿」，规格 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；两批规格都在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App 内高保真第 1 批（2026-10-21 负责人定稿，以 v1.1 为准；购物路径：首页与剪贴板识别、搜索、AI 找货、商品详情、去购买、分享、链接落地页、热销榜，108 张含深色 13 张），画板清单与 sha256 见下方「App 内高保真第 1 批定稿」，规格 `specs/app-*.md` 11 份（2026-10-21）；App 内高保真第 2 批（2026-10-21 负责人定稿；钱：钱包与流水、订单、找回、提现、AI 订单进度，含 15 张深色稿），画板清单与 sha256 见下方「App 内高保真第 2 批定稿」，规格 `specs/app-*.md` 14 份（2026-10-21）；App 内高保真第 3 批（「我的」与其他：我的、邀请、收藏与消息、设置与账号、注销与账号受限、隐私与协议、帮助与客服、基本模式与更新、容器、AI 页面引导，168 张含深色 29 张）负责人 2026-10-21 定稿「全部定稿吧 先开发 后面在微调」，画板清单与 sha256 见下方「App 内高保真第 3 批定稿」，规格 `specs/app-*.md` 26 份（2026-10-21）；App / H5 其余页面以各批定稿登记为准，未登记的草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
-| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 67 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）、管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）与第 2 批 8 份 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；App 内高保真第 2 批 14 份 `specs/app-{wallet,ledger,earnings,order-list,order-detail,appeal-order,find-order,withdraw,withdraw-reverify,withdraw-records,real-name,payout-account,labor-agreement,agent-chat-orders}.md`（2026-10-21）、第 3 批 26 份 `specs/app-*.md`（2026-10-21，清单见下方「App 内高保真第 3 批定稿」）、第 1 批 11 份 `specs/app-{home,search,agent-chat,product-detail,auth-sheet,jump-tip,product-buy,product-share,share-hub,link-landing,hot-rank-list}.md`（2026-10-21）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
+| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」；管理后台第 2 批（财务：提现审核与打款、月结账单与对账差错、调账与核销、余额流水与导出、资金看板）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 2 批定稿」，规格 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；两批规格都在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App 内高保真第 1 批（2026-10-21 负责人定稿，以 v1.1 为准；购物路径：首页与剪贴板识别、搜索、AI 找货、商品详情、去购买、分享、链接落地页、热销榜，108 张含深色 13 张），画板清单与 sha256 见下方「App 内高保真第 1 批定稿」，规格 `specs/app-*.md` 11 份（2026-10-21）；App 内高保真第 2 批（2026-10-21 负责人定稿；钱：钱包与流水、订单、找回、提现、AI 订单进度，含 15 张深色稿），画板清单与 sha256 见下方「App 内高保真第 2 批定稿」，规格 `specs/app-*.md` 14 份（2026-10-21）；App 内高保真第 3 批（「我的」与其他：我的、邀请、收藏与消息、设置与账号、注销与账号受限、隐私与协议、帮助与客服、基本模式与更新、容器、AI 页面引导，168 张含深色 29 张）负责人 2026-10-21 定稿「全部定稿吧 先开发 后面在微调」，画板清单与 sha256 见下方「App 内高保真第 3 批定稿」，规格 `specs/app-*.md` 26 份（2026-10-21）；后台消息模板页（渠道开关与短信登记，9 张）负责人 2026-10-24 定稿「设计稿 没问题」，画板清单与 sha256 见下方「后台消息模板页定稿（2026-10-24）」，规格 `specs/admin-notify-templates.md`（2026-10-24）；App / H5 其余页面以各批定稿登记为准，未登记的草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
+| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 68 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）、管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）与第 2 批 8 份 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）、后台消息模板页 1 份 [specs/admin-notify-templates.md](specs/admin-notify-templates.md)（2026-10-24）；App 内高保真第 2 批 14 份 `specs/app-{wallet,ledger,earnings,order-list,order-detail,appeal-order,find-order,withdraw,withdraw-reverify,withdraw-records,real-name,payout-account,labor-agreement,agent-chat-orders}.md`（2026-10-21）、第 3 批 26 份 `specs/app-*.md`（2026-10-21，清单见下方「App 内高保真第 3 批定稿」）、第 1 批 11 份 `specs/app-{home,search,agent-chat,product-detail,auth-sheet,jump-tip,product-buy,product-share,share-hub,link-landing,hot-rank-list}.md`（2026-10-21）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
 
 完成一项后，把「状态」改为「已交付」，或者直接告诉 Claude。
 
@@ -599,6 +599,27 @@
 | AI 页面引导 | AgentPageGuide.dc.html | `c994bf2413d3d47d670b960625af7e8038d26e16f3225eba3f850ccfb9974118` |
 | AI 页面引导 | AgentPageGuideStates.dc.html | `0b931745ab4744dba20d9fe71f3ac3dddc4bfab7b880d4306b77269f99cf7cf2` |
 | AI 页面引导 | AgentPageGuideDark.dc.html | `93a3a98c2464cfb1b9be7a9fc9bf5372ca961a6be1787a62f65a35f344e9bf3f` |
+
+## 后台消息模板页定稿（2026-10-24）
+
+负责人 2026-10-24 在对话中定稿：「设计稿 没问题」（编排裁定 D10-316 ③「设计先行」）。范围 = 后台「运营 / 消息模板」页的渠道开关与短信登记：模板列表的站内信 / 推送 / 短信三渠道、「短信」页签、编辑短信抽屉的两种保存被拒、测试发送四态、打开短信的二次确认。评审时定下：页面名沿用「消息模板」；提示语照画板原文；另 12 条按评审页的建议（要点与画板和契约对不上的地方见规格第 7 节）。规则取值见 08 BR-TEXT-20 细则「短信渠道登记与后台渠道开关」，来由见 [变更记录](../docs/changes/20261024-短信模板与通知开关后台编辑.md)。
+
+- 规格：[admin-notify-templates.md](specs/admin-notify-templates.md)。
+- 画板存放：本机运行目录 `couli-runs/design-hifi/project/<文件名>.dc.html`（宽 1440），前端草稿规格在 `couli-runs/F1-frontend/design-drafts/admin-notify-channels.md`。画板**不入本公开仓库**，版本以下表 sha256 为准。
+- 定稿后改动：AdmNotifySmsTestSendNoPhone 定稿后按样例账号权限裁剪侧栏（fe，2026-10-24），正文未改；下表登记的是改后的文件。
+- 入库前核对（2026-10-24，逐张，共 9 张）：没有 11 位手机号样式的号码，手机号只以 138****5678 的脱敏样式出现；签名、阿里云模板 CODE（全零占位）、回执编号与阿里云错误都是样例或占位，不是真实登记值；没有嵌入图片与外链。
+
+| 页面 | 画板文件 | sha256 |
+| --- | --- | --- |
+| 模板列表 · 渠道开关 | AdmNotifyTemplatesChannels.dc.html | `78f79d4aa1eef35093842c376c62de39d96f898f8f0dc1a7643c53753ce5457b` |
+| 「短信」页签 | AdmNotifyTemplatesSms.dc.html | `06484e11e70f7eeebc3fefe558197e194c19335da2c22ef643873b496b6b9a56` |
+| 编辑短信 · 变量不一致 | AdmNotifySmsEdit.dc.html | `c8049d09635ddefab86547d0fc4f28599594f96683c913a81fa6245a8c76ac43` |
+| 编辑短信 · 有效期不一致 | AdmNotifySmsEditCodeMismatch.dc.html | `87422f345305ba7ff199fcf030821c915ea96248b30d40973b5245e7dd264ff6` |
+| 测试发送 | AdmNotifySmsTestSend.dc.html | `e36dd416c24f0ffacdf79a45ec2ed8e1d6c352449be2eba015dc4e3d0b19a81a` |
+| 测试发送 · 未登记验证手机号 | AdmNotifySmsTestSendNoPhone.dc.html | `a48954132e55a1f888a5459924d6ab2cb5ac2cd10186b526fa0724004f81f089` |
+| 测试发送 · 已受理 | AdmNotifySmsTestSendOk.dc.html | `ac513bb37c1aec42fa99141c064eab4504c8c3d7f04a1f6ac28b6a640f3acc21` |
+| 测试发送 · 未受理 | AdmNotifySmsTestSendFailed.dc.html | `96182b847afdaf7d1e51d2270d4c8a113460602761b33f3ead9cb26a1ca166e2` |
+| 打开短信 · 二次确认 | AdmNotifySmsEnableConfirm.dc.html | `7804fabafdf034ea77a0afbfd1244b4987428bf5ad11c81154294a572a7fc6d5` |
 
 ## 本次交付验证
 
