@@ -17,7 +17,7 @@
 | 编辑短信 · 变量不一致 | AdmNotifySmsEdit.dc.html（c8049d09635d） | 资金类编码换模板 CODE，预览正文的变量与代码定义不一致 | adminRegisterNotifySms · 20001（`data.fields=[preview_text]`，reason 见第 7 节第 1 条） |
 | 编辑短信 · 有效期不一致 | AdmNotifySmsEditCodeMismatch.dc.html（87422f345305） | `SMS_CODE` 正文写的分钟数与 BR-ID-05 不一致（背景列表里 WD_FAILED 行为「测试失败」） | 同上 |
 | 测试发送 | AdmNotifySmsTestSend.dc.html（e36dd416c24f） | 有验证手机号时：抽屉【保存】且首次登记或签名、模板 CODE 变了（先弹本窗再一并保存并测试）；列表行点【测试发送 / 重新测试】 | 本地：号码取 adminGetMyPermissions 的 `verify_phone_masked`，样例变量按该变体 `variables` |
-| 测试发送 · 未登记验证手机号 | AdmNotifySmsTestSendNoPhone.dc.html（a48954132e55） | 抽屉【保存】时没有验证手机号（含页面加载后才失效）：动态码 → 仍存为「待测试」、不发测试短信，再弹本窗；列表行点【测试发送 / 重新测试】而 `verify_phone_masked` 为 null 时直接弹本窗 | 保存 · 200，测试状态「未发送：未登记验证手机号」（D10-339 ⑤，形状以 CT-24t 为准）；单独测试时没有号码得 10003 · verify_phone_missing |
+| 测试发送 · 未登记验证手机号 | AdmNotifySmsTestSendNoPhone.dc.html（a48954132e55） | ① 抽屉【保存】时 `verify_phone_masked` 为 null：动态码 → 仍存为「待测试」、不发测试短信，再弹本窗；② 页面加载后号码才失效：照常弹测试发送、过动态码，保存响应为「未发送」时结果换成本窗内容；③ 列表行点【测试发送 / 重新测试】而 `verify_phone_masked` 为 null：直接弹本窗 | 保存 · 200，测试状态「未发送：未登记验证手机号」（D10-339 ⑤，形状以 CT-24t 为准）；单独测试时没有号码得 10003 · verify_phone_missing |
 | 测试发送 · 已受理 | AdmNotifySmsTestSendOk.dc.html（ac513bb37c1a） | 阿里云受理；新登记可启用 | 保存（或重新测试）· 200；【启用新配置】调启用动作；【稍后再启用】只关弹窗，该行仍为「待测试」、旁注「测试已受理」，之后在该编码的编辑抽屉里启用（D10-339 ①） |
 | 测试发送 · 未受理 | AdmNotifySmsTestSendFailed.dc.html（96182b847afd） | 阿里云拒收、出错或超时；新登记标「测试失败」，原配置继续生效 | 50301（拒收或出错）/ 50401（超时或未知） |
 | 打开短信 · 二次确认 | AdmNotifySmsEnableConfirm.dc.html（7804fabafdf0） | 给 `sms_billing_confirm` 为真的编码由关到开 | 本地确认后 adminSwitchNotifyChannels（`confirm_sms_billing=true`） |
@@ -36,13 +36,13 @@
 | 页签与筛选 | Tabs；Form inline：Select（分类、渠道、资金术语 / 状态、模板类型）、Input（编码或名称）+【查询】【重置】 | 列表不分页，本地筛选与分页 | 「去「短信」…」切页签、定位并高亮该行 |
 | 说明条 | Alert info；「短信」页签另加 warning（资金术语） | 画板文案 | — |
 | 模板表 | Table（rowKey=code）：编码 / 名称、分类、资金类、站内信、推送、短信、操作 | `category`、`fund_terms`、`channels`、`default_channels`、`push_switchable`、`sms_switchable`、`sms_fixed`、就绪标志（CT-24t 修订补） | 恒开、只发站内信、不能开短信、订阅类不发短信、只能换模板、未就绪等只按接口字段画，前端不写死编码名单 |
-| 推送 / 短信开关 | Switch + 小字默认值 | 同上、`row_version` | 切换 → 动态码 → adminSwitchNotifyChannels；`sms_billing_confirm` 为真且由关到开时先二次确认 Modal；未就绪置灰；失败弹回原值 + message，不做乐观更新 |
+| 推送 / 短信开关 | Switch + 小字默认值 | 同上、`row_version` | 切换 → 动态码 → adminSwitchNotifyChannels；`sms_billing_confirm` 为真且由关到开时先二次确认 Modal；未就绪时短信关着的置灰，默认含短信的显示「开（未就绪）」（D10-339 ⑥，能否关见第 7 节第 8 条）；失败弹回原值 + message，不做乐观更新 |
 | 锁定格 | 锁图标 + 文字（不是置灰的开关） | `sms_fixed`；不含 inbox | 无控件 |
 | 短信表 | Table（rowKey=code+variant）：编码 · 变体、签名、模板 CODE（有新配置时另列「新配置 …」并标「待测试」或「未启用」）、类型、预览正文（两行截断）、短信渠道、状态、操作 | `sms_registrations[]`：在用配置、「待测试」登记、最近一次测试结果 | 已启用：【编辑】【测试发送】；待测试：【编辑】【测试发送】，有在用配置时另有【放弃新配置】；测试失败：【编辑】【重新测试】【放弃新配置】；未登记：【登记】 |
 | 状态列 | Tag：已启用 / 待测试（受理后旁注「测试已受理」）/ 测试失败（小字「保留原配置，原配置继续生效」）/ 未登记；`SMS_CODE` 兜底时「部署配置兜底」，首次登记待测试时两者同时显示 | 同上 | 状态不只靠颜色；不新增状态词（D10-339 ①） |
 | 编辑抽屉 | Drawer 640：编码、变体只读；当前生效；资金术语提示；签名、模板 CODE（Input）；模板类型（Radio，锁定值见 BR-TEXT-20 细则「登记」）；预览正文（TextArea）；定义的变量（Tag 只读）；发出效果；错误条与字段下错误 | 在用配置、「待测试」登记与测试结果、`variables`、`fund_terms` | 【取消】【保存】：首次登记或签名、模板 CODE 变了 → 有验证手机号先弹测试发送，没有则动态码后仍存为「待测试」再弹 NoPhone；只改预览正文 → 动态码后直接保存。「待测试」登记已受理时抽屉另给【启用新配置】（动态码；资金类另需 `content.fund_terms`，D10-339 ①③） |
 | 测试发送 | Modal 520：测试对象（新配置与当前生效；首次登记不显示当前生效）、发送到（脱敏、不可改）、样例变量、样例短信、频控提醒 | `verify_phone_masked`、`variables` | 【发送测试短信】→ 动态码 → 从抽屉来时保存并同步测试，从列表行来时对已存登记测试；结果换同一弹窗内容；没有验证手机号时按 NoPhone 禁用 |
-| 测试结果 | 同一 Modal：已受理（success）/ 未受理（error + 新配置保留为「测试失败」、原配置仍在生效）；首次登记时提到原配置的半句不显示（D10-339 ④） | 测试结果 | 已受理：【稍后再启用】【启用新配置】（动态码）；未受理：【关闭】【修改配置】回抽屉 |
+| 测试结果 | 同一 Modal：已受理（success）/ 未受理（error + 新配置保留为「测试失败」、原配置仍在生效）/ 未发送（换成 NoPhone 内容）；首次登记时这几种和 NoPhone 里提到原配置的半句都不显示（D10-339 ④） | 测试结果 | 已受理：【稍后再启用】【启用新配置】（动态码；资金类编码没有 `content.fund_terms` 时不给）；未受理：【关闭】【修改配置】回抽屉 |
 | 二次确认 | Modal 520：默认渠道、按条计费、发送用的签名与 CODE、用户通知开关不影响短信、发送时刻照推送免打扰 | `default_channels`、在用配置 | 【取消】【确认打开】→ 动态码 |
 
 ## 3. 文案键
@@ -53,7 +53,7 @@
 | 分类「服务」「订阅」 | BR-TEXT-09「通知分类」、BR-WATCH-15 |
 | 保存被拒的错误条 | BR-TEXT-14 表 B `error.20001.notify_preview_vars_mismatch`、`error.20001.notify_code_ttl_mismatch`；字段下「多了 / 少了哪些变量」由前端按 `variables` 与正文拼画板句式，登记 admin.notify_channels.*；分钟数对照句见第 7 节第 2 条；禁用词沿用 BR-TEXT-13 现有提示 |
 | 开关被拒 | BR-TEXT-14 表 B `error.20001.notify_channel_locked`；未就绪被拒照画板「未就绪」与列表刷新 |
-| 未登记验证手机号 | 弹窗内照画板；单独测试时接口返回 BR-TEXT-14 表 B `error.10003.verify_phone_missing`（用语见第 7 节第 4 条） |
+| 未登记验证手机号 | 照画板 NoPhone；单独测试时收到 10003 `verify_phone_missing` 也一律弹 NoPhone，表 B 的接口用语不上页面（D10-335 ④ 认可「请先登记验证手机号」这句话术） |
 | 测试发送未受理 | 照画板 AdmNotifySmsTestSendFailed，不用表 A 50301 / 50401 的通用句 |
 | 说明条、状态、抽屉、弹窗、频控提醒、按条计费 | 08 无键，照画板原文（已定第 8 条），登记 admin.notify_channels.* |
 | 出错、无权限、冲突 | BR-TEXT-14（10403.admin_permission_denied、20902、通用网络错误） |
@@ -65,14 +65,14 @@
 | adminListNotifyChannels（GET /admin/v1/notify-channels） | 进入、写成功后、20902 后、【重试】 | 10001、10403 |
 | adminSwitchNotifyChannels（PATCH /admin/v1/notify-channels/{code}） | 推送 / 短信开关；带 `row_version`，需要时带 `confirm_sms_billing` | 10001、10003、10403、20001（`data.fields` 指 push / sms / confirm_sms_billing；未就绪也是 20001）、20902 |
 | adminRegisterNotifySms（PUT /admin/v1/notify-channels/{code}/sms?variant=） | 抽屉保存：首次登记或签名、模板 CODE 变了时存为「待测试」登记并同步测试发送；没有验证手机号时仍存、不发，响应带「未发送」测试状态（D10-339 ⑤） | 10001、10003（动态码）、10403（资金类缺 `content.fund_terms`）、20001、20902、50301、50401 |
-| 启用新配置、重新测试、放弃新配置 | 结果弹窗或编辑抽屉里【启用新配置】；列表行【测试发送 / 重新测试】【放弃新配置】 | 契约草稿还没有，CT-24t 按 D10-337 ①、D10-339 ①②⑤ 补；单独测试没有验证手机号为 10003 verify_phone_missing，其余码以契约为准 |
+| 启用新配置、重新测试、放弃新配置 | 结果弹窗或编辑抽屉里【启用新配置】；列表行【测试发送 / 重新测试】【放弃新配置】 | 契约草稿还没有，CT-24t 按 D10-337 ①、D10-339 ①②③⑤ 补（资金类编码启用缺 `content.fund_terms` 为 10403）；单独测试没有验证手机号为 10003 verify_phone_missing，其余码以契约为准 |
 | adminGetMyPermissions | 后台外壳已取；本页读 `verify_phone_masked` 决定能否测试发送 | — |
 
 ## 5. 权限点与开关（04 §11.2；取值见 BR-TEXT-20 细则，D10-337 ④、D10-339 ②③）
 
 - 读列表：`content.article` 或 `notify.channels` 任一，不要动态码。
 - 开关、登记、测试发送、启用新配置：`notify.channels` + 动态码；【放弃新配置】：`notify.channels`，不要动态码。没有 `notify.channels` 时写控件不出现。
-- 资金类编码（`fund_terms` 为真）改短信登记、启用新配置另需 `content.fund_terms`，只开关渠道不需要；没有时抽屉只读、不给【启用新配置】，用画板上的提示句说明。
+- 资金类编码（`fund_terms` 为真）改短信登记、启用新配置另需 `content.fund_terms`，只开关渠道不需要；没有时抽屉只读，抽屉与测试结果弹窗都不给【启用新配置】，用画板上的提示句说明。
 - 菜单「消息模板」的可见权限补 `notify.channels`（F1-06zv）。
 
 ## 6. 稿上没画、实现要做的
@@ -81,7 +81,7 @@
 - 预览正文的变量照阿里云原文写 `${name}`（已定第 10 条，推送与站内信仍写 `{name}`）；画板上的 `{code}`、`{amount}` 按此显示。
 - 预览正文的字数只提示、不硬校验（BR-TEXT-20 的字数待验证）。
 - 【放弃新配置】先 Popconfirm；只删「待测试 / 测试失败」登记，在用配置不动。
-- 默认含短信的编码「开（未就绪）」时，前端只照接口字段显示；不发短信、只记日志、就绪后自动发由服务端做（BR-TEXT-20 细则，D10-339 ⑥）。
+- 默认含短信的编码「开（未就绪）」时，前端只照接口字段显示，发送行为在服务端（BR-TEXT-20 细则，D10-339 ⑥）。
 - 读屏：开关 `aria-label`「推送 {code}」「短信 {code}」；锁定格读出「恒开，不能关闭，只能换模板」；状态不只靠颜色。
 
 ## 7. 待定与不一致
@@ -95,9 +95,10 @@
 1. **20001 的 reason**：`notify_channel_locked`、`notify_preview_vars_mismatch`、`notify_code_ttl_mismatch` 已登记在 08（13 §13.11、BR-TEXT-14 表 B，编排裁定 D10-335 ②）；CT-24t 草稿目前只给 `data.fields`，待契约补。补上前两种保存提示用同一字段提示（F1-06zv 台账注释）。给不能发短信的编码登记短信（`data.fields=[code]`）、未就绪时打开短信，是否也带 `notify_channel_locked` 或另给 reason，由契约线定。
 2. **有效期对照句**：画板字段下的分钟数对照要知道 BR-ID-05 的有效期，列表接口没给；补字段前只显示错误条那句。
 3. **测试结果字段**：D10-337 ① 要求契约给最近一次测试结果与时间；画板已受理态的回执编号、未受理态的阿里云错误码与说明，草稿没有，是否给由契约线定，没给前不显示。
-4. **10003 的用语**：单独测试发送没有验证手机号时借 `10003.verify_phone_missing`（`data.tier=totp`，D10-335 ④、D10-339 ⑤），表 B 那句「这项操作需要短信验证，请先登记验证手机号」放在测试发送不贴切；本页弹窗照画板，接口直接返回时的用语等编排定。
-5. **变体显示名与分类**：契约 `variant` 只是编码，没给「默认」「抵扣负余额」等显示名；画板 `SMS_CODE` 分类为「—」、站长告警为「站长告警」，契约 `category` 只有 service / subscription / marketing（草稿示例 `SMS_CODE` 为 service）。两处等契约线定。
-6. **画板外的编码**：`DATA_COPY_READY`、`DATA_COPY_CODE` 不在画板列表里，按接口字段照画、不需新稿；模板类型见 BR-TEXT-20 细则「登记」，`DATA_COPY_CODE` 的中文名等编排定。
-7. **停用态**：已定第 13 条去掉模板「启用 / 停用」列，01 F-ADM-15 与 05 F1-10k 仍写「停用状态 / 停用态」；本页不画停用，01 / 05 的写法等编排定。
-8. **不在本规格**：「消息模板」页签的【编辑】【预览】（站内信与推送措辞）和「发送记录」页签（含 04 `notify_logs` 回执编号列）没有契约，F1-06zv 不做。
-9. **资源名**：前端草稿写 `notify-templates`，代码主干与 F1-06zv 是 `messages`，本规格以代码为准。
+4. **变体显示名与分类**：契约 `variant` 只是编码，没给「默认」「抵扣负余额」等显示名；画板 `SMS_CODE` 分类为「—」、站长告警为「站长告警」，契约 `category` 只有 service / subscription / marketing（草稿示例 `SMS_CODE` 为 service）。两处等契约线定。
+5. **画板外的编码**：`DATA_COPY_READY`、`DATA_COPY_CODE` 不在画板列表里，按接口字段照画、不需新稿；模板类型见 BR-TEXT-20 细则「登记」，`DATA_COPY_CODE` 的中文名等编排定。
+6. **停用态**：已定第 13 条去掉模板「启用 / 停用」列，01 F-ADM-15 与 05 F1-10k 仍写「停用状态 / 停用态」；本页不画停用，01 / 05 的写法等编排定。
+7. **不在本规格**：「消息模板」页签的【编辑】【预览】（站内信与推送措辞）和「发送记录」页签（含 04 `notify_logs` 回执编号列）没有契约，F1-06zv 不做。
+8. **「开（未就绪）」能否关**：D10-339 ⑥ 没说默认含短信、尚未就绪的编码能不能在后台把短信关掉，关了再开是否受就绪条件限制；先按普通开关处理（可关，再开时受 D10-337 ② 限制），等编排确认。未就绪时「只记日志」记在哪（如 `notify_logs` 的 `suppressed`，现有 suppress_reason 枚举里没有对应取值）交 CT-24t / B1-12z 定。
+9. **首次登记的其余句子**：D10-339 ④ 只点了测试弹窗与 `20001.notify_preview_vars_mismatch`；编辑抽屉底部「保存后新配置为「待测试」，原配置继续生效…」和列表「测试失败」小字「保留原配置，原配置继续生效」在首次登记时同样不成立，先照 ④ 的做法不显示提到原配置的半句，等编排确认。
+10. **资源名**：前端草稿写 `notify-templates`，代码主干与 F1-06zv 是 `messages`，本规格以代码为准。
