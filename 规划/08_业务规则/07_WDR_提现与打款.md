@@ -921,7 +921,7 @@
 | ⑥ | 当日提现：不自动到账（花卷云只有这一个选项） | `same_day_policy` ∈ {no_auto} | no_auto | 含义见下文（已确认，FUND-08） |
 | ⑦ | 次数限制：同一支付宝账号最多自动到账 N 次/天、N 次/月；同一会员 N 次/天、N 次/月 | `payee_daily_max_count` / `payee_monthly_max_count` / `user_daily_max_count` / `user_monthly_max_count`，整数 ≥0，0 表示不限 | 1 / 2 / 1 / 1 | 已确认（FUND-08） |
 | ⑧ | 订单佣金（预警）：60 天内佣金比例 > X% 的订单占总订单 > Y% 预警；60 天失效（含维权失效）订单占比 > Z% 预警；30 天内提现金额 > 60 天确认收货佣金 W% 预警 | `warn.high_commission_rate_bp`（X）/ `warn.high_commission_order_ratio_bp`（Y）/ `warn.invalid_ratio_bp`（Z）/ `warn.withdraw_received_ratio_bp`（W），单位 bp，0–10000 | 10000 / 10000 / 10000 / 0（即 100% / 100% / 100% / 0%） | 已确认（FUND-08） |
-| ⑨ | —（花卷云无此项，本系统附加） | `platform_daily_max_fen`，≤ `payout.daily_cap_fen` | 200000（¥2,000） | 本系统附加，沿用本条前版保守默认，已确认（FUND-08） |
+| ⑨ | —（花卷云无此项，本系统附加） | `platform_daily_max_fen`，≤ `payout.daily_cap_fen`；0 表示任何金额都不自动到账（与 ② 同口径，2026-10-27 编排裁定 D10-377） | 200000（¥2,000） | 本系统附加，沿用本条前版保守默认，已确认（FUND-08） |
 | ⑩ | —（花卷云无此项，本系统附加） | 固定条件，不设配置 | 未满 18 周岁不自动 | 本系统附加（BR-WDR-06、BR-ID-26） |
 | ⑪ | —（花卷云无此项，本系统附加） | 不设配置，读 `payout.channel_enabled.<channel>` | — | 本系统附加（BR-WDR-32；取代前版 channels={alipay}） |
 | ⑫ | —（花卷云无此项，本系统附加） | `risk_block_flags`，取值为 BR-WDR-29 标签 code 的集合 | {same_device_multi_account, had_negative, recon_diff, payee_prev_other_user, risk_calc_failed}，另实时检查 blacklist_hit（固定，不可移除） | 本系统附加（BR-WDR-29） |
