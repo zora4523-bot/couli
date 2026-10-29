@@ -14,7 +14,7 @@
 | 已登录（内测版 / 公开版） | Main-v3.dc.html（2ab2d11a402a）、MainRankEntry-v3.dc.html（a9488b8617ae） | 已登录；公开版金刚区配置了热销榜入口 | getPage（page_key=home）· 200；卡片形状 `contracts/home-schema.json` |
 | 游客 | HomeGuest-v3.dc.html（2e75bc1fbdf9） | 未登录 | 同上；「订单没显示怎么办」卡按 condition.login 只对已登录下发（03 §6.1）；顶部价值卡见 §7 |
 | 首页弹窗（Lottie / 静态兜底） | MainPopup-v3.dc.html（09e41d992abc）、MainPopupStatic.dc.html（e260d467f340） | 配置有 popup 卡且命中人群、次数、时段（F-HOME-08）；兜底图在动效加载失败、网速慢、系统减弱动态效果时（BR-TEXT-26） | popup 卡；动效字段见 §7 |
-| 剪贴板首次用途说明 | HomeClipboardConsent-v3.dc.html（8f6ee27ab7ae） | 未看过用途说明时首次点【粘贴】或开启自动识别（BR-ID-16 细则「首次用途说明弹层」） | recordConsent（BR-ID-12） |
+| 剪贴板首次用途说明（2026-10-30 停用，不实现） | HomeClipboardConsent-v3.dc.html（8f6ee27ab7ae） | 未看过用途说明时首次点【粘贴】或开启自动识别（BR-ID-16 细则「首次用途说明弹层」） | recordConsent（BR-ID-12） |
 | 识别到商品弹卡 | HomeClipboardCard-v3.dc.html（87ca6a98d539） | 自动识别或手动粘贴得到商品（BR-ID-16） | parseInput · 200 · ParseInputOk |
 | 识别其他结果 ①～⑥ | HomeClipboardResults-v3.dc.html（8a1e3eb16be4） | ① 识别不了 ② 已下架 ③ 暂无返利 ④ 查不到价格 ⑤ 网络失败 ⑥ 线报素材 | ① 30132 ② availability=off_shelf ③ rebate_basis=no_rebate、不带 tlj、no_rebate_cause 为空 ④ 查不到价格结果（BR-PRICE-01 / 10）⑤ 本地 ⑥ F-CLIP-04 |
 | 识别到邀请码提示条 | HomeClipboardInvite-v3.dc.html（39453277db9c） | 未命中商品、命中邀请口令（BR-INV-04 ③；游客或可补填的已登录用户，稿画游客） | 本地识别；点【绑定】的去向按 BR-INV-04 细则，已登录确认后调 bindInviter |
@@ -27,7 +27,7 @@
 | 区域 | 组件 | 数据 | 交互 |
 | --- | --- | --- | --- |
 | 顶部原生区 | 搜索框、【问 AI】、常驻粘贴卡、游客价值卡（只对游客） | — | 搜索框 → `Search`；【问 AI】→ `AgentChat`；【登录领返利】→ `Login` |
-| 粘贴卡 | iOS UIPasteControl / 鸿蒙 PasteButton（文字图标由系统给，只调底色与圆角）；Android 自绘按钮 | — | 手动粘贴任务（03 §4.6）；首次未看过用途说明先出用途说明弹层 |
+| 粘贴卡 | iOS UIPasteControl / 鸿蒙 PasteButton（文字图标由系统给，只调底色与圆角）；Android 自绘按钮 | — | 手动粘贴任务（03 §4.6）；2026-10-30 起不再先出用途说明弹层 |
 | SDUI 卡片 | 03 §6.3 注册表；`ProductCard`、`PlatformBadge`（14px 官方图标）、`RebateTag`、`DisclaimerFooter` | sections | 卡片 action 按 routes 跳转；商品卡 → `ProductDetail` |
 | 弹窗 | `Dialog`：图片 / 动效区 + 关闭按钮 | popup 卡 | 点图片区按 action 跳转；关闭按钮出现即可点 |
 | 识别弹卡 | `Sheet` + `ProductCard` + `BuyButton` | parseInput 结果 | 购买见 app-product-buy；【搜相似商品】按 BR-PRICE-08 细则「搜相似商品」 |

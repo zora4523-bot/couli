@@ -14,7 +14,7 @@
 | 已登录（公开版） | Settings-v2.dc.html（d076d94490d7） | 已登录；内测包去掉「注销账号」行 | getMe · 200（nickname、手机号脱敏）；本地缓存大小、剪贴板开关 |
 | 游客 | SettingsGuest-v2.dc.html（7663f3b8db53） | 未登录、已同意隐私政策 | 本地；只显示非账号条目 |
 | 基本模式 | SettingsBasic.dc.html（dca586aae4d5） | 未同意隐私政策 | 本地；不显示剪贴板与清除缓存，只发 BR-ID-11 允许的匿名请求 |
-| 剪贴板用途说明 | SettingsClipboardConsent.dc.html（668e9c73da58） | 首次打开剪贴板开关 | 【开启】调 recordConsent（type=clipboard_auto_import，version=`config.clipboard.consent_version`）后开关打开 |
+| 剪贴板用途说明（2026-10-30 停用，不实现） | SettingsClipboardConsent.dc.html（668e9c73da58） | 首次打开剪贴板开关 | 【开启】调 recordConsent（type=clipboard_auto_import，version=`config.clipboard.consent_version`）后开关打开 |
 | 协议选择半屏 | SettingsAgreementSheet-v2.dc.html（7a2f9deca056） | 点「用户协议与隐私政策」 | 本地；选中后开 `Agreement` |
 | 清除缓存确认 / 已清除 | SettingsClearCache-v2.dc.html（2aff1c58b7b3）、SettingsCacheCleared-v2.dc.html（b8697ade4555） | 点「清除缓存」/ 确认后 | 本地（只清图片与 WebView HTTP 缓存，F-CFG-09）；清除后该行为 0 KB |
 | 退出登录确认 | SettingsLogoutConfirm-v2.dc.html（fbdb33920e19） | 点【退出登录】 | 确认后调 logout，回「我的」游客态 |
@@ -28,7 +28,7 @@
 | 区域 | 组件（03 §10.2） | 数据 | 交互 |
 | --- | --- | --- | --- |
 | 分组列表 | 账号与安全 / 隐私 / 通用三组，行高随副标题；「重新显示下单须知」是动作行（无 ›） | — | 游客与已登录同一分组顺序；动作行调 resetTip 后轻提示、不跳页（BR-ATTR-21）；「注销账号」行只在公开版（BR-ID-27 细则） |
-| 剪贴板开关 | 开关行（默认关闭，灰色轨道） | 本机设置 | 三端都显示；首次打开先出用途说明弹层；基本模式不显示（BR-ID-16） |
+| 剪贴板开关 | 开关行（2026-10-30 起默认开启，品牌色轨道） | 本机设置 | 三端都显示；不再出用途说明弹层；用户关闭后保持关闭；基本模式不显示（BR-ID-16） |
 | 基本模式 | 提示条 + 通栏【开启完整功能】 | — | 重新展示首启隐私弹窗（[app-launch.md](app-launch.md)） |
 
 ## 3. 文案键
