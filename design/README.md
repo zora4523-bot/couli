@@ -31,7 +31,7 @@
 | 13 | 分享海报、邀请海报 | `posters/` | W3（10-25） | 待办 |
 | 14 | 商店上架素材 | `store/` | W7 提审前（11-22） | 待办 |
 | 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」；管理后台第 2 批（财务：提现审核与打款、月结账单与对账差错、调账与核销、余额流水与导出、资金看板）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 2 批定稿」，规格 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；两批规格都在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App 内高保真第 1 批（2026-10-21 负责人定稿，以 v1.1 为准；购物路径：首页与剪贴板识别、搜索、AI 找货、商品详情、去购买、分享、链接落地页、热销榜，108 张含深色 13 张），画板清单与 sha256 见下方「App 内高保真第 1 批定稿」，规格 `specs/app-*.md` 11 份（2026-10-21）；App 内高保真第 2 批（2026-10-21 负责人定稿；钱：钱包与流水、订单、找回、提现、AI 订单进度，含 15 张深色稿），画板清单与 sha256 见下方「App 内高保真第 2 批定稿」，规格 `specs/app-*.md` 14 份（2026-10-21）；App 内高保真第 3 批（「我的」与其他：我的、邀请、收藏与消息、设置与账号、注销与账号受限、隐私与协议、帮助与客服、基本模式与更新、容器、AI 页面引导，168 张含深色 29 张）负责人 2026-10-21 定稿「全部定稿吧 先开发 后面在微调」，画板清单与 sha256 见下方「App 内高保真第 3 批定稿」，规格 `specs/app-*.md` 26 份（2026-10-21）；后台消息模板页（渠道开关与短信登记，9 张）负责人 2026-10-24 定稿「设计稿 没问题」，画板清单与 sha256 见下方「后台消息模板页定稿（2026-10-24）」，规格 `specs/admin-notify-templates.md`（2026-10-24）；App / H5 其余页面以各批定稿登记为准，未登记的草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
-| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 68 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）、管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）与第 2 批 8 份 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）、后台消息模板页 1 份 [specs/admin-notify-templates.md](specs/admin-notify-templates.md)（2026-10-24）；App 内高保真第 2 批 14 份 `specs/app-{wallet,ledger,earnings,order-list,order-detail,appeal-order,find-order,withdraw,withdraw-reverify,withdraw-records,real-name,payout-account,labor-agreement,agent-chat-orders}.md`（2026-10-21）、第 3 批 26 份 `specs/app-*.md`（2026-10-21，清单见下方「App 内高保真第 3 批定稿」）、第 1 批 11 份 `specs/app-{home,search,agent-chat,product-detail,auth-sheet,jump-tip,product-buy,product-share,share-hub,link-landing,hot-rank-list}.md`（2026-10-21）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
+| 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 69 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）、管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）与第 2 批 8 份 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）、后台消息模板页 1 份 [specs/admin-notify-templates.md](specs/admin-notify-templates.md)（2026-10-24）、后台客服代办三对话框 1 份 [specs/admin-user-assist.md](specs/admin-user-assist.md)（2026-11-01）；App 内高保真第 2 批 14 份 `specs/app-{wallet,ledger,earnings,order-list,order-detail,appeal-order,find-order,withdraw,withdraw-reverify,withdraw-records,real-name,payout-account,labor-agreement,agent-chat-orders}.md`（2026-10-21）、第 3 批 26 份 `specs/app-*.md`（2026-10-21，清单见下方「App 内高保真第 3 批定稿」）、第 1 批 11 份 `specs/app-{home,search,agent-chat,product-detail,auth-sheet,jump-tip,product-buy,product-share,share-hub,link-landing,hot-rank-list}.md`（2026-10-21）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
 
 完成一项后，把「状态」改为「已交付」，或者直接告诉 Claude。
 
@@ -74,9 +74,9 @@
 | 用户详情 | AdmUserUnionDisable.dc.html | `13f5bc22b7d617b2f1b322c64553cb7b7b6055007aa0130768691d47fee94f90` |
 | 用户详情 | AdmUserFreeze.dc.html | `b9037fbe7bb9893bfadb5756e4d3184ef502a4c74c3db902d6781602371fcbbe` |
 | 用户详情 | AdmUserUnfreeze.dc.html | `093f142185109ac323bac081321bba04fdda4a98fa174e03c3082ea10a788327` |
-| 用户详情 | AdmUserRealnameFix.dc.html | `aa337d48e22be7ea0f37d30458c84868099f79ea7546824cbfbfb4f5235df0b5` |
+| 用户详情（旧入口稿，2026-11-01 被 AdmUserRealname* 取代，留作历史） | AdmUserRealnameFix.dc.html | `aa337d48e22be7ea0f37d30458c84868099f79ea7546824cbfbfb4f5235df0b5` |
 | 用户详情 | AdmUserEdit.dc.html | `4fb9af006f38467ad099df1c97d4ba9b1d46f7a56746d05a6855e06bb19c9baa` |
-| 用户详情 | AdmUserDataExport.dc.html | `a08b538fac720520288e6595ccfb71f0645d4325a481367e9be73f3126ee966c` |
+| 用户详情（旧入口稿，2026-11-01 被 AdmUserDataExport* 请求抽屉取代，留作历史） | AdmUserDataExport.dc.html | `a08b538fac720520288e6595ccfb71f0645d4325a481367e9be73f3126ee966c` |
 | 订单查询 | AdmOrders.dc.html | `1c3ac708e1cb7bee6f46a5cc54d0fb6d24588c79f63c9fbf9a912cf891966c0f` |
 | 订单查询 | AdmOrdersStates.dc.html | `73070371e3a0413e0b813cccb3b14b78dafb572ab1172b77ad06012f55d0aa5b` |
 | 订单查询 | AdmAdaptOrdersWideTable.dc.html | `9905d20e0535e689a3c3581f0ec6781a8e8a51f28fa640fb992451ff68727bc9` |
@@ -620,6 +620,46 @@
 | 测试发送 · 已受理 | AdmNotifySmsTestSendOk.dc.html | `ac513bb37c1aec42fa99141c064eab4504c8c3d7f04a1f6ac28b6a640f3acc21` |
 | 测试发送 · 未受理 | AdmNotifySmsTestSendFailed.dc.html | `96182b847afdaf7d1e51d2270d4c8a113460602761b33f3ead9cb26a1ca166e2` |
 | 打开短信 · 二次确认 | AdmNotifySmsEnableConfirm.dc.html | `7804fabafdf034ea77a0afbfd1244b4987428bf5ad11c81154294a572a7fc6d5` |
+
+## 后台客服代办三对话框定稿（2026-11-01）
+
+负责人 2026-10-31 17:47 在审阅页对 admin-user-assist 整稿选「通过」（无备注、未逐条答待定项）。范围 = 后台用户详情「客服代办」区三个对话框：实名更正、编辑会员信息、个人信息副本（请求抽屉、登记、下载）。草稿 19 条待定按默认值处理，取值与方案选择由 TypeSafe Jev 判断后回写（规划/11 §7.3 第 13 项），概率与结论见规格 §7 与[变更说明](../docs/changes/20261101-后台客服代办三对话框定稿.md)；其中第 8 项（后台显示脱敏实名、实名状态与收款账号状态）由编排确认 A（D10-517）。
+
+- 规格：[admin-user-assist.md](specs/admin-user-assist.md)；入口改指见 [admin-user-detail.md](specs/admin-user-detail.md) §1 末行，旧入口稿 AdmUserRealnameFix、AdmUserDataExport 留作历史（上方第 1 批表已标注）。
+- 画板存放：本机运行目录 `couli-runs/design-hifi/project/<文件名>.dc.html`（宽 1440），草稿、两轮独立审查与 Jev 结果在 `couli-runs/F1-spec-drafts/admin-user-assist/`。画板**不入本公开仓库**，版本以下表 sha256 为准。
+- 待修：规格 §9 列的 8 条画板修正（AdmUserEdit 换版去必填星号、相关四张统一写法、只改昵称的保存确认、AdmUserDetail 副本卡改字等）交前端线，改完按新 sha 更新下表与已登记的 AdmUserEdit、AdmUserDetail 两行。
+- 入库前核对（2026-11-01，逐张，新增 28 张）：完整手机号只有客服在输入框里输入的样例新号 13900005678，完整身份证号只有国家标准 GB 11643 的示例号 11010519491231002X 及其改错一位的校验失败样例，其余手机号、身份证、姓名都以 BR-ID-33 脱敏样式出现；没有嵌入图片与外链；平台只以文字出现。
+
+| 页面 | 画板文件 | sha256 |
+| --- | --- | --- |
+| 实名更正 · 填写 | AdmUserRealnameForm.dc.html | `778e7e8bcbdd53e8fc1427763fe7a2431a32f65f031633ceb21a2cf54e8f6b8b` |
+| 实名更正 · 动态码 | AdmUserRealnameStepUp.dc.html | `ea500ef657de704c95df5292d2e80e04d1f5c7ccdbb10de0f4aeefa4400e168f` |
+| 实名更正 · 核验中 | AdmUserRealnameSubmitting.dc.html | `e6c2d439fd6b251a7fc5fa23949187913cf750b5f3f369cd88f097790b0fec06` |
+| 实名更正 · 成功 | AdmUserRealnameDone.dc.html | `fe04146e450a6b6de2138864e7cf0e070887de1cb486a5edcac8efc4f1d022aa` |
+| 实名更正 · 身份证号不对 | AdmUserRealnameInvalid.dc.html | `9bdd7098ab2451b720ee62de6e84fdebc917558fb546edc841b128207eda5751` |
+| 实名更正 · 不受理 | AdmUserRealnameRefused.dc.html | `68983906659816a1421eebbf53ff6fc01284381b876f472550038af86ad79b2f` |
+| 实名更正 · 核验不一致 | AdmUserRealnameMismatch.dc.html | `129619bacd348d6948757a2563f0c6482c858e68e5626953fcaa06b9e4834e71` |
+| 实名更正 · 其余返回码对照表 | AdmUserRealnameErrors.dc.html | `0a7b76e79fd263adb26f10f8c249c6b6e3c8173fb4c228c3b547d5cb2c460d1a` |
+| 编辑会员信息 · 保存确认 | AdmUserEditConfirm.dc.html | `6ee05f4cf4bc82fc69e2a6e610c2851cde40efb14842fbbbe9cdac8f4a592930` |
+| 编辑会员信息 · 确认里查看完整新号 | AdmUserEditConfirmReveal.dc.html | `4487ed34b17b50c8431c4ecc40207fb4e0a6e1650bcf469c1140af70d77cd960` |
+| 编辑会员信息 · 保存中 | AdmUserEditSubmitting.dc.html | `9363ecb4293fa3e73f0ebd1a111ea7f72634a760f298c10c94463f15286c1554` |
+| 编辑会员信息 · 保存成功 | AdmUserEditDone.dc.html | `f420e8f34ffc52aa1e301214ed34e3b86acd152f1ebc527db4a1254c89935976` |
+| 编辑会员信息 · 手机号已被占用 | AdmUserEditPhoneTaken.dc.html | `46e632d416f3884cf73d7d94fe9e52661c7fd7efcf27960a8496b5435635751d` |
+| 编辑会员信息 · 昵称未过审 | AdmUserEditNicknameInvalid.dc.html | `ed1c335ba5eabc8b84709ab71766816c71082c293c170ec8341ca76d5a72110f` |
+| 编辑会员信息 · 其余返回码对照表 | AdmUserEditErrors.dc.html | `1a1d02a57266bbd0668e7c41461da2c4330e816879ca3b6cb3fb11cf3d1dd655` |
+| 个人信息副本 · 列表为空 | AdmUserDataExportListEmpty.dc.html | `129210940f1fff26dd5f279aa56b6b1db07dff9573ce75101b97bc44a5eb4016` |
+| 个人信息副本 · 请求列表 | AdmUserDataExportList.dc.html | `1f28fbde55455bc5ef494d043c43620fe2f2ca03bbaff4b66dca6b04a7bb6c37` |
+| 个人信息副本 · 登记请求 | AdmUserDataExportForm.dc.html | `b9471c4db3abc5d296130e74371e3e061a4175e6dbdc7b7d924a16fd272b35a8` |
+| 个人信息副本 · 登记成功（企业微信） | AdmUserDataExportCreated.dc.html | `a3f6db76be7cea00ad80dc1e50debb38fa03c95c81bdd6be0e5a559a54d06bac` |
+| 个人信息副本 · 登记成功（站内信 + 短信提取码） | AdmUserDataExportCreatedInApp.dc.html | `dff7123b405fbcd32d6855e2b4d78153bcd715fedaa7eeba24070ab43c06ca77` |
+| 个人信息副本 · 他人登记只读 | AdmUserDataExportListOther.dc.html | `b3def48cce769f47d1740b359d6a68c8b2fa284acdeb259d4b87a045ebf6ac8f` |
+| 个人信息副本 · 返回原请求 | AdmUserDataExportReused.dc.html | `d181c382989865afa16c06347a26ef69434adacb4c490bbdb56a44d668fa98db` |
+| 个人信息副本 · 暂不受理 | AdmUserDataExportUndecided.dc.html | `9d4bc54feac78e5b9dca30eeaf9eeb72cb0eacb683073b4d7f7015fa0c086e2a` |
+| 个人信息副本 · 下载前动态码 | AdmUserDataExportDownloadStepUp.dc.html | `849085da53090178ed037666f46575afe2e2c5a27bee76664f3fb3d76198f8ef` |
+| 个人信息副本 · 首次下载 | AdmUserDataExportDownload.dc.html | `63f6df7e1625499be6f69b01e1ad092c7e55c16be9b58120c9257e7acb136b9e` |
+| 个人信息副本 · 重新生成 | AdmUserDataExportRegenerate.dc.html | `455aedcf431f757049d23ac7634a475aeb5ac72fa76f9842eb6a693bdc123183` |
+| 个人信息副本 · 不能下载 | AdmUserDataExportNotDownloadable.dc.html | `4c13530aab8ccc2e97117f61c0754a4be456c785a5cf7f8314468aed5466ba53` |
+| 个人信息副本 · 其余返回码对照表 | AdmUserDataExportErrors.dc.html | `1658b5510ee3e91008abddebfb119c9de0428f1400be3fba1712c18436759fc8` |
 
 ## 本次交付验证
 
