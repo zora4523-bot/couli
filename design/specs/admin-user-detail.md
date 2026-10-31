@@ -23,7 +23,7 @@
 | 调整余额 | AdmUserBalanceAdjust.dc.html（04b54121cb68） | 点【调整余额】 | 同调账单 adminCreateAdjustment（短信档） |
 | 联盟授权重置 / 停用 | AdmUserUnionReset（0453f5ec337a）/ AdmUserUnionDisable（13f5bc22b7d6） | 淘宝行【重置授权】；各行【停用返利】 | union-bindings reset / disable / enable |
 | 冻结 / 解冻 | AdmUserFreeze（b9037fbe7bb9）/ AdmUserUnfreeze（093f14218510） | 标题行【冻结】【解冻】 | 风控接口（`risk.freeze`） |
-| 客服代办入口（实名更正 / 编辑会员信息 / 个人信息副本） | AdmUserRealnameFix（aa337d48e22b）/ AdmUserEdit（4fb9af006f38）/ AdmUserDataExport（a08b538fac72） | 点对应卡 | 对话框本身的规格随各自任务（F-ADM-04 编辑会员信息、BR-ID-06、BR-ID-30），本页只登记入口 |
+| 客服代办入口（实名更正 / 编辑会员信息 / 个人信息副本） | AdmUserRealnameForm（778e7e8bcbdd）/ AdmUserEdit（4fb9af006f38）/ AdmUserDataExportList（1f28fbde5545）；旧稿 AdmUserRealnameFix（aa337d48e22b）、AdmUserDataExport（a08b538fac72）留作历史，被取代 | 点对应卡 | 对话框规格见 [admin-user-assist.md](admin-user-assist.md)（2026-11-01 定稿；入口改指与旧稿取代见其 §7 第 1–3 项），本页只登记入口 |
 
 画板上的 UID、昵称、脱敏手机号 / 身份证、收款账号、余额、上级与直推数均为样例数据，不对应真实用户；平台名只以文字出现，无平台商标图形。
 
