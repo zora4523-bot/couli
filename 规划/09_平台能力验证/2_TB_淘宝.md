@@ -269,3 +269,11 @@ TB-05 失败时走待决策项"新 App 申请独立联盟账号"（代价：高�
 - BR-PRICE-02 原写的淘宝券字段（`coupon_amount` 等）在升级版接口不存在，已改为取明细里的券项。
 - 价格区间按 `zk_final_price` 过滤，按券后价筛选须服务端二次过滤（TB-03 降级列已有此做法）。
 - 主表 TB-03、TB-04 改为「进行中」（README §0.2 硬规则 2，只到进行中）；TB-10 已是进行中，不变。
+
+### 2.10 2026-10-30 / 10-31 凑狸自有应用：权限核对与字段录制
+
+负责人 2026-10-30 建好凑狸淘宝联盟应用并要求做权限核对；编排会话用凑狸应用在本机跑只读探测（脚本 `couli-runs/probes/tb_couli_perm.py`、`tb_couli_shapes.py`，凭据只在进程内读、不打印不落盘；录制只存字段路径、类型、掩码形状与计数，存私有库 `rebate-private/cap-tests/2026-10-31/taobao/couli-shapes.json`）。
+
+- 权限核对（10-30，9 次调用）：**有** 物料信息查询（`item.info.upgrade.get`）、淘口令生成、长链转短链、私域用户管理、物料精选（`dg.optimus.promotion`）、官方活动转链；**无** 商品物料获取（搜索 / 物料推荐）、推广订单及数据查询（推广者订单接口为邀请制，联盟客服 10-31 答复门槛见 §2.5）、处罚订单、淘口令解析、万能转链、链接解析出商品 ID。
+- 字段录制（10-31，9 次调用）：`dg.optimus.promotion`（权益物料 37116）成功，`promotion_extend.recommend_item_list` 里的 `item_id` 为 12–13 位数字、`url` 为 `//s.click.taobao.com` 推广链接；`tpwd.create` 成功（`data.model`、`data.password_simple`）；`spread.get` 成功（`results.tbk_spread[].content` 短链、`err_msg` 成功时为 OK）。
+- **未知项（CAP-TB-02 相关）**：用上述数字 `item_id` 调 `item.info.upgrade.get`，`biz_scene_id=1` 两批各 5 个都返回 15 / 50001「无结果」，`biz_scene_id=2` 返回 15 / 1911「不支持该sceneId」。凑狸应用这次没取到商品详情。可能是要用新格式商品 ID（《淘宝客新商品 ID 升级》），也可能是这些商品不在推广池，尚未确认。下一步：「商品物料获取」权限批下后，用 `material.optional.upgrade` 返回的 ID 复测。在此之前，代码仓库 B1-04l 把 50001 映射为「商品不可推广」，详情字段先按 §2.7 测试应用录到的形状写，并标注待复录。本条只记实测事实，不对用户承诺详情可用。
