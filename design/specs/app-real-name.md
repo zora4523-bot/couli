@@ -15,7 +15,7 @@
 | 单独同意（默认不勾选） | RealNameConsent-v2.dc.html（532e3deab447） | 未同意 id_verification 时以独立弹窗出现（BR-ID-25），【同意并继续】、【暂不认证】 | recordConsent（type=id_verification） |
 | 提交失败一览（证据稿） | RealNameErrors.dc.html（60a7b9e9af2a） | ① 30406；② 30405；③ 30407；④ 30410 | submitRealname 对应码 |
 | 深色 | RealNameDark.dc.html（678c745cf10c） | 系统深色（00 D35） | 同填写 |
-| 提交中、核验服务不可用 | 不适用（无画板） | 提交在途；50301 / 50401 | 本地；`error.50301`、`error.50401` |
+| 提交中、核验服务不可用 | 不适用（无画板） | 提交在途；50301 / 50401 | 本地；`error.50301.realname_vendor`、`error.50401` |
 
 画板上的姓名与证件号只用脱敏或空白示例。
 

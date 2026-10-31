@@ -112,6 +112,8 @@
 
 2026-10-24 后台消息模板页定稿回写（负责人 2026-10-24「设计稿 没问题」；编排裁定 D10-335 ②，00 §8 第 ① 类码号与文案登记）：BR-TEXT-14 表 B 新增 `20001.notify_channel_locked`、`20001.notify_preview_vars_mismatch`、`20001.notify_code_ttl_mismatch` 三行（后台文案；后两句取定稿画板原文，前一句画板没有对应原文，代理补全的默认），reason 登记见 13 §13.11。同日按编排裁定 D10-337（以负责人定稿画板为依据），BR-TEXT-20 细则「短信渠道登记与后台渠道开关」补模板类型锁定、「待测试」登记与启用、短信开关的就绪条件、列表读取与写操作的权限四处；又按编排裁定 D10-339 补六处细节（稍后启用、放弃新配置、资金类编码的启用、首次登记的措辞、保存时没有验证手机号、默认含短信的编码未就绪），表 B `20001.notify_preview_vars_mismatch` 行同步首次登记的写法。BR-TEXT-14 与 BR-TEXT-20 的状态都不变，没有新增条目与错误码。
 
+2026-11-01 后台客服代办三对话框定稿回写（`docs/changes/20261101-后台客服代办三对话框定稿.md` §2 第 3–6 项，规格 `design/specs/admin-user-assist.md` §3、§7；定稿第 6、7、18、19 项由 Jev 判断后回写（规划/11 §7.3 第 13 项），负责人 2026-10-31 整稿通过；00 §8 第 ① 类文案键登记）：BR-TEXT-14 表 B 新增 `30419.<reason>` 七行（realname_not_verified、account_deleting、account_deleted、withdrawal_in_progress、reverify_pending、identity_blacklisted、delivery_undecided；不带业务名的中性句，以定稿画板句去掉业务名为底稿，account_deleting 一并登记 data.stage 的叫法冷静期 / 处理中）与场景子键 `30411.admin_profile`、`50301.realname_vendor`；BR-TEXT-25 取值表补 `personal_data_copy_status`、`personal_data_copy_delivery` 两行（编码照契约 `contracts/enums/identity.yaml`）。50301 含义的扩大见 13 §13.11。状态不变，没有新增条目与错误码。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -923,9 +925,18 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 30303.payout_account_verify_limit | 今日收款账号核验次数已用完，请明天再试 | 同左 | BR-WDR-02 细则「核验次数上限」（2026-10-03 功能对照 G-13）；不透露核验结果，不说明次数 |
 | 30411.mergeable | 该手机号已注册。可将当前{provider_name}登录并入该手机号账号，并入后当前账号停用 | 该手机号已注册，可将当前登录方式并入该手机号账号 | 按钮【并入】【取消】；【并入】凭 data.merge_ticket 调并号接口（BR-ID-06，拍板第二批 OPS-04）；provider_name 取 微信 / Apple / 华为账号 |
 | 30411.phone_change（2026-10-21，App 内高保真第 3 批定稿 W-15，画板 PhoneChangeNew-v2；画板只指出表 A 原句「可退出后用手机号登录」不适用换号、没有起草新句，本句按同页提示句「新手机号不能是其他凑狸账号正在使用的号码」改写，代理补全的默认，2026-10-21 按 规划/11 §7.1 经 Jev（jev-1.13.0：涉资金 0.04、涉账号授权与对外承诺 0.34）判定可直接采用、事后报告） | 该手机号已被其他凑狸账号使用，请换一个手机号 | 同左 | 场景子键：不是 data.reason，客户端在更换手机号第 2 步得到 30411（data.reason 不是 mergeable）时取这一键，留在新手机号页、号码保留；登录与首次绑定仍用表 A 30411 与上一行；可否换成该号只按 BR-ID-06；键缺失时回落表 A |
+| 30411.admin_profile（2026-11-01，后台客服代办三对话框定稿第 18 项（Jev A 0.78），`docs/changes/20261101-后台客服代办三对话框定稿.md`；句子取定稿画板 AdmUserEditPhoneTaken 的错误条） | 该手机号已被其他账号使用，不能改到本账号 | 同左 | 场景子键：不是 data.reason（adminEditUserProfile 的 30411 不带 data.reason，后台不并号），后台用户详情「编辑会员信息」对话框保存得到 30411 时取这一键；表 A 30411 原句「…可退出后用手机号登录」不适用后台；可否改成该号只按 BR-ID-44；键缺失时回落表 A。后台文案，不进 App 包内默认 |
 | 30417.data_copy（2026-10-23，编排裁定 D10-246；契约 CT-24q） | 该个人信息副本当前状态不支持下载，请刷新后查看 | 同左 | 后台个人信息副本企业微信路径的下载被 30417 拒绝时显示（判定见 BR-ID-40 细则）；子键未补前回落表 A 30417 的主句。后台文案，不进 App 包内默认（代理补全的默认，待负责人确认） |
+| 30419.realname_not_verified（2026-11-01，后台客服代办三对话框定稿第 6 项（Jev A 0.73），`docs/changes/20261101-后台客服代办三对话框定稿.md`；本行起 7 行同此） | 该用户还没有实名，请让用户在 App 内自行实名。 | 同左 | 后台实名更正：用户还没有实名（BR-ID-25 细则「实名更正」）。本行起 7 行是 30419 不受理原因的说明句，与表 A 30419 主句同时显示（主句作错误条标题，本句作说明）；用不带业务名的中性句，业务名由对话框标题说明，以定稿画板（AdmUserRealnameErrors、AdmUserRealnameRefused、AdmUserDataExportUndecided、AdmUserDataExportErrors）的句子去掉业务名为底稿（本行去掉「不能用更正代替实名」）；子键缺失时回落表 A 30419 主句。后台文案，不进 App 包内默认 |
+| 30419.account_deleting（2026-11-01，同上） | 该账号正在注销（{stage_name}），当前不受理。 | 该账号正在注销，当前不受理。 | 账号在注销冷静期或处理中（BR-ID-27）：实名更正两段都不受理（BR-ID-25 细则「实名更正」），个人信息副本登记只在处理中不受理（BR-ID-40 细则）。stage_name 取 data.stage 的叫法：cooling「冷静期」、processing「处理中」（data.stage 取值同 10007）；data.stage 缺失时用包内默认列的一句。画板原句「…注销流程中不受理实名更正」「…注销处理中，不受理新的副本请求」，中性句不写「注销流程中」（副本登记在冷静期照常受理） |
+| 30419.account_deleted（2026-11-01，同上） | 该账号已注销，不再受理。 | 同左 | 账号已注销（BR-ID-27，不带 data.stage）；实名更正与个人信息副本登记都会出现；画板原句「该账号已注销，不受理实名更正 / 新的副本请求」 |
+| 30419.withdrawal_in_progress（2026-11-01，同上） | 该用户有未结束的提现单。请先由财务把提现处理到终态（到账、驳回或失败退回）后再提交。 | 同左 | 后台实名更正：用户有 BR-WDR-08 终态以外的提现单（含核验期间新提交的，BR-ID-25 细则「实名更正」）；错误条给「查看提现页签」链接；画板 AdmUserRealnameRefused 原句不含业务名，照录。归资金术语（BR-TEXT-12 细则「资金术语键」①：说的是提现单与到账；规格 §3），该细则清单与 `specs/fund-term-keys.yaml` 的补登随变更说明 §2 第 7 项 |
+| 30419.reverify_pending（2026-11-01，同上） | 该账号带「待加验」标记，请先人工清除标记后再提交。 | 同左 | 后台实名更正：账号带「待加验」标记（BR-WDR-01 细则「旧手机号被二次放号时的提现加验」）；画板原句「…后再更正」改为「…后再提交」 |
+| 30419.identity_blacklisted（2026-11-01，同上） | 该用户当前实名的身份证号在黑名单中，请转风控处理。 | 同左 | 后台实名更正：当前实名的身份证号在黑名单中（BR-ID-31）；画板原句去掉「不受理更正」 |
+| 30419.delivery_undecided（2026-11-01，同上） | 只有一项通道可用。这种情况怎么交付还在等法务确认，暂不受理。 | 同左 | 个人信息副本登记：两项通道情况只有一项「能」（BR-ID-40 细则）；画板 AdmUserDataExportUndecided 原句括号里的「能登录 App、绑定手机号不能收短信」是样例的情形，不进字典 |
 | 50301.maintenance | {platform_name}维护中，请稍后再试 | 该平台维护中，请稍后再试 | 购买按钮置灰「稍后再试」；Toast 显示文案 |
 | 50301.not_launched | {platform_name}返利即将开放 | 该平台返利即将开放 | 卡片购买按钮置灰并显示该文案（即 platform_coming_soon），不弹 Toast |
+| 50301.realname_vendor（2026-11-01，后台客服代办三对话框定稿第 19 项（Jev A 0.60），`docs/changes/20261101-后台客服代办三对话框定稿.md`；句子取定稿画板 AdmUserRealnameErrors） | 实名核验服务暂时不可用，请稍后再试 | 同左 | 场景子键：不是 data.reason（实名核验的 50301 不带 data.platform、data.reason，13 §13.11 50301 行 ②），客户端在 App 实名页（`RealName`，submitRealname）与后台实名更正对话框（adminCorrectUserRealname）得到 50301 时取这一键；不用表 A 50301 的「维护中」句（那句说的是平台转链），键缺失时回落表 A「其他 5xxxx」行；核验服务超时或结果未知是 50401，按表 A。App 与后台共用，进 App 包内默认 |
 | 50304.search_disabled | {platform_name}暂不提供搜索，可以粘贴商品链接查返利 | 该平台暂不提供搜索，可以粘贴商品链接查返利 | 该平台搜索开关关闭（BR-PROD-10 细则「按平台的搜索开关」，2026-10-03 功能对照 G-47）；不显示重试按钮，给【粘贴链接查返利】；三家都关闭时搜索页用同一句（{platform_name} 缺省按包内默认）；Agent 用 BR-TEXT-22 的 agent.notice.search_disabled |
 | 50304.rank_unavailable | {platform_name}热销榜暂不可用 | 热销榜暂不可用 | 该平台没有合规的热销频道或榜单暂取不到（规划/01 F-PROD-13、规划/04 `GET /v1/rank/hot`；2026-10-05，docs/changes/20261005-分享赚与范围调整.md §3；reason 名是代理补全的默认，负责人 2026-10-05 确认；文案是代理补全的默认，已确认：2026-10-06 代理按 规划/11 §7.1 用 Jev 判断，置信度 0.80） |
 
@@ -1696,6 +1707,8 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | `rights_imports.status` | queued / running / done / failed | 排队中 / 导入中 / 已完成 / 失败 | — | 同上 |
 | `rights_import_failure_reason` | invalid_row / order_not_found / sub_order_no_missing / received_at_missing / platform_mismatch | 行格式不对 / 订单不在本系统 / 缺子订单号 / 无收货时间 / 平台不符 | — | BR-FUND-06 细则「维权导入任务」；编码契约线补（2026-10-22，代理补全的默认） |
 | `admin_union_auth_sessions.status` | pending / succeeded / failed / expired | 授权中 / 已完成 / 失败 / 已过期 | — | BR-ID-24 细则；规划/04 §3.2（2026-10-22，代理补全的默认） |
+| `personal_data_copy_status` | pending / running / ready / delivered / failed / expired / cancelled | 排队中 / 生成中 / 待交付 / 已交付 / 失败 / 已过期 / 已取消 | — | BR-ID-40 细则、BR-ID-30 ⑨；规划/04 §2.5；编码照契约 `contracts/enums/identity.yaml`（2026-11-01，后台客服代办三对话框定稿第 7 项（Jev A 0.78），照定稿画板叫法，`docs/changes/20261101-后台客服代办三对话框定稿.md`） |
+| `personal_data_copy_delivery` | in_app_sms / wecom_session | 站内信 + 短信提取码 / 企业微信会话 | — | BR-ID-40 细则；规划/04 §2.5（同上） |
 
 - 例：差错单列表「类型」列显示「通道对账不一致」，详情页按 BR-TEXT-18 双列显示 `channel_mismatch`「通道对账不一致」；用户侧看不到差错单。
 - 例：契约线把 `claim_reject_reason` 定为 5 个编码 → 在本表补 5 行中文名，前端不改代码、画板按本表更新。
