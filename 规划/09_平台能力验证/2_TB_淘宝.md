@@ -277,3 +277,5 @@ TB-05 失败时走待决策项"新 App 申请独立联盟账号"（代价：高�
 - 权限核对（10-30，9 次调用）：**有** 物料信息查询（`item.info.upgrade.get`）、淘口令生成、长链转短链、私域用户管理、物料精选（`dg.optimus.promotion`）、官方活动转链；**无** 商品物料获取（搜索 / 物料推荐）、推广订单及数据查询（推广者订单接口为邀请制，联盟客服 10-31 答复门槛见 §2.5）、处罚订单、淘口令解析、万能转链、链接解析出商品 ID。
 - 字段录制（10-31，9 次调用）：`dg.optimus.promotion`（权益物料 37116）成功，`promotion_extend.recommend_item_list` 里的 `item_id` 为 12–13 位数字、`url` 为 `//s.click.taobao.com` 推广链接；`tpwd.create` 成功（`data.model`、`data.password_simple`）；`spread.get` 成功（`results.tbk_spread[].content` 短链、`err_msg` 成功时为 OK）。
 - **未知项（CAP-TB-02 相关）**：用上述数字 `item_id` 调 `item.info.upgrade.get`，`biz_scene_id=1` 两批各 5 个都返回 15 / 50001「无结果」，`biz_scene_id=2` 返回 15 / 1911「不支持该sceneId」。凑狸应用这次没取到商品详情。可能是要用新格式商品 ID（《淘宝客新商品 ID 升级》），也可能是这些商品不在推广池，尚未确认。下一步：「商品物料获取」权限批下后，用 `material.optional.upgrade` 返回的 ID 复测。在此之前，代码仓库 B1-04l 把 50001 映射为「商品不可推广」，详情字段先按 §2.7 测试应用录到的形状写，并标注待复录。本条只记实测事实，不对用户承诺详情可用。
+
+- **订单数据源（2026-10-31 负责人决定，`docs/changes/20261031-淘宝订单经大淘客.md`）**：官方推广者订单接口为邀请制、授权版无申请入口，淘宝订单、维权、违规订单改经第三方大淘客开放平台取数（字段与官方 `publisher_order_dto` 同名）；接口事实见私有库 `rebate-private/docs-mirror/dataoke/DEV-NOTES.md`。大淘客用凑狸授权账号的实测待负责人放凭据后做，CAP-TB-07 状态不变。
