@@ -17,7 +17,7 @@
 | 已执行 | AdmPayoutExecuteDone.dc.html（e110d8dea503） | 执行成功 | 成功 Alert + 刷新列表 |
 | 结果待确认（W10 处置） | AdmPayoutUnknown.dc.html（df557e7d41f6） | 页签「结果待确认」；`needs_manual=true` 的 PAYING 单 | adminListUnknownPayouts；处置 adminResolveUnknownPayout |
 | 打款记录（单笔尝试明细） | AdmPayoutAttempts.dc.html（0ee0eadd1f3f） | 行操作【打款记录】 | adminListPayoutAttempts |
-| 录入企业支付宝余额 | AdmPayoutBalanceEntry.dc.html（402d13ce3293） | 点【录入企业支付宝余额】 | adminCreateCashEntry（同一写法用于微信运营账户余额） |
+| 录入企业支付宝余额 | AdmPayoutBalanceEntry.dc.html（402d13ce3293） | 点【录入企业支付宝余额】 | W 录入操作（withdraw 另定名，原暂拟 adminCreateCashEntry；联盟回款已拆为 adminCreateUnionReceipt，编排 D10-538；同一写法用于微信运营账户余额） |
 | 录入校验未通过 | AdmPayoutBalanceEntryInvalid.dc.html（7663d65ef357） | 必填为空、取数时间超时效或倒退 | 本地校验 + 20001 |
 | 空 / 加载中 / 出错 | 不适用（无画板；按三态写法） | — | 本地 |
 | 无权限 | 不适用 | 无 `payout.execute` 且无 `fund.view` | 页签隐藏；10403 |
@@ -61,7 +61,7 @@
 | adminQueryPayoutResult | 【立即查询】【查询通道结果】 | 通道错误按 BR-WDR-28 记录为凭证 |
 | adminResolveUnknownPayout | 处置判定 | 凭证缺失、条件不满足（BR-WDR-15） |
 | adminListPayoutAttempts | 【打款记录】 | 40401 |
-| adminCreateCashEntry | 余额录入 | 20001（取数时间校验）、10403 |
+| W 录入操作（withdraw 另定名，原暂拟 adminCreateCashEntry） | 余额录入 | 20001（取数时间校验）、10403 |
 
 ## 5. 权限点与开关（04 §11.2 / §10.2）
 

@@ -11,9 +11,9 @@
 
 | 状态 | 画板文件（sha256 前 12 位） | 什么时候出现 | 数据来源 |
 | --- | --- | --- | --- |
-| 平台资金台账 | AdmFundLedger.dc.html（f60abba6f181） | 持 `fund.view` 进入 | adminGetFundLedger · 200 · example（概览、按日台账、联盟回款记录） |
+| 平台资金台账 | AdmFundLedger.dc.html（f60abba6f181） | 持 `fund.view` 进入 | adminGetFundLedger（概览）、listAdminAssetSnapshots（按日台账）、adminListUnionReceipts（联盟回款记录）· 200 · example（编排 D10-538 拆分） |
 | 资金看板 | AdmReportFunds.dc.html（d7957c385f84） | 持 `fund.view` 进入报表「资金看板」页签 | adminGetFundsReport · 200 · example |
-| 录入企业支付宝余额 / 录入联盟回款 | 不适用（无独立画板；对话框同 AdmPayoutBalanceEntry.dc.html（402d13ce3293）写法，见 [admin-payouts.md](admin-payouts.md) §2） | 点【录入…】 | adminCreateCashEntry |
+| 录入企业支付宝余额 / 录入联盟回款 | 不适用（无独立画板；对话框同 AdmPayoutBalanceEntry.dc.html（402d13ce3293）写法，见 [admin-payouts.md](admin-payouts.md) §2） | 点【录入…】 | 联盟回款 adminCreateUnionReceipt（CT-24zh）；企业支付宝余额 W 的录入操作由 withdraw 另定（原暂拟 adminCreateCashEntry） |
 | 空 / 加载中 / 出错 | 不适用（无画板；Card 骨架；Result + 【重试】） | — | 本地 |
 | 无权限 | 不适用 | 无 `fund.view` | 菜单隐藏；资金看板页签不渲染（04 §11.1 `fund.view` 备注）；10403 |
 
@@ -49,7 +49,9 @@
 | operationId | 什么时候调 | 本页会遇到的错误码 |
 | --- | --- | --- |
 | adminGetFundLedger | 进入台账、改日期范围、录入后刷新 | 10001、10403 |
-| adminCreateCashEntry（W / 联盟回款） | 录入对话框确认 | 20001（取数时间或日期校验）、10403 |
+| adminCreateUnionReceipt（联盟回款；W 录入见 admin-payouts.md） | 录入对话框确认 | 20001（回款日期晚于今天、通道未开通）、10003、10403、20901 |
+| adminListUnionReceipts | 台账「联盟回款记录」页签、录入对话框里该平台近 30 天回款 | 10403 |
+| adminReverseUnionReceipt | 回款记录行【红冲】（只能整笔、每条一次，D10-538） | 10003、10403、20902（已红冲） |
 | adminGetFundsReport | 进入资金看板、改日期范围 | 10403 |
 | adminCreateExport | 【导出】 | 10403 |
 
@@ -59,7 +61,7 @@
 
 ## 6. 稿上没画、实现要做的
 
-录入联盟回款对话框按 W 录入写法补字段（平台、回款日期、方式固定「后台录入」）；图表配色用令牌、不只靠颜色区分系列；每张图提供表格替代与 `aria-label` 摘要（03 §10.5）；实时卡与趋势图时点不同的说明常显；1280 以下卡片 2 列、图表全宽；数值每小时刷新时不打断焦点。
+录入联盟回款对话框按 W 录入写法补字段（平台、回款日期、方式固定「后台录入」），对话框里先列该平台近 30 天回款防重复录入；回款记录行有【红冲】（`fund.cash_entry`，动态码，必填原因，只能整笔，要改金额就红冲后重录，编排 D10-538）；图表配色用令牌、不只靠颜色区分系列；每张图提供表格替代与 `aria-label` 摘要（03 §10.5）；实时卡与趋势图时点不同的说明常显；1280 以下卡片 2 列、图表全宽；数值每小时刷新时不打断焦点。
 
 ## 7. 待定与不一致
 
