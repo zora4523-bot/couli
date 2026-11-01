@@ -1715,6 +1715,10 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | `admin_union_auth_sessions.status` | pending / succeeded / failed / expired | 授权中 / 已完成 / 失败 / 已过期 | — | BR-ID-24 细则；规划/04 §3.2（2026-10-22，代理补全的默认） |
 | `personal_data_copy_status` | pending / running / ready / delivered / failed / expired / cancelled | 排队中 / 生成中 / 待交付 / 已交付 / 失败 / 已过期 / 已取消 | — | BR-ID-40 细则、BR-ID-30 ⑨；规划/04 §2.5；编码照契约 `contracts/enums/identity.yaml`（2026-11-01，后台客服代办三对话框定稿第 7 项（Jev A 0.78），照定稿画板叫法，`docs/changes/20261101-后台客服代办三对话框定稿.md`） |
 | `personal_data_copy_delivery` | in_app_sms / wecom_session | 站内信 + 短信提取码 / 企业微信会话 | — | BR-ID-40 细则；规划/04 §2.5（同上） |
+| `admin_adjust_sub_type`（调账原因码） | RESTORE / RECON_FIX / PAYOUT_RECOVERY / ACCOUNT_CLOSED / OTHER | 订单恢复 / 对账修正 / 打款追回 / 注销余额转平台收入 / 其他 | — | 含义与流程只在 BR-FUND-24 维护；RESTORE 含申诉恢复（BR-FUND-22）（2026-11-02 D10-534 ⑬，代理补全的默认） |
+| `union_receipt_method`（联盟回款登记方式；契约 fund.yaml 名） | ADMIN_ENTRY / R1_RECON | 后台录入 / 对账确认 | — | BR-FUND-20 细则「联盟回款凭证」；同一笔回款只登记一条（2026-11-02 D10-538 ⑭，同上） |
+| `union_receipt_cash_account`（回款账户；契约 fund.yaml 名） | CASH_ALIPAY / CASH_BANK | 企业支付宝 / 企业对公银行账户 | 支付宝 / 对公账户 | BR-FUND-20；银行卡通道未开通时不接受 CASH_BANK（同上） |
+| `admin_fund_water_level`（资金台账水位结论；契约 fund.yaml 名） | normal / low | 正常 / 水位低 | — | BR-WDR-18；字段为 null（W 或 P 缺、W 过期）时不下结论、显示「—」，未回款超告警线不在此枚举（同上） |
 
 - 例：差错单列表「类型」列显示「通道对账不一致」，详情页按 BR-TEXT-18 双列显示 `channel_mismatch`「通道对账不一致」；用户侧看不到差错单。
 - 例：契约线把 `claim_reject_reason` 定为 5 个编码 → 在本表补 5 行中文名，前端不改代码、画板按本表更新。
