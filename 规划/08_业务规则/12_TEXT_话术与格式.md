@@ -114,6 +114,8 @@
 
 2026-11-01 后台客服代办三对话框定稿回写（`docs/changes/20261101-后台客服代办三对话框定稿.md` §2 第 3–6 项，规格 `design/specs/admin-user-assist.md` §3、§7；定稿第 6、7、18、19 项由 Jev 判断后回写（规划/11 §7.3 第 13 项），负责人 2026-10-31 整稿通过；00 §8 第 ① 类文案键登记）：BR-TEXT-14 表 B 新增 `30419.<reason>` 七行（realname_not_verified、account_deleting、account_deleted、withdrawal_in_progress、reverify_pending、identity_blacklisted、delivery_undecided；不带业务名的中性句，以定稿画板句去掉业务名为底稿，account_deleting 一并登记 data.stage 的叫法冷静期 / 处理中）与场景子键 `30411.admin_profile`、`50301.realname_vendor`；BR-TEXT-25 取值表补 `personal_data_copy_status`、`personal_data_copy_delivery` 两行（编码照契约 `contracts/enums/identity.yaml`）。50301 含义的扩大见 13 §13.11。状态不变，没有新增条目与错误码。
 
+2026-11-01 银行卡核验服务不可用的提示（同日 50301 扩义的后续，编排 2026-11-01 规划小修；00 §8 第 ① 类文案键登记，句子是代理补全的默认）：BR-TEXT-14 表 B 新增场景子键 `50301.bank_vendor`「银行卡核验服务暂时不可用，请稍后再试」，用于收款账号保存（`PUT /v1/me/payout-account`，savePayoutAccount）在卡 BIN 来源或银行卡核验服务不可用时返回的 50301（BR-WDR-02），不再回落表 A 50301 的「维护中」句；13 §13.11 50301 行客户端动作同步。状态不变，没有新增条目与错误码。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -937,6 +939,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 50301.maintenance | {platform_name}维护中，请稍后再试 | 该平台维护中，请稍后再试 | 购买按钮置灰「稍后再试」；Toast 显示文案 |
 | 50301.not_launched | {platform_name}返利即将开放 | 该平台返利即将开放 | 卡片购买按钮置灰并显示该文案（即 platform_coming_soon），不弹 Toast |
 | 50301.realname_vendor（2026-11-01，后台客服代办三对话框定稿第 19 项（Jev A 0.60），`docs/changes/20261101-后台客服代办三对话框定稿.md`；句子取定稿画板 AdmUserRealnameErrors） | 实名核验服务暂时不可用，请稍后再试 | 同左 | 场景子键：不是 data.reason（实名核验的 50301 不带 data.platform、data.reason，13 §13.11 50301 行 ②），客户端在 App 实名页（`RealName`，submitRealname）与后台实名更正对话框（adminCorrectUserRealname）得到 50301 时取这一键；不用表 A 50301 的「维护中」句（那句说的是平台转链），键缺失时回落表 A「其他 5xxxx」行；核验服务超时或结果未知是 50401，按表 A。App 与后台共用，进 App 包内默认 |
+| 50301.bank_vendor（2026-11-01，同日 50301 扩义的后续，编排 2026-11-01 规划小修；句子照上一行 realname_vendor 的句式，代理补全的默认） | 银行卡核验服务暂时不可用，请稍后再试 | 同左 | 场景子键：不是 data.reason（银行卡核验的 50301 不带 data.platform、data.reason，13 §13.11 50301 行 ③），客户端在收款账号页（`PayoutAccount`）绑定银行卡、保存（`PUT /v1/me/payout-account`，savePayoutAccount）因卡 BIN 来源或银行卡核验服务不可用得到 50301 时取这一键（BR-WDR-02）；不用表 A 50301 的「维护中」句（那句说的是平台转链），键缺失时回落表 A「其他 5xxxx」行；核验服务超时或结果未知是 50401，按表 A。只说核验服务不可用、不说金额与提现状态，按 BR-TEXT-12 细则「资金术语键」归普通。App 文案，进 App 包内默认 |
 | 50304.search_disabled | {platform_name}暂不提供搜索，可以粘贴商品链接查返利 | 该平台暂不提供搜索，可以粘贴商品链接查返利 | 该平台搜索开关关闭（BR-PROD-10 细则「按平台的搜索开关」，2026-10-03 功能对照 G-47）；不显示重试按钮，给【粘贴链接查返利】；三家都关闭时搜索页用同一句（{platform_name} 缺省按包内默认）；Agent 用 BR-TEXT-22 的 agent.notice.search_disabled |
 | 50304.rank_unavailable | {platform_name}热销榜暂不可用 | 热销榜暂不可用 | 该平台没有合规的热销频道或榜单暂取不到（规划/01 F-PROD-13、规划/04 `GET /v1/rank/hot`；2026-10-05，docs/changes/20261005-分享赚与范围调整.md §3；reason 名是代理补全的默认，负责人 2026-10-05 确认；文案是代理补全的默认，已确认：2026-10-06 代理按 规划/11 §7.1 用 Jev 判断，置信度 0.80） |
 

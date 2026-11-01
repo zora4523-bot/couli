@@ -37,7 +37,7 @@
 
 | 位置 | 字典键 |
 | --- | --- |
-| 保存失败 | `error.30303.payout_account_change_limit` / `.payout_account_verify_limit`、`error.30307`、`error.30308`、`error.40901`、`error.20001`、`error.20001.phone_invalid` |
+| 保存失败 | `error.30303.payout_account_change_limit` / `.payout_account_verify_limit`、`error.30307`、`error.30308`、`error.40901`、`error.20001`、`error.20001.phone_invalid`、`error.50301.bank_vendor`（银行卡核验服务不可用，2026-11-01） |
 | 被拦下 | `error.44001`、`cs.appeal_entry`；说明句无键（第 7 节） |
 | 二次验证 | `error.10003`、`login.code.countdown` |
 | 待确认一族 | `pending_confirm.title`、`pending_confirm.payout_account.*`、`pending_confirm.abandon*`、`.abandoned`、`.already_done`、`.retry_later`、`.cannot_confirm` |
