@@ -54,7 +54,7 @@
 | 保存被拒的错误条 | BR-TEXT-14 表 B `error.20001.notify_preview_vars_mismatch`、`error.20001.notify_code_ttl_mismatch`；字段下「多了 / 少了哪些变量」由前端按 `variables` 与正文拼画板句式，登记 admin.notify_channels.*；分钟数对照句见第 7 节第 2 条；禁用词沿用 BR-TEXT-13 现有提示 |
 | 开关被拒 | BR-TEXT-14 表 B `error.20001.notify_channel_locked`；未就绪被拒照画板「未就绪」与列表刷新 |
 | 未登记验证手机号 | 照画板 NoPhone；单独测试时收到 10003 `verify_phone_missing` 也一律弹 NoPhone，表 B 的接口用语不上页面（D10-335 ④ 认可「请先登记验证手机号」这句话术） |
-| 测试发送未受理 | 照画板 AdmNotifySmsTestSendFailed，不用表 A 50301 / 50401 的通用句 |
+| 测试发送未受理 | 照画板 AdmNotifySmsTestSendFailed，不用表 A 50301 / 50401 的通用句；50301 的提示句取 BR-TEXT-14 表 B `error.50301.sms_vendor`（2026-11-01 登记，以本画板提示句为底稿） |
 | 说明条、状态、抽屉、弹窗、频控提醒、按条计费 | 08 无键，照画板原文（已定第 8 条），登记 admin.notify_channels.* |
 | 出错、无权限、冲突 | BR-TEXT-14（10403.admin_permission_denied、20902、通用网络错误） |
 

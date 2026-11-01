@@ -1,6 +1,6 @@
 # 消息中心 Messages（App 内 H5）
 
-- 核对版本：规划提交 32a9765；代码主干 f1cd662c（rebate-platform 远端 main，2026-10-21 核对；派发前再核对一次，对不上的写进第 7 节）
+- 核对版本：规划提交 1a7da4f（2026-11-01；定稿时为 32a9765）；代码主干 cea2f9b0（rebate-platform 远端 main，2026-11-01 核对；定稿时为 f1cd662c，2026-10-21；派发前再核对一次，对不上的写进第 7 节）
 - 定稿：负责人 2026-10-21「全部定稿吧 先开发 后面在微调」（[变更记录](../../docs/changes/20261021-App内高保真第3批定稿.md)）；画板在 `couli-runs/design-hifi/project/<文件名>`（1 倍 PNG 在 `review-me/v1/png/`），不入公开仓库，完整 sha256 见 [design/README.md](../README.md)「App 内高保真第 3 批定稿」；逐张改动与依据见 `review-me/v1/README.md` §3
 - 路由：`Messages`（h5 `/messages`，auth login，入口 in_app / push，`agent_guide`）；从哪来：「我的」、推送点击回查不到落点或未登录时（BR-ID-10 细则「推送点击的落点」）、Agent 页面引导卡；去哪：消息的 `route`（订单详情、提现记录、余额流水、账号状态、申诉进度、注销页等）
 - 需求：01 §4.2 `Messages` 行；F-MSG-02、F-MSG-03；规则只引编号：BR-TEXT-09（交易通知模板）、BR-TEXT-23（账号与风控站内信）、BR-TEXT-05、BR-TEXT-11（时间写法）、BR-ID-10 细则、BR-ID-27 细则（冷静期）、BR-ID-30（留存）；验收：AC-MSG-03（同号规则）、AC-S1-81、AC-S1-157、AC-S1-185；任务：F1-04（H5）、APP-12（入口）
@@ -26,7 +26,7 @@
 | 区域 | 组件 | 数据 | 交互 |
 | --- | --- | --- | --- |
 | 导航栏 | 标题 +「全部已读」（14px） | unread | 调 markMessagesRead；冷静期内的处理见 §7 |
-| 消息行 | 未读点 + 标题 + 正文 + 时间（BR-TEXT-11：今天 / 昨天带时刻，同年更早写月-日） | title、body、created_at、read_at | 有 `route` 才可点，经 `nav.open`；`title_short` 按字素截取 |
+| 消息行 | 未读点 + 标题 + 正文 + 时间（BR-TEXT-11：今天 / 昨天带时刻，同年更早写月-日） | title、body、created_at、read_at | 有 `route` 才可点，经 `nav.open`；`title_short` 按字素截取（列表展示时按字素截断 title，契约无 title_short 字段） |
 | 加载更多 | 列表底 | next_cursor | 游标翻页 |
 
 ## 3. 文案键
@@ -36,17 +36,19 @@
 | 交易通知正文 | BR-TEXT-09 模板（服务端渲染，`body`） |
 | 账号、风控、申诉、注销正文 | BR-TEXT-23 模板（服务端渲染） |
 | 加载失败 | 表 C `h5.load_failed` / 表 A `error.50001` |
-| 「全部已读」、空态两句、各类消息标题 | 08 无键（消息标题由 04 `inbox_messages.title` 承载），用画板措辞，待回写 |
+| 各类消息标题 | BR-TEXT-14 表 C `inbox.title.<code>[.<变体>]`（第 3 批回写；站内信标题即 04 `inbox_messages.title`，页面显示接口返回的 `title`；变体与 BR-TEXT-09、BR-TEXT-23 模板一一对应） |
+| 「全部已读」、未读、上拉加载更多、空态两句 | 表 C `messages.read_all`、`messages.unread`、`messages.load_more`、`messages.empty`、`messages.empty_hint` |
+| 导航栏页标题「消息中心」 | 08 无键，用画板措辞 |
 
 ## 4. 接口
 
 | operationId | 什么时候调 | 本页会遇到的错误码 |
 | --- | --- | --- |
 | issueH5Token（经桥） | 进页 | 10405 |
-| listMessages（契约 planned） | 进页、翻页、重试 | 10001 |
-| getMessage | 推送回查后定位一条 | 30701 |
-| markMessagesRead（planned） | 「全部已读」、点开一条 | 20001、10405 |
-| getUnreadMessageCount（planned） | 「我的」角标 | — |
+| listMessages（已实现） | 进页、翻页、重试 | 10001 |
+| getMessage（已实现） | 推送回查后定位一条 | 30701 |
+| markMessagesRead（已实现） | 「全部已读」、点开一条 | 20001、10405 |
+| getUnreadMessageCount（已实现） | 「我的」角标 | — |
 
 ## 6. 稿上没画、实现要做的
 
@@ -54,7 +56,8 @@
 
 ## 7. 待定与不一致
 
-- 冷静期内「全部已读」与记已读会调 `markMessagesRead`，不在 BR-ID-27 冷静期白名单；建议冷静期隐藏「全部已读」、不记已读，或放进白名单，待上游（编排 / Jev）。
-- 04：`markMessagesRead` 请求形状（逐条或全部）、`getUnreadMessageCount` 显示位置未定，待上游（契约线）。
+- 已定（08 BR-ID-27 细则「冷静期内的消息中心」，W-20；契约 markMessagesRead 同写）：`POST /v1/messages/read` 不进 10007 白名单，冷静期内隐藏「全部已读」，点开消息照常看内容但不记已读，客户端此时不调该接口（原写「待上游（编排 / Jev）」）。
+- 已定（契约，cea2f9b0 核对）：markMessagesRead 请求体二选一，`{message_ids: [...]}` 标记所列消息或 `{all: true}` 标记全部未读，响应带 `marked_count`、`unread_count`；getUnreadMessageCount 的 `unread_count` 即消息入口角标（原写「请求形状、显示位置未定，待上游（契约线）」）。
 - BR-TEXT-23 细则末尾「进度只在注销进度页查询」与 BR-ID-27 细则矛盾；cancelled_negative 模板「后续返利抵扣回正」与 BR-TEXT-01「待抵扣」释义不一致，待上游（08 内部同步）。
 - 邀请类消息的跳转：flow-map §23.2.21 写「不跳转」，BR-TEXT-09 为进余额流水；本页按 08，待上游（设计文档回写）。
+- 2026-11-01 摘要同步（编排派工，按 08 与契约修正）：第 3 节消息标题改引 `inbox.title.<code>[.<变体>]`，「全部已读」、未读、上拉加载更多与空态两句改引 `messages.*`，导航栏页标题 08 仍无键；第 4 节四个接口注明已实现（契约 planned 名单里没有）；第 2 节补一句 title_short 不是契约字段；本节前两条待上游已解决。画板不变。

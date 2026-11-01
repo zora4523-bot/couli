@@ -16,6 +16,8 @@
 
 2026-10-18 负责人更正（`docs/changes/20261018-改归属指编辑会员信息.md`）：BR-FUND-01 R14（已归属订单改派）不开放；BR-CALC-13 正文里改派快照下的没收键加一句「当前不产生」。分佣比例、受益权与应得金额不变，条目状态不变。
 
+2026-11-01 京东结算字段指针（编排裁定 D10-529，`docs/changes/20261101-京东结算佣金只由账单导入.md`；00 §8 第 ① 类指针同步）：BR-CALC-03 细则「待验证的字段」表京东行的 actualFee 注明不作结算佣金，表下加一条指向 BR-FUND-02、BR-FUND-04、BR-FUND-09 与 09 CAP-JD-07（京东没有已结算 validCode，结算额只由联盟结算明细导入写入，17 之后 actualFee 只用作预估佣金）。条目正文、取值与状态不变。
+
 **订单状态写法**：本主题按 BR-FUND-01 的双状态（`platform_status` + `rebate_status`）与迁移编号（P1–P15、R1–R14；P11–P15 为 2026-10-03 资金规则对齐补入）书写（按 C-01 默认处理，已由负责人确认 2026-09-30）。与 规划/04 单一 order_status 的对应：O1→P1；O2→P2 / R2；O3→P3 + R4；O4→P6 + R6（入账前整单失效，rebate_status=VOID）；O5→R7；O6→R5（SETTLE_BATCH_CREDIT）；O7→P4 且 rebate_status 不变（只写 order_settlements）；O8→P4 + 结算补差（BR-CALC-23）；O9→R8（rebate_status=CLAWED_BACK）；O10→R9（部分退款、部分维权）/ R9b（价保等佣金变化）；O11→R3。单一状态 SETTLED = (platform_status=SETTLED, rebate_status=CREDITED 且补差已处理完)。负责人不采纳双状态时，按 BR-FUND-01 的映射表回退到上列 O 编号。
 
 ### 5.1 规则一览
@@ -126,8 +128,10 @@ B           = max(0, after_rsv − tlj_deduct_fen)
 | 平台 | 候选预估字段 | 候选结算字段 | 待验证点 |
 |---|---|---|---|
 | taobao | 付款预估收入（如 pub_share_pre_fee） | 结算预估收入（如 pub_share_fee） | 是否已扣技术服务费（alimama_share_fee 为技术服务费金额，待实测）；专项服务费 2026 现行费率；补贴类收入是否单列（subsidy_fee） |
-| jd | 预估佣金（如 estimateFee） | 实际佣金（如 actualFee） | 是否已扣技术服务费 |
+| jd | 预估佣金（如 estimateFee） | 实际佣金（如 actualFee）；不作结算佣金，见表下「京东」 | 是否已扣技术服务费 |
 | pdd | 佣金金额（如 promotion_amount） | 同字段结算后值 | 是否已含账号等级系数、自购 75% 折算 |
+
+- 京东（2026-11-01，编排裁定 D10-529，`docs/changes/20261101-京东结算佣金只由账单导入.md`）：上表京东行的 actualFee 不作结算佣金。京东订单行没有已结算 validCode（09 CAP-JD-07），Adapter 不写 settle_commission_fen，结算额只由联盟结算明细导入写入（BR-FUND-02、BR-FUND-04、BR-FUND-09）；17（已完成）之后 actualFee 只用作预估佣金（est_commission_fen）。取值以该变更记录与所引条目为准。
 
 - 报文直接给出服务费金额时（如拼多多报文的服务费字段），N = 佣金 − 报文服务费金额，以平台实际扣除的金额为准，不再按费率重算；只有费率时才按下例 ceil 公式（2026-10-21 编排默认 D10-105，与代码仓库 B1-08k 现行实现一致；待 CAP-PDD-04 实测确认，结论不同则按 09 回填改本句）。
 - 例（假设未扣费）：gross=1600、fee_bp=1000 → 服务费 ceil(160)=160 → N=1440；gross=1605、fee_bp=1000 → 服务费 ceil(160.5)=161 → N=1444。
