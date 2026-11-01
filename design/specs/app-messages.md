@@ -57,6 +57,7 @@
 ## 7. 待定与不一致
 
 - 已定（08 BR-ID-27 细则「冷静期内的消息中心」，W-20；契约 markMessagesRead 同写）：`POST /v1/messages/read` 不进 10007 白名单，冷静期内隐藏「全部已读」，点开消息照常看内容但不记已读，客户端此时不调该接口（原写「待上游（编排 / Jev）」）。
+- 2026-11-01 编排裁定 D10-542：H5 拿不到冷静期状态（H5 令牌不能读 `/v1/me/deletion`，BR-ID-32），本页不预判——点开或「全部已读」照常调 markMessagesRead，收到 10007 后隐藏「全部已读」、之后不再调，静默不弹错；与画板 W-20「预先隐藏」的差异待 FU-H5-DELETION-STATE（原生经桥带注销状态）后消除，契约 markMessagesRead 描述届时一并改。
 - 已定（契约，cea2f9b0 核对）：markMessagesRead 请求体二选一，`{message_ids: [...]}` 标记所列消息或 `{all: true}` 标记全部未读，响应带 `marked_count`、`unread_count`；getUnreadMessageCount 的 `unread_count` 即消息入口角标（原写「请求形状、显示位置未定，待上游（契约线）」）。
 - BR-TEXT-23 细则末尾「进度只在注销进度页查询」与 BR-ID-27 细则矛盾；cancelled_negative 模板「后续返利抵扣回正」与 BR-TEXT-01「待抵扣」释义不一致，待上游（08 内部同步）。
 - 邀请类消息的跳转：flow-map §23.2.21 写「不跳转」，BR-TEXT-09 为进余额流水；本页按 08，待上游（设计文档回写）。
