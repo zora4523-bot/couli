@@ -50,8 +50,8 @@
 | --- | --- | --- |
 | adminGetFundLedger | 进入台账、改日期范围、录入后刷新 | 10001、10403 |
 | adminCreateUnionReceipt（联盟回款；W 录入见 admin-payouts.md） | 录入对话框确认 | 20001（回款日期晚于今天、通道未开通）、10003、10403、20901 |
-| adminListUnionReceipts | 台账「联盟回款记录」页签、录入对话框里该平台近 30 天回款 | 10403 |
-| adminReverseUnionReceipt | 回款记录行【红冲】（只能整笔、每条一次，D10-538） | 10003、10403、20902（已红冲） |
+| adminListUnionReceipts | 台账「联盟回款记录」页签、录入对话框里该平台近 30 天回款 | 10001、10403、20001（日期区间或页大小） |
+| adminReverseUnionReceipt | 回款记录行【红冲】（只能整笔、每条一次，必填原因，D10-538；行上显示红冲时间与红冲人 reversed_by_name，D10-539） | 10003、10403、20001（原因、回款记录不存在）、20902（已红冲） |
 | adminGetFundsReport | 进入资金看板、改日期范围 | 10403 |
 | adminCreateExport | 【导出】 | 10403 |
 
