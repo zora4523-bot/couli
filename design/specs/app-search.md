@@ -36,7 +36,7 @@
 
 ## 3. 文案键
 
-占位文字：`search.placeholder`（占位文字待搜索页视觉任务定，D10-119 H-V03，暂沿用首页这一键）；列表口径：`price_basis`、`price_basis.general`（BR-PRICE-03 细则「无券商品与混排列表的口径说明」）；出错 / 关闭：BR-TEXT-14 表 A 50304、表 B `50304.search_disabled`；购买按钮：`btn.buy.*`。
+占位文字：`search.placeholder`（与首页同一键，2026-11-04 D10-617 定；基本模式进搜索页用 `basic.search.placeholder`，不提粘贴链接；画板 SearchTyping-v2 写「搜商品或粘贴链接」，措辞以 08 BR-TEXT-14 表 C 为准）；列表口径：`price_basis`、`price_basis.general`（BR-PRICE-03 细则「无券商品与混排列表的口径说明」）；出错 / 关闭：BR-TEXT-14 表 A 50304、表 B `50304.search_disabled`；购买按钮：`btn.buy.*`。
 
 ## 4. 接口
 
@@ -57,4 +57,4 @@
 ## 7. 待定与不一致
 
 - 待上游（契约）：搜索热词、关键词直达（F-PROD-03）在契约里还没有下发字段，补齐前输入页「搜索发现」不实现数据，只留历史。
-- 待上游（契约）：`texts.default.json` 暂无 `search.placeholder`、`price_basis*` 键。
+- ~~待上游（契约）：`texts.default.json` 暂无 `search.placeholder`、`price_basis*` 键。~~ 2026-11-04 核：代码主干契约已含这两组键，关闭。
