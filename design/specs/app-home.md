@@ -28,7 +28,7 @@
 | --- | --- | --- | --- |
 | 顶部原生区 | 搜索框、【问 AI】、常驻粘贴卡、游客价值卡（只对游客） | — | 搜索框 → `Search`；【问 AI】→ `AgentChat`；【登录领返利】→ `Login` |
 | 粘贴卡 | iOS UIPasteControl / 鸿蒙 PasteButton（文字图标由系统给，只调底色与圆角）；Android 自绘按钮 | — | 手动粘贴任务（03 §4.6）；2026-10-30 起不再先出用途说明弹层 |
-| SDUI 卡片 | 03 §6.3 注册表；`ProductCard`、`PlatformBadge`（14px 官方图标）、`RebateTag`、`DisclaimerFooter` | sections | 卡片 action 按 routes 跳转；商品卡 → `ProductDetail` |
+| SDUI 卡片 | 03 §6.3 注册表；`ProductCard`、`PlatformBadge`（标题标签形态：实底文字标签，底色 `color.platform.tag.*`、字 `color.text.inverse`，文案表 C `platform.tag.*`；03 §10.2）、`RebateTag`、`DisclaimerFooter` | sections | 卡片 action 按 routes 跳转；商品卡 → `ProductDetail` |
 | 弹窗 | `Dialog`：图片 / 动效区 + 关闭按钮 | popup 卡 | 点图片区按 action 跳转；关闭按钮出现即可点 |
 | 识别弹卡 | `Sheet` + `ProductCard` + `BuyButton` | parseInput 结果 | 购买见 app-product-buy；【搜相似商品】按 BR-PRICE-08 细则「搜相似商品」 |
 

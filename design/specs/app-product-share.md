@@ -29,7 +29,7 @@
 
 | 区域 | 组件 | 数据 | 交互 |
 | --- | --- | --- | --- |
-| 商品摘要 | `ProductCard`（大卡）、`PlatformBadge`（14px） | product_card | — |
+| 商品摘要 | `ProductCard`（大卡）、`PlatformBadge`（标题标签形态：实底文字标签，底色 `color.platform.tag.*`、字 `color.text.inverse`，文案表 C `platform.tag.*`；03 §10.2） | product_card | — |
 | 素材图 | `ShareMaterialPicker` | images[] | 多选、全选、保存张数提示 |
 | 文案 | `ShareCopyEditor` | copy.parts | 勾选、编辑；末尾固定口令 / 链接与价格口径句（不能删） |
 | 操作 | 复制、去微信、系统分享、保存图片 | — | 未装微信不列微信渠道 |

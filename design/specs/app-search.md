@@ -31,7 +31,7 @@
 | 搜索框 | 输入框 + 框内【粘贴】（iOS / 鸿蒙系统控件，有输入时换清除键） | `q` | 粘贴只填入输入框（BR-ID-16 手动粘贴「填入输入框」）；链接或口令点【搜索】走 parseInput 直达详情（F-PROD-02） |
 | 平台切换 | Tab + `PlatformBadge`（20px 官方图标） | `platform` | 默认 Tab 按 F-PROD-01；关闭的平台不出 Tab（BR-PROD-10 细则） |
 | 排序 / 筛选 | 排序条、价格区间、只看有券 | `sort`、`has_coupon`、价格区间 | 改条件重新请求 |
-| 列表 | `ProductCard`（紧凑）、`PlatformBadge`（14px）、`RebateTag`、`BuyButton`、`DisclaimerFooter` | items[] | 卡片 → `ProductDetail`；购买见 app-product-buy |
+| 列表 | `ProductCard`（紧凑）、`PlatformBadge`（标题标签形态：实底文字标签，底色 `color.platform.tag.*`、字 `color.text.inverse`，文案表 C `platform.tag.*`；03 §10.2）、`RebateTag`、`BuyButton`、`DisclaimerFooter` | items[] | 卡片 → `ProductDetail`；购买见 app-product-buy |
 | 三家都关 | 说明 + 粘贴入口（iOS 写法） | — | 只留返回、说明与粘贴入口 |
 
 ## 3. 文案键

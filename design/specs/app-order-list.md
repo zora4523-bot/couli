@@ -30,7 +30,7 @@
 | 区域 | 组件 | 数据（接口字段） | 交互 |
 | --- | --- | --- | --- |
 | 顶部 | 自购 / 分享子 Tab + 状态分组 + 平台、月份筛选 + 搜索框 | status_group、platform、paid_month、q | 切换即重查；状态分组成员只按服务端 |
-| 订单卡 | 卡片：`PlatformBadge`（14px 官方图标，装饰）+ 标题、商品图、件数、订单号；`AmountGrid`（左实付或已付定金，右返利或推广收益）；状态标签单独一行 | platform、title、image_url、quantity、order_no / masked_order_no、pay_amount_fen、est_rebate_fen 等、display_status、is_price_compare | 点卡进 `OrderDetail`；自购单号【复制】（`order_detail.copy.done`），分享单不可复制；is_price_compare=true 时显示「比价订单」标识（BR-TEXT-03，2026-11-05） |
+| 订单卡 | 卡片：`PlatformBadge`（标题标签形态：实底文字标签，底色 `color.platform.tag.*`、字 `color.text.inverse`，文案表 C `platform.tag.*`；03 §10.2）+ 标题、商品图、件数、订单号；`AmountGrid`（左实付或已付定金，右返利或推广收益）；状态标签单独一行 | platform、title、image_url、quantity、order_no / masked_order_no、pay_amount_fen、est_rebate_fen 等、display_status、is_price_compare | 点卡进 `OrderDetail`；自购单号【复制】（`order_detail.copy.done`），分享单不可复制；is_price_compare=true 时显示「比价订单」标识（BR-TEXT-03，2026-11-05） |
 | 找回入口 | 右上角常驻入口；置顶时为列表首行整行入口、右上角不重复 | claim_entry_pinned | 进 `FindOrder`；`claims.enabled` 关闭时置灰 |
 | 查询范围提示 | 列表底部一行 | earliest_visible_date | 设了范围时显示 |
 | 待跟单卡 | 第 1 批画板（ProductPendingTrack*），本批不重出 | listPendingTracks | 关闭带 attempt_id（dismissPendingTrack） |

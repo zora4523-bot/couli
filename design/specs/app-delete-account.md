@@ -38,7 +38,7 @@
 | 待确认卡 | BR-TEXT-14 表 C `pending_confirm.title`、`.deletion.desc` / `.action`、`.abandon*`、`.abandon_busy`、`.abandoned`、`.already_done`、`.cannot_confirm` |
 | 错误 | 表 A `error.10003`、`.10007`、`.20004`、`.20903`、`.30412`、`.30416`；表 B `error.20004.identity_mismatch` |
 | 金额术语 | BR-TEXT-01（「待抵扣」等） |
-| 顶部提示、资金区说明、须知六条、负余额说明卡、冷静期各句、二次验证摘要、本端不支持的句子 | 08 无键（须知由法务定稿），用画板文案，待回写 |
+| 顶部提示、资金区说明、须知、负余额说明卡、申请与待确认、冷静期各句、二次验证摘要、本端不支持的句子 | BR-TEXT-14 表 C `deletion.top_notice`、`deletion.funds.*`、`deletion.notice.*`（须知六条正文待法务定稿）、`deletion.negative.desc`、`deletion.agree_hint` / `deletion.apply` / `deletion.pending.*`、`deletion.cooling.*`、`deletion.timeline.*`、`step_up.summary.deletion`、`step_up.oauth.*`、`step_up.no_available_method`；画板文案与 08 不一致时以 08 为准（2026-11-05 更正，原写「08 无键，用画板文案，待回写」已过时） |
 
 ## 4. 接口
 
@@ -56,5 +56,6 @@
 
 - 须知第 6 条「有进行中的提现时不能申请」对封禁用户（提现被人工冻结，不返回 30412，BR-ID-31）不适用，正式文本由法务定稿时处理，待上游。
 - 30416 与 cancelled_negative 模板「后续返利抵扣回正」与 BR-TEXT-01「待抵扣」释义不一致，待上游（08 内部同步）。
-- BR-ID-08 正文「请先绑定手机号，或在支持该登录方式的设备上操作」无键，待上游（BR-TEXT-14）。
+- BR-ID-08 正文「请先绑定手机号，或在支持该登录方式的设备上操作」已有键 `step_up.no_available_method`（BR-TEXT-14 表 C），可关（2026-11-05 核对）。
+- 冷静期一句：画板（含深色、负余额、二次验证、待确认各态）里的「冷静期内账号只能查看，不能领券购买、提现和邀请好友」以 08 `deletion.cooling.readonly_note` 为准（2026-11-05 起「不能购买、提现和邀请好友」，购买按钮不再叫「领券购买」），画板下次改稿时同步（`docs/changes/20261105-商品详情v3定稿.md` §7 待跟进第 7 项）。
 - 余额摘要是否含预估收益：README 待回写项；核对 2026-10-21 契约 `MeBalance` 已有 `estimated_total_fen`，由编排确认后可关。

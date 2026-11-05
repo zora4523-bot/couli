@@ -12,7 +12,7 @@
 | 状态 | 画板文件（sha256 前 12 位） | 什么时候出现 | 数据来源 |
 | --- | --- | --- | --- |
 | 正在确认授权结果 | ProductAuthConfirming.dc.html（f5f53fc6de38） | 授权回来到继续购买之间 | bindUnion；失败或超时按授权失败处理 |
-| 关闭授权说明后 / 授权未完成 | ProductAuthDeclined-v2.dc.html（c5539d265ae0）、ProductAuthFailed-v2.dc.html（14ea5ac603b6） | 关闭半屏 / 授权失败 | 本地；【仍去购买（无返利）】 |
+| 关闭授权说明后 / 授权未完成 | ProductAuthDeclined-v2.dc.html（c5539d265ae0）、ProductAuthFailed-v2.dc.html（14ea5ac603b6） | 关闭半屏 / 授权失败 | 本地；【仍去购买（无返利）】（由商品详情【进店】拉起时不适用：只给【重试】，08 BR-ID-18 例外，2026-11-05） |
 | 淘宝暂时无法下单 | ProductAuthUnavailable-v2.dc.html（f775768afb21） | 站长授权失效期间 | 30101 / 30102 `reason=auth_unavailable` |
 | 返利已停用 | ProductAuthBlocked.dc.html（dc9d0fb3bf00） | 30153；30103、30151 同版式 | 30153、30103、30151 |
 | 正在打开 / 超时 | ProductBuyOpening-v2.dc.html（903bc25c3932）、ProductBuyTimeout-v2.dc.html（80e4e2d03ad9） | open 在途 / 超时 | openLink · OpenLinkUnchanged；本地超时 |

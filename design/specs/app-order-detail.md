@@ -36,7 +36,7 @@
 | 状态区 | 标题 + 说明 + `AmountGrid`（返利或推广收益 / 实付或已付定金）+「比价订单」标识（2026-11-05） | display_status、est_rebate_fen、actual_fen、clawback_fen、pay_amount_fen、expected_credit_period、is_price_compare | 未知编码不显示金额；is_price_compare=true 时显示标识并附「查看说明」（同页已有原因为 PRICE_COMPARE 的差额行或比价无返利 hint 时，入口跟在那一行行尾，标识旁不再出；全页只出一个，BR-TEXT-03） |
 | 原因区「为什么没返利？」 | 原因标题与说明 + 按钮 | reason、reason_action | 按钮只来自 reason_action（去找回、重新授权、去申诉、联系客服）；未知状态一律不显示写动作 |
 | 差额行 | 单行 | 见第 7 节 | 比价单附「查看说明」（`help_links.price_compare`） |
-| 商品区 | `PlatformBadge`（14px 官方图标）+ 商品图、标题、件数、订单号 | title、image_url、quantity、order_no / masked_order_no、product_key | 【查看商品】只在 product_key 非空；自购单号可复制 |
+| 商品区 | `PlatformBadge`（标题标签形态：实底文字标签，底色 `color.platform.tag.*`、字 `color.text.inverse`，文案表 C `platform.tag.*`；03 §10.2）+ 商品图、标题、件数、订单号 | title、image_url、quantity、order_no / masked_order_no、product_key | 【查看商品】只在 product_key 非空；自购单号可复制 |
 | 时间线 | 时间线 | timeline[]（未发生节点 at 为空） | 结算后不显示预计月份 |
 | 底部 | 【问问 AI】 | order_id | 打开 `AgentChat` 并带订单 context |
 

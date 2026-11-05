@@ -3,7 +3,7 @@
 - 核对版本：规划提交 0949b0a 加本次回写（负责人 2026-11-04～11-05 逐轮给意见、按 r13 为最后一轮回写的商品详情 v3，`docs/changes/20261105-商品详情v3定稿.md`）；代码主干未核对（派发前核对）
 - 画板存放：`couli-runs/design-hifi/project/<文件名>.dc.html`（v3 的 PNG 在 `review-detail/v3/png/`，逐轮意见与字段显隐表在同目录 `README.md`），不入公开仓库；完整 sha256 见 [design/README.md](../README.md)「商品详情 v3 定稿」；v3 取代第 1 批的 Product-v2、ProductJd、ProductDark、ProductPriceTrend-v2 与 ProductPublic-v2（公开版底栏），这几张不再作实现依据；画板上的商品、店铺（拼多多店「云朵柔」是虚构）、价格、返利、走势均为样例数据
 - 路由：`ProductDetail`（auth none；参数 `platform`、`product_key`、`item_ref`；入口 in_app、push、deeplink）；从哪来：首页、搜索、热销榜、收藏夹、AI 卡片、识别弹卡、链接直达（F-PROD-02）；去哪：购买链路（[app-product-buy.md](app-product-buy.md)）、`AgentChat`（【问问 AI】）、`ProductShare`（公开版【分享赚】，[app-product-share.md](app-product-share.md)）、平台店铺页（【进店】外跳）
-- 需求：01 F-PROD-05、F-PROD-12（收藏）、F-PROD-14（价格走势）、F-PROD-15（反馈）；验收：10 AC-S1-01-*、AC-S1-141、AC-S1-186、AC-S1-187；任务：05 APP-06 / HM-05、APP-16 / HM-12，新增部分由编排派工
+- 需求：01 F-PROD-05、F-PROD-12（收藏）、F-PROD-14（价格走势）、F-PROD-15（反馈）；验收：10 AC-S1-01-*、AC-S1-54、AC-S1-141、AC-S1-186、AC-S1-187、AC-S1-188；任务：05 APP-06 / HM-05、APP-16 / HM-12，新增部分由编排派工
 - 可参考的已合并页面：无（派发前按代码主干核对）
 - 是否资金或归属页面：否（展示预估；购买与进店的归因在服务端）
 
@@ -52,7 +52,7 @@
 | --- | --- | --- |
 | getProduct | 进页、重试 | 30141、30143 |
 | getProductPriceTrend | 展开价格走势 | — |
-| 店铺转链 `POST /v1/products/{product_key}/shop/open`（待契约） | 点【进店】 | 10001、30101、30102、30111；不能进店的码待契约 |
+| 店铺转链 `POST /v1/products/{product_key}/shop/open`（待契约） | 点【进店】 | 10001、30101、30102、30111（拉起 AuthSheet；关闭或授权失败只给【重试】，不给【仍去购买（无返利）】，08 BR-ID-18 例外）；不能进店的码待契约 |
 | 商品反馈 `POST /v1/products/{product_key}/feedback`（待契约） | 点【提交】 | 20001、42901 |
 | addFavorite / removeFavorite | 点【收藏】 | 20001、10405 |
 | openLink | 点购买（见 app-product-buy） | 同该规格 |

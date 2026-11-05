@@ -2,7 +2,7 @@
 
 - 核对版本：规划提交 b8b7dac（负责人 2026-10-21 定稿，`docs/changes/20261021-App内高保真第1批定稿.md`）；代码主干 67d7a4df（2026-10-21 核对；派发前再核对一次）
 - 画板存放：`couli-runs/design-hifi/project/<文件名>.dc.html`（PNG 在 `review-shop/v1/png/`），不入公开仓库；完整 sha256 见 [design/README.md](../README.md)「App 内高保真第 1 批定稿」
-- 路由：`AuthSheet`（auth login；参数 `platform`；入口 in_app）；从哪来：点购买时 openLink 返回 30101 / 30102 / 30111；去哪：平台授权（按 `auth_methods` 或 `auth_jump`），回来后进「正在确认授权结果」，关闭后进「关闭授权说明后的提示」（两者见 [app-product-buy.md](app-product-buy.md)）
+- 路由：`AuthSheet`（auth login；参数 `platform`；入口 in_app）；从哪来：点购买时 openLink 返回 30101 / 30102 / 30111；商品详情点【进店】时 shop/open 返回 30101 / 30102 / 30111（2026-11-05，[app-product-detail.md](app-product-detail.md)）；去哪：平台授权（按 `auth_methods` 或 `auth_jump`），回来后进「正在确认授权结果」，关闭后进「关闭授权说明后的提示」（两者见 [app-product-buy.md](app-product-buy.md)）；由【进店】拉起时，关闭或授权失败后只给【重试】，不给【仍去购买（无返利）】（08 BR-ID-18 例外）
 - 需求：01 F-LINK-03、F-LINK-04；规则只引编号：BR-ID-17（授权方式）、BR-ID-18、BR-ID-22；验收：AC-LINK-03、AC-LINK-04（同号规则）；任务：05 APP-06 / HM-05
 - 可参考的已合并页面：无（派发前按代码主干核对）
 - 是否资金或归属页面：是（授权决定订单能否归属本人）

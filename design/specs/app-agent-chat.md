@@ -33,7 +33,7 @@
 | 区域 | 组件 | 数据 | 交互 |
 | --- | --- | --- | --- |
 | 消息流 | 文本（03 §7.3）、`AiLabel`、notice 卡；同意用 `AgentConsentSheet` | 流事件 | 【停止】调 cancelAgentRun；点赞 / 点踩、举报 |
-| 商品卡 | `ProductCard`、`PlatformBadge`（14px）、`MatchBadge`、`RebateTag`、`BuyButton`、`DisclaimerFooter` | 卡片事件 | 卡片 → `ProductDetail`；购买见 app-product-buy；下架卡另给【换一批】 |
+| 商品卡 | `ProductCard`、`PlatformBadge`（标题标签形态：实底文字标签，底色 `color.platform.tag.*`、字 `color.text.inverse`，文案表 C `platform.tag.*`；03 §10.2）、`MatchBadge`、`RebateTag`、`BuyButton`、`DisclaimerFooter` | 卡片事件 | 卡片 → `ProductDetail`；购买见 app-product-buy；下架卡另给【换一批】 |
 | 输入区上方胶囊 | iOS UIPasteControl / 鸿蒙 PasteButton【粘贴】+ 旁边说明；Android 自绘胶囊 | — | 手动粘贴任务，结果出查返利卡 |
 
 ## 3. 文案键

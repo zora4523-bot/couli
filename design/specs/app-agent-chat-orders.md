@@ -26,7 +26,7 @@
 
 | 区域 | 组件 | 数据（卡片字段，04 §8.3） | 交互 |
 | --- | --- | --- | --- |
-| 订单卡 | `PlatformBadge`（14px）+ 标题（好友买的其他商品显示 `order_list.other_product`）+ 状态 + 原因 + 预估返 + 预计结算月份；不放订单号、实付、件数、时间、商品图 | order_id、platform、title、is_other_product、display_status、reason、est_rebate_fen、expected_credit_period | 【查看订单】进 `OrderDetail`，返回回到对话 |
+| 订单卡 | `PlatformBadge`（标题标签形态：实底文字标签，底色 `color.platform.tag.*`、字 `color.text.inverse`，文案表 C `platform.tag.*`；03 §10.2）+ 标题（好友买的其他商品显示 `order_list.other_product`）+ 状态 + 原因 + 预估返 + 预计结算月份；不放订单号、实付、件数、时间、商品图 | order_id、platform、title、is_other_product、display_status、reason、est_rebate_fen、expected_credit_period | 【查看订单】进 `OrderDetail`，返回回到对话 |
 | 登录 / 绑手机卡、找回草稿卡、客服卡 | 同一「图标 + 标题 + 按钮」卡片版式 | reason；platform、order_no、click_times[]；entry、summary | 登录先登记 `pending_action`；客服打开企业微信 |
 | 找回草稿卡 | 回显平台、订单号、本人最近打开该平台的时间 + 用户自选「付款日期」+【提交找回】 | 见左 | 用户点了才提交；结果承接同找回页（成功与 30205 打开找回记录，30203 / RISK_BLOCKED / 30206 置灰，30201 / 30202.* / 30204 显示在对应输入下） |
 | 收益卡 | 两列 `AmountGrid`（可提现、预估收益 + 最早预计月份或「入账核对中」）+ 最近一笔提现（状态标题 + 申请金额）+「更新于 hh:mm」+ 并排两个次按钮 | as_of、withdrawable_fen、estimated_total_fen、next_credit_period、credit_overdue、latest_withdrawal{title_key, amount_fen} | 【去钱包】【看提现记录】点了才打开、不带参数；本机金额隐藏时显示「****」；不写本机缓存 |
