@@ -478,7 +478,7 @@ platform = reserve_fen + (B − own − direct − indirect)   // reserve_fen �
 - 来源：规划/01_需求规划.md §3；规划/06_待补信息清单.md Q-B1；规划/09_平台能力验证/2_TB_淘宝.md CAP-TB-04、3_JD_京东.md CAP-JD-04、4_PDD_拼多多.md CAP-PDD-04；PRD修订_后端功能规划 §2.2；参考_花卷云功能查漏底稿 §2、§3
 - 需同步修改的规划文档：2 处（计数仅作记录，落点见 README §0.6）
 
-- 配置：`union.pdd.self_buy_factor_bp` 默认 7500（来源为花卷云底稿，待核实）；`union.pdd.account_level_factor_bp` 默认 10000（待核实，V0 可能为 8000）。
+- 配置：`union.pdd.self_buy_factor_bp` 默认 7500（来源为花卷云底稿，待核实；与 2026-11-05 返利按接口实际金额展示的决定相关，待复核，见 docs/changes/20261105-返利按接口实际金额展示.md §7 与 14 §14.3 C-30）；`union.pdd.account_level_factor_bp` 默认 10000（待核实，V0 可能为 8000）。
 - 例（拼多多）：分享口径佣金 400，因子 7500 × 10000 → 自购 N=floor(400×75000000/100000000)=300 → 本人预估 150；分享 N=400 → 分享者预估 200。
 - 例（因子均非 10000）：佣金 333、7500 × 8000 → floor(333×60000000/100000000)=floor(199.8)=199（分步 floor 会得 floor(floor(249.75)×0.8)=199，本例相同，但规则只允许一次 floor）。
 - 订单侧：联盟返回 promotion_amount=300 → N=300，不再折算。

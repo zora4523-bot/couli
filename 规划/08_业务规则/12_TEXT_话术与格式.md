@@ -284,7 +284,7 @@
 - 实返 y = actual_fen = credited_fen + Σ 该子订单本账户 SETTLE_ADJUST 流水金额（带符号）− Σ 该子订单本账户 CLAWBACK 流水金额绝对值（display_status ∈ {CREDITED, CREDITED_PART_CLAWED} 时展示）。
 - 扣回 z = clawback_fen = Σ 该子订单本账户 CLAWBACK 流水金额绝对值（含 sub_type=PART_REFUND 的部分扣回，BR-FUND-08）。
 
-**比价订单标识**（负责人 2026-11-05，docs/changes/20261105-返利按接口实际金额展示.md）：is_price_compare=true 的子订单在订单列表与订单详情另显示「比价订单」标识（`order.tag.price_compare`，显示规则见 BR-TEXT-03「比价订单」行，识别见 BR-CALC-16）；标识不是 display_status，不改上表的状态文案、金额行与按钮。
+**比价订单标识**（订单列表加标识是负责人 2026-11-05 原话，订单详情按编排口径，docs/changes/20261105-返利按接口实际金额展示.md）：is_price_compare=true 的子订单在订单列表与订单详情另显示「比价订单」标识（`order.tag.price_compare`，显示规则见 BR-TEXT-03「比价订单」行，识别见 BR-CALC-16）；标识不是 display_status，不改上表的状态文案、金额行与按钮。
 
 **share 单（分享者视角）**：状态文案同上；金额行「预估推广收益 ¥x」/「推广收益 ¥y」；不展示买家信息。子订单 product_key 与分享时 link_id 登记的商品不一致时，标题显示「好友购买的其他商品」，不展示标题、图片、SKU（服务端不下发这些字段，见下文「订单的检索范围与分享单的投影」；平台是否存在跨商品归因见 规划/09，待实测）。
 
