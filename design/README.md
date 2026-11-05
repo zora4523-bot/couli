@@ -30,7 +30,7 @@
 | 12 | 空态、错误态插画 | `illustrations/` | W3（10-25） | 待办 |
 | 13 | 分享海报、邀请海报 | `posters/` | W3（10-25） | 待办 |
 | 14 | 商店上架素材 | `store/` | W7 提审前（11-22） | 待办 |
-| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」；管理后台第 2 批（财务：提现审核与打款、月结账单与对账差错、调账与核销、余额流水与导出、资金看板）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 2 批定稿」，规格 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；两批规格都在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App 内高保真第 1 批（2026-10-21 负责人定稿，以 v1.1 为准；购物路径：首页与剪贴板识别、搜索、AI 找货、商品详情、去购买、分享、链接落地页、热销榜，108 张含深色 13 张），画板清单与 sha256 见下方「App 内高保真第 1 批定稿」，规格 `specs/app-*.md` 11 份（2026-10-21）；App 内高保真第 2 批（2026-10-21 负责人定稿；钱：钱包与流水、订单、找回、提现、AI 订单进度，含 15 张深色稿），画板清单与 sha256 见下方「App 内高保真第 2 批定稿」，规格 `specs/app-*.md` 14 份（2026-10-21）；App 内高保真第 3 批（「我的」与其他：我的、邀请、收藏与消息、设置与账号、注销与账号受限、隐私与协议、帮助与客服、基本模式与更新、容器、AI 页面引导，168 张含深色 29 张）负责人 2026-10-21 定稿「全部定稿吧 先开发 后面在微调」，画板清单与 sha256 见下方「App 内高保真第 3 批定稿」，规格 `specs/app-*.md` 26 份（2026-10-21）；后台消息模板页（渠道开关与短信登记，9 张）负责人 2026-10-24 定稿「设计稿 没问题」，画板清单与 sha256 见下方「后台消息模板页定稿（2026-10-24）」，规格 `specs/admin-notify-templates.md`（2026-10-24）；App / H5 其余页面以各批定稿登记为准，未登记的草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
+| 15 | 定稿的高保真稿 | App 与 H5 页面放 `hifi/`，**关键页定稿稿含深色版**（规划/00 D35，2026-10-18：登录 4 张先出；首页、详情、订单、钱包、我的在各自定稿批次加深色版；其余页面由实现按令牌推导、评审抽查深色截图）；管理后台稿入库前先逐张核对样例数据与风控规则标识，核对前不放进本公开仓库（代理默认，你可以改） | 随各页定稿 | 部分已交付：管理后台第 1 批（工作台、一框搜、用户查询与详情、订单查询与详情、找回审核）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 1 批定稿」；管理后台第 2 批（财务：提现审核与打款、月结账单与对账差错、调账与核销、余额流水与导出、资金看板）负责人 2026-10-18 定稿「全部按推荐」，画板清单与 sha256 见下方「管理后台第 2 批定稿」，规格 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）；两批规格都在 `specs/admin-*.md`，画板文件本身留在本机运行目录不入库；App 内高保真第 1 批（2026-10-21 负责人定稿，以 v1.1 为准；购物路径：首页与剪贴板识别、搜索、AI 找货、商品详情、去购买、分享、链接落地页、热销榜，108 张含深色 13 张），画板清单与 sha256 见下方「App 内高保真第 1 批定稿」，规格 `specs/app-*.md` 11 份（2026-10-21）；App 内高保真第 2 批（2026-10-21 负责人定稿；钱：钱包与流水、订单、找回、提现、AI 订单进度，含 15 张深色稿），画板清单与 sha256 见下方「App 内高保真第 2 批定稿」，规格 `specs/app-*.md` 14 份（2026-10-21）；App 内高保真第 3 批（「我的」与其他：我的、邀请、收藏与消息、设置与账号、注销与账号受限、隐私与协议、帮助与客服、基本模式与更新、容器、AI 页面引导，168 张含深色 29 张）负责人 2026-10-21 定稿「全部定稿吧 先开发 后面在微调」，画板清单与 sha256 见下方「App 内高保真第 3 批定稿」，规格 `specs/app-*.md` 26 份（2026-10-21）；后台消息模板页（渠道开关与短信登记，9 张）负责人 2026-10-24 定稿「设计稿 没问题」，画板清单与 sha256 见下方「后台消息模板页定稿（2026-10-24）」，规格 `specs/admin-notify-templates.md`（2026-10-24）；商品详情 v3（负责人 2026-11-04～11-05 逐轮定稿，6 张，取代第 1 批的商品详情 5 张），画板清单与 sha256 见下方「商品详情 v3 定稿（2026-11-05）」，规格 `specs/app-product-detail.md` 重写（2026-11-05）；App / H5 其余页面以各批定稿登记为准，未登记的草稿在 claude.ai 画布与本机运行目录，未入库。稿件版本以页面规格里记的文件名与 sha256 为准 |
 | 16 | 页面规格（一页一份，给实现者照做） | `specs/` | 各页定稿后 | 进行中：已有 69 份——首份 [specs/admins.md](specs/admins.md)（F1-06i 后台账号列表，2026-10-10，规划/11 §2.6）、管理后台第 1 批 7 份 `specs/admin-{dashboard,search,users,user-detail,orders,order-detail,claims}.md`（2026-10-18）与第 2 批 8 份 `specs/admin-{withdrawals,withdrawal-detail,payouts,settle-bills,recon,adjustments,ledger,fund-dashboard}.md`（2026-10-18）、后台消息模板页 1 份 [specs/admin-notify-templates.md](specs/admin-notify-templates.md)（2026-10-24）、后台客服代办三对话框 1 份 [specs/admin-user-assist.md](specs/admin-user-assist.md)（2026-11-01）；App 内高保真第 2 批 14 份 `specs/app-{wallet,ledger,earnings,order-list,order-detail,appeal-order,find-order,withdraw,withdraw-reverify,withdraw-records,real-name,payout-account,labor-agreement,agent-chat-orders}.md`（2026-10-21）、第 3 批 26 份 `specs/app-*.md`（2026-10-21，清单见下方「App 内高保真第 3 批定稿」）、第 1 批 11 份 `specs/app-{home,search,agent-chat,product-detail,auth-sheet,jump-tip,product-buy,product-share,share-hub,link-landing,hot-rank-list}.md`（2026-10-21）；模板 [page-spec.md](../docs/templates/page-spec.md)；格式仍在试行，其他页面等试行后再定 |
 
 完成一项后，把「状态」改为「已交付」，或者直接告诉 Claude。
@@ -203,14 +203,14 @@
 | AI 助手（找货） | AgentReported-v2.dc.html | `be5efdb9579fda3dc1cf0f936e7dc123f3fd3d8fd0fc835576616c28a667facf` |
 | AI 助手（找货） | AgentClipboardCard.dc.html | `4092777116fada1f40050aa965674e6ac69d8fc84df05b87bf7656fabb74ef35` |
 | AI 助手（找货） | AgentResultDark.dc.html | `6408def6c8887b66d6dce7a8ab6226fb8d33b7e18b0ad0f4979cc17f77c114c8` |
-| 商品详情 | Product-v2.dc.html | `332e5a6255c482bbc54374b9b35a70d1f55d9c85be60c8944cc4ff01f207792c` |
-| 商品详情 | ProductPublic-v2.dc.html | `5910e23441e6df67e498a40af241bd4005db584a3fd1f5d01217846bdf228251` |
+| 商品详情（2026-11-05 起由「商品详情 v3 定稿」取代，留作历史） | Product-v2.dc.html | `332e5a6255c482bbc54374b9b35a70d1f55d9c85be60c8944cc4ff01f207792c` |
+| 商品详情（2026-11-05 起由「商品详情 v3 定稿」取代，留作历史） | ProductPublic-v2.dc.html | `5910e23441e6df67e498a40af241bd4005db584a3fd1f5d01217846bdf228251` |
 | 商品详情 | ProductFavorited-v2.dc.html | `4f7de72d9e56ee37867b0db889c38821af4ca974de299f77605ef300158f6628` |
 | 商品详情 | ProductFavoriteFull.dc.html | `4bcb3a16d7707ee22c6c660925986979ab6b14f0782793065e1710cae1ff702b` |
-| 商品详情 | ProductPriceTrend-v2.dc.html | `fb121836d240005400ec5361823034453c8802566358a9f20bd8f71a300d0cdb` |
+| 商品详情（2026-11-05 起由「商品详情 v3 定稿」取代，留作历史） | ProductPriceTrend-v2.dc.html | `fb121836d240005400ec5361823034453c8802566358a9f20bd8f71a300d0cdb` |
 | 商品详情 | ProductPriceTrendEmpty-v2.dc.html | `f225eca45ee25ae26f2fa1c84fa7124dbb67f80c84301851f37499f3e6149ff2` |
-| 商品详情 | ProductJd.dc.html | `772b02da48b3a90e45c3dac5640afd626f614e9f88247ec8441a5670dc0e2a89` |
-| 商品详情 | ProductDark.dc.html | `25dbc178d1bf6d94d4496ac43a830d124c7468b170f96fce5414f50d0456654e` |
+| 商品详情（2026-11-05 起由「商品详情 v3 定稿」取代，留作历史） | ProductJd.dc.html | `772b02da48b3a90e45c3dac5640afd626f614e9f88247ec8441a5670dc0e2a89` |
+| 商品详情（2026-11-05 起由「商品详情 v3 定稿」取代，留作历史） | ProductDark.dc.html | `25dbc178d1bf6d94d4496ac43a830d124c7468b170f96fce5414f50d0456654e` |
 | 授权半屏 | ProductAuthSheet-v2.dc.html | `ac41612bb7ea604b1125abf23e83316956eff7a88eda0defdbeea52b40f07ef3` |
 | 授权半屏 | ProductAuthSheetDark.dc.html | `410ac1a82aea6eeba0361325ceb570f006dad23de6aa82f8cbfaacdaf10354fc` |
 | 下单须知 | ProductJumpTip-v2.dc.html | `df823e0652363dafdb491052d58b27c1ba8c7f6187db61c9817078a787909e6a` |
@@ -660,6 +660,24 @@
 | 个人信息副本 · 重新生成 | AdmUserDataExportRegenerate.dc.html | `455aedcf431f757049d23ac7634a475aeb5ac72fa76f9842eb6a693bdc123183` |
 | 个人信息副本 · 不能下载 | AdmUserDataExportNotDownloadable.dc.html | `4c13530aab8ccc2e97117f61c0754a4be456c785a5cf7f8314468aed5466ba53` |
 | 个人信息副本 · 其余返回码对照表 | AdmUserDataExportErrors.dc.html | `1658b5510ee3e91008abddebfb119c9de0428f1400be3fba1712c18436759fc8` |
+
+## 商品详情 v3 定稿（2026-11-05）
+
+负责人 2026-11-04 定「补一版详情稿」，2026-11-05 在编排会话里逐轮给意见并定稿（r2–r13：三平台同一骨架；价格大字只放主价，下面是券标签；返利放进右下角一行主按钮「购买预估返 ¥x」；【分享赚】与主按钮拼成组合胶囊；标题前改实底平台文字标签，列表卡也统一用；店铺块改成「头像 + 店名 + 评分 + 【进店】」；预估返后价与口径小字不展示；无返利商品不出现在 App）。规则取值与回写见 [变更记录](../docs/changes/20261105-商品详情v3定稿.md)。本批 6 张取代第 1 批的 Product-v2、ProductJd、ProductDark、ProductPriceTrend-v2 与 ProductPublic-v2（公开版底栏），上方第 1 批表里这 5 行留作历史、不再作实现依据。
+
+- 规格：[app-product-detail.md](specs/app-product-detail.md)（按 v3 重写）；列表卡、订单卡、购买链路、链接落地页与分享页相关规格的第 7 节加了平台文字标签与按钮句式的指针。
+- 画板存放：本机运行目录 `couli-runs/design-hifi/project/<文件名>.dc.html`；1 倍 PNG、逐轮意见、字段显隐表与 r1–r8 的 Codex 对抗审查记录在 `couli-runs/design-hifi/review-detail/v3/`。画板与 PNG **不入本公开仓库**，版本以下表 sha256 为准（2026-11-05 r13 改稿后实算）。
+- 入库前核对（2026-11-05，逐张，共 6 张）：没有手机号、证件号样式的号码，没有外链；嵌入图片只有 `icons/platform/` 的淘宝、京东官方图标 96px 缩样（店铺块头像兜底），拼多多样例的店铺 logo「云朵柔」是虚构的自绘图；四种平台标签色与图上控件的半透明底尚未进 `tokens/`，天猫标识图暂缺（Q-E7），见变更记录 §7。
+- 待同步：以详情为背景的各状态画板（去购买各状态、授权、下单须知、分享加载等，约 40 张）与首页、搜索、收藏、热销榜、AI、订单的列表卡画板按新组件同步，见变更记录 §7；同步前按规格与组件实现。
+
+| 页面 | 画板文件 | sha256 |
+| --- | --- | --- |
+| 商品详情 · 淘宝有券（多图） | Product-v3.dc.html | `5d06d0a1480e79bf3b7c478de002dd6a42857873bd4227606549a262249a3642` |
+| 商品详情 · 拼多多有券（销量、店铺评分） | ProductPdd.dc.html | `333b6a50e63b34a2ac724b754cfd03464e454e1ac732e523a5429ea447519761` |
+| 商品详情 · 京东无券（单张图） | ProductJd-v2.dc.html | `3e7ad1c09aec1fa53dedb4a26a675ba82cd88085191afb5e4c6bbbc299ea2c7f` |
+| 商品详情 · 深色 | ProductDark-v2.dc.html | `cec93f3000a64eb3a8273e6b581eaa6d687e5625d9fc3034cb177bfbf1067a2c` |
+| 商品详情 · 价格走势展开（最常见价） | ProductPriceTrend-v3.dc.html | `9f4f94dbe44cc557c3d5daebfd90c7c013adadfd068e4494651ae434bc29879c` |
+| 商品详情 · 反馈半屏 | ProductFeedbackSheet.dc.html | `81d27e7c10e51305ad2635c3373128d1571ad7831450bb146373e9d0f4df3576` |
 
 ## 本次交付验证
 
