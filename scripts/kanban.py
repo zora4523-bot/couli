@@ -47,7 +47,7 @@ REF_LABEL = {
     FETCH_REF: "远端 main（看板自己拉取）", "refs/remotes/origin/main": "origin/main（本机上次 fetch 到的）",
     "HEAD": "本地检出（没有远端 main 的引用，可能落后或含未合并的内容）",
 }
-LINES = ("CT", "B1", "B2", "B3", "F1", "APP", "HM", "QA")
+LINES = ("CT", "B1", "B2", "B3", "F1", "APP", "HM", "QA", "DSX")
 TASK_ID = re.compile(r"(?<![A-Za-z0-9-])((?:CT|B1|B2|B3|F1|APP|HM|QA)-\d{2})(?![0-9])")
 LEDGER_ID = re.compile(r"((?:CT|B1|B2|B3|F1|APP|HM|QA)-\d{2})([a-z]*)\Z")
 STATUSES = ("done", "in_progress", "open", "blocked", "deferred", "void")
@@ -386,8 +386,13 @@ DOC_OVERVIEW = PLAN / "00_总览与决策.md"
 WEEK = re.compile(r"W(\d+)(?:\s*[–—-]\s*W(\d+))?")
 LINE_NAMES = {
     "CT": "接口与公共规格", "B1": "交易后端", "B2": "资金后端", "B3": "Agent 后端",
-    "F1": "H5 + 后台", "APP": "iOS / Android", "HM": "鸿蒙", "QA": "质量",
+    "F1": "H5 + 后台", "APP": "iOS / Android", "HM": "鸿蒙", "QA": "质量", "DSX": "设计标准整改",
 }
+FIX_SECTION = "设计标准整改"          # 05 §3.11 heading; its tables are read as the DSX line
+FIX_ID = re.compile(r"[A-Z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)+")
+FIX_ID_IN_TEXT = re.compile(r"(?<![A-Za-z0-9-])[A-Z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)+(?![A-Za-z0-9-])")
+# A §3.11 row's 周 cell (待排 / 进行中 / 已完成 / 等负责人) mapped onto the task states the ledger would give.
+DOC_TASK_STATE = {"done": "merged", "in_progress": "in_progress", "void": "void", "deferred": "deferred"}
 
 
 def strip_parens(text):
@@ -480,19 +485,29 @@ def parse_tasks(warn):
     for table in tables(DOC_TASKS):
         if not table.header or table.header[0] != "任务":
             continue
+        # 05 §3.11 设计标准整改: keys of the fix program (DSX-nn, UI-STATES, CT-11c …) form one board line;
+        # until the ledger has their splits, the 周 cell carries the dispatch state, as the DS-02 row does.
+        fix = any(FIX_SECTION in heading for heading in table.headings)
         when_at = table.column("周", "截止")
         deps_at = table.column("依赖")
         refs_at = table.column("关联")
         extra_at = table.column("验收", "产出")
         share_at = exact(table, "线")
         for line, cells in table.rows:
-            ident = re.fullmatch(r"(CT|B1|B2|B3|F1|APP|HM|QA)-\d{2}", plain(cells[0]))
-            if not ident:
-                continue
+            label = plain(cells[0])
+            if fix:
+                if not FIX_ID.fullmatch(label):
+                    continue
+                ident, family = label, "DSX"
+            else:
+                match = re.fullmatch(r"(CT|B1|B2|B3|F1|APP|HM|QA)-\d{2}", label)
+                if not match:
+                    continue
+                ident, family = match.group(0), match.group(1)
             if len(cells) > len(table.header):
-                warn(f"05 任务 {ident.group(0)}（第 {line} 行）的格数比表头多，可能有未转义的竖线")
-            if deps_at is None and ident.group(1) not in ("HM", "QA") and not any(task["line"] == ident.group(1) for task in tasks):
-                warn(f"05 {ident.group(1)} 线的任务表没有「依赖」列，任务之间的依赖读不到")
+                warn(f"05 任务 {ident}（第 {line} 行）的格数比表头多，可能有未转义的竖线")
+            if deps_at is None and family not in ("HM", "QA") and not any(task["line"] == family for task in tasks):
+                warn(f"05 {family} 线的任务表没有「依赖」列，任务之间的依赖读不到")
             cell = lambda at: cells[at] if at is not None and at < len(cells) else ""
             content, when = cells[1], plain(cell(when_at))
             weeks = week_numbers(when)
@@ -501,13 +516,14 @@ def parse_tasks(warn):
             deps_raw = cell(deps_at)
             deps_plain = strip_parens(plain(deps_raw))
             refs = cell(refs_at)
-            tasks.append({
-                "id": ident.group(0), "line": ident.group(1), "order": len(tasks),
+            deps = FIX_ID_IN_TEXT.findall(deps_plain) if fix else expand_task_ids(deps_plain)
+            task = {
+                "id": ident, "line": family, "order": len(tasks),
                 "title": clip(first_clause(plain(content)), 72), "content": content,
                 "when": when, "when_short": clip(strip_parens(when) or when, 18),
                 "weeks": [f"W{number}" for number in weeks],
                 "week_rank": weeks[0] if weeks else 99, "week_last": weeks[-1] if weeks else None,
-                "deps": [dep for dep in expand_task_ids(deps_plain) if dep != ident.group(0)],
+                "deps": [dep for dep in dict.fromkeys(deps) if dep != ident],
                 "deps_raw": "" if plain(deps_raw) in ("—", "-", "") else deps_raw,
                 "human_deps": [part.strip() for part in re.findall(r"人：[^；;]*", deps_plain)],
                 "share": plain(cell(share_at)),
@@ -516,7 +532,18 @@ def parse_tasks(warn):
                 "extra_label": table.header[extra_at] if extra_at is not None else "",
                 "plan_state": "void" if void else "deferred" if deferred else "active",
                 "stages": [], "src": source(DOC_TASKS, line),
-            })
+            }
+            if fix:
+                phase = re.search(r"整改\s*(P\d)", when)
+                task["when_short"] = f"整改 {phase.group(1)}" if phase else task["when_short"]
+                task["doc_state"] = DOC_TASK_STATE.get(classify(when), "planned")
+            tasks.append(task)
+    known = {task["id"] for task in tasks}
+    for task in tasks:
+        unknown = [dep for dep in task["deps"] if dep not in known] if task["line"] == "DSX" else []
+        if unknown:
+            warn(f"05 §3.11 {task['id']} 的依赖不在任务表里：{'、'.join(unknown)}")
+            task["deps"] = [dep for dep in task["deps"] if dep in known]
     counts = {line: sum(task["line"] == line for task in tasks) for line in LINES}
     missing = [line for line, count in counts.items() if not count]
     if missing:
@@ -594,7 +621,9 @@ def join_ledger(tasks, entries, inflight, merged, warn):
         if task["plan_state"] != "active":
             task["state"] = task["plan_state"]
         elif not subs:
-            task["state"] = "planned"
+            task["state"] = task.get("doc_state", "planned")
+            if task["state"] == "in_progress":
+                task["note"] = f"台账里还没有拆分，状态取自 05 §3.11 的「周」列：{task['when']}"
         elif all(item["state"] == "done" for item in subs):
             # The ledger does not say whether a task is fully split. Tables created ahead of the
             # module they belong to are the one case it does show: the work itself has not begun.
@@ -1331,9 +1360,12 @@ def build(board, version, plan_ref):
     confirm = [item for item in of("06 ") if item["kind"] == "decision"]
     account = [item for item in of("06 ") if item["kind"] == "account"]
     untracked = [item for item in items.items if not item["tracked"]]
+    planned_tasks = [task for task in tasks if task["line"] != "DSX"]   # §3.11 has no weeks; counted on its own below
     schedule = buckets(
         task["plan_state"] if task["plan_state"] != "active" else "done" if task["weeks"]
-        else "open" if task["when"].startswith("待排") else "in_progress" for task in tasks)
+        else "open" if task["when"].startswith("待排") else "in_progress" for task in planned_tasks)
+    fix_states = buckets({"merged": "done", "in_progress": "in_progress", "void": "void", "deferred": "deferred"}
+                         .get(task.get("doc_state"), "open") for task in tasks if task["line"] == "DSX")
     cap_counts = buckets(cap["status"] for cap in caps)
     case_total = sum(stage["total"] for stage in cases.values())
     case_void = sum(stage["void"] for stage in cases.values())
@@ -1370,10 +1402,14 @@ def build(board, version, plan_ref):
         dimension("schedule", "任务排期", "规划/05 §3", schedule,
                   "05 §1 写明后面几周的周次要在复盘后重排，现有周次不能用来推断进度，所以不算百分比。",
                   {"done": "已排周次", "in_progress": "随其他任务触发", "open": "待排", "deferred": "P1 / 未排期"}, rate=False),
+        dimension("design_fix", "设计标准整改", "规划/05 §3.11", fix_states,
+                  "整改 P0 与 P1 的派工状态，取自 §3.11 的「周」列（编排按派工改写，台账有拆分后以台账为准）；P2 只在整改计划里列，不在这里。",
+                  {"done": "已完成", "in_progress": "进行中", "open": "待排 / 等负责人"}),
         dimension("approvals", "协作规则的批准栏", "规划/11 §7.3", approvals, "", {"done": "已确认", "open": "待确认"}),
     ]
 
-    parents = [task for task in tasks if task["plan_state"] == "active"]
+    # §3.11 keys never match ledger ids, so they stay out of the "split into the ledger" headline.
+    parents = [task for task in planned_tasks if task["plan_state"] == "active"]
     split = [task for task in parents if task["ledger"]]
     subs = [entry for task in tasks for entry in task["ledger"] if entry["state"] != "void"]
     undecided = [item for item in items.items
