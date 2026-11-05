@@ -11,7 +11,7 @@
 
 | 状态 | 画板文件（sha256 前 12 位） | 什么时候出现 | 数据来源 |
 | --- | --- | --- | --- |
-| 正常（淘宝有券，比价区间） | Product-v2.dc.html（332e5a6255c4） | 有券 | getProduct · 200 · ProductOk |
+| 正常（淘宝有券；画板上的返利区间与「以结算为准」2026-11-05 作废，按单一金额实现，见第 7 节） | Product-v2.dc.html（332e5a6255c4） | 有券 | getProduct · 200 · ProductOk |
 | 正常（京东无券，单一金额） | ProductJd.dc.html（772b02da48b3） | 无券、`rebate_basis` 单值 | getProduct · 200（契约只有 ProductOk 一个示例，无券字段按 product_card 置空） |
 | 公开版（底栏多【分享赚】） | ProductPublic-v2.dc.html（5910e23441e6） | M-公开（内测期隐藏，TRADE-21） | 同上 |
 | 已收藏 | ProductFavorited-v2.dc.html（4f7de72d9e56） | 收藏成功 | addFavorite |
@@ -38,7 +38,7 @@
 | 位置 | 字典键 |
 | --- | --- |
 | 购买按钮 | `btn.buy`、`btn.buy.coupon`、`btn.buy.no_rebate`、`btn.buy.rebate_suffix` |
-| 口径 | `price_basis`、`price_basis.general`（拼多多按 BR-PRICE-04） |
+| 口径 | `price_basis`、`price_basis.general`（拼多多按 BR-PRICE-04）；返利口径 `rebate_estimate`（2026-11-05 起淘宝也用它，`rebate_compare` 不再下发，BR-PRICE-17） |
 | 价格走势 | `price_trend.title`、`price_trend.title.general`、`price_trend.source*`、`price_trend.empty` |
 | 收藏 | `favorite.add`、`favorite.added`、`favorite.removed`、`error.20001.favorites_full` |
 
@@ -57,4 +57,5 @@
 
 ## 7. 待定与不一致
 
-- 无。设计自定：京东无券详情 ProductJd 取 ProductJumpBrowser 底稿去掉加载卡，作「无券 + 单一金额」样例。
+- 设计自定：京东无券详情 ProductJd 取 ProductJumpBrowser 底稿去掉加载卡，作「无券 + 单一金额」样例。
+- 画板与规则不一致（负责人 2026-11-05 决定，`docs/changes/20261105-返利按接口实际金额展示.md`）：Product-v2 上的「预估返 ¥a–¥b · 以结算为准」作废。实现按 08 BR-PRICE-07 显示接口佣金字段算出的单一金额「预估返 ¥x」，口径小字用 `rebate_estimate`，主按钮照常拼「· 预估返 ¥x」（`btn.buy.rebate_suffix`）；画板待设计改稿，改稿前以本条为准。
