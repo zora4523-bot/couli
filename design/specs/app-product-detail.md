@@ -19,6 +19,7 @@
 | 深色 | ProductDark-v2.dc.html（cec93f3000a6） | 系统深色（00 D35） | 同浅色 |
 | 已收藏 / 收藏夹已满 / 走势暂无记录 | ProductFavorited-v2（4f7de72d9e56）、ProductFavoriteFull（4bcb3a16d770）、ProductPriceTrendEmpty-v2（f225eca45ee2）沿用；背景是旧版详情，按 v3 骨架实现 | 收藏成功；超上限；记录不足 | addFavorite；20001（`20001.favorites_full`）；getProductPriceTrend（no_data） |
 | 无返利 | 不适用（无专用画板） | getProduct 返回 `rebate_basis=no_rebate` | 只显示 `no_rebate.notice` 与【搜相似商品】，不显示价格与购买区（BR-PRICE-08） |
+| 拿不到金额（amount_unknown） | 不适用 | 不进详情 | —（拼多多直链降级卡没有 product_key，见 §7） |
 | 商品失效 | 不适用 | 进页即失效 | 30143；进页即下架 30141 的置灰写法同 app-product-buy「已下架」 |
 
 ## 2. 组件
@@ -39,7 +40,7 @@
 
 | 位置 | 字典键 |
 | --- | --- |
-| 主按钮 | `btn.buy.rebate`、`rebate_login_to_view`；点击时变成无返利后 `btn.buy.no_rebate`（08 BR-TEXT-12 细则「购买按钮」） |
+| 主按钮 | `btn.buy.rebate`、`rebate_login_to_view`；点击时变成无返利后 `btn.buy.no_rebate`（08 BR-TEXT-12 细则「购买按钮」）；`btn.buy.rebate_unknown` 不用于详情（§7） |
 | 主图与价格区 | `product.gallery.position`、`product.gallery.position.a11y`；`coupon.tag`、`coupon.valid_until`；`tag.presale`、`presale.price_note` |
 | 标题与店铺 | `platform.tag.*`；`rank.sales.neutral`（拼多多销量）；`shop.enter`、`shop.name.fallback`、`shop.a11y`、`shop.a11y.enter`、`shop.score.*` |
 | 价格走势 | `price_trend.title`、`.title.general`、`.title.pdd*`、`price_trend.source*`、`price_trend.empty`、`price_trend.current`、`price_trend.mode`、`price_trend.mode.note*` |
@@ -65,3 +66,4 @@
 - 待上游：详情专用字段、`mode_price_fen`、店铺转链与商品反馈两个接口、新文案键都还没进契约（04 §6.3、§8.3；`texts.default.json`）；四种平台标签色与图上控件的半透明底未进 `design/tokens`；天猫标识图暂缺（06 Q-E7）；反馈的后台查看页、权限点与反馈记录的留存登记待规划（变更记录 §7），上线前补齐。
 - 待 09：拼多多 sales_tip 原样格式与 desc / serv / lgst 取值、京东 shopLevel 满分与 goods.query 权限、多图张数、三平台店铺推广链接能否带上用户归因；验证前对应开关保持关。
 - 画板设计说明里留有早轮写法（两行主按钮「领券购买 / 预估返」、「购买 预估返」中间留空格、口径小字三句等），以画面与 README R12、R13 为准：主按钮一行「购买预估返 ¥x」，详情不显示口径小字。
+- 画板 Product-v3 设计说明中的「拼多多拿不到金额：购买可返利」示例，以及设计稿 README 0.2 底栏行拼多多列的「购买 可返利」，都不适用于商品详情：amount_unknown 是拼多多直链降级卡（开关 `pdd.direct_convert.enabled`，默认关），没有 product_key，进不了详情（04 §8.3、08 BR-PRICE-08、BR-TEXT-14 `rebate_amount_unknown`）；`btn.buy.rebate_unknown` 只用在这类卡自己的购买按钮上，详情页不实现这个状态（§1「拿不到金额」行）。
