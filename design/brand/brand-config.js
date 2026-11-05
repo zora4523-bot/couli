@@ -9,8 +9,8 @@ window.COULI_BRAND = Object.freeze({
   },
   "metadata": {
     "name": "凑狸",
-    "version": "0.4.0",
-    "date": "2026-10-18",
+    "version": "0.5.0",
+    "date": "2026-11-05",
     "status": "project baseline",
     "theme": "light",
     "modes": [
@@ -19,7 +19,7 @@ window.COULI_BRAND = Object.freeze({
     ],
     "darkThemePhase": "MVP",
     "colorSpace": "sRGB",
-    "description": "当前项目使用的品牌与界面基线；2026-10-04 按设计方向第三轮调整 App 页面底、返利强调、平台来源标签与图片占位（docs/changes/20261004-设计方向第三轮.md）；2026-10-18 v0.4.0 按 00 D35 给每个颜色与阴影令牌补深色取值（dark 字段，value 仍为浅色）并新增组件令牌 T1–T12（docs/changes/20261018-深色令牌进唯一源.md）。已应用于根目录品牌配置、交付素材与品牌预览，不代表原生接入、Icon Composer 或真机验收完成。App 图标外观变体独立于 UI 主题。",
+    "description": "当前项目使用的品牌与界面基线；2026-10-04 按设计方向第三轮调整 App 页面底、返利强调、平台来源标签与图片占位（docs/changes/20261004-设计方向第三轮.md）；2026-10-18 v0.4.0 按 00 D35 给每个颜色与阴影令牌补深色取值（dark 字段，value 仍为浅色）并新增组件令牌 T1–T12（docs/changes/20261018-深色令牌进唯一源.md）；2026-11-05 v0.5.0 按商品详情 v3 新增标题前平台文字标签的四个实底色 color.platform.tag.*（淘宝、天猫、京东、拼多多）与主图浮层控件底 color.overlay.on-image（docs/changes/20261105-商品详情v3定稿.md）。已应用于根目录品牌配置、交付素材与品牌预览，不代表原生接入、Icon Composer 或真机验收完成。App 图标外观变体独立于 UI 主题。",
     "cssFontBase": 16,
     "sources": [
       "https://developer.apple.com/design/human-interface-guidelines/color",
@@ -233,6 +233,36 @@ window.COULI_BRAND = Object.freeze({
       "cssVariable": "--color-overlay-scrim",
       "value": "#28251F66",
       "dark": "#0000008C"
+    },
+    "overlayOnImage": {
+      "token": "color.overlay.on-image",
+      "cssVariable": "--color-overlay-on-image",
+      "value": "#0000008C",
+      "dark": "#0000008C"
+    },
+    "platformTagTaobao": {
+      "token": "color.platform.tag.taobao",
+      "cssVariable": "--color-platform-tag-taobao",
+      "value": "#D53D00",
+      "dark": "#D53D00"
+    },
+    "platformTagTmall": {
+      "token": "color.platform.tag.tmall",
+      "cssVariable": "--color-platform-tag-tmall",
+      "value": "#EA0031",
+      "dark": "#EA0031"
+    },
+    "platformTagJd": {
+      "token": "color.platform.tag.jd",
+      "cssVariable": "--color-platform-tag-jd",
+      "value": "#E02018",
+      "dark": "#E02018"
+    },
+    "platformTagPdd": {
+      "token": "color.platform.tag.pdd",
+      "cssVariable": "--color-platform-tag-pdd",
+      "value": "#EB0007",
+      "dark": "#EB0007"
     },
     "controlChecked": {
       "token": "color.control.checked",

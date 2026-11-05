@@ -29,9 +29,9 @@
 | 主图 | `ProductGallery` | image、images[]（≤ 9） | 左右滑；≥ 2 张显示页码；图上只浮返回键 |
 | 价格区 | `PriceTag`（详情形态） | final_price_fen、coupon_fen、coupon_end_at、is_presale；stale、age_sec、quoted_at；规格不确定与「¥x 起」的判定（BR-PROD-04，字段待契约，见 §7）；platform 与 `features.flags.jd_plus_note` | 主价 + 券标签那一行：依次为券标签（无券不显示）、预售标签与说明、规格限定语「规格以下单页为准」（规格无法确定时）、京东 PLUS 提示（只京东、开关 on），都没有时整行不显示，放不下时折行；联盟返回区间或确知最低规格价时主价带「起」、不另加规格限定语；报价降级时这一行下方显示取价提示（BR-PRICE-11）；位置与顺序见 08 BR-PRICE-04 细则「商品详情的券标签」 |
 | 标题 | `PlatformBadge`（标题标签）+ 标题 | platform、shop_type、title；sales_text（只拼多多） | 标签与标题同一段文字、两行省略；销量一行为空不显示 |
-| 店铺块 | `StoreCard` | shop_name、shop_logo、shop_scores[]、shop_entry | `shop_entry=true` 整块点击 → 店铺转链 → 外跳；头像：拼多多店铺 logo，淘宝、京东平台标识图，天猫通用店铺图标；评分：拼多多三项等级，京东店铺等级原样数字，淘宝不放 |
+| 店铺块 | `StoreCard` | shop_name、shop_logo、shop_scores[]、shop_entry | `shop_entry=true` 整块点击 → 店铺转链 → 外跳；头像：拼多多店铺 logo（`mall_img_url`，官方文档依据、未实测，为空用拼多多标识图），淘宝、京东平台标识图（官方文档：商品接口不给店铺 logo），天猫通用店铺图标；评分：拼多多三项等级，京东店铺等级原样数字，淘宝不放 |
 | 价格走势 | `PriceTrendPanel` | price-trend（含 mode_price_fen） | 默认折叠、展开才请求；拼多多与无券换标题 |
-| 反馈 | 走势下方文字入口 + `FeedbackSheet` | link_id、券后价、返利金额、quoted_at | 规则见 F-PROD-15 |
+| 反馈 | 走势下方文字入口 + `FeedbackSheet` | link_id、券后价、返利金额、quoted_at | 规则见 F-PROD-15；提交身份与每日上限 08 BR-ID-02 细则「商品反馈与进店」，收集与留存 BR-ID-30 细则「商品反馈记录」 |
 | 底栏 | `BuyBar`：【问问 AI】【收藏】+ 组合胶囊（【分享赚】+ `BuyButton`） | cta、rebate_min_fen | 购买见 app-product-buy；内测期与未满 18 周岁不出【分享赚】 |
 
 不显示：券前价、「有券」标签、预估返后价、正常态取价时间、口径小字（`DisclaimerFooter`，BR-PRICE-03 细则「商品详情页不展示口径说明」）。三平台模块顺序一致，字段没有就整块不显示，平台差异只在口径词（拼多多「拼单」）；另有按条件显示的限定语（规格以下单页为准，BR-PROD-04；京东 PLUS 提示，BR-CALC-17），放在券标签那一行，不属于口径小字。开关：`shop.entry.enabled.<platform>`（默认 off）与来源 `shop.entry.source.<platform>`；`detail.sales.enabled.<platform>`、`detail.shop_scores.enabled.<platform>`（默认 off，先拼多多）；`feedback.enabled`（派生 `/v1/config.features.flags.product_feedback`）；`detail.jd_plus_note.enabled`（默认 on，派生 `/v1/config.features.flags.jd_plus_note`）；内测期按 TRADE-21 不出【分享赚】。
@@ -63,8 +63,8 @@
 
 ## 7. 待定与不一致
 
-- 待上游：详情专用字段、`mode_price_fen`、店铺转链与商品反馈两个接口、新文案键都还没进契约（04 §6.3、§8.3；`texts.default.json`）；四种平台标签色与图上控件的半透明底未进 `design/tokens`；天猫标识图暂缺（06 Q-E7）；反馈的后台查看页、权限点与反馈记录的留存登记待规划（变更记录 §7），上线前补齐。
+- 待上游：详情专用字段、`mode_price_fen`、店铺转链与商品反馈两个接口、新文案键都还没进契约（04 §6.3、§8.3；`texts.default.json`）；天猫标识图暂缺（06 Q-E7）；反馈的后台查看页与权限点待规划（变更记录 §7），上线前补齐。四种平台标签色与图上控件的半透明底已登记进令牌源（`color.platform.tag.*`、`color.overlay.on-image`，令牌 v0.5.0），反馈记录的留存与注销处理已登记 08 BR-ID-30、BR-ID-28（措辞待法务，06 Q-F1）（同日审查后）。
 - 待上游（同日审查后补）：规格无法确定与「¥x 起」的判定字段 04 §8.3 `product_card` 还没有（BR-PROD-04 已确认、早于 v3 的缺口），由契约线补，客户端不自己判断规格；`jd.plus_note` 与开关 `detail.jd_plus_note.enabled` 待进契约。设计稿 README 0.2 字段显隐表缺规格限定语与京东 PLUS 提示两行，以本规格 §2 与 08 BR-PRICE-04 细则为准，下次改稿补。
-- 待 09：拼多多 sales_tip 原样格式与 desc / serv / lgst 取值、京东 shopLevel 满分与 goods.query 权限、多图张数、三平台店铺推广链接能否带上用户归因；验证前对应开关保持关。
+- 待 09：拼多多 sales_tip 原样格式与 desc / serv / lgst 取值、mall_img_url 是否有值与能否直接展示、京东 shopLevel 满分与 goods.query 权限、三平台券结束时间字段的含义与时区（开关 `detail.coupon_end.enabled.<platform>` 默认关，关时券标签只显示「¥y 券」）、多图张数、三平台店铺推广链接能否带上用户归因（09 §6 U-90、U-92，CAP-TB-06）；验证前对应开关保持关。
 - 画板设计说明里留有早轮写法（两行主按钮「领券购买 / 预估返」、「购买 预估返」中间留空格、口径小字三句等），以画面与 README R12、R13 为准：主按钮一行「购买预估返 ¥x」，详情不显示口径小字。
 - 画板 Product-v3 设计说明中的「拼多多拿不到金额：购买可返利」示例，以及设计稿 README 0.2 底栏行拼多多列的「购买 可返利」，都不适用于商品详情：amount_unknown 是拼多多直链降级卡（开关 `pdd.direct_convert.enabled`，默认关），没有 product_key，进不了详情（04 §8.3、08 BR-PRICE-08、BR-TEXT-14 `rebate_amount_unknown`）；`btn.buy.rebate_unknown` 只用在这类卡自己的购买按钮上，详情页不实现这个状态（§1「拿不到金额」行）。

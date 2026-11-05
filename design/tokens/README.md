@@ -1,6 +1,6 @@
 # 凑狸设计令牌
 
-版本：2026-10-18 / project baseline v0.4.0。2026-10-04 按设计方向第三轮改 App 页面底并新增后台页面底、图片占位、返利强调（`color.rebate.*`）与来源描边令牌（[变更记录](../../docs/changes/20261004-设计方向第三轮.md) §1）；2026-10-18 按规划/00 D35 给全部颜色令牌与 `shadow.card` / `shadow.floating` 补深色取值（其余令牌两态复用 `value`），并新增组件令牌 T1–T12（[变更记录](../../docs/changes/20261018-深色令牌进唯一源.md)）；不代表原生或真机验收完成。根配置入口见 [brand.config.json](../../brand.config.json)，完整维护与接入流程见 [品牌接入](../../docs/brand-integration.md)。语义说明见 [品牌色](../colors/colors.md)；覆盖规划/03 §10.1 的颜色、六级字号、间距、圆角与阴影，并补充焦点、主按钮状态及触控命中区。
+版本：2026-11-05 / project baseline v0.5.0。2026-10-04 按设计方向第三轮改 App 页面底并新增后台页面底、图片占位、返利强调（`color.rebate.*`）与来源描边令牌（[变更记录](../../docs/changes/20261004-设计方向第三轮.md) §1）；2026-10-18 按规划/00 D35 给全部颜色令牌与 `shadow.card` / `shadow.floating` 补深色取值（其余令牌两态复用 `value`），并新增组件令牌 T1–T12（[变更记录](../../docs/changes/20261018-深色令牌进唯一源.md)）；2026-11-05 v0.5.0 按商品详情 v3 新增标题前平台文字标签的四个实底色 `color.platform.tag.*` 与商品主图浮层控件底 `color.overlay.on-image`（[变更记录](../../docs/changes/20261105-商品详情v3定稿.md)）；不代表原生或真机验收完成。根配置入口见 [brand.config.json](../../brand.config.json)，完整维护与接入流程见 [品牌接入](../../docs/brand-integration.md)。语义说明见 [品牌色](../colors/colors.md)；覆盖规划/03 §10.1 的颜色、六级字号、间距、圆角与阴影，并补充焦点、主按钮状态及触控命中区。
 
 ## 文件与主题
 
@@ -21,11 +21,11 @@ python3 scripts/sync-brand.py --check
 
 ## JSON 结构与转换约定
 
-本版共 109 个令牌叶节点（v0.3.0 的 87 个 + 2026-10-18 新增 22 个），与 CSS 自定义属性一一对应；其中 46 个（44 个颜色 + 2 个阴影）带深色值。根节点含 `schemaVersion`、`metadata`、`tokens`；令牌叶节点统一为 `{ "type": "…", "value": …, "description": "…" }`，全部颜色叶节点与 `shadow.card` / `shadow.floating` 另有 `"dark": …`（结构与 `value` 相同；其余叶节点没有 `dark`，两态复用 `value`）。这是内部交换格式，不声明已经完整实现 DTCG 标准，也没有尚不存在的远程 `$schema` 依赖。所有值均已展开，不需要引用解析器。
+本版共 114 个令牌叶节点（v0.3.0 的 87 个 + 2026-10-18 新增 22 个 + 2026-11-05 新增 5 个），与 CSS 自定义属性一一对应；其中 51 个（49 个颜色 + 2 个阴影）带深色值。根节点含 `schemaVersion`、`metadata`、`tokens`；令牌叶节点统一为 `{ "type": "…", "value": …, "description": "…" }`，全部颜色叶节点与 `shadow.card` / `shadow.floating` 另有 `"dark": …`（结构与 `value` 相同；其余叶节点没有 `dark`，两态复用 `value`）。这是内部交换格式，不声明已经完整实现 DTCG 标准，也没有尚不存在的远程 `$schema` 依赖。所有值均已展开，不需要引用解析器。
 
 | `type` | `value` 结构 | 平台消费方式 |
 | --- | --- | --- |
-| `color` | 大写六位十六进制字符串 `#RRGGBB`；带透明度的遮罩类用八位 `#RRGGBBAA`（末两位为透明度，目前只有 `color.overlay.scrim`） | 六位按 sRGB 不透明颜色解析；八位 CSS 输出为 `rgba()`，iOS 按 RGBA 读取；Android `colors.xml` 与鸿蒙 `color.json` 的八位格式都是 `#AARRGGBB`，生成时须换位（浅 `#28251F66` → `#6628251F`，深 `#0000008C` → `#8C000000`），直接照抄会变成接近全透明 |
+| `color` | 大写六位十六进制字符串 `#RRGGBB`；带透明度的遮罩类用八位 `#RRGGBBAA`（末两位为透明度，目前有 `color.overlay.scrim` 与 `color.overlay.on-image`） | 六位按 sRGB 不透明颜色解析；八位 CSS 输出为 `rgba()`，iOS 按 RGBA 读取；Android `colors.xml` 与鸿蒙 `color.json` 的八位格式都是 `#AARRGGBB`，生成时须换位（浅 `#28251F66` → `#6628251F`，深 `#0000008C` → `#8C000000`），直接照抄会变成接近全透明 |
 | `number` | 无单位数字 | 倍数或比例，原样使用（目前只有 `component.checkbox.max-scale`） |
 | `dimension` | 数字，另有 `unit: "logical"` | H5 用 px；iOS 用 pt；Android 用 dp；鸿蒙用 vp；布局值不随字号缩放 |
 | `fontSize` | 数字，另有 `unit: "logical"` | H5 转 rem（以 16 为基数且保留用户根字号）；iOS 通过 Dynamic Type 缩放 pt 基础值；Android 用 sp；鸿蒙用 fp |
@@ -98,10 +98,10 @@ python3 scripts/sync-brand.py --check
 
 `.couli-button-primary` 提供正常、按下、禁用和 `:focus-visible`。原生 `<button disabled>` 可直接禁用；若自定义控件使用 `aria-disabled="true"`，仍须在业务代码中阻止激活，CSS 不会替它禁用行为。加载态应保留尺寸、可读文字与忙碌语义；具体文案由页面规则决定。
 
-JSON、CSS 只定义视觉与基础交互，不实现登录、授权、价格计算或购买行为。平台来源使用 `color.source.*`（白底、浅描边、中性文字）；此版不引入任何商家品牌色。返利金额与其标签用 `color.rebate.*`，价格仍用 `color.price.text`，状态标签仍用 `color.status.*`。
+JSON、CSS 只定义视觉与基础交互，不实现登录、授权、价格计算或购买行为。平台来源使用 `color.source.*`（白底、浅描边、中性文字）；2026-11-05 起标题前的实底平台文字标签用 `color.platform.tag.*`（淘宝、天猫、京东、拼多多各一个，取平台标识主色加深、只承载 `color.text.inverse` 白字，深浅色同值；规划/03 §10.2 `PlatformBadge`），它是来源标识的底色，不作品牌宣传，也不用于其他文字、按钮或大面积色块；商品主图上的浮层控件（返回键、页码胶囊）底用 `color.overlay.on-image`，不复用弹层遮罩 `color.overlay.scrim`。返利金额与其标签用 `color.rebate.*`，价格仍用 `color.price.text`，状态标签仍用 `color.status.*`。
 
 ## 验收与来源
 
 颜色对比度公式与全部关键组合（浅色与深色各一张表）见 [品牌色 §3](../colors/colors.md#3-对比度实测)。尤其主色 `#C44820` 在暖米白上只有 4.41:1、在深色页面底上只有 3.72:1，两种主题下普通链接与强调文字都须使用 `color.text.link` / `color.brand.emphasis`，不能直接复用主色。必要控件边界使用 `color.border.control`；浅分隔线只能装饰。
 
-遵循 [Apple HIG · Color](https://developer.apple.com/design/human-interface-guidelines/color) 和 [Apple HIG · Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility) 的语义用色、对比、非颜色线索及适应用户需求原则（核对日期：2026-10-01）。本版已校验 109 个令牌的 JSON 解析与 CSS 值一致性（`--check` 同时核对两个深色块与 JSON 的 `dark` 一致），以及指定实色组合的对比度：浅色价格 / 白底为 15.28:1，待定状态为 5.33:1，错误状态为 5.64:1；深色主文字 / 卡片底为 13.84:1，待定状态为 6.28:1，错误状态为 6.72:1，禁用文字为 4.64:1，控件边界 / 卡片底为 4.25:1。`forced-colors` 中按钮、输入框与焦点线使用系统颜色，但代码回退不能视为已经通过高对比测试。实现必须验证系统强制配色、增强对比、200% 文字放大、灰度与色觉障碍状态辨识；三端 Dynamic Type、屏幕阅读器、触控、焦点及真实素材叠加效果仍需在实现和真机上验证。
+遵循 [Apple HIG · Color](https://developer.apple.com/design/human-interface-guidelines/color) 和 [Apple HIG · Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility) 的语义用色、对比、非颜色线索及适应用户需求原则（核对日期：2026-10-01）。本版已校验 114 个令牌的 JSON 解析与 CSS 值一致性（`--check` 同时核对两个深色块与 JSON 的 `dark` 一致），以及指定实色组合的对比度：浅色价格 / 白底为 15.28:1，待定状态为 5.33:1，错误状态为 5.64:1；深色主文字 / 卡片底为 13.84:1，待定状态为 6.28:1，错误状态为 6.72:1，禁用文字为 4.64:1，控件边界 / 卡片底为 4.25:1；平台标签白字 4.62–4.78:1，主图浮层底叠在纯白图上白字 4.74:1（2026-11-05）。`forced-colors` 中按钮、输入框与焦点线使用系统颜色，但代码回退不能视为已经通过高对比测试。实现必须验证系统强制配色、增强对比、200% 文字放大、灰度与色觉障碍状态辨识；三端 Dynamic Type、屏幕阅读器、触控、焦点及真实素材叠加效果仍需在实现和真机上验证。
