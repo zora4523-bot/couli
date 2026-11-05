@@ -69,6 +69,8 @@
 
 2026-11-03 代理补全的默认（编排 D10-590；00 §8 第 ① 类）：BR-FUND-24 细则补「注销调减单被驳回后每个会计日补建、注销处理中的用户不受理新人工调账只允许红冲 ACCOUNT_CLOSED 单」；BR-FUND-10 补一句 ADMIN_ADJUST 红冲指向 BR-FUND-24（原文「红冲入账类凭证 ≥0」与 BR-FUND-24 ⑤「调减方向红冲允许 available < 0」并不冲突，只是没互相指明）。
 
+2026-11-05 商品详情 v3 指针同步（`docs/changes/20261105-商品详情v3定稿.md` 同日审查后；00 §8 第 ① 类）：BR-FUND-04「平台入账开关」表 off / ESTIMATED 行的入账说明改为只说订单页（商品详情 2026-11-05 起不显示入账说明，BR-TEXT-04）。取值与状态不变。
+
 ### 6.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -405,7 +407,7 @@ VOID、CLAWED_BACK 是终态：订单同步等自动事件不得让订单离开�
 
 | 场景 | 结算批次 | 订单 display_status 与预计结算月份 | 入账说明文案 |
 |---|---|---|---|
-| off，ESTIMATED（DEPOSIT_PAID / PAID） | 不涉及 | DEPOSIT_PAID / PAID，expected_credit_period=null | 商品详情与订单页不展示入账说明 |
+| off，ESTIMATED（DEPOSIT_PAID / PAID） | 不涉及 | DEPOSIT_PAID / PAID，expected_credit_period=null | 订单页不展示入账说明（商品详情 2026-11-05 起本来就不显示，BR-TEXT-04） |
 | off，WAITING | 该平台不生成、不执行批次（含 R5a）；月结账单中该平台只保留校验结果 | CREDITING「入账核对中」，expected_credit_period=null；hold、维权中按 BR-FUND-17 先匹配 REVIEWING / RIGHTS_PENDING | 同上 |
 | off，钱包 | — | 该平台 WAITING 份额仍计入 pending_credit_fen，不参与预计结算月份（BR-FUND-18） | — |
 | off → on | 对当期已生成的月结账单重新校验、生成补充批次，照常人工确认后执行 | 恢复按 ⑪ 返回预计结算月份 | 恢复展示 |
