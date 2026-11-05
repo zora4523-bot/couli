@@ -167,6 +167,8 @@
 2. 代理：写 `tools/probe/taobao/tb12_quota.ts`。先按 §0.2 硬规则 5 确认配额计算口径：按联盟账号计时不压测，只记录控制台配额与文档值；按 appkey 计时，经人批准后在 10-14 前 02:00–06:00 对搜索与详情做阶梯压测（1 → 5 → 10 → 20 QPS，每档 1 分钟），首个限流即停并记录错误码与阈值，提前 1 个工作日通知优券汇运营；把全部探测脚本改为读取 `config/union-endpoints.yaml` 的 real / replay / mock 模式。
 3. 代理：写 `tools/probe/fixtures-lint.ts` 脱敏校验（禁止手机号、完整订单号、买家昵称），接入 CI。
 
+- **站长 OAuth 授权文档（2026-11-06 登记，编排 D10-680）**：联盟主账号授权给凑狸应用的 session（09 §2.10 sc 类调用缺的就是它）按淘宝开放平台官方文档实现，已存私有库 `rebate-private/docs-mirror/taobao/guides/`：118「淘宝 OAuth2.0 服务」、102635「用户授权介绍」、105590「无线端授权规范」（2026-10-02 抓取，.md 与 .json）。授权地址、令牌接口、参数名、令牌有效期与续期以这三份为准；尚未实测，回调地址与主账号授权由负责人本人做。本条只登记文档出处，不改 CAP-TB-12 状态。
+
 **CAP-TB-13 价格可观测性（P1）**
 
 未知项：用 30 分钟前、24 小时前、7 天前取得的 raw_item_id 调 item.info 是否仍返回；不同 relation_id / promotion_type / ip 下 final_promotion_price 是否变化；appkey 日调用上限与 QPS（1 万 tracked_item、默认层每 6 小时约 2000 次/天，热层另计）；券后价字段更新时效；大促预热价（future_activity_promotion_price）能否用来提前判定。
