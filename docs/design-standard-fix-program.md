@@ -142,11 +142,11 @@ P1 原为 156 项，按 D10-664 ③ 从 CT-22-trend 拆出 CT-22-mode 后为 157
 | DSX-42 | 三端共享客户端向量收归唯一源，加跨端 hash 比对 | 后端 | P1 | TOKENS-LAG | 三端共享客户端向量只在 specs/client/ 一处，login、order、clipboard 分叉合并为一版 | — |
 | DSX-43 | 契约补文案键：邀请落地页、邀请页海报暂不可用 | 后端 | P1 | DSX-34 | texts.default.json 有这些键，取值与 08 一致 | — |
 | DSX-44 | 京东商品图接上：CAP-JD-02 实测 imageInfo 后映射主图和多图（外部阻塞：京东 goods.query 权限） | 后端（协同 运维） | P1 | — | 京东有 imageInfo 时搜索卡出 https 主图与多图，没有时为 null，staging 实测进 evidence | — |
-| CT-22-trend | 价格走势契约补齐：文本键、几何测试向量、拼多多来源键（最常见价字段已拆到 CT-22-mode） | 后端 | P1 | DSX-37 | 价格走势文本键、拼多多来源键与几何测试向量入契约，oasdiff 只有新增 | CT-22 |
+| CT-22-trend | 价格走势契约补齐：几何测试向量、拼多多来源键（最常见价字段已拆到 CT-22-mode；走势文本键随 D10-664 S-01 由 content 一并登记，不在本单重复） | 后端 | P1 | DSX-37 | 价格走势文本键、拼多多来源键与几何测试向量入契约，oasdiff 只有新增 | CT-22 |
 | CT-22-mode | 最常见价字段契约：ProductPriceTrend 加 mode_price_fen（D10-664 ③ 从 CT-22-trend 拆出） | 后端 | P1 | — | 契约加可为空的 mode_price_fen、形状与 04 §6.3 一致，oasdiff 只有新增 | CT-22 |
 | CT-24-funds | CT-24：adminGetFundsReport 契约与 specs/reports/funds.yaml | 后端 | P1 | DSX-39 | adminGetFundsReport 契约与 specs/reports/funds.yaml 合入，oasdiff 只有新增 | CT-24 |
 | DSX-45 | packages/money 补坐标轴刻度和读屏金额格式化函数，配测试向量 | 后端（协同 前端） | P1 | DSX-39 | 单测覆盖 0、负数、四位以上金额、分到元的换算 | — |
-| B1-29-trend | 价格走势计算：按平台选来源键，服务端算最常见价和显示门槛 | 后端 | P1 | CT-22-trend、CT-22-mode | 按平台选来源键（拼多多用 .pdd 变体），最常见价按 01 F-PROD-14 ⑧ 计算，属性测试与 verify 通过 | B1-29 |
+| B1-29-trend | 价格走势计算：按平台选来源键，服务端算最常见价和显示门槛（即 D10-664 S-12，同一单，不重复派） | 后端 | P1 | CT-22-trend、CT-22-mode | 按平台选来源键（拼多多用 .pdd 变体），最常见价按 01 F-PROD-14 ⑧ 计算，属性测试与 verify 通过 | B1-29 |
 | DSX-103 | 文案检查加品牌语气条目 | 后端 | P2 | DSX-05 | 文案检查加品牌语气条目，违反语气条目的样例让 CI 失败 | — |
 | CT-03-upgrade | routes.json 登记「请升级 App」提示页的路由名和文案键 | 后端（协同 iOS、安卓、鸿蒙） | P2 | DSX-95 | routes.json 有该路由，并通过路由一致性检查 | CT-03 |
 | CT-03-navbar | 桥契约：ui.setNavBar 的色值参数收口为令牌名 | 后端（协同 iOS、安卓、鸿蒙、前端） | P2 | DSX-25 | ui.setNavBar 的色值参数改为令牌名，CT-06 门禁通过 | CT-03 |
@@ -2093,7 +2093,7 @@ texts.default.json 有这些键，取值与 08 一致；banned-words 扫描 0 �
 </details>
 
 <details>
-<summary><b>CT-22-trend</b> · P1 · 价格走势契约补齐：文本键、几何测试向量、拼多多来源键（最常见价字段已拆到 CT-22-mode）</summary>
+<summary><b>CT-22-trend</b> · P1 · 价格走势契约补齐：几何测试向量、拼多多来源键（最常见价字段已拆到 CT-22-mode；走势文本键随 D10-664 S-01 由 content 一并登记，不在本单重复）</summary>
 
 负责线：后端；依赖：DSX-37；承接：CT-22（后续子编号）。
 
@@ -2167,7 +2167,7 @@ oasdiff 只有新增；Prism 能启动并返回样例；契约测试断言 funds
 </details>
 
 <details>
-<summary><b>B1-29-trend</b> · P1 · 价格走势计算：按平台选来源键，服务端算最常见价和显示门槛</summary>
+<summary><b>B1-29-trend</b> · P1 · 价格走势计算：按平台选来源键，服务端算最常见价和显示门槛（即 D10-664 S-12，同一单，不重复派）</summary>
 
 负责线：后端；依赖：CT-22-trend、CT-22-mode；承接：B1-29（后续子编号）。
 
