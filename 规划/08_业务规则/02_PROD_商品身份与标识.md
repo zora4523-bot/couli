@@ -170,7 +170,7 @@ V-PK-1、V-PK-2 在各平台能否通过，取决于 BR-PROD-03 的 S0 验证结
 | 入口 | 处理 |
 | --- | --- |
 | 搜索 | 丢弃该条，计数并告警 |
-| 解析（`POST /v1/inputs/parse`；规划/04 §6.3 原写 `/v1/clipboard/parse`，读作同一接口，C-14） | 联盟已识别出商品但派生失败 → 30131，文案“暂时无法识别这个商品，试试用商品名搜索”，搜索框预填 title_hint；不写 product_refs。口令本身无法识别时仍按 09 返回 30132。三平台识别不到具体商品时一律报错并给“用商品名搜索”按钮，不自动出候选卡（拍板第二批 TRADE-07）。例外：拼多多合法链接拿不到商品信息、且 pdd.direct_convert.enabled 打开时，出 amount_unknown 卡（BR-PRICE-08，拍板第二批 TRADE-08） |
+| 解析（`POST /v1/inputs/parse`；规划/04 §6.3 原写 `/v1/clipboard/parse`，读作同一接口，C-14） | 联盟已识别出商品但派生失败 → 30131，文案与按钮按 BR-TEXT-14 表 A 30131（2026-11-05 编排 D10-656：原写的文案与 12_TEXT 不一致，改为只引文案键；契约没有 title_hint 字段，预填改为请求前从原文抽出的「」内或首行商品名，同 30132）；不写 product_refs。口令本身无法识别时仍按 09 返回 30132。三平台识别不到具体商品时一律报错并给“用商品名搜索”按钮，不自动出候选卡（拍板第二批 TRADE-07）。例外：拼多多合法链接拿不到商品信息、且 pdd.direct_convert.enabled 打开时，出 amount_unknown 卡（BR-PRICE-08，拍板第二批 TRADE-08） |
 | `POST /v1/links/convert` 传 url | 与解析相同：返回 30131，不转链，不以 product_key=null 生成 links。唯一例外是 09 CAP-PDD-01 的 zs.unit.url.gen 直链降级（开关 pdd.direct_convert.enabled，默认关；links.product_key=null，不参与去重、缓存和“同商品”证据；卡片按 BR-PRICE-08 显示 amount_unknown，点击经 open 带用户参数转链，拍板第二批 TRADE-08） |
 | 详情 `GET /v1/products/{product_key}` | 响应的派生结果（解析别名后）不等于请求键，或无法派生 → 按 BR-PROD-05 结果分类②处理（ref_expired，30143） |
 | 商品池 | 拒绝入库，并向运营显示原因（BR-PROD-08） |
