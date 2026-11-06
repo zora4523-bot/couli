@@ -120,6 +120,8 @@
 
 2026-11-05 后台提现驳回与未知结果处置的拒绝原因文案（编排 D10-628，契约 CT-24zp、CT-24zs 的 20001 子原因；00 §8 第 ① 类文案键登记，句子是代理补全的默认）：BR-TEXT-14 表 B 在 20001 子键处新增 reject_attempt_exists、reject_query_required、reject_query_success 与 resolve_query_failed、resolve_too_early、resolve_bill_unverifiable、resolve_query_unverifiable、resolve_paid_at_invalid、resolve_order_id_taken、resolve_identity_missing 十行，都是后台文案、不进 App 包内默认。状态不变。
 
+2026-11-06 W10 凭证交叉核对的拒绝文案（编排 D10-703；00 §8 第 ① 类文案键登记，句子是代理补全的默认）：BR-TEXT-14 表 B 在 20001 子键处新增 resolve_order_id_other_order、resolve_order_id_mismatch、resolve_amount_mismatch 三条后台文案。
+
 2026-11-04 搜索页输入框占位（编排裁定 D10-617，APP-06x 三端搜索视觉任务书 Q11；00 §8 第 ① 类：文案键用法登记，不新增键、不改取值）：BR-TEXT-14 表 C `search.placeholder` 行把「搜索页输入框暂沿用本键，到搜索页视觉任务再定（D10-119 H-V03）」定为搜索页输入框也用本键；`basic.search.placeholder` 行补「基本模式进搜索页时输入框也用本键」（基本模式不能调识别接口，BR-ATTR-29 细则，占位不提粘贴链接）。高保真画板 SearchTyping-v2 占位写「搜商品或粘贴链接」，措辞以本表为准。状态不变。
 
 2026-11-05 返利按接口实际金额展示（`docs/changes/20261105-返利按接口实际金额展示.md`，00 §8 第 ② 类，负责人 2026-11-05 在编排会话里明确确认）：BR-TEXT-03 的「比价风险」行（PAID 时显示区间 + hint「如被判定为比价订单，返利按较低金额计算」）作废，改为「比价订单」行——is_price_compare=true 的订单在订单列表与详情显示标识，金额与状态 hint 照常按接口返回的实际佣金；「比价无返利」行与「查看说明」入口保留；正文去掉「首次预估为区间时取上限」。BR-TEXT-02 PAID 行金额改为单一金额、细则补「比价订单标识」一段；BR-TEXT-10 RebateTag 一句注明区间不再出现；BR-TEXT-14 表 C 新增 `order.tag.price_compare`「比价订单」（键名是代理补全的默认，用词取负责人原话），BR-TEXT-12 细则「资金术语键」单列这个键，BR-TEXT-13「比价」allow_keys 加这个键、原比价变体 hint 停用。同日对抗审查后：BR-TEXT-03 影响面补订单列表接口与 OrderList；「比价订单」行写明归属（订单列表为负责人原话、订单详情按编排口径、显示范围与并列规则为代理补全的默认）、标识随订单同步更新、AI 订单卡与推送不显示；「比价说明入口」补「同一订单详情页只出一个『查看说明』」的去重规则（代理补全的默认）；BR-TEXT-02 PAID 行附加说明去掉标识一句（表后已有专段）；BR-TEXT-09、BR-TEXT-10 与表 C btn.buy.rebate_suffix、share.est_promo 的区间写法注明只作兼容；BR-TEXT-12 资金术语键单列补 rebate_estimate、rebate_compare（「以结算为准」从未取名清单移出）；BR-TEXT-13 把 order.tag.price_compare 移到推送分句之后并注明不进推送。各条状态不变，没有新增条目与错误码。
@@ -937,6 +939,9 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 20001.resolve_paid_at_invalid（2026-11-05，编排 D10-628；后台文案，代理补全的默认） | 到账时间不对：不能晚于现在，也不能早于首次转账时间。 | 同左 | 后台未知结果处置判成功：paid_at 超出范围（不晚于当前 + 5 分钟、不早于 T）。不进 App 包内默认 |
 | 20001.resolve_order_id_taken（2026-11-05，编排 D10-628；后台文案，代理补全的默认） | 这个通道单号已用在另一笔提现上，请核对后再提交。 | 同左 | 后台未知结果处置判成功：channel_order_id 与其他提现重复（含并发由唯一索引判定）。不进 App 包内默认 |
 | 20001.resolve_identity_missing（2026-11-05，编排 D10-628；后台文案，代理补全的默认） | 该会员没有已核验的实名，暂不能判为已到账，请转技术处理。 | 同左 | 后台未知结果处置判成功：记个税累计（BR-WDR-20）需要已核验实名，什么都不写。不进 App 包内默认 |
+| 20001.resolve_order_id_other_order（2026-11-06，编排 D10-703；后台文案，代理补全的默认） | 这个通道单号在对账里属于另一笔提现，不能用来判这笔为已到账。请核对凭证后再提交。 | 同左 | 后台未知结果处置判成功：凭证交叉核对 ①（BR-WDR-15）。不进 App 包内默认 |
+| 20001.resolve_order_id_mismatch（2026-11-06，编排 D10-703；后台文案，代理补全的默认） | 填写的通道单号与这笔提现已有的成功记录不一致，请核对后再提交。 | 同左 | 后台未知结果处置判成功：凭证交叉核对 ②（BR-WDR-15）。不进 App 包内默认 |
+| 20001.resolve_amount_mismatch（2026-11-06，编排 D10-703；后台文案，代理补全的默认） | 账单里这笔的金额与实发金额不一致，不能判为已到账，请转技术处理。 | 同左 | 后台未知结果处置判成功：凭证交叉核对 ③（BR-WDR-15）。不进 App 包内默认 |
 | 20002.totp_invalid（2026-10-06） | 动态码不正确，请输入验证器上最新的 6 位动态码 | 同左 | 后台登录第二步，清空输入框（代理补全的默认，待负责人确认） |
 | 20002.totp_bind_invalid（2026-10-06） | 动态码不正确，绑定没有完成。请确认手机时间准确，再输入验证器上最新的 6 位动态码。 | 同左 | 后台首次绑定，未绑定、未登录；照设计稿 AdmLoginTotpBindInvalid |
 | 20004.identity_mismatch | 请使用本账号已绑定的{provider_name}验证 | 请使用本账号已绑定的登录方式验证 | 二次验证时重新授权得到的第三方账号不是本账号绑定的那一个（BR-ID-08）；provider_name 取 微信 / Apple / 华为账号 |
