@@ -171,3 +171,18 @@
 ### 4.5 2026-11-04 staging 实测：搜索卡片主图
 
 staging 接拼多多 live（approvals 43）后，B1-04zzf（rebate-platform #2339）把搜索、推荐、详情行的 `goods_image_url` 映射为主图、`goods_gallery_urls` 映射为多图（经 normalizeItemImages 清洗；`goods_thumbnail_url` 不当主图，主图缺失时不从多图或缩略图补）；字段依据是 2026-10-15 录制（私有库 `rebate-private/cap-tests/2026-10-15/pdd`，只有字段形状）。部到 3233970b6 后搜「保温杯」20 / 20 张卡带图，图片域名 img.pddpic.com。只证明搜索卡片能拿到主图；§4.4 CAP-PDD-02 分享素材图的张数、是否要额外参数、能否直接保存与再分享仍未实测，主表状态不变。
+
+### 4.6 2026-11-06 价格对应的规格：文档核对（未实测）
+
+用途：商品卡与详情的价格规格提示 `price_spec_hint`（04 §8.3；取值按 08 BR-PROD-04，列表卡在实现单 S-19 补齐判定前一律给 null）要从 `spec_uncertain` 收窄为 `price_from`，须有文档写明价格对应哪个规格或是最低规格价。本节只回答拼多多文档有没有这样的字段（编排 D10-725 ③，落位按 D10-728）。证据类型「文档已查、未实测」，不是对用户的承诺；主表状态不变。淘宝、京东见 [2_TB §2.12](2_TB_淘宝.md#212-2026-11-06-价格对应的规格文档核对未实测)、[3_JD §3.7](3_JD_京东.md#37-2026-11-06-价格对应的规格文档核对未实测)。
+
+来源（拼多多开放平台官方文档，须登录查看；私有资料库已存镜像，原文不进本仓库）：https://open.pinduoduo.com/application/document/api?id=pdd.ddk.goods.detail 、https://open.pinduoduo.com/application/document/api?id=pdd.ddk.goods.search 、https://open.pinduoduo.com/application/document/api?id=pdd.ddk.goods.recommend.get （页面更新 2026-06-09）、https://open.pinduoduo.com/application/document/api?id=pdd.ddk.goods.promotion.url.generate （页面更新 2026-07-17）、多多客入驻与使用指南 https://open.pinduoduo.com/application/document/browse?idStr=4EB34D3DDCBC83EB （以上获取 2026-10-02）。
+
+| 对应能力 | 证据类型 | 文档结论（摘要） | 仍需测试 |
+| --- | --- | --- | --- |
+| CAP-PDD-02（详情价格对应的规格） | 文档已查、未实测 | `pdd.ddk.goods.detail` 返回的 `min_group_price`、`min_normal_price`，文档写明是**最低价 sku** 的拼团价、单买价（分）。这满足 BR-PROD-04 的「确知该价为最低规格价」，详情可据此出 `price_from` | 实测比对：详情 `min_group_price` 与下单页各规格最低拼团价是否一致 |
+| CAP-PDD-02、CAP-PDD-03、CAP-PDD-10（搜索 / 推荐卡价格） | 文档已查、未实测 | `pdd.ddk.goods.search`、`pdd.ddk.goods.recommend.get` 返回同名字段，文档只写「最小」拼团（成团）价、「最小」单买价，没有像详情那样写明是最低价 sku。**实测前保持 `spec_uncertain`** | 同一商品在搜索 / 推荐与详情返回的 `min_group_price` 是否一致 |
+| CAP-PDD-02（多规格标记） | 文档已查、未实测 | 文档里没有「是否多规格」字段。搜索返回的 `is_multi_group` 是「是否多人团」，指拼团方式，**不是多规格标记**，不能用来判规格；所以无法据接口区分单规格与多规格商品 | — |
+| CAP-PDD-02、CAP-PDD-06（规格级价格与带规格转链） | 需特殊权限、未申请（文档已查、未实测） | 详情请求的 `need_sku_info` 是特殊渠道权限、须额外申请，开通后返回 `sku_list`（每个规格的拼团价、进宝算价、券面额、上下架、规格值与 `sku_id_code`）；转链的 `sku_id_list` / `sku_id_code_list` 同样要 sku 权限，否则不生效（[4 附 §6](4_PDD_附_开放平台接入.md#6-官方接口文档与主表的差异)已记）。凑狸本期不申请；2026-10-15 录制的详情调用没有传该参数，返回里没有 `sku_list` | 申请后再测 |
+
+补充：「最低价 sku」按拼团价还是单买价认定，文档未说明；官方指南给的券后价口径是现价（`min_group_price`）减 `coupon_discount`，券门槛按哪个价判断仍是 §4.2 CAP-PDD-02 原有未知项，不变。

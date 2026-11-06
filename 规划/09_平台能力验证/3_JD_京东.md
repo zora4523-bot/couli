@@ -187,3 +187,15 @@
 | --- | --- | --- | --- |
 | CAP-JD-02、CAP-JD-13（价格历史） | 文档已查、未实测 | 商品查询与京粉精选接口只有一个 `historyPriceDay`（历史最低价天数：当前券后价是近多少天内最低，单个数字），没有按日的价格或价格曲线；京粉精选另有一个按历史低价优惠力度排序的商品榜频道，是商品列表、不是单品价格历史，也不是按销量 / 热度排序，不用于热销榜（BR-TEXT-17 细则「联盟物料频道」） | `historyPriceDay` 是否稳定返回、口径与当前券后价是否一致未实测；本期不使用，也不据此写「近 N 天最低」类文案（BR-TEXT-13） |
 | CAP-JD-02（分享素材图） | 文档已查、未实测 | 商品信息里有图片合集字段（`imageInfo.imageList`） | 实际张数与图片能否直接保存、再分享未实测 |
+
+### 3.7 2026-11-06 价格对应的规格：文档核对（未实测）
+
+用途：商品卡与详情的价格规格提示 `price_spec_hint`（04 §8.3；取值按 08 BR-PROD-04，列表卡在实现单 S-19 补齐判定前一律给 null）要从 `spec_uncertain` 收窄，须有文档写明价格对应哪个规格。本节只回答京东文档有没有这样的字段（编排 D10-725 ③，落位按 D10-728）。证据类型「文档已查、未实测」，不是对用户的承诺；主表状态不变。淘宝、拼多多见 [2_TB §2.12](2_TB_淘宝.md#212-2026-11-06-价格对应的规格文档核对未实测)、[4_PDD §4.6](4_PDD_拼多多.md#46-2026-11-06-价格对应的规格文档核对未实测)。
+
+来源（京东联盟官方文档；私有资料库已存镜像，原文不进本仓库）：[goods.query](https://union.jd.com/openplatform/api/v2?apiName=jd.union.open.goods.query)、[goods.bigfield.query](https://union.jd.com/openplatform/api/v2?apiName=jd.union.open.goods.bigfield.query)（获取 2026-10-02）、[goods.promotiongoodsinfo.query](https://union.jd.com/openplatform/api/v2?apiName=jd.union.open.goods.promotiongoodsinfo.query)（2026-10-04 入库的整理稿，以官方为准）。
+
+| 对应能力 | 证据类型 | 文档结论（摘要） | 仍需测试 |
+| --- | --- | --- | --- |
+| CAP-JD-01、CAP-JD-02（item 模式：`sceneId=1`、按 `itemIds` 查，凑狸当前所用） | 文档已查、未实测 | 返回不带 `skuId`（§3.5 实测：无场景 2 权限时只有 `itemId`、`spuid`，bigfield 另有 `mainSkuId`、`productId`）。`priceInfo` 的 `price`、`lowestPrice`、`lowestCouponPrice` 对应同款下哪个 sku、itemId 与 skuId 是否一一对应、是不是同款最低价，**文档都未说明**；`spuid` 只写是同款的主 skuid，没说价格取主 sku；没有价格区间或多规格标记字段；bigfield 的 `propGroups` 是商品参数，文档没说是可选规格。**保持 `spec_uncertain`** | item 模式粒度按 BR-PROD-04 待 S0 实测（CAP-JD-01、02） |
+| CAP-JD-01、CAP-JD-02（sku 模式：`sceneId=2`、按 `skuIds` 查） | 需特殊权限、未申请（文档已查、未实测） | `sceneId=2` 须申请（§3.4）。按 `skuIds` 查时每条记录以 `skuId` 为键、价格在同一条记录下，有权限时 `materialUrl` 拼成 item.jd.com/{skuId}.html；可推知价格属于这个 skuId，但原文没有直说。`goods.promotiongoodsinfo.query` 按 skuIds 返回单价（京东价），§3.5 测试应用调用无权限 | 本期不申请；有权限后实测。若按上面的读法，sku 模式的价格即 product_key 本身的价格（BR-PROD-04 京东 sku 粒度） |
+| CAP-JD-02（多件价） | 文档已查、未实测 | `multiPrice` 入参与多件到手价指购买件数，与规格无关，不能用来判规格 | — |

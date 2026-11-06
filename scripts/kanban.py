@@ -49,7 +49,7 @@ REF_LABEL = {
 }
 LINES = ("CT", "B1", "B2", "B3", "F1", "APP", "HM", "QA", "DSX")
 TASK_ID = re.compile(r"(?<![A-Za-z0-9-])((?:CT|B1|B2|B3|F1|APP|HM|QA)-\d{2})(?![0-9])")
-LEDGER_ID = re.compile(r"((?:CT|B1|B2|B3|F1|APP|HM|QA)-\d{2})([a-z]*)\Z")
+LEDGER_ID = re.compile(r"((?:CT|B1|B2|B3|F1|APP|HM|QA)-\d{2}|DSX-\d{2,3})([a-z]*)\Z")   # DSX: 05 §3.11 fix keys split in the ledger
 STATUSES = ("done", "in_progress", "open", "blocked", "deferred", "void")
 STATUS_LABEL = {"done": "已完成", "in_progress": "进行中", "open": "待办", "blocked": "被阻塞", "deferred": "远期", "void": "作废"}
 
