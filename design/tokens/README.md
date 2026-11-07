@@ -1,6 +1,6 @@
 # 凑狸设计令牌
 
-版本：2026-11-05 / project baseline v0.5.0。2026-10-04 按设计方向第三轮改 App 页面底并新增后台页面底、图片占位、返利强调（`color.rebate.*`）与来源描边令牌（[变更记录](../../docs/changes/20261004-设计方向第三轮.md) §1）；2026-10-18 按规划/00 D35 给全部颜色令牌与 `shadow.card` / `shadow.floating` 补深色取值（其余令牌两态复用 `value`），并新增组件令牌 T1–T12（[变更记录](../../docs/changes/20261018-深色令牌进唯一源.md)）；2026-11-05 v0.5.0 按商品详情 v3 新增标题前平台文字标签的四个实底色 `color.platform.tag.*` 与商品主图浮层控件底 `color.overlay.on-image`（[变更记录](../../docs/changes/20261105-商品详情v3定稿.md)）；不代表原生或真机验收完成。根配置入口见 [brand.config.json](../../brand.config.json)，完整维护与接入流程见 [品牌接入](../../docs/brand-integration.md)。语义说明见 [品牌色](../colors/colors.md)；覆盖规划/03 §10.1 的颜色、六级字号、间距、圆角与阴影，并补充焦点、主按钮状态及触控命中区。
+版本：2026-11-07 / project baseline v0.5.2。2026-10-04 按设计方向第三轮改 App 页面底并新增后台页面底、图片占位、返利强调（`color.rebate.*`）与来源描边令牌（[变更记录](../../docs/changes/20261004-设计方向第三轮.md) §1）；2026-10-18 按规划/00 D35 给全部颜色令牌与 `shadow.card` / `shadow.floating` 补深色取值（其余令牌两态复用 `value`），并新增组件令牌 T1–T12（[变更记录](../../docs/changes/20261018-深色令牌进唯一源.md)）；2026-11-05 v0.5.0 按商品详情 v3 新增标题前平台文字标签的四个实底色 `color.platform.tag.*` 与商品主图浮层控件底 `color.overlay.on-image`（[变更记录](../../docs/changes/20261105-商品详情v3定稿.md)）；同日 v0.5.1 补 `radius.tag`、`radius.avatar`；2026-11-07 v0.5.2 新增 **Web 动效令牌** `motion.*`（时长、缓动、轻提示停留、骨架微光与防闪、减弱动态替代；只供 H5 与管理后台，原生三端按平台默认动效、不读，规划/00 D37、[变更记录](../../docs/changes/20261107-Web动效令牌.md)、用法见规划/03 §10.6）；不代表原生或真机验收完成。根配置入口见 [brand.config.json](../../brand.config.json)，完整维护与接入流程见 [品牌接入](../../docs/brand-integration.md)。语义说明见 [品牌色](../colors/colors.md)；覆盖规划/03 §10.1 的颜色、六级字号、间距、圆角与阴影，并补充焦点、主按钮状态及触控命中区。
 
 ## 文件与主题
 
@@ -21,7 +21,7 @@ python3 scripts/sync-brand.py --check
 
 ## JSON 结构与转换约定
 
-本版共 114 个令牌叶节点（v0.3.0 的 87 个 + 2026-10-18 新增 22 个 + 2026-11-05 新增 5 个），与 CSS 自定义属性一一对应；其中 51 个（49 个颜色 + 2 个阴影）带深色值。根节点含 `schemaVersion`、`metadata`、`tokens`；令牌叶节点统一为 `{ "type": "…", "value": …, "description": "…" }`，全部颜色叶节点与 `shadow.card` / `shadow.floating` 另有 `"dark": …`（结构与 `value` 相同；其余叶节点没有 `dark`，两态复用 `value`）。这是内部交换格式，不声明已经完整实现 DTCG 标准，也没有尚不存在的远程 `$schema` 依赖。所有值均已展开，不需要引用解析器。
+本版共 131 个令牌叶节点（v0.3.0 的 87 个 + 2026-10-18 新增 22 个 + 2026-11-05 新增 5 个 + v0.5.1 新增 2 个 + 2026-11-07 v0.5.2 新增 15 个 `motion.*`），与 CSS 自定义属性一一对应；其中 51 个（49 个颜色 + 2 个阴影）带深色值。根节点含 `schemaVersion`、`metadata`、`tokens`；令牌叶节点统一为 `{ "type": "…", "value": …, "description": "…" }`，全部颜色叶节点与 `shadow.card` / `shadow.floating` 另有 `"dark": …`（结构与 `value` 相同；其余叶节点没有 `dark`，两态复用 `value`）。这是内部交换格式，不声明已经完整实现 DTCG 标准，也没有尚不存在的远程 `$schema` 依赖。所有值均已展开，不需要引用解析器。
 
 | `type` | `value` 结构 | 平台消费方式 |
 | --- | --- | --- |
@@ -33,8 +33,10 @@ python3 scripts/sync-brand.py --check
 | `fontWeight` | 数字 | 映射平台字体字重 |
 | `fontFamily` | 有序字符串数组 | H5 为字体回退列表；原生使用平台系统字体，不打包 SF 字体 |
 | `shadow` | 含 `x/y/blur/spread/color/opacity` 的对象数组 | 尺寸按逻辑单位；CSS 用 rgba；原生采用对应阴影能力，Android 可近似映射 elevation 并视觉复核 |
+| `duration` | 毫秒数，另有 `unit: "ms"`（v0.5.2 起，只用于 `motion.*`） | 只供 H5 与管理后台：CSS 输出 `150ms` 这类时长，用于 `transition-duration` / `animation-duration`；原生三端按平台默认动效、不读（00 D37） |
+| `cubicBezier` | 四个数字 `[x1, y1, x2, y2]`，x1、x2 在 0–1 之间（v0.5.2 起，只用于 `motion.easing.*`） | 只供 H5 与管理后台：CSS 输出 `cubic-bezier(x1, y1, x2, y2)`；原生不读（00 D37） |
 
-令牌从 `tokens` 下路径转换为短横线变量名。例如 `color.brand.primary` → `--color-brand-primary`，`color.button.primary.pressed.background` → `--color-button-primary-pressed-background`。文本字号转换为 rem，字重和行高保持无单位，其余尺寸转换为 px。`shadow.none` 的空数组转换为 `none`。
+令牌从 `tokens` 下路径转换为短横线变量名。例如 `color.brand.primary` → `--color-brand-primary`，`color.button.primary.pressed.background` → `--color-button-primary-pressed-background`。文本字号转换为 rem，字重和行高保持无单位，其余尺寸转换为 px；动效时长输出毫秒（如 `--motion-duration-normal: 250ms`），缓动输出 `cubic-bezier(…)`（如 `--motion-easing-enter`）。`shadow.none` 的空数组转换为 `none`。
 
 ## 浅 / 深两套取值与各端消费
 

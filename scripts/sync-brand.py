@@ -149,6 +149,17 @@ def convert_token(token, path, font_base, theme="light"):
             value = number(value / font_base, path + " / cssFontBase", positive=True)
             return numeric_text(value) + "rem"
         return numeric_text(value) + "px"
+    if kind == "duration":
+        # Web-only motion durations (03 §10.6); native platforms use their own defaults (00 D37).
+        require(token.get("unit") == "ms", f"{path}: expected unit=ms")
+        return numeric_text(number(value, path, minimum=0)) + "ms"
+    if kind == "cubicBezier":
+        require(isinstance(value, list) and len(value) == 4,
+                f"{path}: expected [x1, y1, x2, y2]")
+        points = [number(point, f"{path}[{index}]") for index, point in enumerate(value)]
+        for index in (0, 2):
+            number(points[index], f"{path}[{index}] (x)", minimum=0, maximum=1)
+        return "cubic-bezier(" + ", ".join(numeric_text(point) for point in points) + ")"
     if kind == "lineHeight":
         return numeric_text(number(value, path, positive=True))
     if kind == "fontWeight":

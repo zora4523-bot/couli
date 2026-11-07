@@ -9,8 +9,8 @@ window.COULI_BRAND = Object.freeze({
   },
   "metadata": {
     "name": "凑狸",
-    "version": "0.5.1",
-    "date": "2026-11-05",
+    "version": "0.5.2",
+    "date": "2026-11-07",
     "status": "project baseline",
     "theme": "light",
     "modes": [
@@ -19,12 +19,14 @@ window.COULI_BRAND = Object.freeze({
     ],
     "darkThemePhase": "MVP",
     "colorSpace": "sRGB",
-    "description": "当前项目使用的品牌与界面基线；2026-10-04 按设计方向第三轮调整 App 页面底、返利强调、平台来源标签与图片占位（docs/changes/20261004-设计方向第三轮.md）；2026-10-18 v0.4.0 按 00 D35 给每个颜色与阴影令牌补深色取值（dark 字段，value 仍为浅色）并新增组件令牌 T1–T12（docs/changes/20261018-深色令牌进唯一源.md）；2026-11-05 v0.5.0 按商品详情 v3 新增标题前平台文字标签的四个实底色 color.platform.tag.*（淘宝、天猫、京东、拼多多）与主图浮层控件底 color.overlay.on-image（docs/changes/20261105-商品详情v3定稿.md）；同日 v0.5.1 补平台文字标签圆角 radius.tag 与店铺头像圆角 radius.avatar（只加键，不改已有值）。已应用于根目录品牌配置、交付素材与品牌预览，不代表原生接入、Icon Composer 或真机验收完成。App 图标外观变体独立于 UI 主题。",
+    "description": "当前项目使用的品牌与界面基线；2026-10-04 按设计方向第三轮调整 App 页面底、返利强调、平台来源标签与图片占位（docs/changes/20261004-设计方向第三轮.md）；2026-10-18 v0.4.0 按 00 D35 给每个颜色与阴影令牌补深色取值（dark 字段，value 仍为浅色）并新增组件令牌 T1–T12（docs/changes/20261018-深色令牌进唯一源.md）；2026-11-05 v0.5.0 按商品详情 v3 新增标题前平台文字标签的四个实底色 color.platform.tag.*（淘宝、天猫、京东、拼多多）与主图浮层控件底 color.overlay.on-image（docs/changes/20261105-商品详情v3定稿.md）；同日 v0.5.1 补平台文字标签圆角 radius.tag 与店铺头像圆角 radius.avatar（只加键，不改已有值）。已应用于根目录品牌配置、交付素材与品牌预览，不代表原生接入、Icon Composer 或真机验收完成。App 图标外观变体独立于 UI 主题。；2026-11-07 v0.5.2 新增 Web 动效令牌 motion.*（时长、缓动、轻提示停留、骨架微光与防闪、减弱动态替代；只供 H5 与管理后台，原生三端按平台默认动效、不读这些数，00 D37、编排裁定 D10-837；docs/changes/20261107-Web动效令牌.md）（只加键，不改已有值）",
     "cssFontBase": 16,
     "sources": [
       "https://developer.apple.com/design/human-interface-guidelines/color",
       "https://developer.apple.com/design/human-interface-guidelines/accessibility",
-      "https://www.w3.org/TR/WCAG22/#contrast-minimum"
+      "https://www.w3.org/TR/WCAG22/#contrast-minimum",
+      "https://m3.material.io/styles/motion/easing-and-duration/tokens-specs",
+      "https://www.w3.org/TR/WCAG22/#animation-from-interactions"
     ]
   },
   "assets": {
