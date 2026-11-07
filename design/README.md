@@ -4,6 +4,8 @@
 
 2026-10-01：第二版 Logo、语义配色和设计令牌已作为项目当前采用基线，视觉方案沿用已有修订。先看 [品牌概览](brand/brand-overview.png) 与 [可点击展示页](brand/index.html)，再看 [Logo 使用规范](logo/README.md)、[配色](colors/colors.md)及[五个 App 参考](references/README.md)。当前展示页通过根配置生成的 CSS / JS 消费品牌；三端工程尚未创建，素材和展示页接入不代替系统图标制作、平台资源接入或真机验收。
 
+2026-11-07（00 D37）：三端功能一致、界面不求一致——画板是信息结构与品牌参照，不是三端像素标准；系统已有的控件（标签栏、导航栏、弹窗、底部弹层等）各端用平台原生组件，iOS 底栏为系统标签栏（iOS 26 起 Liquid Glass 悬浮样式）。
+
 令牌数值唯一维护于 [design-tokens.json](tokens/design-tokens.json)；[variables.css](tokens/variables.css) 与 [brand-config.js](brand/brand-config.js) 由根目录 `python3 scripts/sync-brand.py` 生成，`python3 scripts/sync-brand.py --check` 只读检查生成物漂移。H5 基础控件样式源为 [foundations.css](tokens/foundations.css)，同步时追加进生成 CSS。不要手改生成文件。
 
 展示页可直接在浏览器打开；需要本地 HTTP 预览时，在仓库根目录运行 `python3 -m http.server 8765 --bind 127.0.0.1 --directory design`，访问 `http://127.0.0.1:8765/brand/index.html`。页面无外部脚本或字体依赖，示例数据不会调用商品、AI、支付服务；官方参考链接由点击打开。
