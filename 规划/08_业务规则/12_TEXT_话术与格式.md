@@ -134,6 +134,8 @@
 
 2026-11-07 入账后结算负差调减通知（编排裁定 D10-773、D10-791；契约 CT-26za 已合并；00 §8 第 ① 类，模板句与 {amount} 写法是代理补全的默认）：BR-TEXT-09 模板表新增 SETTLE_ADJUSTED 自购 / 分享 / 邀请三行，细则写明收信人、原因、跳转、幂等键与「{amount} 取调减额绝对值」；通知模板资金术语清单与 inbox.title 表各补一项。
 
+2026-11-07 SETTLE_ADJUSTED 邀请变体用词（编排裁定 D10-803，按 BR-TEXT-01 修正，属同步缺陷）：邀请分佣（直推、间推）是「推广收益」，「邀请奖励」专指邀请双方奖励活动；BR-TEXT-09 模板表邀请行正文与 inbox.title 表 SETTLE_ADJUSTED 邀请短标题由「邀请奖励」改为「推广收益」，与 CLAWBACK 邀请变体一致；契约文案键随 CT-26zb 改。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -606,7 +608,7 @@
 | CLAWBACK 邀请（直推、间推分佣） | 推送 + 站内 | 一笔邀请订单的推广收益已扣回 {amount}（不带原因，J7） |
 | SETTLE_ADJUSTED 自购 | 推送 + 站内 | 订单返利已按结算金额调整，减少 {amount}：{reason.title} |
 | SETTLE_ADJUSTED 分享（share 单） | 推送 + 站内 | 一笔分享订单的推广收益已按结算金额调整，减少 {amount}：{reason.title} |
-| SETTLE_ADJUSTED 邀请（直推、间推分佣） | 推送 + 站内 | 一笔邀请奖励已按结算金额调整，减少 {amount}（不带原因，J7） |
+| SETTLE_ADJUSTED 邀请（直推、间推分佣） | 推送 + 站内 | 一笔推广收益已按结算金额调整，减少 {amount}（不带原因，J7；2026-11-07 D10-803 由「邀请奖励」改为「推广收益」，按 BR-TEXT-01） |
 | WD_SUCCESS | 推送 + 站内 | 提现已到账：{net} 已转入{payout_channel_name} |
 | WD_REJECTED | 推送 + 站内 | 提现未通过：{reason}，{amount} 已退回余额 |
 | WD_REJECTED（驳回原因为 NEGATIVE_BALANCE） | 推送 + 站内 | 提现未通过：{reason}；抵扣后的余额以钱包显示为准（不带金额：冻结金额已用于抵扣，退回多少要看抵扣结果；编排裁定 D10-235，2026-10-23，代理补全的默认，措辞可由负责人调整；其余驳回原因仍用上一行） |
@@ -1199,7 +1201,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | 填写邀请码页·输入框与粘贴 invite.backfill.placeholder / invite.paste_not_found（第 3 批，画板 InviteBackfillErrorStates ⑧；占位句见登录 v2 画板 LoginInviteFill） | 6 位邀请码｜未识别到邀请码 | .placeholder 是输入框占位；.paste_not_found 是点【粘贴】没识别到 6 位邀请码时的轻提示，不清空已有输入（BR-INV-04 正文同句，规则仍在 BR-INV-04） |
 | 收藏夹 favorites.manage / .done / .delete / .select_all / .delete_n、favorite.invalid_desc、favorites.empty_hint / favorites.go_home（第 3 批，画板 Favorites-v2、FavoritesManage-v2、FavoritesEmpty-v2） | 管理｜完成｜删除｜全选｜删除（{n}）｜商品已失效，不能购买｜在商品详情点「收藏」，商品会保存在这里｜去首页逛逛 | 删除不弹确认，删除后提示 favorite.removed；失效商品置灰、只能删除（规划/01 F-PROD-12）；空态标题仍为 favorites.empty |
 | 消息中心 messages.read_all / messages.unread / messages.load_more / messages.empty / messages.empty_hint（第 3 批，画板 Messages-v2、MessagesEmpty） | 全部已读｜未读｜上拉加载更多｜暂时没有消息｜跟单、返利结算和提现的通知会出现在这里 | 「全部已读」与记已读的接口形状待 04；冷静期内是否显示「全部已读」按 BR-ID-27 细则 |
-| 消息标题 inbox.title.&lt;code>[.&lt;变体>]（第 3 批，画板 Messages-v2、MessagesCatalog、MessagesDeletion-v2 等） | ORDER_TRACKED：自购「跟单成功」、分享「分享订单」、邀请「邀请订单」；ORDER_INVALID：自购「订单失效」、分享「分享订单失效」、邀请「邀请订单失效」；CREDITED：仅自购「返利结算」、仅推广「推广收益结算」、两者都有「收益结算」；CLAWBACK：自购「返利扣回」、分享与邀请「推广收益扣回」；SETTLE_ADJUSTED（2026-11-07 D10-773，契约 CT-26za）：自购「返利已调整」、分享「推广收益已调整」、邀请「邀请奖励已调整」；WD_SUCCESS「提现到账」；WD_REJECTED「提现未通过」；WD_FAILED「提现打款未成功」；WD_OVERDUE「提现审核中」；CLAIM_RESULT「找回结果」；RISK_STATE_CHANGED「账号状态」；BALANCE_ADJUSTED「余额调整」；APPEAL_RESULT「申诉结果」；DELETION_PROGRESS「注销进度」 | 站内信的标题（04 inbox_messages.title），变体与 BR-TEXT-09、BR-TEXT-23 模板的变体一一对应（邀请类直推、间推同一标题）；正文仍只按模板；标题不带金额与商品 |
+| 消息标题 inbox.title.&lt;code>[.&lt;变体>]（第 3 批，画板 Messages-v2、MessagesCatalog、MessagesDeletion-v2 等） | ORDER_TRACKED：自购「跟单成功」、分享「分享订单」、邀请「邀请订单」；ORDER_INVALID：自购「订单失效」、分享「分享订单失效」、邀请「邀请订单失效」；CREDITED：仅自购「返利结算」、仅推广「推广收益结算」、两者都有「收益结算」；CLAWBACK：自购「返利扣回」、分享与邀请「推广收益扣回」；SETTLE_ADJUSTED（2026-11-07 D10-773，契约 CT-26za）：自购「返利已调整」、分享「推广收益已调整」、邀请「推广收益已调整」（2026-11-07 D10-803 由「邀请奖励已调整」改，按 BR-TEXT-01；契约 CT-26zb）；WD_SUCCESS「提现到账」；WD_REJECTED「提现未通过」；WD_FAILED「提现打款未成功」；WD_OVERDUE「提现审核中」；CLAIM_RESULT「找回结果」；RISK_STATE_CHANGED「账号状态」；BALANCE_ADJUSTED「余额调整」；APPEAL_RESULT「申诉结果」；DELETION_PROGRESS「注销进度」 | 站内信的标题（04 inbox_messages.title），变体与 BR-TEXT-09、BR-TEXT-23 模板的变体一一对应（邀请类直推、间推同一标题）；正文仍只按模板；标题不带金额与商品 |
 | 公告列表到底 notice.no_more（第 3 批，画板 Notice-v2） | 没有更多公告了 | 公告列表加载完时的末行 |
 | 通知设置 notify_settings.service_push / .service_push.desc（第 3 批，画板 NotifySettings、NotifySettingsOn） | 服务类推送｜跟单成功、返利结算、提现结果等消息。关闭后不再推送，消息中心里照常可以看到 | 开关关闭即时生效、不弹确认；站内信照常写入（规划/01 F-MSG-03、F-MSG-04）；iOS 从未申请时的提示句见表 D perm.push.not_asked_hint |
 | 设置·分组与行名 settings.group.account / .privacy / .general、settings.nickname / .phone / .delete_account / .privacy_center / .agreements / .notify / .reshow_jump_tip / .help / .about（第 3 批，画板 Settings-v2、SettingsGuest-v2、SettingsBasic） | 账号与安全｜隐私｜通用；昵称｜手机号｜注销账号｜隐私中心｜用户协议与隐私政策｜通知设置｜重新显示下单须知｜帮助中心｜关于凑狸 | 「授权管理」行用 auth_manage.title；剪贴板、清除缓存、退出登录行用已有 settings.\* 键；各行显隐（游客、基本模式、内测包不显示注销）只按 BR-ID-02 细则、BR-ID-27 细则 |
