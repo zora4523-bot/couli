@@ -136,6 +136,8 @@
 
 2026-11-07 SETTLE_ADJUSTED 邀请变体用词（编排裁定 D10-803，按 BR-TEXT-01 修正，属同步缺陷）：邀请分佣（直推、间推）是「推广收益」，「邀请奖励」专指邀请双方奖励活动；BR-TEXT-09 模板表邀请行正文与 inbox.title 表 SETTLE_ADJUSTED 邀请短标题由「邀请奖励」改为「推广收益」，与 CLAWBACK 邀请变体一致；契约文案键随 CT-26zb 改。
 
+2026-11-07 订单子原因清单（负责人 2026-11-07 给出参照清单并定「后台可选、App 透出给用户」，00 §8 第 ② 类负责人确认，对话中确认直接回写）：BR-TEXT-05「PUNISH 子原因」三项扩为「子原因 reason_sub」表——PUNISH 12 项、REFUND 两项（售中退款、结算后退款）、RIGHTS 一项（售后退款），desc 即用户看到的原文；写清自动映射来源（淘宝 / 大淘客 violation_type、京东 validCode、拼多多 fail_reason、淘宝维权按结算 / 收货时点）与后台人工单选；对不上的处罚归 PUNISH_ORDER 并告警。取代原「不暴露联盟术语」默认；待确认第 13 项关闭。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -462,7 +464,29 @@
 | COMMISSION_ZERO | void | 返利已取消 | 平台将这笔订单的返利调整为 0，平台未说明原因 | 否 | [CONTACT_CS] |
 | OTHER | void | 其他原因 | 可联系客服查询 | 否 | [CONTACT_CS] |
 
-**PUNISH 子原因**（维权 / 处罚导入时写入 orders.reason_sub，字典 key order_reason_sub.&lt;SUB>.desc，不暴露联盟术语）：VIOLATION_PROMO「平台判定为违规推广订单」、SHOP_TK「平台判定为无效推广订单」、FAKE_TRADE「平台判定为异常交易」。「结算后退款」映射 REFUND（CLAWED_BACK）。
+**子原因 reason_sub**（2026-11-07 负责人给出参照清单并定「后台可选、App 透出给用户看」，取代原「不暴露联盟术语、只用概括文案」的默认；字典 key order_reason_sub.&lt;SUB>.desc，desc 即用户看到的子原因原文，显示为「{title}：{sub.desc}」；编码为凑狸自定，不沿用他家编码，D19）：
+
+| 父编码 | SUB | 用户看到的子原因（desc） |
+| --- | --- | --- |
+| PUNISH | VIOLATION_PROMO | 违规推广 |
+| PUNISH | SHOP_TK | 店铺淘宝客 |
+| PUNISH | INSITE_PROMO | 站内推广 |
+| PUNISH | PROXY_BUY | 违规代购 |
+| PUNISH | FAKE_TRADE | 虚假交易 |
+| PUNISH | INSITE_RESALE | 站内二次售卖 |
+| PUNISH | OVER_LIMIT | 累计超出上限 |
+| PUNISH | MARKET_DISRUPT | 扰乱市场秩序 |
+| PUNISH | MULTI_TRADE_ABNORMAL | 多笔交易异常 |
+| PUNISH | SINGLE_TRADE_ABNORMAL | 单笔交易异常 |
+| PUNISH | RISK_ORDER | 风险订单 |
+| PUNISH | PUNISH_ORDER | 处罚订单 |
+| REFUND | IN_SALE | 售中退款 |
+| REFUND | AFTER_SETTLE | 结算后退款 |
+| RIGHTS | AFTER_SALE | 售后退款 |
+
+- 「无」= 不写 reason_sub（只显示父编码标题与说明）；「其他原因」= 父编码 OTHER，不另设子原因。
+- 写入来源：① 同步 / 导入自动映射——淘宝（含大淘客）处罚记录 violation_type 文本按上表 desc 逐字匹配（文档列出店铺淘宝客、订单虚假交易两类，「订单虚假交易」映射 FAKE_TRADE；其余实际取值待录制核对）；京东 validCode 的违规订单码（13、25–28、36–43）与「累计件数超出类目上限」（30）按语义映射到上表 PUNISH 子原因，映射表放在代码仓库 specs（实现时列全，评审核对）；拼多多处罚 / 审核失败按 fail_reason 能对上的映射；淘宝维权：维权时订单已结算（earning_time 有值）→ REFUND / AFTER_SETTLE，确认收货前 → REFUND / IN_SALE，确认收货后、结算前 → RIGHTS / AFTER_SALE。对不上任何一项的处罚 → PUNISH / PUNISH_ORDER，原值存入归档并告警，供运营补映射。② 后台人工——运营处理订单失效 / 扣回、维权导入时，从上表（加「无」）单选子原因，选项旁注明「App 端会展示给用户」；人工选择覆盖自动映射，写审计。
+- 子原因只改用户看到的说明，不改金额、不改父编码的 kind 与状态迁移；同一订单后续同步得到更具体的子原因时可覆盖 PUNISH_ORDER，人工选过的不被自动覆盖。
 
 **旧编码映射**：PRD v2.1 REFUNDED/CANCELLED→REFUND；RISK_INVALID→BLACKLIST；PRICE_COMPARE_DOWNGRADED→PRICE_COMPARE；ORDER_ATTR_OTHER_TLJ→OTHER_TLJ；RIGHTS_SUCCESS→RIGHTS；PUNISHED→PUNISH；NOT_FILED→RELATION_INVALID、CART_ORDER_UNTRACKED→NOT_TRACKED（这两个只用于 explain_order / 找回查询，不写入已归因订单）。
 
@@ -1854,7 +1878,7 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 10. share 单是否存在跨商品归因（好友经分享进店后买其他商品）待 规划/09 实测（BR-TEXT-02）。
 11. 2026–2027 年法定节假日与调休日历的录入责任人与时间（BR-WDR-26 workday_calendar）。
 12. 修订① 的 D8（C 类素材是否给「复制原口令」）与 规划/00 的 D8（分销计酬）编号冲突，需在文档登记表中重新编号。
-13. PUNISH 子原因对用户透出粒度需负责人与运营确认（BR-TEXT-05 默认用不含联盟术语的概括文案）。
+13. ~~PUNISH 子原因对用户透出粒度需负责人与运营确认~~ 已定（负责人 2026-11-07 给出参照清单）：子原因按 BR-TEXT-05 子原因表原文透出给用户，后台可单选。
 14. 找回驳回原因字典 claim_reject_reason 的编码表由 BR-ATTR 给出（BR-TEXT-09 CLAIM_RESULT 引用）。已补（2026-10-19，BR-TEXT-25 取值表 `claim_reject_reason` 行，8 个编码的后台显示名与契约枚举描述一致）。
 15. 订单状态按 C-01 改用 BR-FUND-01 双状态与 BR-FUND-17 派生的 display_status（BR-TEXT-01/02/03/04/05/09/18），已由负责人确认 2026-09-30；不采纳时按本主题开头的映射回退。
 16. 已关闭：BR-FUND-17 已删去术语表，派生表文案列改为「示意」并声明以 BR-TEXT-02 为准，只保留派生条件与「状态和金额只取接口」；现派生表示意文案已用「入账核对中」「售后处理中，入账暂停」「已收货，等待联盟结算后入账」。原记录：BR-FUND-17 文案列与本主题不一致、未列入 §14.3：REVIEWING「返利审核中」对本主题「入账核对中」（本主题不透露 hold）；RIGHTS_PENDING「返利暂缓到账」、CREDITING「到账处理中」、WAITING_SETTLE「等待联盟结算后到账」对方案 A 的「入账」；BR-FUND-04 推送「¥x 已到账」对 BR-TEXT-09「已入账」。建议随 C-02 一并裁决，文案以本主题为准（BR-FUND-17 只保留派生条件）。
