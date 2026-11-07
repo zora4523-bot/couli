@@ -290,33 +290,35 @@ TB-05 失败时走待决策项"新 App 申请独立联盟账号"（代价：高�
 - **商品 ID 口径（2026-10-31 22:0x 实测）**：淘宝新式不透明商品 ID 按应用不同。大淘客**搜索** goodsId（46–47 字符、一个「-」）送凑狸应用 `item.info.upgrade.get` 能查到详情（数字 ID 才回 50001），但返回的 item_id 与之前段、后段都不同；大淘客**订单** item_id（41 字符）送查 5 返 4、后段 4/4 一致。所以 product_key「取最后一段」只对凑狸口径与订单口径成立，搜索结果须先经凑狸 `item.info.upgrade.get` 换口径再派生（编排 D10-504）。
 - **商品图（2026-11-04 staging 实测，凑狸应用）**：官方搜索 `dg.material.optional.upgrade` 的主图取 `item_basic_info.pict_url`、多图取 `small_images.string[]`（B1-04zx 适配器映射，经 normalizeItemImages 清洗；卡片 image 写死 null 的问题由 B1-04zzf rebate-platform #2339 修好）。staging 部到 3233970b6 后搜「保温杯」8 / 8 张卡带图，图片域名 img.alicdn.com。只证明搜索卡片能拿到主图；§2.8 CAP-TB-02 分享素材图的张数、能否直接给用户保存与再分享仍未实测，主表状态不变。
 - **渠道 / 会员备案的会话（2026-11-05 只读探测，凑狸应用）**：`taobao.tbk.sc.publisher.info.get`（info_type=1、relation_app=common、page_size=1）调 1 次、不带 session，返回 TOP 错误码 26（Missing Session），sub_code 为空，没有落返回值（预算记录 `couli-runs/probes/state/taobao-couli-20261105-sc-publisher.json`）。说明 sc 类接口可调（与上面「私域用户管理」权限包一致），缺的是凑狸淘宝联盟主账号授权给应用的 session；生成邀请码（`sc.invitecode.get`）会真建码、不算只读，本次没调。拿 session 要负责人在开放平台填回调地址并用联盟主账号授权一次，回调接收与 session 存放随 FU-TB-AUTH-SESSION 实现；此前淘宝授权链接仍是占位（linking `syntheticAuthUrl`），不得写成对用户的承诺。
-- **店铺转链（2026-11-06，编排 D10-725 ② / D10-728；文档已查、未实测）**：商品详情 v3【进店】的淘宝店铺推广链接按负责人意见先用大淘客「店铺转链」（文档 id=42，GET，v1.0.0；`docs/changes/20261105-商品详情v3定稿.md`）。文档页的请求地址与调用示例写的路径不一致（`/api/dels/shop/convert` 与 `/api/shop/get-shop-convert-info`），必填的 `sellerId` 从哪里取得文档未说明，两项都待实测时定；必填 `sellerId`、`pid`、`shopName`，可选 `relationId`、`authId`；返回只有推广链接 `shopLinks`、淘口令 `Tpwd` 与长口令 `longTpwd`，没有短链与有效期字段；属大淘客 2024-07-01 授权调整公告点名、须先在统一授权中心授权并绑定 pid 的接口。文档摘要、与商品转链的对照和仍需测试项见 §2.11。没有调用、没有做归因核对，CAP-TB-06 状态与淘宝进店开关（默认关）不变。
+- **店铺转链（2026-11-06，编排 D10-725 ② / D10-728；文档已查、未实测）**：商品详情 v3【进店】的淘宝店铺推广链接按负责人意见先用大淘客「店铺转链」（文档 id=42，GET，v1.0.0；`docs/changes/20261105-商品详情v3定稿.md`）。文档页的请求地址与调用示例写的路径不一致（`/api/dels/shop/convert` 与 `/api/shop/get-shop-convert-info`），必填的 `sellerId` 从哪里取得文档未说明，两项都待实测时定；必填 `sellerId`、`pid`、`shopName`，可选 `relationId`、`authId`；返回只有推广链接 `shopLinks`、淘口令 `Tpwd` 与长口令 `longTpwd`，没有短链与有效期字段；属大淘客 2024-07-01 授权调整公告点名、须先在统一授权中心授权并绑定 pid 的接口。文档摘要、与商品转链的对照和仍需测试项见 §2.11。没有调用、没有做归因核对，CAP-TB-06 状态与淘宝进店开关（默认关）不变。2026-11-07 已实测接口（编排 D10-795）：路径用 `/api/dels/shop/convert`，`sellerId` 取自大淘客搜索结果，淘口令字段实返小写 `tpwd`，见 §2.11；归因仍未验证（没有下单），CAP-TB-06 状态与淘宝进店开关不变。
 
-### 2.11 2026-11-06 大淘客店铺转链：文档核对（未实测）
+### 2.11 2026-11-06 大淘客店铺转链：文档核对（2026-11-07 接口实测，归因未验证）
 
-用途：商品详情 v3 店铺块的【进店】要按用户身份转出淘宝店铺推广链接（`docs/changes/20261105-商品详情v3定稿.md`；§2.2 CAP-TB-06 未知项「店铺推广链接」，规划/07 §3、08 BR-PRICE-21 细则「进店」），负责人定淘宝先用大淘客店铺转链、运营后台保留切换来源。本节只登记大淘客公开文档的写法（编排 D10-725 ②，落位按 D10-728），证据类型一律「文档已查、未实测」，不是对用户的承诺；没有调用接口。CAP-TB-06 主表与 §2.2 未知项不改、状态不变，有结论前淘宝进店开关保持关闭（默认关）。
+用途：商品详情 v3 店铺块的【进店】要按用户身份转出淘宝店铺推广链接（`docs/changes/20261105-商品详情v3定稿.md`；§2.2 CAP-TB-06 未知项「店铺推广链接」，规划/07 §3、08 BR-PRICE-21 细则「进店」），负责人定淘宝先用大淘客店铺转链、运营后台保留切换来源。本节登记大淘客公开文档的写法（编排 D10-725 ②，落位按 D10-728）与 2026-11-07 的一次接口实测（编排 D10-795）。实测只证明接口可调、路径与返回形状，**能否归因到凑狸推广位未验证**（没有下单），不是对用户的承诺。CAP-TB-06 主表与 §2.2 未知项不改、状态不变，有结论前淘宝进店开关保持关闭（默认关）。
 
 来源（大淘客开放平台公开页面；私有资料库已存镜像，原文不进本仓库）：店铺转链 https://www.dataoke.com/kfpt/api-d.html?id=42 （抓取 2026-11-06）；高效转链 https://www.dataoke.com/kfpt/api-d.html?id=7 ；公告「关于淘宝联盟授权调整通知」https://www.dataoke.com/kfpt/open-gz.html?id=155 、接口调用错误码 https://www.dataoke.com/kfpt/open-gz.html?id=13 、10064 报错原因 https://www.dataoke.com/kfpt/open-gz.html?id=45 、接口调用申请须知 https://www.dataoke.com/kfpt/open-gz.html?id=23 、验签 https://www.dataoke.com/kfpt/open-gz.html?id=41 与 https://www.dataoke.com/kfpt/open-gz.html?id=146 （以上均抓取 2026-10-31）。
 
+**2026-11-07 实测**（union 线，编排 D10-795；用本机的凑狸大淘客凭据，口径同 2026-10-31 的大淘客探针：凭据只在进程内读取，不读值、不打印、不落库；共调用 2 次，预算上限 3 次；没有下单、没有外发，链接与口令只在内存）：① 大淘客搜索 `get-dtk-search-goods`（v2.1.2）调 1 次，HTTP 200、code 0，返回 10 行，每行都带 `sellerId` 与 `shopName`（请求 pageSize=5 实返 10，似有下限）——`sellerId` 可以从大淘客搜索结果 `data.list[].sellerId` 取；② 店铺转链按文档页地址 `/api/dels/shop/convert`（v1.0.0，入参 `sellerId`、凑狸淘宝 pid、`shopName`）调 1 次，HTTP 200、code 0、msg「成功v2」，所以没有再试调用示例的 `/api/shop/get-shop-convert-info`。返回 `data` 只有三个键：`shopLinks`（s.click.taobao.com 长链）、`tpwd`（中文淘口令，**实返小写**，文档写 `Tpwd`）、`longTpwd`（长口令）；没有有效期类字段，也没有短链字段。链接与口令的明文里看不到凑狸推广位或 pid（s.click 链接的参数是加密串，看不到属预期，不能据此判断绑定与否）。错误码只见到成功路径。脱敏输出（只有字段形状、主机名与布尔）存私有运行目录 couli-runs 的 `probes/out/dataoke-shop-convert-20261107-103858.json`，脚本 `probes/dtk_shop_convert_probe.py`。
+
 | 对应能力 | 证据类型 | 文档结论（摘要） | 仍需测试 |
 | --- | --- | --- | --- |
-| CAP-TB-06（店铺推广链接：接口与路径） | 文档已查、未实测 | 「店铺转链」（文档 id=42），GET，版本 v1.0.0；用途是推广整个店铺：把店铺与推广者 PID 绑定，成交后计佣。**请求路径两处不一致**：文档页的请求地址写 `https://openapi.dataoke.com/api/dels/shop/convert`，Java / PHP 调用示例写 `https://openapi.dataoke.com/api/shop/get-shop-convert-info`，文档没说哪个是现行路径。公共参数 `appKey`、`version` 必填，签名按大淘客通用验签（公告 id=41、146） | **路径待实测时定**：两个都试，以实际返回为准 |
-| CAP-TB-06（请求参数） | 文档已查、未实测 | 必填 `sellerId`（卖家 id）、`pid`（推广位）、`shopName`（店铺名，文档说用于生成口令）；可选 `relationId`（渠道 id）、`authId`（大淘客平台的淘宝授权 id，传入时 pid 须属于该授权联盟账号；文档标为后加字段） | **`sellerId` 从哪里取得文档未说明，待实测时定**（大淘客搜索与官方搜索返回里有没有卖家 id，本次未核对）；`shopName` 是否只影响口令文案、填错是否报错 |
-| CAP-TB-06（返回形态） | 文档已查、未实测 | `data` 只有三个字段：`shopLinks`（推广链接，示例为 s.click.taobao.com 长链）、`Tpwd`（淘口令，字段名首字母大写）、`longTpwd`（面向 iOS 14 的长口令，示例内含 m.tb.cn 短链与店铺名）；**没有短链字段、没有有效期字段**，也不回显店铺 id 或佣金率 | 链接与口令的实际有效期；`longTpwd` 里的短链能否单独使用；字段名大小写以实际返回为准 |
-| CAP-TB-06、CAP-TB-05（归因） | 文档已查、未实测 | 文档只说绑定 PID 后成交计佣；`relationId` 只注明是渠道 id，没写与 pid 的校验（商品高效转链的渠道 id 参数文档写明会与 pid 校验，店铺转链没写）；没有 `externalId`、`specialId` 一类入参 | 带 relationId 转出的店铺链接，在店内下单后订单的推广位与 relation_id 是否正确；店内商品是否都计佣 |
-| CAP-TB-06、CAP-TB-12（权限、错误码与额度） | 文档已查、未实测 | 页面错误码表只列 `-1`（服务器错误，稍后再试）与 `1`（参数错误）；通用错误码与 10064 限流见公告 id=13、45。大淘客 2024-07-01 授权调整公告点名本接口：调用前须在统一授权中心添加订单统计、选品库、比价工具三个模块的授权并绑定 pid。文档没写本接口单独的频控与默认额度（通用说明见公告 id=23） | 凑狸的大淘客 appKey 对本接口是否有权限 |
+| CAP-TB-06（店铺推广链接：接口与路径） | 文档已查；路径 2026-11-07 已实测 | 「店铺转链」（文档 id=42），GET，版本 v1.0.0；用途是推广整个店铺：把店铺与推广者 PID 绑定，成交后计佣。**请求路径两处不一致**：文档页的请求地址写 `https://openapi.dataoke.com/api/dels/shop/convert`，Java / PHP 调用示例写 `https://openapi.dataoke.com/api/shop/get-shop-convert-info`，文档没说哪个是现行路径。公共参数 `appKey`、`version` 必填，签名按大淘客通用验签（公告 id=41、146） | **路径已定**：用文档页地址 `/api/dels/shop/convert`（2026-11-07 实测 code 0）；调用示例的路径没有试 |
+| CAP-TB-06（请求参数） | 文档已查；`sellerId` 来源 2026-11-07 已实测 | 必填 `sellerId`（卖家 id）、`pid`（推广位）、`shopName`（店铺名，文档说用于生成口令）；可选 `relationId`（渠道 id）、`authId`（大淘客平台的淘宝授权 id，传入时 pid 须属于该授权联盟账号；文档标为后加字段） | `sellerId` 取大淘客搜索结果的 `data.list[].sellerId`（2026-11-07 实测每行都有，连同 `shopName`）；官方搜索返回里有没有卖家 id 仍未核对；`shopName` 是否只影响口令文案、填错是否报错仍未测 |
+| CAP-TB-06（返回形态） | 文档已查；形状 2026-11-07 已实测 | `data` 只有三个字段：`shopLinks`（推广链接，示例为 s.click.taobao.com 长链）、`Tpwd`（淘口令，字段名首字母大写）、`longTpwd`（面向 iOS 14 的长口令，示例内含 m.tb.cn 短链与店铺名）；**没有短链字段、没有有效期字段**，也不回显店铺 id 或佣金率。2026-11-07 实测相同：`data` 只有这三个键，淘口令字段实返小写 `tpwd` | 链接与口令的实际有效期；`longTpwd` 里的短链能否单独使用；字段名以实测为准（`tpwd` 小写） |
+| CAP-TB-06、CAP-TB-05（归因） | 文档已查、未实测 | 文档只说绑定 PID 后成交计佣；`relationId` 只注明是渠道 id，没写与 pid 的校验（商品高效转链的渠道 id 参数文档写明会与 pid 校验，店铺转链没写）；没有 `externalId`、`specialId` 一类入参 | 带 relationId 转出的店铺链接，在店内下单后订单的推广位与 relation_id 是否正确；店内商品是否都计佣。2026-11-07 实测转出的链接明文看不到推广位或 pid（加密串），归因只能靠下单核对 |
+| CAP-TB-06、CAP-TB-12（权限、错误码与额度） | 文档已查；权限 2026-11-07 已实测 | 页面错误码表只列 `-1`（服务器错误，稍后再试）与 `1`（参数错误）；通用错误码与 10064 限流见公告 id=13、45。大淘客 2024-07-01 授权调整公告点名本接口：调用前须在统一授权中心添加订单统计、选品库、比价工具三个模块的授权并绑定 pid。文档没写本接口单独的频控与默认额度（通用说明见公告 id=23） | 凑狸的大淘客 appKey 对本接口有权限（2026-11-07 实测 code 0）；单独的频控与额度、错误路径的返回仍未知 |
 
-与商品转链（大淘客高效转链 `get-privilege-link`，2026-10-31 已用凑狸推广位实测成功，见 §2.10「搜索与转链」条）的文档对比（店铺转链未实测）：
+与商品转链（大淘客高效转链 `get-privilege-link`，2026-10-31 已用凑狸推广位实测成功，见 §2.10「搜索与转链」条）的对比（店铺转链 2026-11-07 已实测路径与返回形状，归因未测）：
 
 | 项 | 高效转链（商品，id=7） | 店铺转链（id=42） |
 | --- | --- | --- |
-| 路径 | `/api/tb-service/get-privilege-link` | `/api/dels/shop/convert`（文档页）或 `/api/shop/get-shop-convert-info`（调用示例），待实测时定 |
+| 路径 | `/api/tb-service/get-privilege-link` | `/api/dels/shop/convert`（文档页地址，2026-11-07 实测可用；调用示例的 `/api/shop/get-shop-convert-info` 未试） |
 | 版本 | v1.3.1 | v1.0.0 |
 | 主键入参 | `goodsId`（必填） | `sellerId` + `shopName`（均必填） |
 | pid | 可选，不填用应用绑定的 pid | 必填 |
 | 渠道 id 参数 | `channelId`（对应联盟 relationId，与 pid 校验） | `relationId`（未写校验） |
 | 其他归因入参 | `externalId`、`specialId`、`xid`、`authId` | 只有 `authId` |
-| 返回 | 推广长链、短链、领券链接、淘口令与长口令、券与佣金信息等 | 只有推广链接、淘口令、长口令；无短链、无有效期 |
+| 返回 | 推广长链、短链、领券链接、淘口令与长口令、券与佣金信息等 | 只有推广链接、淘口令（实返 `tpwd`）、长口令；无短链、无有效期（2026-11-07 实测相同） |
 | 授权调整公告（id=155）是否列名 | 未列名 | 明确列名 |
 
 ### 2.12 2026-11-06 价格对应的规格：文档核对（未实测）
