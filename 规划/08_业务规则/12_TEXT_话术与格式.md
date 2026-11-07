@@ -142,6 +142,8 @@
 
 2026-11-07 扣回通知的原因来源与金额隐藏的范围（编排裁定 D10-817、D10-871；00 §8 第 ① 类，澄清与代理补全的默认，不改范围与文案）：BR-TEXT-09 细则补一条——CLAWBACK 的 {reason.title} 取 order.clawed_back 载荷里的原因，R9 维权扣回为 RIGHTS、部分退款扣回为 PART_REFUND，缺原因只作旧事件的防御；BR-TEXT-10 细则「金额隐藏」写明商品卡、商品详情、AI 商品卡、识别结果卡的返利金额与购买按钮不在范围内，组件拿到隐藏状态时购买按钮回落「购买」；表 C btn.buy.rebate_suffix 行注明「金额隐藏开关未打开」条件随该键停用，btn.buy.rebate 不沿用。
 
+2026-11-07 Agent 订单模板 summary 键补齐（编排裁定 D10-882；00 §8 第 ① 类，代理补全的默认）：BR-TEXT-22 表加 order_status.CREDITED_PART_CLAWED.summary「这笔返利已结算，其中部分已扣回，详情见卡片。」（状态文案带金额变量，不套拼法）；拼法一条补「带变量的不套拼法、须单列；包内默认逐键写进契约字典」。其余状态与原因的 summary 仍按拼法。条目状态不变。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -1667,11 +1669,12 @@ ORDER_TRACKED 的推送对象、触发、合并与去重只在本条维护（BR-
 | order_status.PAID.summary | T5（BR-AI-07） | 订单已跟踪到，确认收货后随联盟月度结算，详情见卡片。 |
 | order_status.WAITING.summary | T5 | 已收货，等待联盟结算，预计结算月份见卡片。 |
 | order_status.CREDITED.summary | T5 | 这笔返利已结算，可以去钱包提现，详情见卡片。 |
+| order_status.CREDITED_PART_CLAWED.summary | T5（2026-11-07 编排裁定 D10-882，代理补全的默认：状态文案「已结算（部分扣回 {z}）」带金额变量，summary 不许带金额，不套下方拼法） | 这笔返利已结算，其中部分已扣回，详情见卡片。 |
 
 - agent.notice.tlj_none「暂无淘礼金活动」只在 BR-TEXT-15 判定 6 维护，本表不重复。
 - agent.guide.&lt;路由名> 的路由名与 BR-AI-01 细则「页面引导」的候选路由一一对应（配置 agent.page_guide.routes 只能在其中选）；候选集扩大时在本表加行（2026-10-05，D31）。
 - 页面引导的话术写法（2026-10-05 核查后补）：agent.guide.&lt;路由名> 同时用作卡片说明和 `fallback_text`，旧客户端或被拦下的卡片只显示这句、没有按钮，所以不写「点下方按钮」；按钮文字只放在 agent.guide.open。agent.guide.unavailable 用于账户安全类以外所有不出卡的情形（含开关关闭），只用中性说法，不点名具体页面，也不说「可以在某处找到入口」（第 1 轮评审后改：外链、未知路由不一定有对应入口）；账户安全类按 agent.guide.account.\* 选用，换手机号的两条由服务端按 account.phone_change_enabled 当时的值选，注销一条不提入口；手机号、注销、实名、收款账号的具体位置随最终设计稿再定（注销入口内测包不显示，BR-ID-27 细则；手机号自助更换受 account.phone_change_enabled 控制，BR-ID-06）。agent.refuse.out_of_scope 不提页面引导，与 agent.page_guide.enabled 的状态无关。
-- 其余 order_status.&lt;display_status>.summary 与全部 order_reason.&lt;CODE>.summary 的包内默认 = 「{BR-TEXT-02 状态文案或 BR-TEXT-05 标题}，详情见卡片。」（即 BR-AI-07 的兜底拼法，例：order_reason.REFUND.summary =「订单已退款或取消，详情见卡片。」，AC-S1-44 ② 断言不变）；需要单独措辞时在上表加行。
+- 其余 order_status.&lt;display_status>.summary 与全部 order_reason.&lt;CODE>.summary 的包内默认 = 「{BR-TEXT-02 状态文案或 BR-TEXT-05 标题}，详情见卡片。」（即 BR-AI-07 的兜底拼法，例：order_reason.REFUND.summary =「订单已退款或取消，详情见卡片。」，AC-S1-44 ② 断言不变）；需要单独措辞时在上表加行。状态文案或标题带金额、日期等变量的不套拼法，必须在上表单列一行（2026-11-07 D10-882，如 CREDITED_PART_CLAWED）。这些包内默认要逐键写进契约字典 contracts/texts.default.json，不靠运行时拼。
 - 自查：上表不含 BR-TEXT-13 禁用词（「佣金」只出现在 agent.disclaimer.commission 例外键），不含金额与日期变量（agent.suggest.clarify.price.\* 的固定价格区间是正文写明的例外）；summary 只说状态，不说「已返」「没返」类结论以外的推断（BR-AI-07）。agent.guide.\* 只说页面在哪里，不提页面里的数字、状态与链接（2026-10-05，D31）；agent.guide.account.\* 不承诺入口一定存在；agent.earnings.\* 不含数字与月份，金额只在收益卡上（D32）。
 - 例：游客问「我昨天的订单返了吗」→ auth_required(login) 卡 + 「登录后才能查你的订单，点下方按钮登录。」。
 - 例：模型与备用模型都超时 → 关键词出卡 + 「先按关键词为你找到这些商品，详情见卡片。」，不出现错误提示。
