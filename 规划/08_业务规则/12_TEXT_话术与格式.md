@@ -138,6 +138,8 @@
 
 2026-11-07 订单子原因清单（负责人 2026-11-07 给出参照清单并定「后台可选、App 透出给用户」，00 §8 第 ② 类负责人确认，对话中确认直接回写）：BR-TEXT-05「PUNISH 子原因」三项扩为「子原因 reason_sub」表——PUNISH 12 项、REFUND 两项（售中退款、结算后退款）、RIGHTS 一项（售后退款），desc 即用户看到的原文；写清自动映射来源（淘宝 / 大淘客 violation_type、京东 validCode、拼多多 fail_reason、淘宝维权按结算 / 收货时点）与后台人工单选；对不上的处罚归 PUNISH_ORDER 并告警。取代原「不暴露联盟术语」默认；待确认第 13 项关闭。
 
+2026-11-07 京东违规码按订单失效（负责人 2026-11-07「订单失效就好了」，编排 D10-867）：子原因表写入来源里京东 validCode 13、25–28、36–43 与 30 由「映射到 PUNISH 子原因」改为按订单失效处理（同 30，PLATFORM_INVALID），不写子原因；代码仓库 FU-JD-VIOLATION-CODES-MAP 补 jd.csv。
+
 ### 12.1 规则一览
 
 | 编号 | 规则 | 状态 | 影响面 |
@@ -485,7 +487,7 @@
 | RIGHTS | AFTER_SALE | 售后退款 |
 
 - 「无」= 不写 reason_sub（只显示父编码标题与说明）；「其他原因」= 父编码 OTHER，不另设子原因。
-- 写入来源：① 同步 / 导入自动映射——淘宝（含大淘客）处罚记录 violation_type 文本按上表 desc 逐字匹配（文档列出店铺淘宝客、订单虚假交易两类，「订单虚假交易」映射 FAKE_TRADE；其余实际取值待录制核对）；京东 validCode 的违规订单码（13、25–28、36–43）与「累计件数超出类目上限」（30）按语义映射到上表 PUNISH 子原因，映射表放在代码仓库 specs（实现时列全，评审核对）；拼多多处罚 / 审核失败按 fail_reason 能对上的映射；淘宝维权：维权时订单已结算（earning_time 有值）→ REFUND / AFTER_SETTLE，确认收货前 → REFUND / IN_SALE，确认收货后、结算前 → RIGHTS / AFTER_SALE。对不上任何一项的处罚 → PUNISH / PUNISH_ORDER，原值存入归档并告警，供运营补映射。② 后台人工——运营处理订单失效 / 扣回、维权导入时，从上表（加「无」）单选子原因，选项旁注明「App 端会展示给用户」；人工选择覆盖自动映射，写审计。
+- 写入来源：① 同步 / 导入自动映射——淘宝（含大淘客）处罚记录 violation_type 文本按上表 desc 逐字匹配（文档列出店铺淘宝客、订单虚假交易两类，「订单虚假交易」映射 FAKE_TRADE；其余实际取值待录制核对）；京东 validCode 的违规订单码（13、25–28、36–43）与「累计件数超出类目上限」（30）**按订单失效处理**（同 30 的现有映射，PLATFORM_INVALID，负责人 2026-11-07「订单失效就好了」），不改走 PUNISH、不写子原因；拼多多处罚 / 审核失败按 fail_reason 能对上的映射；淘宝维权：维权时订单已结算（earning_time 有值）→ REFUND / AFTER_SETTLE，确认收货前 → REFUND / IN_SALE，确认收货后、结算前 → RIGHTS / AFTER_SALE。对不上任何一项的处罚 → PUNISH / PUNISH_ORDER，原值存入归档并告警，供运营补映射。② 后台人工——运营处理订单失效 / 扣回、维权导入时，从上表（加「无」）单选子原因，选项旁注明「App 端会展示给用户」；人工选择覆盖自动映射，写审计。
 - 子原因只改用户看到的说明，不改金额、不改父编码的 kind 与状态迁移；同一订单后续同步得到更具体的子原因时可覆盖 PUNISH_ORDER，人工选过的不被自动覆盖。
 
 **旧编码映射**：PRD v2.1 REFUNDED/CANCELLED→REFUND；RISK_INVALID→BLACKLIST；PRICE_COMPARE_DOWNGRADED→PRICE_COMPARE；ORDER_ATTR_OTHER_TLJ→OTHER_TLJ；RIGHTS_SUCCESS→RIGHTS；PUNISHED→PUNISH；NOT_FILED→RELATION_INVALID、CART_ORDER_UNTRACKED→NOT_TRACKED（这两个只用于 explain_order / 找回查询，不写入已归因订单）。
