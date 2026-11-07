@@ -10,7 +10,7 @@
 
 | 需求 | 用 | 要点 |
 | --- | --- | --- |
-| 底栏 | `Tabs`（`barPosition: BarPosition.End`）+ `TabContent().tabBar(…)` | 已是系统 Tabs，保持（D10-824）；优先 `BottomTabBarStyle`，它是否支持 Symbol 图标以本项目 SDK 与官方文档为准（目录里写「只接图片资源」，审计未核实，`CAT:130`）；切换动画用系统默认，不设 0 |
+| 底栏 | `Tabs`（`barPosition: BarPosition.End`）+ `TabContent().tabBar(…)` | 已是系统 Tabs，保持（D10-824）；用 `BottomTabBarStyle(icon, text)` + 系统符号 `TabBarSymbol`（API 12 起支持，本项目下限 API 20 可直接用；目录里「只接图片资源」不成立，2026-11-07 鸿蒙线核实本机 SDK `tab_content.d.ts:1015`），删自绘 tabBar 构建，背景用系统模糊材质（D10-909）；切换动画用系统默认——`BottomTabBarStyle` 的默认切换本就没有过渡，这是系统默认、不算「设 0」；禁止的是把系统有动画的切换手动改成 0，内容区淡入放到组件冲刺第 2 步。角标：三端底栏目前都不显示角标，`badgeIndex` 删除；以后产品要加未读角标须三端一起加（D10-909 ②） |
 | 页面与顶栏 | `Navigation` + `NavDestination` 的**系统标题栏**（`.title()`、`.menus()`） | 不再 `hideTitleBar(true)` 后嵌一个空 `Navigation` 充当标题栏 |
 | 返回 | 系统返回手势与标题栏返回 | 只在需要拦截时用 NavDestination 的返回回调 |
 | 半屏 | `bindSheet`（高度档位 `detents`） | 已有 13 处；统一参数放薄封装（审计：CouliSheet 统一参数在业务里 0 处使用） |
@@ -82,4 +82,4 @@
 - **目录标记**：`CAT` 的 KIND 标记按实际实现改正，系统控件的条目改为系统样例，只为 L2 业务组件保留完整状态矩阵。
 - **样式检查**：LINT-STYLE-harmony 按总则 §5 第 0 步定口径（禁写死样式保留；禁自绘系统控件；新增拦 `EdgeEffect.None` 与 `hideTitleBar(true)` 的规则，确需的走白名单）。
 - **截图比对**（03 §11 的 hdc 截图，像素差 ≤1%）：只作本端回归基线；换系统组件按批次重出。
-- **BottomTabBarStyle 的 Symbol 支持**：先在本项目 SDK 上核实，再决定底栏是否从自定义 tabBar 构建切到 `BottomTabBarStyle`。
+- **BottomTabBarStyle 的 Symbol 支持**：已核实支持（2026-11-07，API 12 起有 `TabBarSymbol`），底栏切到 `BottomTabBarStyle`，见 §1 底栏行（D10-909）。
